@@ -1,1 +1,55 @@
 @import "bootstrap/scss/bootstrap";
+
+body{
+  padding-top: 104px;
+}
+
+.navbar{
+  background-color: #252771;
+  color: #fff;
+}
+
+body .navbar ul.navbar-nav .navbar-icons a{
+  color: #fff;
+  padding-left: 15px;
+}
+
+body .navbar ul.navbar-nav .navbar-icons a:hover{
+  color: #88dcdf;
+}
+
+@media (max-width: 768px) {
+  .navbar-nav .dropdown-menu {
+    max-height: 200px;
+    overflow-y: auto;
+  }
+}
+
+.main-footer{
+  background-color: #262770;
+  color: #fff;
+}
+
+.main-footer a{
+  color: #a85c8e;
+}
+
+footer h3::after{
+  display: none;
+}
+
+.footer-sep{
+  border-bottom: 1px solid #ffffff;
+}
+
+.footer-imprint-bar{
+  background-color: #a85c8e;
+}
+
+.footer-imprint-bar a{
+  color: #27276f;
+}
+
+img.footer-acdh-logo{
+  width: 100px;
+}
