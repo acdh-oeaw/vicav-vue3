@@ -2,7 +2,7 @@
   "private": true,
   "scripts": {
     "makeapi": "sta -p ./vicav-app-api/openapi.yaml -o ./gen/",
-    "build": "nuxt build",
+    "build": "sta -p ./vicav-app-api/openapi.yaml -o ./gen/ && nuxt build",
     "start": "node .output/server/index.mjs",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
