@@ -1,5 +1,11 @@
 name: RenderApi
 
+on:
+  push:
+    branches: [develop-nuxt]
+  workflow_dispatch: ~
+
+
 jobs:
   Linux:
     name: Test and Render API docs
@@ -9,7 +15,7 @@ jobs:
         uses: actions/checkout@v1
       - uses: kong/setup-inso@v1
         with:
-          inso-version: 2.4.0
+          inso-version: 3.5.0
       - name: Run test suites
         run: inso run test -w /vicav-app-api spc_8ea7cf -e env_env_9a21f4d181d64765d33c7bbe158a0e24fc2976d0 --verbose
       - name: Generate yaml
