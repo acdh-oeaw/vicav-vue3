@@ -51,3 +51,8 @@ sta -p ./vicav-app-api/openapi.yaml -o ./gen/
 npm run makeapi
 ```
 resides in the gen folder and should NOT be commited. 
+The [OpenApi](https://swagger.io/specification/) - definition used is maintained [here](https://github.com/acdh-oeaw/vicav-app-api)
+and included as a submodule. It can be updated using
+```bash
+git submodule update
+```
