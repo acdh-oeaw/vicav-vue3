@@ -42,6 +42,8 @@ Check out the [deployment documentation](https://nuxt.com/docs/getting-started/d
 
 ## API Module
 
+### Setup
+
 The current setup uses a [swagger-typescript-api](https://github.com/acacode/swagger-typescript-api) module for 
 communication with the REST-API of the vicav backend. It can be created like so:
 
@@ -56,3 +58,20 @@ and included as a submodule. It can be updated using
 ```bash
 git submodule update
 ```
+
+### Usage
+
+The module is set up as a [Nuxt Plugin](https://nuxt.com/docs/guide/directory-structure/plugins) and can be imported in
+any view like so:
+
+```javascript
+const { $api } = useNuxtApp();
+```
+
+By default the generated module will use the first defined server from the swagger file. This can be updated
+at runtime by modifying the `baseUrl`:
+
+```javascript
+$api.baseUrl = "https://vicav.acdh-ch-dev.oeaw.ac.at/vicav";
+```
+

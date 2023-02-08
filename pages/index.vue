@@ -1,6 +1,8 @@
 <script setup lang="ts">
 const { $api } = useNuxtApp();
 
+$api.baseUrl = "https://vicav.acdh-ch-dev.oeaw.ac.at/vicav";
+
 let projectInfo = await $api.project.getProject({mode: "no-cors", headers: { ACCEPT: "application/json" }});
 
 </script>
