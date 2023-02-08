@@ -9,7 +9,7 @@ For basic info on how it works, check out [Nuxt 3 documentation](https://nuxt.co
 # install all dependencies
 npm install
 # create the API Module from swagger
-npm makeapi
+npm run makeapi
 ```
 
 ## Development
@@ -38,3 +38,16 @@ npm run preview
 ```
 
 Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+
+
+## API Module
+
+The current setup uses a [swagger-typescript-api](https://github.com/acacode/swagger-typescript-api) module for 
+communication with the REST-API of the vicav backend. It can be created like so:
+
+```bash
+sta -p ./vicav-app-api/openapi.yaml -o ./gen/
+#or
+npm run makeapi
+```
+resides in the gen folder and should NOT be commited. 
