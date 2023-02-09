@@ -16,4 +16,18 @@ export default defineNuxtConfig({
         }
     },
     css: ['~/assets/styles/main.scss'],
+    dev: true,
+    vite: {
+        define: {
+            'process.env.DEBUG': false,
+        },
+        plugins: [
+
+        ]
+    },
+    vue: {
+        compilerOptions: {
+
+        }
+    }
 })
