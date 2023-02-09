@@ -1,5 +1,9 @@
 {
   "private": true,
+  "engines": {
+    "node": "18.x",
+    "npm": "8.x"
+  },
   "scripts": {
     "makeapi": "sta -p ./vicav-app-api/openapi.yaml -o ./gen/",
     "build": "sta -p ./vicav-app-api/openapi.yaml -o ./gen/ && nuxt build",
@@ -7,18 +11,23 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "test": "echo 'no tests'"
   },
   "dependencies": {
     "@types/leaflet": "^1.9.0",
-    "bootstrap": "^5.2.3",
     "leaflet": "^1.9.2",
     "sass": "^1.58.0",
     "sass-loader": "^13.2.0"
   },
   "devDependencies": {
+    "@nuxtjs/eslint-config-typescript": "^12.0.0",
+    "@types/bootstrap": "^5.2.6",
+    "@vitejs/plugin-vue": "^3.2.0",
+    "@vue/runtime-dom": "^3.2.47",
+    "bootstrap": "^5.2.3",
     "eslint": "^8.28.0",
-    "nuxt": "^3.1.1",
+    "nuxt": "3.0.0",
     "swagger-typescript-api": "^12.0.2"
   }
 }
