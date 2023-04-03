@@ -3,7 +3,8 @@ export default defineNuxtConfig({
     app: {
         head: {
             meta: [{
-                name: 'VICAV Frontend'
+                name: 'application-name',
+                content: 'VICAV Frontend'
             }],
             link: [
                 {
