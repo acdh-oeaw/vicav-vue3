@@ -1,5 +1,5 @@
-import { ref, computed, nextTick } from 'vue';
-import { defineStore } from 'pinia';
+import {ref, computed, nextTick} from 'vue';
+import {defineStore} from 'pinia';
 
 export const useWMStore = defineStore(
 	'wm',
