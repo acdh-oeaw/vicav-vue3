@@ -12,7 +12,7 @@ For basic info on how it works, check out [Nuxt 3 documentation](https://nuxt.co
 npm install
 ```
 
-### 2. Install API submodule{#setup-api}
+### 2. Install API submodule {#setup-api}
 
 The current setup uses a [swagger-typescript-api](https://github.com/acacode/swagger-typescript-api) module for 
 communication with the REST-API of the vicav backend. 
