@@ -1,6 +1,7 @@
 <script setup lang="ts">
 	import { computed } from 'vue'
-	import { useWMStore, IWindowType, INewWindow } from '~~/store/wm'
+	import { useWMStore, INewWindow, IWindowType, IWindow } from '~~/store/wm'
+	import { VicavWinBox } from "./VicavWinBox.client";
 	import WMap from './WMap.vue'
 	import DictQuery from "./DictQuery.vue";
 
@@ -27,6 +28,7 @@
 	}*/
 
     const WMStore = useWMStore()
+	const windowList = computed(() => WMStore.windowList)
 
 	const newWindow = computed(() => WMStore.newWindow)
 	watch(newWindow, (window) => {
@@ -34,20 +36,31 @@
 			NewWindow(window)
 		}
 	})
-	function NewWindow(window: INewWindow) {
-		let windowType: IWindowType|undefined = windowTypes.find(t => t.id == window.windowTypeId)
+	function NewWindow(newWindow: INewWindow) {
+		let windowType: IWindowType|undefined = windowTypes.find(t => t.id == newWindow.windowTypeId)
+		if (windowType == undefined) {
+			ConsoleWarning("Window type undefined", newWindow)
+			return false
+		}
 		if (!IsValidWindowType(windowType)) {
 			return false
 		}
-		// TODO: add window to store state array
-		// TODO: create computed array from store state array & do v-for on winbox elements
+		var window: IWindow = {
+			id: null,
+			ref: null,
+			type: windowType,
+			winBoxOptions: {
+				title: windowType.title,
+				top: 35,
+				index: 10000,
+			}
+		}
+
+		WMStore.AddWindowToList(window)
 	}
 	// IsValidWindow returns false if window data don't pass validation filters, true otherwise
-	function IsValidWindowType(windowType: IWindowType|undefined) {
-		if (
-			windowType == undefined
-			|| !windowTypes.map(w => w.id).includes(windowType.id)
-		) {
+	function IsValidWindowType(windowType: IWindowType) {
+		if (!windowTypes.map(w => w.id).includes(windowType.id)) {
 			ConsoleWarning("Invalid window type", windowType as any)
 			return false
 		}
@@ -64,7 +77,15 @@
 
 <template>
 	<div>
-		<WMap />
+		<VicavWinBox
+			v-for="(window, i) in windowList"
+			:key="i"
+			:options="window.winBoxOptions"
+			>
+			<component
+				:is="window.type.componentName"
+				></component>
+		</VicavWinBox>
 
 		<!--VicavWinBox :options="options">
             <div>this is some test content</div>
