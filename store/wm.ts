@@ -42,7 +42,7 @@ export interface INewWindow {
 export interface IWindowType {
 	id: string
 	title: string,
-	componentName: string,
+	componentName: EComponentName,
 }
 
 export interface IWindow {
@@ -50,4 +50,9 @@ export interface IWindow {
 	ref: any
 	type: IWindowType
 	winBoxOptions: any
+}
+
+export enum EComponentName {
+	WMap,
+	DictQuery,
 }

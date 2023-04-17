@@ -1,22 +1,20 @@
 <script setup lang="ts">
 	import { computed } from 'vue'
-	import { useWMStore, INewWindow, IWindowType, IWindow } from '~~/store/wm'
+	import { useWMStore, INewWindow, IWindowType, IWindow, EComponentName } from '~~/store/wm'
 	import { VicavWinBox } from "./VicavWinBox.client";
 	import WMap from './WMap.vue'
 	import DictQuery from "./DictQuery.vue";
-
-	const componentNames = [ 'WMap', 'DictQuery' ] // TODO: replace it with a computed list based on an internal reference similar to this.$options.components in OptionsAPI
 
 	const windowTypes: IWindowType[] = [
 		{
 			id: 'map',
 			title: 'Map',
-			componentName: 'WMap',
+			componentName: EComponentName.WMap,
 		},
 		{
 			id: 'dict-query',
 			title: 'Dictionary query',
-			componentName: 'DictQuery',
+			componentName: EComponentName.DictQuery,
 		},
 	]
 
@@ -63,10 +61,6 @@
 		if (!windowTypes.map(w => w.id).includes(windowType.id)) {
 			ConsoleWarning("Invalid window type", windowType as any)
 			return false
-		}
-		if (!componentNames.includes(windowType.componentName)) {
-			ConsoleWarning("Window type not implemented", windowType as any);
-			return false;
 		}
 		return true;
 	}
