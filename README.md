@@ -5,12 +5,42 @@ A redevelopment of the [current vicav frontend](https://vicav.acdh.oeaw.ac.at/) 
 For basic info on how it works, check out [Nuxt 3 documentation](https://nuxt.com/docs/getting-started/introduction).
 
 ## Setup
+
+### 1. Install dependencies
+
 ```bash
-# install all dependencies
 npm install
-# create the API Module from swagger
+```
+
+### 2. Install API submodule
+
+The current setup uses a [swagger-typescript-api](https://github.com/acacode/swagger-typescript-api) module for 
+communication with the REST-API of the vicav backend. 
+
+The [OpenApi](https://swagger.io/specification/) - definition used is maintained [here](https://github.com/acdh-oeaw/vicav-app-api)
+and included as a submodule. It can be checked out and updated using
+
+```bash
+git submodule update
+```
+
+> **Note:** Currently the only way to set up the most up-to-date version is to ckeckout the indicated commit. Therefore, the following steps are also necessary:
+
+```bash
+cd vicav-app-api
+git checkout <commit_hash> # for example dad2f8c
+cd ..
+```
+
+Having set up the code this way, the submodule is ready to be built:
+
+```bash
+sta -p ./vicav-app-api/openapi.yaml -o ./gen/
+#or
 npm run makeapi
 ```
+
+**Note:** The resulting `gen` folder SHOULD NOT be commited. 
 
 ## Development
 
@@ -44,20 +74,7 @@ Check out the [deployment documentation](https://nuxt.com/docs/getting-started/d
 
 ### Setup
 
-The current setup uses a [swagger-typescript-api](https://github.com/acacode/swagger-typescript-api) module for 
-communication with the REST-API of the vicav backend. It can be created like so:
-
-```bash
-sta -p ./vicav-app-api/openapi.yaml -o ./gen/
-#or
-npm run makeapi
-```
-resides in the gen folder and should NOT be commited. 
-The [OpenApi](https://swagger.io/specification/) - definition used is maintained [here](https://github.com/acdh-oeaw/vicav-app-api)
-and included as a submodule. It can be updated using
-```bash
-git submodule update
-```
+See in the general setup steps above.
 
 ### Usage
 
