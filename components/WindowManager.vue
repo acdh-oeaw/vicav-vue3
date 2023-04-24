@@ -76,7 +76,7 @@
 			>
 			{{ EComponentName[window.type.componentName] }}
 			<component
-				:is="'' + EComponentName[window.type.componentName]"
+				:is="EComponentName[window.type.componentName]"
 				></component>
 		</VicavWinBox>
 
