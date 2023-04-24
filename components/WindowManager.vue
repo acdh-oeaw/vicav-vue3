@@ -2,8 +2,6 @@
 	import { computed } from 'vue'
 	import { useWMStore, INewWindow, IWindowType, IWindow, EComponentName } from '~~/store/wm'
 	import { VicavWinBox } from "./VicavWinBox.client";
-	import WMap from './WMap.vue'
-	import DictQuery from "./DictQuery.vue";
 
 	const windowTypes: IWindowType[] = [
 		{
@@ -76,8 +74,9 @@
 			:key="i"
 			:options="window.winBoxOptions"
 			>
+			{{ EComponentName[window.type.componentName] }}
 			<component
-				:is="window.type.componentName"
+				:is="'' + EComponentName[window.type.componentName]"
 				></component>
 		</VicavWinBox>
 
