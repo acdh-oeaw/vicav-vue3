@@ -20,12 +20,12 @@
     const menu: MenuItem[] = [ // dummy menu for testing functionality
         {
             name: "Open map",
-            windowTypeId: "map",
+            windowTypeId: "WMap",
             params: null,
         },
         {
             name: "Query dictionaries",
-            windowTypeId: "dict-query",
+            windowTypeId: "DictQuery",
             params: null,
         },
         {

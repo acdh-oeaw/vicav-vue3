@@ -1,4 +1,4 @@
-import { ref, nextTick } from 'vue';
+import { ref, nextTick, ConcreteComponent, ComputedOptions, MethodOptions, resolveComponent } from 'vue';
 import { defineStore } from 'pinia';
 
 export const useWMStore = defineStore(
@@ -40,9 +40,8 @@ export interface INewWindow {
 }
 
 export interface IWindowType {
-	id: string
 	title: string,
-	componentName: EComponentName,
+	component: ConcreteComponent<{}, any, any, ComputedOptions, MethodOptions>,
 }
 
 export interface IWindow {
@@ -52,7 +51,13 @@ export interface IWindow {
 	winBoxOptions: any
 }
 
-export enum EComponentName {
-	WMap,
-	DictQuery,
+export const windowTypes = {
+	WMap: {
+		title: 'Map',
+		component: resolveComponent('WMap'),
+	} as IWindowType,
+	DictQuery: {
+		title: 'Dictionary query',
+		component: resolveComponent('DictQuery'),
+	} as IWindowType,
 }

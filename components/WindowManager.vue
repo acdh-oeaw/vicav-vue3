@@ -1,20 +1,7 @@
 <script setup lang="ts">
 	import { computed } from 'vue'
-	import { useWMStore, INewWindow, IWindowType, IWindow, EComponentName } from '~~/store/wm'
-	import { VicavWinBox } from "./VicavWinBox.client";
-
-	const windowTypes: IWindowType[] = [
-		{
-			id: 'map',
-			title: 'Map',
-			componentName: EComponentName.WMap,
-		},
-		{
-			id: 'dict-query',
-			title: 'Dictionary query',
-			componentName: EComponentName.DictQuery,
-		},
-	]
+	import { useWMStore, INewWindow, IWindow, windowTypes } from '~~/store/wm'
+	import { VicavWinBox } from "./VicavWinBox.client"
 
 	/*import { VicavWinBox } from "~/components/VicavWinBox.client";
 	import { LMap, LMarker, LTileLayer, LFeatureGroup } from "@vue-leaflet/vue-leaflet";
@@ -33,12 +20,9 @@
 		}
 	})
 	function NewWindow(newWindow: INewWindow) {
-		let windowType: IWindowType|undefined = windowTypes.find(t => t.id == newWindow.windowTypeId)
+		let windowType = windowTypes[newWindow.windowTypeId as keyof typeof windowTypes]
 		if (windowType == undefined) {
 			ConsoleWarning("Window type undefined", newWindow)
-			return false
-		}
-		if (!IsValidWindowType(windowType)) {
 			return false
 		}
 		var window: IWindow = {
@@ -54,14 +38,6 @@
 
 		WMStore.AddWindowToList(window)
 	}
-	// IsValidWindow returns false if window data don't pass validation filters, true otherwise
-	function IsValidWindowType(windowType: IWindowType) {
-		if (!windowTypes.map(w => w.id).includes(windowType.id)) {
-			ConsoleWarning("Invalid window type", windowType as any)
-			return false
-		}
-		return true;
-	}
 	function ConsoleWarning(text: string, data: Object) {
 		console.warn("WindowManager:", text, data);
 	}
@@ -74,9 +50,9 @@
 			:key="i"
 			:options="window.winBoxOptions"
 			>
-			{{ EComponentName[window.type.componentName] }}
+			{{ typeof window.type.component }} {{ window.type.component }}
 			<component
-				:is="EComponentName[window.type.componentName]"
+				:is="window.type.component"
 				></component>
 		</VicavWinBox>
 
