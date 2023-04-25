@@ -1,10 +1,20 @@
 <script setup lang="ts">
 	import { computed } from 'vue'
-	import { useWMStore, INewWindow, IWindow, windowTypes } from '~~/store/wm'
+	import { useWMStore, INewWindow, IWindow, IWindowType } from '~~/store/wm'
 	import { VicavWinBox } from "./VicavWinBox.client"
 
     const WMStore = useWMStore()
 	const windowList = computed(() => WMStore.windowList)
+	const windowTypes = {
+		WMap: {
+			title: 'Map',
+			component: resolveComponent('WMap'),
+		} as IWindowType,
+		DictQuery: {
+			title: 'Dictionary query',
+			component: resolveComponent('DictQuery'),
+		} as IWindowType,
+	}
 
 	const newWindow = computed(() => WMStore.newWindow)
 	watch(newWindow, (window) => {

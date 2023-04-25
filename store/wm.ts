@@ -50,14 +50,3 @@ export interface IWindow {
 	type: IWindowType
 	winBoxOptions: any
 }
-
-export const windowTypes = {
-	WMap: {
-		title: 'Map',
-		component: resolveComponent('WMap'),
-	} as IWindowType,
-	DictQuery: {
-		title: 'Dictionary query',
-		component: resolveComponent('DictQuery'),
-	} as IWindowType,
-}
