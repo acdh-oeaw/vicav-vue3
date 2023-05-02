@@ -29,6 +29,17 @@
             params: null,
         },
         {
+            name: "Valid test item",
+            windowTypeId: "DisplayHtml",
+            params: {
+                content: '\n\
+                    <h1>Lorem Ipsum Dolor Sit Amet</h1>\n\
+                    <div>Lorem ipsum dolor sit amet consectetur adipisicing elit. Nulla, illo ducimus aspernatur iusto voluptatem repellendus maiores incidunt minus temporibus ea itaque blanditiis debitis eos dolor pariatur, qui animi molestias? Temporibus.</div>\n\
+                    <div>Lorem ipsum dolor sit amet consectetur adipisicing elit. Aut iusto nobis sint sequi, commodi omnis modi libero, maiores reprehenderit nemo facere odit labore quibusdam consequatur voluptas doloremque iste a explicabo in perspiciatis fugit praesentium architecto veritatis. Autem distinctio corporis dolore hic adipisci, fugit sapiente minus quisquam iure quis repellat exercitationem pariatur! Asperiores optio tempora neque eos. Earum quidem voluptatum praesentium dicta corrupti aut expedita est harum libero nemo velit ducimus ex labore consectetur, repellat dignissimos qui sapiente! In, minima perspiciatis fugiat magnam facere voluptatum eligendi soluta sequi repellat pariatur consequuntur ut voluptatem placeat fugit praesentium veritatis voluptatibus quos incidunt aperiam ipsa, deserunt recusandae maxime esse unde. Ipsum nemo nulla hic ex quos facere a veniam numquam distinctio suscipit repellat impedit possimus quo quasi dolor, cupiditate ipsa. Sequi nobis eius corporis, natus labore a itaque repellat sed quo fugiat. Vel ipsum perspiciatis, laboriosam aspernatur, asperiores praesentium ad corporis aliquid incidunt eius magni commodi at officia rem id necessitatibus delectus esse ex sapiente molestiae! Suscipit nam placeat beatae maiores provident reprehenderit? Neque officia tenetur beatae, nam vel reiciendis praesentium eos quidem dignissimos dolores, assumenda ipsa eum ratione, ullam excepturi impedit libero saepe odit blanditiis! Tempore, porro dolor? Quidem dolore modi debitis rerum.</div>\n\
+                ',
+            },
+        },
+        {
             name: "Invalid test item",
             windowTypeId: "invalid-menu-item",
             params: null,
@@ -49,7 +60,7 @@
                 Desktop menu
                 <div
                     v-for="menuItem in menu"
-                    :key="menuItem.id"
+                    :key="menuItem.name"
                     @mousedown="ClickMenu(menuItem, $event)"
                     class="vv-desktop-menu-item"
                 >
@@ -61,3 +72,9 @@
         </div>
     </nav>
 </template>
+
+<style>
+    .vv-desktop-menu-item {
+        cursor: pointer;
+    }
+</style>

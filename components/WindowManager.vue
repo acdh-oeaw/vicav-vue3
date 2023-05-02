@@ -6,6 +6,10 @@
     const WMStore = useWMStore()
 	const windowList = computed(() => WMStore.windowList)
 	const windowTypes = {
+		DisplayHtml: {
+			title: 'Display HTML Content',
+			component: resolveComponent('DisplayHtml'),
+		},
 		WMap: {
 			title: 'Map',
 			component: resolveComponent('WMap'),
@@ -28,15 +32,21 @@
 			ConsoleWarning("Window type undefined", newWindow)
 			return false
 		}
+		if (typeof windowType.component === "string") {
+			ConsoleWarning("Window type '" + windowType + "' was not resolved", newWindow)
+			return false
+		}
+
 		var window: IWindow = {
-			id: null,
+			id: newWindow.id,
 			ref: null,
-			type: windowType,
+			type: windowType as IWindowType,
 			winBoxOptions: {
 				title: windowType.title,
 				top: 35,
 				index: 10000,
-			}
+			},
+			params: newWindow.params,
 		}
 
 		WMStore.AddWindowToList(window)
@@ -53,10 +63,10 @@
 			:key="i"
 			:options="window.winBoxOptions"
 			>
-			{{ typeof window.type.component }} {{ window.type.component }}
 			<component
-				:is="window.type.component"
-				></component>
+				:is="{...window.type.component}"
+				:params="window.params"
+				/>
 		</VicavWinBox>
 
 	</div>
