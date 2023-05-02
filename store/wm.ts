@@ -20,11 +20,16 @@ export const useWMStore = defineStore(
 			windowList.value.push(window)
 		}
 
+		const Close = (index: number) => {
+			windowList.value.splice(index, 1)
+		}
+
 		return {
 			windowList,
 			newWindow,
 			Open,
 			AddWindowToList,
+			Close,
 		}
 	},
 	{

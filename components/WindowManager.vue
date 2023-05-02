@@ -54,6 +54,10 @@
 	function ConsoleWarning(text: string, data: Object) {
 		console.warn("WindowManager:", text, data);
 	}
+
+	function CloseWindow(windowIndex: number) {
+		WMStore.Close(windowIndex)
+	}
 </script>
 
 <template>
@@ -62,6 +66,7 @@
 			v-for="(window, i) in windowList"
 			:key="i"
 			:options="window.winBoxOptions"
+			@close="CloseWindow(i)"
 			>
 			<component
 				:is="{...window.type.component}"
