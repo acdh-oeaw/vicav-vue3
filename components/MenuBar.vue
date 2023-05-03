@@ -55,7 +55,7 @@
 <template>
     <nav class="navbar navbar-expand-md navbar-dark fixed-top">
         <div class="container-fluid">
-            <a class="navbar-brand mr-0 mr-md-2" aria-label="Vicav" href="/"><img alt="logo" src="~/assets/vicav_logo.svg"></a>
+            <a class="vv-navbar-brand mr-0 mr-md-2" aria-label="Vicav" href="/"><img alt="logo" src="~/assets/vicav_logo.svg"></a>
             <div class="vv-desktop-menu">
                 Desktop menu
                 <div
@@ -74,6 +74,9 @@
 </template>
 
 <style>
+    .vv-navbar-brand > img {
+        height: 52px;
+    }
     .vv-desktop-menu-item {
         cursor: pointer;
     }
