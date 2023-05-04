@@ -4,7 +4,7 @@ export const useAppDataStore = defineStore(
     'appData',
     () => {
 		const appTitle = ref('VICAV engine – no project loaded')
-		const appMenu = ref([] as IMenuItem[])
+		const appMenu = ref([] as IMenuNode[])
 
 		const GetProjectData = async () => {
 			const { $api } = useNuxtApp();
@@ -12,7 +12,20 @@ export const useAppDataStore = defineStore(
 			try {
 				let projectInfo = await $api.project.getProject({headers: { 'Accept': 'application/json' }});
 				appTitle.value = projectInfo.data.projectConfig.title
-				appMenu.value = projectInfo.data.projectConfig.menu.main
+				appMenu.value = projectInfo.data.projectConfig.menu.main.map(m => {
+					return {
+						name: m.title,
+						submenu: m.item.map((item: { title: any; componentName: any; id: any; }) => {
+							return {
+								name: item.title,
+								windowTypeId: item.componentName,
+								params: {
+									id: item.id,
+								}
+							}
+						}),
+					}
+				})
 				return projectInfo;
 			} catch (error) {
 				console.error(error)
@@ -20,7 +33,6 @@ export const useAppDataStore = defineStore(
 		}
 
 		GetProjectData()
-		watch(appTitle, (newVal) => { console.log('appTitle changed to', newVal) })
 
 		return {
 			appTitle,
@@ -29,8 +41,15 @@ export const useAppDataStore = defineStore(
 	}
 )
 
+type IMenuNode = IMenuItem | IMenuSubmenu | IMenuSeparator
 export interface IMenuItem {
 	name: string,
 	windowTypeId: string,
 	params: null|Object,
+}
+export interface IMenuSubmenu {
+	name: string,
+	submenu: IMenuNode,
+}
+export interface IMenuSeparator {
 }
