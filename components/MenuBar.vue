@@ -2,22 +2,8 @@
     import { useWMStore } from '~~/store/wm';
     const WMStore = useWMStore()
 
-    /*const { $api } = useNuxtApp();
-    $api.baseUrl = "https://vicav.acdh-ch-dev.oeaw.ac.at/vicav";
-    try {
-        let projectInfo = await $api.project.getProject({headers: { 'Accept': 'application/json' }});
-        console.log(projectInfo);
-    } catch (error) {
-        console.error(error)
-    }*/
-
-    interface MenuItem {
-        name: string,
-        windowTypeId: string,
-        params: null|Object,
-    }
-
-    const menu: MenuItem[] = [ // dummy menu for testing functionality
+    import { IMenuItem } from '~~/store/appData';
+    const menu: IMenuItem[] = [
         {
             name: "Open map",
             windowTypeId: "WMap",
