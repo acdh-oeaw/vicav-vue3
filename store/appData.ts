@@ -22,9 +22,9 @@ export const useAppDataStore = defineStore(
 								params: {
 									id: item.id,
 								}
-							}
+							} as IMenuItem
 						}),
-					}
+					} as IMenuSubmenu
 				})
 				return projectInfo;
 			} catch (error) {
