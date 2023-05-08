@@ -3,7 +3,7 @@
 	import { useWMStore, INewWindow, IWindow, IWindowType } from '~~/store/wm'
 	import { VicavWinBox } from "./VicavWinBox.client"
 
-    const WMStore = useWMStore()
+  const WMStore = useWMStore()
 	const windowList = computed(() => WMStore.windowList)
 	const windowTypes = {
 		WMap: {
@@ -53,7 +53,6 @@
 			:key="i"
 			:options="window.winBoxOptions"
 			>
-			{{ typeof window.type.component }} {{ window.type.component }}
 			<component
 				:is="window.type.component"
 				></component>

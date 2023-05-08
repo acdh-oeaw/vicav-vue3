@@ -16,7 +16,10 @@ export default defineNuxtConfig({
             ]
         }
     },
-    css: ['~/assets/styles/main.scss'],
+    css: [
+        '~/assets/styles/main.scss',
+        'leaflet/dist/leaflet.css',
+    ],
     dev: true,
     vite: {
         define: {
