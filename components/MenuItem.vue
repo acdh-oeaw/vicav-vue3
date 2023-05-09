@@ -20,7 +20,7 @@
           :key="i"
       >
         <a
-            v-if="m.type == 'item'"
+            v-if="m.type === 'item'"
             class="dropdown-item"
             href="#"
         >
@@ -33,9 +33,10 @@
 
 <script setup lang="ts">
   import { ref, onMounted } from 'vue'
-  import { IMenuItem } from "../store/appData";
+  import { IMenuItem } from "~/store/appData";
+  import {Dropdown} from "bootstrap";
   const { $bootstrap } = useNuxtApp()
-  let dropdown: HTMLElement | null = null;
+  let dropdown: Dropdown | null = null;
 
     const props = defineProps<{
       menuItem: IMenuItem;
