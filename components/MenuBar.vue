@@ -1,5 +1,7 @@
 <script setup lang="ts">
     import { useWMStore } from '~~/store/wm';
+    const { $bootstrap } = useNuxtApp()
+
     const WMStore = useWMStore()
 
     import { IMenuItem, IMenuNode } from '~~/store/appData';
@@ -20,42 +22,10 @@
             <a class="vv-navbar-brand mr-0 mr-md-2" aria-label="Vicav" href="/"><img alt="logo" src="~/assets/vicav_logo.svg"></a>
             <ul class="navbar-nav">
                 <li
-                    v-for="menuItem, i in menu"
-                    :key="i"
+                    v-for="(menuItem, index) in menu"
+                    :key="index"
                     >
-                    <div
-                        v-if="menuItem.type == 'submenu'"
-                        class="nav-item dropdown"
-                        >
-                        <a
-                            :id="menuItem.id"
-                            class="nav-link dropdown-toggle"
-                            href="#"
-                            role="button"
-                            data-toggle="dropdown"
-                            aria-haspopup="true"
-                            aria-expanded="false"
-                            >
-                            {{ menuItem.name }}
-                        </a>
-                        <div
-                            class="dropdown-menu"
-                            :aria-labelledby="menuItem.id"
-                            >
-                            <div
-                                v-for="m, i in menuItem.submenu"
-                                :key="i"
-                                >
-                                <a
-                                    v-if="m.type == 'item'"
-                                    class="dropdown-item"
-                                    href="#"
-                                    >
-                                    {{ m.name }}
-                                </a>
-                            </div>
-                        </div>
-                    </div>
+                    <MenuItem :menu-item="menuItem"></MenuItem>
                 </li>
             </ul>
             <div>Hamburger menu</div>

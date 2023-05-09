@@ -13,10 +13,10 @@ export default defineNuxtConfig({
                     href: '/favicon-32x32.png',
                     sizes: 'any'
                 }
-            ]
+            ],
         }
     },
-    css: ['~/assets/styles/main.scss'],
+    css: ["bootstrap/dist/css/bootstrap.min.css","~/assets/styles/main.scss"],
     dev: true,
     vite: {
         define: {
