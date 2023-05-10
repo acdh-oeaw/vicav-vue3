@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { GeoJsonObject } from 'geojson'
 import { z } from "zod";
+import {ComputedRef} from "vue";
 const { $api } = useNuxtApp();
 
 const pointSchema = z.object({
@@ -17,21 +18,10 @@ const featureSchema = z.object({
 })
 
 $api.baseUrl = "https://vicav.acdh-ch-dev.oeaw.ac.at/vicav";
-$api.project.getProject({ headers: { accept: "application/json" }});
 const { data, pending, error, refresh } = await useAsyncData(
     () => $api.biblMarkersTei.getMarkers({query: ".*", scope: "geo"}, { headers: { accept: "application/json" }}),
     {
-      transform: (items) => items.data.map(feature => {
-        const coordinates = feature.geometry.coordinates.map(coord => parseFloat(coord)).reverse();
-        return {
-          ...feature,
-          geometry: {
-            ...feature.geometry,
-            coordinates
-          }
-        };
-      })
-      .filter((item) => {
+      transform: (items) => items.data.filter((item) => {
         try {
           featureSchema.parse(item);
           return true
@@ -45,7 +35,7 @@ const { data, pending, error, refresh } = await useAsyncData(
 onMounted(() => {
   refresh()
 })
-const items = computed(() => data?.value || [])
+const items: ComputedRef<GeoJsonObject[]> = computed(() => data?.value as GeoJsonObject[] || [])
 </script>
 
 <template>
@@ -53,7 +43,7 @@ const items = computed(() => data?.value || [])
         <MenuBar/>
         <div style="position:relative; overflow: hidden;">
           <WindowManager/>
-          <vicav-map :items="items as GeoJsonObject[]" style="height:calc(100vh - 116px); position: relative; outline: none;"></vicav-map>
+          <vicav-map :items="items" style="height:calc(100vh - 116px); position: relative; outline: none;"></vicav-map>
         </div>
     </client-only>
 </template>
