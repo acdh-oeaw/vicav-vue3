@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { GeoJsonObject } from 'geojson'
 import { z } from "zod";
 import {ComputedRef} from "vue";
 const { $api } = useNuxtApp();
@@ -16,6 +15,8 @@ const featureSchema = z.object({
   properties: z.any().nullable(),
   geometry: pointSchema.nullable()
 })
+
+type GeoJsonObject = z.infer<typeof featureSchema>
 
 $api.baseUrl = "https://vicav.acdh-ch-dev.oeaw.ac.at/vicav";
 const { data, pending, error, refresh } = await useAsyncData(
