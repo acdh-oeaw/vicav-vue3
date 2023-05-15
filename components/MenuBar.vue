@@ -1,19 +1,7 @@
 <script setup lang="ts">
-    import { useWMStore } from '~~/store/wm';
-    const { $bootstrap } = useNuxtApp()
-
-    const WMStore = useWMStore()
-
-    import { IMenuItem, IMenuNode } from '~~/store/appData';
     import { useAppDataStore } from '~~/store/appData';
     const AppDataStore = useAppDataStore()
     const menu = computed(() => AppDataStore.appMenu)
-
-/*     function ClickMenu(menuItem: IMenuItem) {
-        WMStore.Open(menuItem.windowTypeId, menuItem.params)
-    }
-                    <!-- @mousedown="ClickMenu(menuItem)" -->
- */
 </script>
 
 <template>
@@ -24,8 +12,11 @@
                 <li
                     v-for="(menuItem, index) in menu"
                     :key="index"
-                    >
-                    <MenuItem :menu-item="menuItem"></MenuItem>
+                >
+                    <MenuDropdown
+                        v-if="menuItem.type === 'submenu'"
+                        :menu-item="menuItem"
+                    />
                 </li>
             </ul>
             <div>Hamburger menu</div>
