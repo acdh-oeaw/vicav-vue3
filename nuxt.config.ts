@@ -36,5 +36,9 @@ export default defineNuxtConfig({
     },
     modules: [
         '@pinia/nuxt',
-    ]
+    ],
+    sourcemap: {
+        "server": true,
+        "client": true
+    }
 })
