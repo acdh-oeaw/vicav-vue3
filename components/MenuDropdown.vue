@@ -3,7 +3,7 @@
         <a
             :id="menuItem.id"
             ref="buttonRef"
-            @click="dropdown.show()"
+            @click="toggleMenu(dropdown)"
             class="nav-link dropdown-toggle"
             role="button"
             data-bs-toggle="dropdown"
@@ -50,6 +50,10 @@
 
     function ClickMenu(menuItem: IMenuItem) {
         WMStore.Open(menuItem.windowTypeId, menuItem.params)
+    }
+
+    function toggleMenu(dropdown: Dropdown) {
+       dropdown._isShown() ? dropdown.show() : dropdown.hide();
     }
 
     const buttonRef = ref<HTMLElement | null>(null)
