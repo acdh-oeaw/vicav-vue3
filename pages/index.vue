@@ -22,7 +22,7 @@ const featureSchema = z.object({
 
 type GeoJsonObject = z.infer<typeof featureSchema>
 
-$api.baseUrl = "https://vicav.acdh-ch-dev.oeaw.ac.at/vicav";
+$api.baseUrl = ("" + import.meta.env.VITE_APIBASEURL);
 const { data, pending, error, refresh } = await useAsyncData(
     () => $api.biblMarkersTei.getMarkers({query: ".*", scope: "geo"}, { headers: { accept: "application/json" }}),
     {

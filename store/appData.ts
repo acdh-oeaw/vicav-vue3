@@ -8,7 +8,7 @@ export const useAppDataStore = defineStore(
 
 		const GetProjectData = async () => {
 			const { $api } = useNuxtApp();
-			$api.baseUrl = ('' + import.meta.env.VITE_APIBASEURL);
+			$api.baseUrl = ("" + import.meta.env.VITE_APIBASEURL);
 			try {
 				let projectInfo = await $api.project.getProject({headers: { 'Accept': 'application/json' }});
 				appTitle.value = projectInfo.data.projectConfig.title
