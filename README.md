@@ -44,7 +44,7 @@ npm run makeapi
 
 ## Environment variables
 
-VITE_BASEURL - base address of the app
+VITE_BASEURL - base address of the app  
 VITE_APIBASEURL - base address of the backend api
 
 ## Development
