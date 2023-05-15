@@ -42,6 +42,11 @@ npm run makeapi
 
 **Note:** The resulting `gen` folder SHOULD NOT be commited. 
 
+## Environment variables
+
+VITE_BASEURL - base address of the app
+VITE_APIBASEURL - base address of the backend api
+
 ## Development
 
 Start the development server on http://localhost:3000
