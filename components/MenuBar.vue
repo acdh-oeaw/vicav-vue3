@@ -1,63 +1,41 @@
 <script setup lang="ts">
-    import { useWMStore } from '~~/store/wm';
-    const WMStore = useWMStore()
-
-    /*const { $api } = useNuxtApp();
-    $api.baseUrl = "https://vicav.acdh-ch-dev.oeaw.ac.at/vicav";
-    try {
-        let projectInfo = await $api.project.getProject({headers: { 'Accept': 'application/json' }});
-        console.log(projectInfo);
-    } catch (error) {
-        console.error(error)
-    }*/
-
-    interface MenuItem {
-        name: string,
-        windowTypeId: string,
-        params: null|Object,
-    }
-
-    const menu: MenuItem[] = [ // dummy menu for testing functionality
-        {
-            name: "Open map",
-            windowTypeId: "WMap",
-            params: null,
-        },
-        {
-            name: "Query dictionaries",
-            windowTypeId: "DictQuery",
-            params: null,
-        },
-        {
-            name: "Invalid test item",
-            windowTypeId: "invalid-menu-item",
-            params: null,
-        }
-    ]
-
-    function ClickMenu(menuItem: MenuItem, e) {
-        WMStore.Open(menuItem.windowTypeId, menuItem.params)
-    }
-
+    import { useAppDataStore } from '~~/store/appData';
+    const AppDataStore = useAppDataStore()
+    const menu = computed(() => AppDataStore.appMenu)
 </script>
 
 <template>
     <nav class="navbar navbar-expand-md navbar-dark fixed-top">
         <div class="container-fluid">
-            <a class="navbar-brand mr-0 mr-md-2" aria-label="Vicav" href="/"><img alt="logo" src="~/assets/vicav_logo.svg"></a>
-            <div class="vv-desktop-menu">
-                Desktop menu
-                <div
-                    v-for="menuItem in menu"
-                    :key="menuItem.id"
-                    @mousedown="ClickMenu(menuItem, $event)"
-                    class="vv-desktop-menu-item"
+            <a class="vv-navbar-brand mr-0 mr-md-2" aria-label="Vicav" href="/"><img alt="logo" src="~/assets/vicav_logo.svg"></a>
+            <ul class="navbar-nav">
+                <li
+                    v-for="(menuItem, index) in menu"
+                    :key="index"
                 >
-                    {{ menuItem.name }}
-                </div>
-            </div>
+                    <MenuDropdown
+                        v-if="menuItem.type === 'submenu'"
+                        :menu-item="menuItem"
+                    />
+                </li>
+            </ul>
             <div>Hamburger menu</div>
             <div>Window selector</div>
         </div>
     </nav>
 </template>
+
+<style>
+    .vv-navbar-brand > img {
+        height: 52px;
+    }
+    .vv-desktop-menu {
+        display: flex;
+        flex-flow: row nowrap;
+    }
+    .vv-desktop-menu-item {
+        padding: 0 1rem;
+        white-space: nowrap;
+        cursor: pointer;
+    }
+</style>

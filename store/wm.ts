@@ -1,23 +1,27 @@
-import { ref, nextTick, ConcreteComponent, ComputedOptions, MethodOptions, resolveComponent } from 'vue';
+import { ref, nextTick, ConcreteComponent, ComputedOptions, MethodOptions } from 'vue';
 import { defineStore } from 'pinia';
 
 export const useWMStore = defineStore(
 	'wm',
 	() => {
 
+		const counter = ref(0)
 		const windowList = ref([] as IWindow[])
 		const newWindow = ref(null as INewWindow|null)
 
 		const Open = (windowTypeId: string, params: Object|null) => {
-			newWindow.value = { windowTypeId, params }
+			newWindow.value = { id: counter.value++, windowTypeId, params }
 			nextTick(() => {
 				newWindow.value = null
 			})
-			console.log('opening', newWindow.value)
 		}
 
 		const AddWindowToList = (window: IWindow) => {
 			windowList.value.push(window)
+		}
+
+		const Close = (index: number) => {
+			windowList.value.splice(index, 1)
 		}
 
 		return {
@@ -25,6 +29,7 @@ export const useWMStore = defineStore(
 			newWindow,
 			Open,
 			AddWindowToList,
+			Close,
 		}
 	},
 	{
@@ -35,6 +40,7 @@ export const useWMStore = defineStore(
 )
 
 export interface INewWindow {
+	id: number,
 	windowTypeId: string,
 	params: Object|null,
 }
@@ -49,4 +55,5 @@ export interface IWindow {
 	ref: any
 	type: IWindowType
 	winBoxOptions: any
+	params: Object|null
 }
