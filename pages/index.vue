@@ -44,8 +44,9 @@ const items: ComputedRef<GeoJsonObject[]> = computed(() => data?.value as GeoJso
 </script>
 
 <template>
+  <MenuBar/>
     <client-only>
-        <MenuBar/>
-        <WindowManager/>
+      <WindowManager/>
+      <vicav-map :items="items" style="height:calc(100vh - 68px); position: relative; top: -36px; outline: none;"></vicav-map>
     </client-only>
 </template>
