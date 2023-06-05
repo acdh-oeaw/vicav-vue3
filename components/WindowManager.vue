@@ -67,11 +67,11 @@
 			:key="i"
 			:options="window.winBoxOptions"
 			@close="CloseWindow(i)"
-			>
+		>
 			<component
 				:is="{...window.type.component}"
 				:params="window.params"
-				/>
+			/>
 		</VicavWinBox>
 
 	</div>

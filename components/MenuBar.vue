@@ -1,26 +1,48 @@
 <script setup lang="ts">
     import { useAppDataStore } from '~~/store/appData';
+
     const AppDataStore = useAppDataStore()
     const menu = computed(() => AppDataStore.appMenu)
+
+    const isMenuOpen = ref(false)
+    function ToggleMenuCollapse(e) {
+        isMenuOpen.value = !isMenuOpen.value
+    }
 </script>
 
 <template>
-    <nav class="navbar navbar-expand-md navbar-dark fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
         <div class="container-fluid">
-            <a class="vv-navbar-brand mr-0 mr-md-2" aria-label="Vicav" href="/"><img alt="logo" src="~/assets/vicav_logo.svg"></a>
-            <ul class="navbar-nav">
-                <li
-                    v-for="(menuItem, index) in menu"
-                    :key="index"
-                >
-                    <MenuDropdown
-                        v-if="menuItem.type === 'submenu'"
-                        :menu-item="menuItem"
-                    />
-                </li>
-            </ul>
-            <div>Hamburger menu</div>
+            <a class="vv-navbar-brand mr-0 mr-lg-2" aria-label="Vicav" href="/">
+                <img alt="logo" src="~/assets/vicav_logo.svg">
+            </a>
+            <button
+                class="navbar-toggler ms-auto"
+                type="button"
+                data-toggle="collapse" data-target="#navbarMenu"
+                aria-controls="navbarMenu" aria-expanded="false" aria-label="Toggle menu"
+                @click="ToggleMenuCollapse"
+            >
+                <span class="navbar-toggler-icon"></span>
+            </button>
             <div>Window selector</div>
+            <div
+                class="navbar-collapse collapse"
+                :class="{ show: isMenuOpen }"
+                id="navbarMenu"
+            >
+                <ul class="navbar-nav">
+                    <li
+                        v-for="(menuNode, index) in menu"
+                        :key="index"
+                    >
+                        <MenuNode
+                            :menu-node="menuNode"
+                        />
+                    </li>
+                </ul>
+            </div>
+
         </div>
     </nav>
 </template>
