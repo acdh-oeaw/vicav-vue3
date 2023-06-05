@@ -1,7 +1,5 @@
 <template>
-    <div v-if="menuNode.type==='submenu'"
-        class="nav-item dropdown"
-    >
+    <div class="nav-item dropdown">
         <a
             :id="menuNode.id"
             ref="buttonRef"
@@ -20,47 +18,28 @@
                 v-for="(m, i) in menuNode.submenu"
                 :key="i"
             >
-                <MenuNode
+                <VicavMenuNode
                     :menu-node="m"
                 />
             </li>
         </ul>
     </div>
-    <div v-if="menuNode.type==='item'">
-        <a
-            class="dropdown-item"
-            href="#"
-            @mousedown="ClickMenu(menuNode)"
-        >
-            {{ menuNode.name }}
-        </a>
-    </div>
-    <div v-if="menuNode.type==='separator'">
-        <div class="dropdown-divider"></div>
-    </div>
 </template>
 
 <script setup lang="ts">
     import { ref, onMounted } from 'vue'
-    import { IMenuNode } from "~/store/appData";
-    import { useWMStore } from '~~/store/wm';
     import { Dropdown } from "bootstrap";
+    import { IMenuSubmenu } from "~/store/appData";
 
-    const WMStore = useWMStore()
+    const props = defineProps<{
+        menuNode: IMenuSubmenu;
+    }>();
+
+    console.log('hello')
 
     const { $bootstrap } = useNuxtApp()
 
     let dropdown: Dropdown | null = null;
-
-    const props = defineProps<{
-        menuNode: IMenuNode;
-    }>();
-
-    function ClickMenu(menuNode: IMenuNode) {
-        if (menuNode.type === 'item') {
-            WMStore.Open(menuNode.windowTypeId, menuNode.params)
-        }
-    }
 
     function toggleMenu(dropdown: Dropdown | null) {
         if (dropdown == null) {
@@ -75,7 +54,3 @@
         dropdown = new $bootstrap.Dropdown(buttonRef.value);
     })
 </script>
-
-<style>
-/* Add any custom styling here */
-</style>

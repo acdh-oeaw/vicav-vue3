@@ -36,7 +36,7 @@
                         v-for="(menuNode, index) in menu"
                         :key="index"
                     >
-                        <MenuNode
+                        <VicavMenuNode
                             :menu-node="menuNode"
                         />
                     </li>
