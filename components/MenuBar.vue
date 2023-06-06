@@ -72,6 +72,6 @@
         display: inline-block !important;
     }
     .vv-window-selector-icon {
-        background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'><path stroke='rgba%28255, 255, 255, 0.55%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' fill='none' d='M4,11l11,8l11,-8'/></svg>")
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3crect stroke='rgba%28255, 255, 255, 0.55%29' stroke-width='2' fill='rgba%280,0,0,0.55%29' width='14' height='18' x='6' y='4'/%3e%3crect stroke='rgba%28255, 255, 255, 0.75%29' stroke-width='2' fill='white' width='14' height='18' x='10' y='9'/%3e%3c/svg%3e")
     }
 </style>
