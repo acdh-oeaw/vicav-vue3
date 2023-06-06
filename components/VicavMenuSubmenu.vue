@@ -35,8 +35,6 @@
         menuNode: IMenuSubmenu;
     }>();
 
-    console.log('hello')
-
     const { $bootstrap } = useNuxtApp()
 
     let dropdown: Dropdown | null = null;
