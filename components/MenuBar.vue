@@ -25,7 +25,16 @@
             >
                 <span class="navbar-toggler-icon"></span>
             </button>
-            <div>Window selector</div>
+
+            <button
+                class="navbar-toggler vv-window-selector-toggler"
+                type="button"
+                data-toggle="collapse" data-target="#windowMenu"
+                aria-controls="windowMenu" aria-expanded="false" aria-label="Toggle menu"
+            >
+                <span class="navbar-toggler-icon vv-window-selector-icon" />
+            </button>
+
             <div
                 class="navbar-collapse collapse"
                 :class="{ show: isMenuOpen }"
@@ -42,7 +51,6 @@
                     </li>
                 </ul>
             </div>
-
         </div>
     </nav>
 </template>
@@ -59,5 +67,11 @@
         padding: 0 1rem;
         white-space: nowrap;
         cursor: pointer;
+    }
+    .vv-window-selector-toggler {
+        display: inline-block !important;
+    }
+    .vv-window-selector-icon {
+        background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'><path stroke='rgba%28255, 255, 255, 0.55%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' fill='none' d='M4,11l11,8l11,-8'/></svg>")
     }
 </style>
