@@ -34,6 +34,10 @@
         isMenuOpen.value = false
         windowListDropdown._isShown() ? windowListDropdown.show() : windowListDropdown.hide();
     }
+
+    function ItemClick() {
+        console.log('MenuBar received click event')
+    }
 </script>
 
 <template>
@@ -64,6 +68,7 @@
                     >
                         <VicavMenuNode
                             :menu-node="menuNode"
+                            @itemclick="ItemClick"
                         />
                     </li>
                 </ul>

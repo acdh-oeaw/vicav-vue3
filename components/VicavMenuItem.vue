@@ -11,9 +11,11 @@
 </template>
 
 <script setup lang="ts">
+	import { defineEmits } from "vue";
     import { IMenuItem } from "~/store/appData";
     import { useWMStore } from '~~/store/wm';
 
+	const emit = defineEmits(['itemclick'])
     const WMStore = useWMStore()
 
 	const props = defineProps<{
@@ -23,6 +25,7 @@
     function ClickMenu(menuNode: IMenuItem) {
         if (menuNode.type === 'item') {
             WMStore.Open(menuNode.windowTypeId, menuNode.params)
+			emit('itemclick')
         }
     }
 </script>
