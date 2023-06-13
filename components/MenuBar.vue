@@ -14,12 +14,17 @@
 
     const WMStore = useWMStore()
     const windowList = computed(() => {
-        // TODO: populate array
-        return [{ id: null, name: 'No windows open'}]
+        if (WMStore.windowList.length == 0) {
+            return [{ id: null, name: 'No windows open'}]
+        }
+        return WMStore.windowList.map(w => { return {
+            id: w.id,
+            name: w.id?.toString() + ': ' + w.winBoxOptions?.title
+        }})
     })
-    function SelectWindow(window) {
-        if (window.id != null) {
-            // TODO: focus window
+    function SelectWindow(windowId: number | null) {
+        if (windowId != null) {
+            WMStore.Focus(windowId)
         }
     }
 
@@ -94,7 +99,7 @@
                         <a
                             class="dropdown-item"
                             href="#"
-                            @mousedown="SelectWindow(window)"
+                            @mousedown="SelectWindow(window.id)"
                         >
                             {{ window.name }}
                         </a>
