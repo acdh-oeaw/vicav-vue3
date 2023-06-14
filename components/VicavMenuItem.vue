@@ -11,7 +11,6 @@
 </template>
 
 <script setup lang="ts">
-	import { defineEmits } from "vue";
     import { IMenuItem } from "~/store/appData";
     import { useWMStore } from '~~/store/wm';
 

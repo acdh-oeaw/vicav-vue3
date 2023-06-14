@@ -20,6 +20,10 @@ export const useWMStore = defineStore(
 			windowList.value.push(window)
 		}
 
+		const RegisterWindowRef = (i: number, ref: HTMLElement) => {
+			windowList.value[i].ref = ref
+		}
+
 		const Focus = (windowId: number) => {
 			let window = windowList.value.find(w => w.id == windowId)
 			if (window != null) {
@@ -36,6 +40,7 @@ export const useWMStore = defineStore(
 			newWindow,
 			Open,
 			AddWindowToList,
+			RegisterWindowRef,
 			Focus,
 			Close,
 		}
