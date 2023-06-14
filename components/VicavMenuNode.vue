@@ -15,7 +15,6 @@
 </template>
 
 <script setup lang="ts">
-	import { defineEmits } from "vue";
     import { IMenuNode } from "~/store/appData";
 
 	const emit = defineEmits(['itemclick'])
