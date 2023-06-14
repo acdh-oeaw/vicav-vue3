@@ -3,7 +3,8 @@
 	import { useWMStore, INewWindow, IWindow, IWindowType } from '~~/store/wm'
 	import { VicavWinBox } from "./VicavWinBox.client"
 
-  const WMStore = useWMStore()
+	const windowRefList = ref([])
+  	const WMStore = useWMStore()
 	const windowList = computed(() => WMStore.windowList)
 	const windowTypes = {
 		DisplayHtml: {
@@ -55,6 +56,10 @@
 		console.warn("WindowManager:", text, data);
 	}
 
+	function RegisterWindowRef(i: number, ref: HTMLElement) {
+		WMStore.RegisterWindowRef(i, ref)
+	}
+
 	function CloseWindow(windowIndex: number) {
 		WMStore.Close(windowIndex)
 	}
@@ -64,14 +69,16 @@
 	<div>
 		<VicavWinBox
 			v-for="(window, i) in windowList"
+			ref="windowRefList"
 			:key="i"
 			:options="window.winBoxOptions"
+			@open="RegisterWindowRef(i, $event)"
 			@close="CloseWindow(i)"
-			>
+		>
 			<component
 				:is="{...window.type.component}"
 				:params="window.params"
-				/>
+			/>
 		</VicavWinBox>
 
 	</div>
