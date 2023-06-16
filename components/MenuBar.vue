@@ -79,7 +79,7 @@
                 </ul>
             </div>
 
-            <div class="nav-item dropdown">
+            <div class="nav-item dropdown vv-window-selector">
                 <button
                     ref="windowListTogglerRef"
                     class="navbar-toggler vv-window-selector-toggler"
@@ -122,9 +122,11 @@
             order: 4;
         }
     }
+    .vv-window-selector {
+        order: 5;
+    }
     .vv-window-selector-toggler {
         display: inline-block !important;
-        order: 5;
     }
     .vv-window-selector-icon {
         background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3crect stroke='rgba%28255, 255, 255, 0.55%29' stroke-width='2' fill='rgba%280,0,0,0.55%29' width='14' height='18' x='6' y='4'/%3e%3crect stroke='rgba%28255, 255, 255, 0.75%29' stroke-width='2' fill='white' width='14' height='18' x='10' y='9'/%3e%3c/svg%3e")
