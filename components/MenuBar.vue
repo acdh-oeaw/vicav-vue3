@@ -6,10 +6,9 @@
     const AppDataStore = useAppDataStore()
     const menu = computed(() => AppDataStore.appMenu)
 
-    const isMenuOpen = ref(false)
     function ToggleMenuCollapse(e) {
         isWindowListOpen.value = false
-        isMenuOpen.value = !isMenuOpen.value
+        AppDataStore.isMobileMenuOpen = !AppDataStore.isMobileMenuOpen
     }
 
     const WMStore = useWMStore()
@@ -36,7 +35,7 @@
         windowListDropdown = new $bootstrap.Dropdown(windowListTogglerRef.value);
     })
     function ToggleWindowListCollapse(e) {
-        isMenuOpen.value = false
+        AppDataStore.isMobileMenuOpen = false
         windowListDropdown._isShown() ? windowListDropdown.show() : windowListDropdown.hide();
     }
 
@@ -63,7 +62,7 @@
 
             <div
                 class="navbar-collapse collapse vv-navbar-menu"
-                :class="{ show: isMenuOpen }"
+                :class="{ show: AppDataStore.isMobileMenuOpen }"
                 id="navbarMenu"
             >
                 <ul class="navbar-nav">

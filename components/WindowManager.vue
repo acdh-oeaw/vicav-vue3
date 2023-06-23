@@ -1,5 +1,6 @@
 <script setup lang="ts">
 	import { computed } from 'vue'
+	import { useAppDataStore } from '~~/store/appData'
 	import { useWMStore, INewWindow, IWindow, IWindowType } from '~~/store/wm'
 	import { VicavWinBox } from "./VicavWinBox.client"
 
@@ -60,6 +61,11 @@
 		WMStore.RegisterWindowRef(i, ref)
 	}
 
+	const AppDataStore = useAppDataStore()
+	function OnFocus() {
+		AppDataStore.isMobileMenuOpen = false
+	}
+
 	function CloseWindow(windowIndex: number) {
 		WMStore.Close(windowIndex)
 	}
@@ -73,6 +79,7 @@
 			:key="i"
 			:options="window.winBoxOptions"
 			@open="RegisterWindowRef(i, $event)"
+			@focus="OnFocus"
 			@close="CloseWindow(i)"
 		>
 			<component
