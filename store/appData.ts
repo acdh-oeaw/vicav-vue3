@@ -50,9 +50,14 @@ export const useAppDataStore = defineStore(
 
 		GetProjectData()
 
+		const isMobileMenuOpen = ref(false);
+		const isMobile = ref(false);
+
 		return {
 			appTitle,
-			appMenu
+			appMenu,
+			isMobileMenuOpen,
+			isMobile,
 		}
 	}
 )
