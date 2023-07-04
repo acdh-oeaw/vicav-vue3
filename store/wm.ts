@@ -31,8 +31,11 @@ export const useWMStore = defineStore(
 			}
 		}
 
-		const Close = (index: number) => {
-			windowList.value.splice(index, 1)
+		const Close = (id: string) => {
+			let index = windowList.value.findIndex(w => w.ref.id === id)
+			if (index >= 0) {
+				//windowList.value.splice(index, 1)
+			}
 		}
 
 		return {

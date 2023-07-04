@@ -66,8 +66,8 @@
 		AppDataStore.isMobileMenuOpen = false
 	}
 
-	function CloseWindow(windowIndex: number) {
-		WMStore.Close(windowIndex)
+	function CloseWindow(id: string) {
+		WMStore.Close(id)
 	}
 </script>
 
@@ -80,7 +80,7 @@
 			:options="window.winBoxOptions"
 			@open="RegisterWindowRef(i, $event)"
 			@focus="OnFocus"
-			@close="CloseWindow(i)"
+			@close="CloseWindow"
 		>
 			<component
 				:is="{...window.type.component}"
