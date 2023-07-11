@@ -4,8 +4,7 @@
 	import { useWMStore, INewWindow, IWindow, IWindowType } from '~~/store/wm'
 	import { VicavWinBox } from "./VicavWinBox.client"
 
-	const windowRefList = ref([])
-  	const WMStore = useWMStore()
+  const WMStore = useWMStore()
 	const windowList = computed(() => WMStore.windowList)
 	const windowTypes = {
 		DisplayHtml: {
@@ -45,8 +44,8 @@
 			type: windowType as IWindowType,
 			winBoxOptions: {
 				title: windowType.title,
-				top: 35,
-				index: 10000,
+				top: 70,
+				index: 1000,
 			},
 			params: newWindow.params,
 		}
@@ -61,26 +60,27 @@
 		WMStore.RegisterWindowRef(i, ref)
 	}
 
+  function RemoveWindowRef(i: number, ref: IWindow) {
+    WMStore.RemoveWindowRef(i, ref)
+  }
+
 	const AppDataStore = useAppDataStore()
 	function OnFocus() {
 		AppDataStore.isMobileMenuOpen = false
 	}
 
-	function CloseWindow(id: string) {
-		WMStore.Close(id)
-	}
+
 </script>
 
 <template>
 	<div>
 		<VicavWinBox
 			v-for="(window, i) in windowList"
-			ref="windowRefList"
-			:key="i"
+			:key="window.id"
 			:options="window.winBoxOptions"
 			@open="RegisterWindowRef(i, $event)"
 			@focus="OnFocus"
-			@close="CloseWindow"
+			@close="RemoveWindowRef(i, $event)"
 		>
 			<component
 				:is="{...window.type.component}"

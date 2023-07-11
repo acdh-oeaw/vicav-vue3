@@ -3,6 +3,7 @@
     import { useAppDataStore } from '~~/store/appData';
     import { useWMStore } from '~~/store/wm';
 
+    const menubarref = ref();
     const AppDataStore = useAppDataStore()
     const menu = computed(() => AppDataStore.appMenu)
 
@@ -23,7 +24,8 @@
     })
     function SelectWindow(windowId: number | null) {
         if (windowId != null) {
-            WMStore.Focus(windowId)
+            WMStore.Focus(windowId);
+            console.log(menubarref);
         }
     }
 
@@ -45,7 +47,7 @@
 </script>
 
 <template>
-    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top" >
         <div class="container-fluid">
             <a class="vv-navbar-brand mr-0 mr-lg-2" aria-label="Vicav" href="/">
                 <img alt="logo" src="~/assets/vicav_logo.svg">
@@ -64,6 +66,7 @@
                 class="navbar-collapse collapse vv-navbar-menu"
                 :class="{ show: AppDataStore.isMobileMenuOpen }"
                 id="navbarMenu"
+                ref="menubarref"
             >
                 <ul class="navbar-nav">
                     <li

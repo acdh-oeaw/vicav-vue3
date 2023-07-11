@@ -56,7 +56,8 @@ export const VicavWinBox = defineComponent({
                     })
                 },
                 onclose: () => {
-                    emit('close', winbox.value?.id )
+                    emit('close', winbox.value);
+                    return true;
                 },
                 onfocus: () => {
                     emit('focus', { id: winbox.value?.id })

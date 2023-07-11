@@ -24,18 +24,20 @@ export const useWMStore = defineStore(
 			windowList.value[i].ref = ref
 		}
 
+		const RemoveWindowRef = (i: number, ref: any) => {
+			let index = windowList.value.findIndex(w => w.ref.id === ref.id);
+			if(index >= 0) {
+				ref.g.remove();
+				windowList.value.splice(index, 1);
+			}
+		}
+
 		const Focus = (windowId: number) => {
 			let window = windowList.value.find(w => w.id == windowId)
 			if (window != null) {
 				window.ref.focus()
 			}
-		}
 
-		const Close = (id: string) => {
-			let index = windowList.value.findIndex(w => w.ref.id === id)
-			if (index >= 0) {
-				//windowList.value.splice(index, 1)
-			}
 		}
 
 		return {
@@ -44,8 +46,8 @@ export const useWMStore = defineStore(
 			Open,
 			AddWindowToList,
 			RegisterWindowRef,
+			RemoveWindowRef,
 			Focus,
-			Close,
 		}
 	},
 	{
