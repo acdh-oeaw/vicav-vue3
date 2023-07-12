@@ -37,7 +37,6 @@ export const useWMStore = defineStore(
 			if (window != null) {
 				window.ref.focus()
 			}
-
 		}
 
 		return {

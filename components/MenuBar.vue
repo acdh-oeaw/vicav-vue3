@@ -34,15 +34,12 @@
     let windowListDropdown: Dropdown;
     const windowListTogglerRef = ref<HTMLElement | string>('')
     onMounted(() => {
-        windowListDropdown = new $bootstrap.Dropdown(windowListTogglerRef.value);
+        windowListDropdown = new $bootstrap.Dropdown(windowListTogglerRef.value)
     })
-    function ToggleWindowListCollapse(e) {
-        AppDataStore.isMobileMenuOpen = false
-        windowListDropdown._isShown() ? windowListDropdown.show() : windowListDropdown.hide();
-    }
 
-    function ItemClick() {
-        console.log('MenuBar received click event')
+    function ToggleWindowListCollapse() {
+        AppDataStore.isMobileMenuOpen = false
+        windowListDropdown._isShown() ? windowListDropdown.show() : windowListDropdown.hide()
     }
 </script>
 
@@ -75,7 +72,6 @@
                     >
                         <VicavMenuNode
                             :menu-node="menuNode"
-                            @itemclick="ItemClick"
                         />
                     </li>
                 </ul>
