@@ -29,7 +29,7 @@
 	})
 	function NewWindow(newWindow: INewWindow) {
 		let windowType = windowTypes[newWindow.windowTypeId as keyof typeof windowTypes]
-		if (windowType == undefined) {
+		if (windowType === undefined) {
 			ConsoleWarning("Window type undefined", newWindow)
 			return false
 		}
@@ -56,19 +56,17 @@
 		console.warn("WindowManager:", text, data);
 	}
 
-	function RegisterWindowRef(i: number, ref: HTMLElement) {
+	function RegisterWindowRef(i: number, ref: any) {
+    console.log(ref);
 		WMStore.RegisterWindowRef(i, ref)
 	}
 
-  function RemoveWindowRef(i: number, ref: IWindow) {
+  function RemoveWindowRef(i: number, ref: any) {
+    console.log(ref);
     WMStore.RemoveWindowRef(i, ref)
   }
 
 	const AppDataStore = useAppDataStore()
-	function OnFocus() {
-		AppDataStore.isMobileMenuOpen = false
-	}
-
 
 </script>
 
@@ -79,7 +77,6 @@
 			:key="window.id"
 			:options="window.winBoxOptions"
 			@open="RegisterWindowRef(i, $event)"
-			@focus="OnFocus"
 			@close="RemoveWindowRef(i, $event)"
 		>
 			<component
