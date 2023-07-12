@@ -1,5 +1,3 @@
-
-
 import type { PropType } from 'vue'
 import { Teleport, defineComponent, h, onMounted, onScopeDispose, ref } from 'vue'
 import { nanoid } from 'nanoid'
