@@ -35,7 +35,6 @@ export const VicavWinBox = defineComponent({
             selector,
             winbox,
             initialized,
-            initialize,
         })
 
         function initialize() {
