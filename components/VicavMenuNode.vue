@@ -16,7 +16,6 @@
 <script setup lang="ts">
     import { IMenuNode } from "~/store/appData";
 
-	const emit = defineEmits(['itemclick'])
     const props = defineProps<{
         menuNode: IMenuNode;
     }>();

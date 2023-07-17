@@ -3,7 +3,6 @@
     import { useAppDataStore } from '~~/store/appData';
     import { useWMStore } from '~~/store/wm';
 
-    const menubarref = ref();
     const AppDataStore = useAppDataStore()
     const menu = computed(() => AppDataStore.appMenu)
 
@@ -25,7 +24,6 @@
     function SelectWindow(windowId: number | null) {
         if (windowId != null) {
             WMStore.Focus(windowId);
-            console.log(menubarref);
         }
     }
 
@@ -66,7 +64,6 @@
                 class="navbar-collapse collapse vv-navbar-menu"
                 :class="{ show: AppDataStore.isMobileMenuOpen }"
                 id="navbarMenu"
-                ref="menubarref"
             >
                 <ul class="navbar-nav">
                     <li
