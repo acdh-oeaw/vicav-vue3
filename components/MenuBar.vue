@@ -29,12 +29,15 @@
         }
     }
 
+    const menuBarRef = ref()
     const isWindowListOpen = ref(false)
     const { $bootstrap } = useNuxtApp()
     let windowListDropdown: Dropdown;
     const windowListTogglerRef = ref<HTMLElement | string>('')
     onMounted(() => {
         windowListDropdown = new $bootstrap.Dropdown(windowListTogglerRef.value)
+        let menuBarHeight = menuBarRef.value.offsetHeight
+        WMStore.SetTopMargin(menuBarHeight)
     })
 
     function ToggleWindowListCollapse() {
@@ -44,7 +47,7 @@
 </script>
 
 <template>
-    <nav class="navbar navbar-expand-lg navbar-dark fixed-top" >
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top" ref="menuBarRef">
         <div class="container-fluid">
             <a class="vv-navbar-brand mr-0 mr-lg-2" aria-label="Vicav" href="/">
                 <img alt="logo" src="~/assets/vicav_logo.svg">

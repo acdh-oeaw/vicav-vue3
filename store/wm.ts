@@ -4,6 +4,10 @@ import { defineStore } from 'pinia';
 export const useWMStore = defineStore(
 	'wm',
 	() => {
+		const topMargin = ref(0)
+		const SetTopMargin = (heightInPixels: number) => {
+			topMargin.value = heightInPixels
+		}
 
 		const counter = ref(0)
 		const windowList = ref([] as IWindow[])
@@ -40,6 +44,9 @@ export const useWMStore = defineStore(
 		}
 
 		return {
+			topMargin,
+			SetTopMargin,
+
 			windowList,
 			newWindow,
 			Open,
