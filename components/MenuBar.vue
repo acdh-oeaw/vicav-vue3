@@ -3,6 +3,7 @@
     import { useAppDataStore } from '~~/store/appData';
     import { useWMStore } from '~~/store/wm';
 
+    const menubarref = ref();
     const AppDataStore = useAppDataStore()
     const menu = computed(() => AppDataStore.appMenu)
 
@@ -23,29 +24,30 @@
     })
     function SelectWindow(windowId: number | null) {
         if (windowId != null) {
-            WMStore.Focus(windowId)
+            WMStore.Focus(windowId);
+            console.log(menubarref);
         }
     }
 
+    const menuBarRef = ref()
     const isWindowListOpen = ref(false)
     const { $bootstrap } = useNuxtApp()
     let windowListDropdown: Dropdown;
     const windowListTogglerRef = ref<HTMLElement | string>('')
     onMounted(() => {
-        windowListDropdown = new $bootstrap.Dropdown(windowListTogglerRef.value);
+        windowListDropdown = new $bootstrap.Dropdown(windowListTogglerRef.value)
+        let menuBarHeight = menuBarRef.value.offsetHeight
+        WMStore.SetTopMargin(menuBarHeight)
     })
-    function ToggleWindowListCollapse(e) {
-        AppDataStore.isMobileMenuOpen = false
-        windowListDropdown._isShown() ? windowListDropdown.show() : windowListDropdown.hide();
-    }
 
-    function ItemClick() {
-        console.log('MenuBar received click event')
+    function ToggleWindowListCollapse() {
+        AppDataStore.isMobileMenuOpen = false
+        windowListDropdown._isShown() ? windowListDropdown.show() : windowListDropdown.hide()
     }
 </script>
 
 <template>
-    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top" ref="menuBarRef">
         <div class="container-fluid">
             <a class="vv-navbar-brand mr-0 mr-lg-2" aria-label="Vicav" href="/">
                 <img alt="logo" src="~/assets/vicav_logo.svg">
@@ -64,6 +66,7 @@
                 class="navbar-collapse collapse vv-navbar-menu"
                 :class="{ show: AppDataStore.isMobileMenuOpen }"
                 id="navbarMenu"
+                ref="menubarref"
             >
                 <ul class="navbar-nav">
                     <li
@@ -72,7 +75,6 @@
                     >
                         <VicavMenuNode
                             :menu-node="menuNode"
-                            @itemclick="ItemClick"
                         />
                     </li>
                 </ul>

@@ -4,6 +4,10 @@ import { defineStore } from 'pinia';
 export const useWMStore = defineStore(
 	'wm',
 	() => {
+		const topMargin = ref(0)
+		const SetTopMargin = (heightInPixels: number) => {
+			topMargin.value = heightInPixels
+		}
 
 		const counter = ref(0)
 		const windowList = ref([] as IWindow[])
@@ -24,6 +28,14 @@ export const useWMStore = defineStore(
 			windowList.value[i].ref = ref
 		}
 
+		const RemoveWindowRef = (i: number, ref: any) => {
+			let index = windowList.value.findIndex(w => w.ref.id === ref.id);
+			if(index >= 0) {
+				ref.g.remove();
+				windowList.value.splice(index, 1);
+			}
+		}
+
 		const Focus = (windowId: number) => {
 			let window = windowList.value.find(w => w.id == windowId)
 			if (window != null) {
@@ -31,18 +43,17 @@ export const useWMStore = defineStore(
 			}
 		}
 
-		const Close = (index: number) => {
-			windowList.value.splice(index, 1)
-		}
-
 		return {
+			topMargin,
+			SetTopMargin,
+
 			windowList,
 			newWindow,
 			Open,
 			AddWindowToList,
 			RegisterWindowRef,
+			RemoveWindowRef,
 			Focus,
-			Close,
 		}
 	},
 	{
