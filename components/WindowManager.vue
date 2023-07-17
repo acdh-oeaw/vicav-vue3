@@ -57,14 +57,12 @@
 	}
 
 	function RegisterWindowRef(i: number, ref: any) {
-    console.log(ref);
 		WMStore.RegisterWindowRef(i, ref)
 	}
 
-  function RemoveWindowRef(i: number, ref: any) {
-    console.log(ref);
-    WMStore.RemoveWindowRef(i, ref)
-  }
+	function RemoveWindowRef(i: number, ref: any) {
+		WMStore.RemoveWindowRef(i, ref)
+	}
 
 	const AppDataStore = useAppDataStore()
 
@@ -74,7 +72,7 @@
 	<div>
 		<VicavWinBox
 			v-for="(window, i) in windowList"
-			:key="window.id"
+			:key="window.id?.toString()"
 			:options="window.winBoxOptions"
 			@open="RegisterWindowRef(i, $event)"
 			@close="RemoveWindowRef(i, $event)"
