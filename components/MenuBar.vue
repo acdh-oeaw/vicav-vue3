@@ -13,9 +13,6 @@
 
     const WMStore = useWMStore()
     const windowList = computed(() => {
-        if (WMStore.windowList.length == 0) {
-            return [{ id: null, name: 'No windows open'}]
-        }
         return WMStore.windowList.map(w => { return {
             id: w.id,
             name: w.id?.toString() + ': ' + w.winBoxOptions?.title
@@ -41,6 +38,10 @@
     function ToggleWindowListCollapse() {
         AppDataStore.isMobileMenuOpen = false
         windowListDropdown._isShown() ? windowListDropdown.show() : windowListDropdown.hide()
+    }
+
+    function ArrangeTile() {
+        WMStore.ArrangeTile();
     }
 </script>
 
@@ -90,6 +91,14 @@
                     <span class="navbar-toggler-icon vv-window-selector-icon" />
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end">
+                    <li v-if="windowList.length == 0">
+                        <a
+                            class="dropdown-item"
+                            href="#"
+                        >
+                            No windows open
+                        </a>
+                    </li>
                     <li
                         v-for="window in windowList"
                         :key="window.name"
@@ -102,7 +111,19 @@
                             {{ window.name }}
                         </a>
                     </li>
-                </ul>
+                    <li v-if="windowList.length > 0">
+                        <div class="dropdown-divider"></div>
+                    </li>
+                    <li v-if="windowList.length > 0">
+                        <a
+                            class="dropdown-item"
+                            href="#"
+                            @mousedown="ArrangeTile"
+                        >
+                            Tile
+                        </a>
+                    </li>
+                 </ul>
             </div>
         </div>
     </nav>
