@@ -1,6 +1,5 @@
 <script setup lang="ts">
 	import { computed } from 'vue'
-	import { useAppDataStore } from '~~/store/appData'
 	import { useWMStore, INewWindow, IWindow, IWindowType } from '~~/store/wm'
 	import { VicavWinBox } from "./VicavWinBox.client"
 
@@ -63,9 +62,6 @@
 	function RemoveWindowRef(i: number, ref: any) {
 		WMStore.RemoveWindowRef(i, ref)
 	}
-
-	const AppDataStore = useAppDataStore()
-
 </script>
 
 <template>
