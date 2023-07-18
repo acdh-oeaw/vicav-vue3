@@ -34,7 +34,7 @@
     onMounted(() => {
         windowListDropdown = new $bootstrap.Dropdown(windowListTogglerRef.value);
     })
-    function ToggleWindowListCollapse(e) {
+    function ToggleWindowListCollapse() {
         AppDataStore.isMobileMenuOpen = false
         windowListDropdown._isShown() ? windowListDropdown.show() : windowListDropdown.hide();
     }
