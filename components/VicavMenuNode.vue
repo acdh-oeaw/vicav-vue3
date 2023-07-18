@@ -7,7 +7,6 @@
     <VicavMenuItem
         v-if="props.menuNode.type==='item'"
         :menu-node="props.menuNode"
-        @itemclick="ItemClick"
     />
     <VicavMenuSeparator
         v-if="props.menuNode.type==='separator'"
@@ -17,13 +16,7 @@
 <script setup lang="ts">
     import { IMenuNode } from "~/store/appData";
 
-	const emit = defineEmits(['itemclick'])
     const props = defineProps<{
         menuNode: IMenuNode;
     }>();
-
-    function ItemClick() {
-        console.log('MenuNode received click event')
-        emit('itemclick')
-    }
 </script>

@@ -23,29 +23,29 @@
     })
     function SelectWindow(windowId: number | null) {
         if (windowId != null) {
-            WMStore.Focus(windowId)
+            WMStore.Focus(windowId);
         }
     }
 
+    const menuBarRef = ref()
     const isWindowListOpen = ref(false)
     const { $bootstrap } = useNuxtApp()
     let windowListDropdown: Dropdown;
     const windowListTogglerRef = ref<HTMLElement | string>('')
     onMounted(() => {
-        windowListDropdown = new $bootstrap.Dropdown(windowListTogglerRef.value);
+        windowListDropdown = new $bootstrap.Dropdown(windowListTogglerRef.value)
+        let menuBarHeight = menuBarRef.value.offsetHeight
+        WMStore.SetTopMargin(menuBarHeight)
     })
+
     function ToggleWindowListCollapse() {
         AppDataStore.isMobileMenuOpen = false
-        windowListDropdown._isShown() ? windowListDropdown.show() : windowListDropdown.hide();
-    }
-
-    function ItemClick() {
-        console.log('MenuBar received click event')
+        windowListDropdown._isShown() ? windowListDropdown.show() : windowListDropdown.hide()
     }
 </script>
 
 <template>
-    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top" ref="menuBarRef">
         <div class="container-fluid">
             <a class="vv-navbar-brand mr-0 mr-lg-2" aria-label="Vicav" href="/">
                 <img alt="logo" src="~/assets/vicav_logo.svg">
@@ -72,7 +72,6 @@
                     >
                         <VicavMenuNode
                             :menu-node="menuNode"
-                            @itemclick="ItemClick"
                         />
                     </li>
                 </ul>

@@ -31,7 +31,7 @@ const { data, pending, error, refresh } = await useAsyncData(
           featureSchema.parse(item);
           return true
         } catch (error) {
-          console.log(error,item);
+          console.error(error,item);
           return false
         }
       })
