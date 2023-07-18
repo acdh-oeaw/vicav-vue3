@@ -23,14 +23,14 @@ watch(() => props.items, () => placeGeoJson(props.items), { immediate: true })
 async function initMap() {
   await nextTick();
   map = L.map(mapContainer.value);
-  L.tileLayer('https://api.mapbox.com/styles/v1/acetin/cjb22mkrf16qf2spyl3u1vee3/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoiYWNldGluIiwiYSI6ImNqYjIybG5xdTI4OWYyd285dmsydGFkZWQifQ.xG4sN5u8h-BoXaej6OjkXw', {
+  L.tileLayer(import.meta.env.VITE_MAP_TILELAYER as string, {
     maxZoom: 20,
     attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
         '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
         'Imagery © <a href="http://mapbox.com">Mapbox</a>',
   }).addTo(map);
   map.invalidateSize();
-  setTimeout(function () { map.setView([19.064, 24.544], 4) }, 50);
+  setTimeout(function () { map.setView([import.meta.env.VITE_MAP_INITIAL_X, import.meta.env.VITE_MAP_INITIAL_Y], import.meta.env.VITE_MAP_INITIAL_Z) }, 50);
   placeGeoJson(props.items)
 }
 
