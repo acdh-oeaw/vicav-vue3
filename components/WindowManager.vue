@@ -20,6 +20,10 @@
 			title: 'Dictionary query',
 			component: resolveComponent('DictQuery'),
 		} as IWindowType,
+		CorpusQuery: {
+			title: 'Corpus query',
+			component: resolveComponent('CorpusQuery'),
+		} as IWindowType,
 	}
 
 	const newWindow = computed(() => WMStore.newWindow)
@@ -30,6 +34,7 @@
 	})
 	function NewWindow(newWindow: INewWindow) {
 		let windowType = windowTypes[newWindow.windowTypeId as keyof typeof windowTypes]
+		console.log(newWindow.windowTypeId)
 		if (windowType == undefined) {
 			ConsoleWarning("Window type undefined", newWindow)
 			return false
