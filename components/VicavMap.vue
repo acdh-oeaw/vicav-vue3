@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Feature, GeoJsonObject, Geometry } from "geojson";
-import L from "leaflet";
+import L, {PointTuple} from "leaflet";
 
 
 const emit = defineEmits<{
@@ -8,17 +8,27 @@ const emit = defineEmits<{
 }>()
 
 const mapContainer = ref()
+const regionMarker = {
+  color: 'rgb(168, 93, 143)',
+  weight: 1,
+  fillColor: 'rgb(168, 93, 143)',
+  radius: 10,
+};
+const placeMarker = {
+  iconUrl: '/marker-icon.png',
+  iconSize: [13, 35] as PointTuple,
+  iconAnchor: [2, 35] as PointTuple,
+}
+
 let map: L.Map;
 let geoJsonLayer: L.GeoJSON<any>;
 onMounted(() => initMap())
-
 
 const props = defineProps<{
   items: GeoJsonObject | GeoJsonObject[];
 }>();
 
 watch(() => props.items, () => placeGeoJson(props.items), { immediate: true })
-
 
 async function initMap() {
   await nextTick();
@@ -37,33 +47,26 @@ async function initMap() {
 function placeGeoJson(items: GeoJsonObject | GeoJsonObject[]) {
   if (!map) return;
   if (!!geoJsonLayer) map.removeLayer(geoJsonLayer);
-  const myCircleStyle = {
-    color: "#000000",
-    weight: 1,
-    fillOpacity: 0.8,
-    fillColor: "#007bd9",
-    radius: 10,
-  };
 
   geoJsonLayer = L.geoJSON(items, {
     onEachFeature: onEachFeature,
     pointToLayer: function (feature, latlng) {
-      return L.circleMarker(latlng, myCircleStyle);
+      const iconMarker = L.icon(placeMarker);
+      const markerProps: L.MarkerOptions = {
+        alt: feature.properties.name,
+        title: `${feature.properties.name} (${feature.properties.hitCount})`,
+      }
+      if(feature.properties.type === "reg") return L.circleMarker(latlng, Object.assign(markerProps, regionMarker));
+      return L.marker(latlng, Object.assign( markerProps,{icon: iconMarker }));
     },
   });
   geoJsonLayer.addTo(map);
-
 }
 
 function onEachFeature(feature: Feature<Geometry, any>, layer: L.Layer) {
-  //bind click
   layer.on({
-    click: handleClick
+    click: (e) => (emit('itemClicked', e)),
   });
-}
-
-function handleClick(e: L.LeafletMouseEvent) {
-  emit('itemClicked', e);
 }
 
 </script>
