@@ -37,8 +37,7 @@
         let menuBarHeight = menuBarRef.value.offsetHeight
         WMStore.SetTopMargin(menuBarHeight)
     })
-
-    function ToggleWindowListCollapse() {
+    function ToggleWindowListCollapse(e) {
         AppDataStore.isMobileMenuOpen = false
         windowListDropdown._isShown() ? windowListDropdown.show() : windowListDropdown.hide()
     }
