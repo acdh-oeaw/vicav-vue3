@@ -6,7 +6,7 @@
     const AppDataStore = useAppDataStore()
     const menu = computed(() => AppDataStore.appMenu)
 
-    function ToggleMenuCollapse(e) {
+    function ToggleMenuCollapse() {
         isWindowListOpen.value = false
         AppDataStore.isMobileMenuOpen = !AppDataStore.isMobileMenuOpen
     }
