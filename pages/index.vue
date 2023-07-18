@@ -1,11 +1,16 @@
 <script setup lang="ts">
 	import { useAppDataStore } from '~~/store/appData'
-    const AppDataStore = useAppDataStore()
-    const title = computed(() => AppDataStore.appTitle)
-    watch(title, (title) => { document.title = title })
-import { z } from "zod";
-import {ComputedRef} from "vue";
-const { $api } = useNuxtApp();
+  import { useMapDataStore } from '~~/store/mapData'
+  import { z } from "zod";
+  import {ComputedRef} from "vue";
+
+
+  const AppDataStore = useAppDataStore()
+  const MapDataStore = useMapDataStore()
+
+  const title = computed(() => AppDataStore.appTitle)
+  watch(title, (title) => { document.title = title })
+  const { $api } = useNuxtApp();
 
 const pointSchema = z.object({
   type: z.literal("Point"),
