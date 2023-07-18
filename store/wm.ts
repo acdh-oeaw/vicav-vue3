@@ -49,6 +49,17 @@ export const useWMStore = defineStore(
 			}
 		}
 
+		const ArrangeTile = () => {
+			let cols = Math.floor(Math.sqrt(windowList.value.length))
+			let rows = Math.ceil(windowList.value.length / cols)
+			let windowWidth = Math.floor(clientSizeWidth.value / cols)
+			let windowHeight = Math.floor(clientSizeHeight.value / rows)
+			windowList.value.forEach(w => {
+				console.log(w.id, w.ref)
+			})
+			console.log('tile', windowList.value.length)
+		}
+
 		return {
 			topMargin,
 			SetTopMargin,
@@ -61,6 +72,8 @@ export const useWMStore = defineStore(
 			RegisterWindowRef,
 			RemoveWindowRef,
 			Focus,
+
+			ArrangeTile,
 		}
 	},
 	{
