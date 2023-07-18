@@ -3,7 +3,7 @@
 	import { useWMStore, INewWindow, IWindow, IWindowType } from '~~/store/wm'
 	import { VicavWinBox } from "./VicavWinBox.client"
 
-  const WMStore = useWMStore()
+	const WMStore = useWMStore()
 	const windowList = computed(() => WMStore.windowList)
 	const windowTypes = {
 		DisplayHtml: {
@@ -62,6 +62,15 @@
 	function RemoveWindowRef(i: number, ref: any) {
 		WMStore.RemoveWindowRef(i, ref)
 	}
+
+	function RegisterClientSize() {
+		WMStore.RegisterClientSize(document.documentElement.clientWidth, document.documentElement.clientHeight)
+	}
+
+	onMounted(() =>{
+		RegisterClientSize()
+		window.addEventListener('resize', RegisterClientSize, true)
+	})
 </script>
 
 <template>
