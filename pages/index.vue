@@ -1,8 +1,6 @@
 <script setup lang="ts">
-  import { storeToRefs } from 'pinia'
 	import { useAppDataStore } from '~~/store/appData'
   import { useMapDataStore, IMapLayer } from '~~/store/mapData'
-  import { z } from "zod";
   import {ComputedRef} from "vue";
 
 
