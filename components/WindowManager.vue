@@ -64,7 +64,8 @@
 	}
 
 	function RegisterClientSize() {
-		WMStore.RegisterClientSize(document.documentElement.clientWidth, document.documentElement.clientHeight)
+		// warning: WMStore.topMargin must already be set by the MenuBar component's onmounted event handler
+		WMStore.RegisterClientSize(document.documentElement.clientWidth, document.documentElement.clientHeight - WMStore.topMargin)
 	}
 
 	onMounted(() =>{

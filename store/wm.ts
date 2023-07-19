@@ -50,14 +50,18 @@ export const useWMStore = defineStore(
 		}
 
 		const ArrangeTile = () => {
-			let cols = Math.floor(Math.sqrt(windowList.value.length))
+			let cols = Math.floor(Math.sqrt(windowList.value.length - 1)) + 1
 			let rows = Math.ceil(windowList.value.length / cols)
 			let windowWidth = Math.floor(clientSizeWidth.value / cols)
 			let windowHeight = Math.floor(clientSizeHeight.value / rows)
-			windowList.value.forEach(w => {
-				console.log(w.id, w.ref)
+
+			windowList.value.forEach((w, i) => {
+				let newX = windowWidth * (i % cols),
+					newY = topMargin.value + windowHeight * Math.floor(i / cols)
+				w.ref
+					.resize(windowWidth, windowHeight)
+					.move(newX, newY)
 			})
-			console.log('tile', windowList.value.length)
 		}
 
 		return {
