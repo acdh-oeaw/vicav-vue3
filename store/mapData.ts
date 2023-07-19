@@ -2,7 +2,6 @@ import {defineStore} from 'pinia';
 import {GeoJsonObject} from "geojson";
 import { z } from "zod";
 
-const { $api } = useNuxtApp();
 const pointSchema = z.object({
     type: z.literal("Point"),
     coordinates: z.array(z.number()),
@@ -38,10 +37,12 @@ function endpointString(s) {
     return frags.join('');
 }
 
-$api.baseUrl = ("" + import.meta.env.VITE_APIBASEURL);
 export const useMapDataStore = defineStore(
     'mapData',
     () => {
+        const { $api } = useNuxtApp();
+        $api.baseUrl = ("" + import.meta.env.VITE_APIBASEURL);
+
         const layers = ref([] as IMapLayer[])
 
         const layerById = computed((id: string) => layers.value.find((l) => l.id === id ));
@@ -64,6 +65,7 @@ export const useMapDataStore = defineStore(
                     layers.value[index].query = query;
                     layers.value[index].data = filteredRes;
                 }
+
                 else layers.value.push({id, data: filteredRes, query});
             }
             else console.error(`endpoint ${query.endpoint} not found in current API configuration`);
