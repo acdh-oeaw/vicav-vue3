@@ -1,5 +1,4 @@
 import {defineStore} from 'pinia';
-import {GeoJsonObject} from "geojson";
 import { z } from "zod";
 
 const pointSchema = z.object({
@@ -29,12 +28,13 @@ export interface IMapQuery {
 
 const defaultParams = { headers: { accept: "application/json" }};
 
-function endpointString(s) {
-    let i, frags = s.split('_');
-    for (i=0; i<frags.length; i++) {
-        frags[i] = frags[i].charAt(0).toUpperCase() + frags[i].slice(1);
-    }
-    return frags.join('');
+function endpointString(s: string) {
+    return s.toLowerCase().replace(/([-_][a-z])/g, (group: string) =>
+        group
+            .toUpperCase()
+            .replace('-', '')
+            .replace('_', '')
+    );
 }
 
 export const useMapDataStore = defineStore(
@@ -45,12 +45,13 @@ export const useMapDataStore = defineStore(
 
         const layers = ref([] as IMapLayer[])
 
-        const layerById = computed((id: string) => layers.value.find((l) => l.id === id ));
+        const layerById = (id: string) => layers.value.find((l) => l.id === id );
         async function getMarkers(id: string, query: IMapQuery) {
             let index = layers.value.findIndex((l) => l.id === id );
             let endpoint: string = endpointString(query.endpoint);
-            console.log(endpoint);
+            // @ts-ignore
             if($api[endpoint] && $api[endpoint].getMarkers) {
+                // @ts-ignore
                 let res = await $api[endpoint].getMarkers(query, defaultParams);
                 let filteredRes = res.data.filter((item: GeoJsonObject) => {
                     try {
@@ -61,14 +62,14 @@ export const useMapDataStore = defineStore(
                         return false
                     }
                 })
-                if(index) {
+                if(index > -1) {
                     layers.value[index].query = query;
                     layers.value[index].data = filteredRes;
                 }
 
                 else layers.value.push({id, data: filteredRes, query});
             }
-            else console.error(`endpoint ${query.endpoint} not found in current API configuration`);
+            else console.error(`endpoint ${endpoint} not found in current API configuration`);
         }
 
         return {
