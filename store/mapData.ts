@@ -12,7 +12,7 @@ const featureSchema = z.object({
     properties: z.any().nullable(),
     geometry: pointSchema.nullable()
 })
-type GeoJsonObject = z.infer<typeof featureSchema>
+export type GeoJsonObject = z.infer<typeof featureSchema>
 
 export interface IMapLayer {
     id: string,

@@ -16,7 +16,6 @@
       "query": ".*",
       "scope": "geo",
     });
-    console.log(MapDataStore.layerById("background"));
   })
   const items: ComputedRef<IMapLayer> = computed(() => MapDataStore.layerById("background") as IMapLayer || { data: []})
 </script>
