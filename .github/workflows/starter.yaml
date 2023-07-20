@@ -14,6 +14,7 @@ jobs:
       # environment: review/dev
       # or see the switch on ref_name script below
       environment: ${{ steps.get_environment_from_git_ref.outputs.environment }}
+      environment_short: ${{ steps.get_environment_from_git_ref.outputs.environment_short }}
       image_name: nuxt-vicav
       registry_root: ghcr.io/${{ github.repository }}/
       default_port: "3000"
