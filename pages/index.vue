@@ -24,6 +24,7 @@
   <MenuBar/>
     <client-only>
       <WindowManager/>
+      <VicavMapBar></VicavMapBar>
       <vicav-map :items="items.data" style="height:calc(100vh - 68px); position: relative; top: -36px; outline: none;"></vicav-map>
     </client-only>
 </template>
