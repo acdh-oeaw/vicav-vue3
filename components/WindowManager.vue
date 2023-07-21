@@ -1,10 +1,9 @@
 <script setup lang="ts">
 	import { computed } from 'vue'
-	import { useAppDataStore } from '~~/store/appData'
 	import { useWMStore, INewWindow, IWindow, IWindowType } from '~~/store/wm'
 	import { VicavWinBox } from "./VicavWinBox.client"
 
-  const WMStore = useWMStore()
+	const WMStore = useWMStore()
 	const windowList = computed(() => WMStore.windowList)
 	const windowTypes = {
 		DisplayHtml: {
@@ -64,8 +63,15 @@
 		WMStore.RemoveWindowRef(i, ref)
 	}
 
-	const AppDataStore = useAppDataStore()
+	function RegisterClientSize() {
+		// warning: WMStore.topMargin must already be set by the MenuBar component's onmounted event handler
+		WMStore.RegisterClientSize(document.documentElement.clientWidth, document.documentElement.clientHeight - WMStore.topMargin)
+	}
 
+	onMounted(() =>{
+		RegisterClientSize()
+		window.addEventListener('resize', RegisterClientSize, true)
+	})
 </script>
 
 <template>

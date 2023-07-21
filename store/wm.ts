@@ -8,6 +8,12 @@ export const useWMStore = defineStore(
 		const SetTopMargin = (heightInPixels: number) => {
 			topMargin.value = heightInPixels
 		}
+		const clientSizeWidth = ref(0)
+		const clientSizeHeight = ref(0)
+		const RegisterClientSize = (width: number, height: number) => {
+			clientSizeWidth.value = width
+			clientSizeHeight.value = height
+		}
 
 		const counter = ref(0)
 		const windowList = ref([] as IWindow[])
@@ -43,9 +49,25 @@ export const useWMStore = defineStore(
 			}
 		}
 
+		const ArrangeTile = () => {
+			let cols = Math.floor(Math.sqrt(windowList.value.length - 1)) + 1
+			let rows = Math.ceil(windowList.value.length / cols)
+			let windowWidth = Math.floor(clientSizeWidth.value / cols)
+			let windowHeight = Math.floor(clientSizeHeight.value / rows)
+
+			windowList.value.forEach((w, i) => {
+				let newX = windowWidth * (i % cols),
+					newY = topMargin.value + windowHeight * Math.floor(i / cols)
+				w.ref
+					.resize(windowWidth, windowHeight)
+					.move(newX, newY)
+			})
+		}
+
 		return {
 			topMargin,
 			SetTopMargin,
+			RegisterClientSize,
 
 			windowList,
 			newWindow,
@@ -54,6 +76,8 @@ export const useWMStore = defineStore(
 			RegisterWindowRef,
 			RemoveWindowRef,
 			Focus,
+
+			ArrangeTile,
 		}
 	},
 	{
