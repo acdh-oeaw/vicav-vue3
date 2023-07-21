@@ -1,14 +1,11 @@
 <script setup lang="ts">
-import {IMenuItem} from "~/store/appData";
+
+import {IMapBarItem} from "~/store/appData";
 
 const hover = ref(false);
 
 const props = defineProps<{
-  item: {
-    id: ""
-    icon: "",
-    title: "",
-  };
+  item: IMapBarItem;
 }>();
 </script>
 

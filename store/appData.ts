@@ -5,6 +5,16 @@ export const useAppDataStore = defineStore(
     () => {
 		const appTitle = ref('VICAV engine – no project loaded')
 		const appMenu = ref([] as IMenuNode[])
+		const mapBarMenu = ref(
+			[{"id": "subNavBiblGeoMarkers", "icon": "fa fa-map", "title": "Bibl. Locations"},
+			{"id": "subNavBiblRegMarkers", "icon": "fa fa-map", "title": "Bibl. Regions"},
+			{"id": "subNavDictGeoRegMarkers", "icon": "fa fa-map", "title": "Bibl. (Dictionaries)"},
+			{"id": "subNavTextbookGeoRegMarkers", "icon": "fa fa-map", "title": "Bibl. (Textbooks)"},
+			{"id": "subNavProfilesGeoRegMarkers", "icon": "fa fa-map", "title": "Profiles"},
+			{"id": "subNavFeaturesGeoRegMarkers", "icon": "fa fa-map", "title": "Features"},
+			{"id": "subNavSamplesGeoRegMarkers", "icon": "fa fa-map", "title": "Samples"},
+			{"id": "subNavVicavDictMarkers", "icon": "fa fa-map", "title": "VICAV Dictionaries"}]  as IMapBarItem[]);
+
 
 		const GetProjectData = async () => {
 			const { $api } = useNuxtApp();
@@ -56,6 +66,7 @@ export const useAppDataStore = defineStore(
 		return {
 			appTitle,
 			appMenu,
+			mapBarMenu,
 			isMobileMenuOpen,
 			isMobile,
 		}
@@ -78,4 +89,10 @@ export interface IMenuSubmenu {
 }
 export interface IMenuSeparator {
 	type: 'separator',
+}
+
+export interface IMapBarItem {
+	id: string
+	icon: string,
+	title: string,
 }

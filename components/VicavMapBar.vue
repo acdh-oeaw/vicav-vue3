@@ -1,15 +1,7 @@
 <script setup lang="ts">
+import { useAppDataStore } from '~~/store/appData';
+const AppDataStore = useAppDataStore();
 const hover = ref(false);
-const navItems = [
-  {"id": "subNavBiblGeoMarkers", "icon": "fa fa-map", "title": "Bibl. Locations"},
-  {"id": "subNavBiblRegMarkers", "icon": "fa fa-map", "title": "Bibl. Regions"},
-  {"id": "subNavDictGeoRegMarkers", "icon": "fa fa-map", "title": "Bibl. (Dictionaries)"},
-  {"id": "subNavTextbookGeoRegMarkers", "icon": "fa fa-map", "title": "Bibl. (Textbooks)"},
-  {"id": "subNavProfilesGeoRegMarkers", "icon": "fa fa-map", "title": "Profiles"},
-  {"id": "subNavFeaturesGeoRegMarkers", "icon": "fa fa-map", "title": "Features"},
-  {"id": "subNavSamplesGeoRegMarkers", "icon": "fa fa-map", "title": "Samples"},
-  {"id": "subNavVicavDictMarkers", "icon": "fa fa-map", "title": "VICAV Dictionaries"}
-]
 
 const funcItems = [
   {"id": "sub-nav-expand", "icon": "fa fa-expand", "title": "Expand Panels Over Map"},
@@ -22,7 +14,7 @@ const funcItems = [
   <div class="sub-nav">
     <div class="container-fluid">
       <div class="sub-nav-map-items">
-        <VicavMapBarItem v-for="item in navItems" :item="item"></VicavMapBarItem>
+        <VicavMapBarItem v-for="item in AppDataStore.mapBarMenu" :item="item"></VicavMapBarItem>
       </div>
       <div class="sub-nav-actions">
         <VicavMapBarItem v-for="item in funcItems" :item="item"></VicavMapBarItem>
