@@ -13,7 +13,7 @@
 				Query</button
 			><br />
 		</form>
-		{{ normalizedQueryString }}<br />{{ normalizedDictList }}
+		{{ resultQuery }}
 		<ul class="selQueryType">
 			<!-- <li v-for="dict in dictList" :key="dict.id">
 				<input type="checkbox" v-model="dict.selected" :id="'cb' + dict.id.toUpperCase()" />
@@ -24,12 +24,20 @@
 			<!-- For details as to how to formulate meaningful dictionary queries consult the
 			<a class="aVicText" href="" @click="UndefinedLink">examples of the TUNICO dictionary</a>. -->
 		</p>
-		<div v-html="resultHtml"></div>
+		<div v-for="hit in hits">
+			<a href="#" click="openCorpusText(hit.doc)">
+				<strong>{{ hit.doc }}</strong>
+			</a>
+			<div class="corpus-search-results" v-html="hit.content"></div>
+		</div>
 	</div>
 </template>
 
 <script>
-import axios from "axios";
+//import axios from "axios";
+
+
+
 //import { useDictStore } from '~~/store/dict'
 //import { storeToRefs } from 'pinia';
 
@@ -43,12 +51,18 @@ export default {
 		// 	dictList,
 		// 	dictCrossQueryXslt,
 		// }
-		return {}
+		const { $api } = useNuxtApp();
+		$api.baseUrl = ("" + import.meta.env.VITE_APIBASEURL);
+
+		return {
+			$api
+		}
 	},
 	data() {
 		return {
 			queryString: "",
 			resultHtml: "",
+			hits: []
 		};
 	},
 	computed: {
@@ -75,23 +89,32 @@ export default {
 		// },
 	},
 	methods: {
-		QueryButtonClicked(e) {
-			e.preventDefault();
-			axios
-				.get(
-					"http://" + import.meta.env.VITE_BASEURL + "/corpus" +
-						"?query=" + this.normalizedQueryString // +
-						// "&dicts=" + this.normalizedDictList +
-						// "&xslt=" + this.dictCrossQueryXslt,
-				)
-				.then(response => {
-					this.resultHtml = response.data //this.PostProcessResultList(response.data);
-					//this.MakeDictEntryLinksClickable();
-				})
-				.catch(error => {
-					console.error(error);
-				});
-		},
+		QueryButtonClicked: async function (e)  {
+	e.preventDefault();
+	const result = await this.$api.corpus.searchCorpus(
+		{ query: this.queryString },
+		{ headers: { 'Accept': 'application/json' }})
+
+	if (result.error) return false;
+	this.resultQuery = result.data.query
+	this.hits = result.data.hits;
+
+
+	// axios
+	// 	.get(
+	// 		 import.meta.env.VITE_APIBASEURL + "/corpus" +
+	// 			"?query=" + this.queryString // +
+	// 			// "&dicts=" + this.normalizedDictList +
+	// 			// "&xslt=" + this.dictCrossQueryXslt,
+	// 	)
+	// 	.then(response => {
+	// 		this.resultHtml = response.data //this.PostProcessResultList(response.data);
+	// 		//this.MakeDictEntryLinksClickable();
+	// 	})
+	// 	.catch(error => {
+	// 		console.error(error);
+	// 	});
+}
 		// // // PostProcessResultList(resultList) {
 		// // // 	return resultList
 		// // // 		.split(/\r\n/)
@@ -155,8 +178,31 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
 #corpus-query {
 	padding: 1rem;
+}
+
+
+.corpus-search-result {
+	display: grid;
+    grid-template-columns: 2fr 1fr 2fr;
+    width: 100%;
+
+	> .left {
+	  text-align: right;
+	  writing-mode: horizontal-rl;
+	  text-wrap: nowrap;
+	  text-overflow: ellipsis;
+	}
+	> .keyword {
+	  text-align: center;
+	  padding-left: 1em;
+	  padding-right: 1em;
+	  background-color: yellow;
+	}
+	> .right {
+	  text-align: left;
+	}
 }
 </style>
