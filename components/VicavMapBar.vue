@@ -18,6 +18,10 @@ const funcItems = [
       <div class="sub-nav-actions">
         <VicavMapBarItem v-for="item in funcItems" :item="item"></VicavMapBarItem>
       </div>
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault">
+        <label class="form-check-label" for="flexSwitchCheckDefault">Map Mode Switch</label>
+      </div>
     </div>
   </div>
 </template>
@@ -31,8 +35,7 @@ const funcItems = [
   margin-bottom: 1px;
   position: fixed;
   top: 68px;
-  right: 0;
-  left: 0;
+  width: 100%;
   z-index: 1000;
 }
 
@@ -44,5 +47,11 @@ const funcItems = [
   margin-left: auto;
 }
 
+.form-check-label {
+  margin-right: 15px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: color 0.1s ease-in;
+}
 
 </style>

@@ -20,7 +20,7 @@ const props = defineProps<{
 </template>
 
 <style scoped lang="scss">
-.sub-nav span {
+span {
   margin-right: 15px;
   font-size: 13px;
   cursor: pointer;
