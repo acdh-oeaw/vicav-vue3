@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { useAppDataStore } from '~~/store/appData';
 const AppDataStore = useAppDataStore();
-const hover = ref(false);
 
 const funcItems = [
   {"id": "sub-nav-expand", "icon": "fa fa-expand", "title": "Expand Panels Over Map"},
