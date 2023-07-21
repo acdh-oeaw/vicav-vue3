@@ -1,27 +1,31 @@
 <script setup lang="ts">
+const hover = ref(false);
+const navItems = [
+  {"id": "subNavBiblGeoMarkers", "icon": "fa fa-map", "title": "Bibl. Locations"},
+  {"id": "subNavBiblRegMarkers", "icon": "fa fa-map", "title": "Bibl. Regions"},
+  {"id": "subNavDictGeoRegMarkers", "icon": "fa fa-map", "title": "Bibl. (Dictionaries)"},
+  {"id": "subNavTextbookGeoRegMarkers", "icon": "fa fa-map", "title": "Bibl. (Textbooks)"},
+  {"id": "subNavProfilesGeoRegMarkers", "icon": "fa fa-map", "title": "Profiles"},
+  {"id": "subNavFeaturesGeoRegMarkers", "icon": "fa fa-map", "title": "Features"},
+  {"id": "subNavSamplesGeoRegMarkers", "icon": "fa fa-map", "title": "Samples"},
+  {"id": "subNavVicavDictMarkers", "icon": "fa fa-map", "title": "VICAV Dictionaries"}
+]
 
+const funcItems = [
+  {"id": "sub-nav-expand", "icon": "fa fa-expand", "title": "Expand Panels Over Map"},
+  {"id": "sub-nav-close", "icon": "fa fa-window-close", "title": "Close All"},
+  {"id": "sub-nav-share", "icon": "fa fa-link", "title": "Share Current View"},
+]
 </script>
 
 <template>
   <div class="sub-nav">
     <div class="container-fluid">
       <div class="sub-nav-map-items">
-        <span id="subNavBiblGeoMarkers" class=""><font-awesome-icon icon="fa fa-map" aria-hidden="true"/> Bibl. Locations</span>
-        <span id="subNavBiblRegMarkers" class=""><font-awesome-icon icon="fa fa-map" aria-hidden="true"/> Bibl. Regions</span>
-        <span  id="subNavDictGeoRegMarkers" class=""><font-awesome-icon icon="fa fa-map" aria-hidden="true"/> Bibl. (Dictionaries)</span>
-        <span  id="subNavTextbookGeoRegMarkers" class=""><font-awesome-icon icon="fa fa-map" aria-hidden="true"/> Bibl. (Textbooks)</span>
-        <span  id="subNavProfilesGeoRegMarkers" class=""><font-awesome-icon icon="fa fa-map" aria-hidden="true"/> Profiles</span>
-        <span  id="subNavFeaturesGeoRegMarkers" class=""><font-awesome-icon icon="fa fa-map" aria-hidden="true"/> Features</span>
-        <span  id="subNavSamplesGeoRegMarkers" class=""><font-awesome-icon icon="fa fa-map" aria-hidden="true"/> Samples</span>
-        <span  id="subNavVicavDictMarkers" class="active"><font-awesome-icon icon="fa fa-map" aria-hidden="true"/> VICAV Dictionaries</span>
+        <VicavMapBarItem v-for="item in navItems" :item="item"></VicavMapBarItem>
       </div>
       <div class="sub-nav-actions">
-        <span id="sub-nav-expand" class=""><font-awesome-icon icon="fa fa-expand" aria-hidden="true"/> Expand Panels Over Map</span>
-        <span id="sub-nav-close"><font-awesome-icon icon="fa fa-window-close" aria-hidden="true"/> Close All</span>
-        <span id="sub-nav-share">
-            <font-awesome-icon icon="fa fa-link" aria-hidden="true"/> Share Current View
-            <span id="sub-nav-share-confirmation" style="display: none;">URL is copied to clipboard!</span>
-          </span>
+        <VicavMapBarItem v-for="item in funcItems" :item="item"></VicavMapBarItem>
       </div>
     </div>
   </div>
@@ -41,13 +45,6 @@
   z-index: 1000;
 }
 
-.sub-nav span {
-  margin-right: 15px;
-  font-size: 13px;
-  cursor: pointer;
-  transition: color 0.1s ease-in;
-}
-
 .sub-nav .container-fluid {
   display: flex;
 }
@@ -55,4 +52,6 @@
 .sub-nav-actions {
   margin-left: auto;
 }
+
+
 </style>
