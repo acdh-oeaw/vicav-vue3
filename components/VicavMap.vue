@@ -2,7 +2,6 @@
 import { Feature, GeoJsonObject, Geometry } from "geojson";
 import L, {PointTuple} from "leaflet";
 
-
 const emit = defineEmits<{
   (e: 'itemClicked', event: L.LeafletMouseEvent): void
 }>()

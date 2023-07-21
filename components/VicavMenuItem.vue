@@ -25,7 +25,6 @@
     function ClickMenu(menuNode: IMenuItem) {
         if (menuNode.type === 'item') {
             WMStore.Open(menuNode.windowTypeId, menuNode.params)
-			AppDataStore.isMobileMenuOpen = false;
         }
     }
 </script>

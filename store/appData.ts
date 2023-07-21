@@ -11,7 +11,7 @@ export const useAppDataStore = defineStore(
 			$api.baseUrl = ("" + import.meta.env.VITE_APIBASEURL);
 			try {
 				let projectInfo = await $api.project.getProject({headers: { 'Accept': 'application/json' }});
-				appTitle.value = projectInfo.data.projectConfig.title
+				appTitle.value = projectInfo.data.projectConfig.title;
 				appMenu.value = projectInfo.data.projectConfig.menu.main.map(m => {
 					return {
 						id: m.id,
