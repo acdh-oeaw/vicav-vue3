@@ -24,6 +24,10 @@
 			title: 'Corpus query',
 			component: resolveComponent('CorpusQuery'),
 		} as IWindowType,
+		CorpusText: {
+			title: 'Corpus text',
+			component: resolveComponent('CorpusText'),
+		} as IWindowType,
 	}
 
 	const newWindow = computed(() => WMStore.newWindow)
@@ -34,7 +38,6 @@
 	})
 	function NewWindow(newWindow: INewWindow) {
 		let windowType = windowTypes[newWindow.windowTypeId as keyof typeof windowTypes]
-		console.log(newWindow.windowTypeId)
 		if (windowType == undefined) {
 			ConsoleWarning("Window type undefined", newWindow)
 			return false

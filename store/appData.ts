@@ -18,6 +18,7 @@ export const useAppDataStore = defineStore(
 						type: 'submenu',
 						name: m.title,
 						submenu: m.item.map((item: { id: string; type: string; title: string; componentName: string; }) => {
+							console.log(item.type)
 							switch (item.type) {
 								case 'item':
 									return {
