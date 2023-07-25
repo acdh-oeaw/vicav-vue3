@@ -44,9 +44,16 @@ npm run makeapi
 
 ## Environment variables
 
+see [dev.env.template](dev.env.template) for recommended values 
+
+```
 VITE_BASEURL - base address of the app  
 VITE_APIBASEURL - base address of the backend api
-
+VITE_MAP_TILELAYER - template URL for the leaflet map tile-layer
+VITE_MAP_INITIAL_X - coordinates for the the initial map view
+VITE_MAP_INITIAL_Y - coordinates for the the initial map view
+VITE_MAP_INITIAL_Z - coordinates for the the initial map view
+```
 ## Development
 
 Start the development server on http://localhost:3000

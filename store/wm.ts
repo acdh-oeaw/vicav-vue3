@@ -4,6 +4,16 @@ import { defineStore } from 'pinia';
 export const useWMStore = defineStore(
 	'wm',
 	() => {
+		const topMargin = ref(0)
+		const SetTopMargin = (heightInPixels: number) => {
+			topMargin.value = heightInPixels
+		}
+		const clientSizeWidth = ref(0)
+		const clientSizeHeight = ref(0)
+		const RegisterClientSize = (width: number, height: number) => {
+			clientSizeWidth.value = width
+			clientSizeHeight.value = height
+		}
 
 		const counter = ref(0)
 		const windowList = ref([] as IWindow[])
@@ -24,6 +34,14 @@ export const useWMStore = defineStore(
 			windowList.value[i].ref = ref
 		}
 
+		const RemoveWindowRef = (i: number, ref: any) => {
+			let index = windowList.value.findIndex(w => w.ref.id === ref.id);
+			if(index >= 0) {
+				ref.g.remove();
+				windowList.value.splice(index, 1);
+			}
+		}
+
 		const Focus = (windowId: number) => {
 			let window = windowList.value.find(w => w.id == windowId)
 			if (window != null) {
@@ -31,18 +49,35 @@ export const useWMStore = defineStore(
 			}
 		}
 
-		const Close = (index: number) => {
-			windowList.value.splice(index, 1)
+		const ArrangeTile = () => {
+			let cols = Math.floor(Math.sqrt(windowList.value.length - 1)) + 1
+			let rows = Math.ceil(windowList.value.length / cols)
+			let windowWidth = Math.floor(clientSizeWidth.value / cols)
+			let windowHeight = Math.floor(clientSizeHeight.value / rows)
+
+			windowList.value.forEach((w, i) => {
+				let newX = windowWidth * (i % cols),
+					newY = topMargin.value + windowHeight * Math.floor(i / cols)
+				w.ref
+					.resize(windowWidth, windowHeight)
+					.move(newX, newY)
+			})
 		}
 
 		return {
+			topMargin,
+			SetTopMargin,
+			RegisterClientSize,
+
 			windowList,
 			newWindow,
 			Open,
 			AddWindowToList,
 			RegisterWindowRef,
+			RemoveWindowRef,
 			Focus,
-			Close,
+
+			ArrangeTile,
 		}
 	},
 	{

@@ -6,16 +6,13 @@
     const AppDataStore = useAppDataStore()
     const menu = computed(() => AppDataStore.appMenu)
 
-    function ToggleMenuCollapse(e) {
+    function ToggleMenuCollapse() {
         isWindowListOpen.value = false
         AppDataStore.isMobileMenuOpen = !AppDataStore.isMobileMenuOpen
     }
 
     const WMStore = useWMStore()
     const windowList = computed(() => {
-        if (WMStore.windowList.length == 0) {
-            return [{ id: null, name: 'No windows open'}]
-        }
         return WMStore.windowList.map(w => { return {
             id: w.id,
             name: w.id?.toString() + ': ' + w.winBoxOptions?.title
@@ -23,29 +20,32 @@
     })
     function SelectWindow(windowId: number | null) {
         if (windowId != null) {
-            WMStore.Focus(windowId)
+            WMStore.Focus(windowId);
         }
     }
 
+    const menuBarRef = ref()
     const isWindowListOpen = ref(false)
     const { $bootstrap } = useNuxtApp()
     let windowListDropdown: Dropdown;
     const windowListTogglerRef = ref<HTMLElement | string>('')
     onMounted(() => {
-        windowListDropdown = new $bootstrap.Dropdown(windowListTogglerRef.value);
+        windowListDropdown = new $bootstrap.Dropdown(windowListTogglerRef.value)
+        let menuBarHeight = menuBarRef.value.offsetHeight
+        WMStore.SetTopMargin(menuBarHeight)
     })
     function ToggleWindowListCollapse(e) {
         AppDataStore.isMobileMenuOpen = false
-        windowListDropdown._isShown() ? windowListDropdown.show() : windowListDropdown.hide();
+        windowListDropdown._isShown() ? windowListDropdown.show() : windowListDropdown.hide()
     }
 
-    function ItemClick() {
-        console.log('MenuBar received click event')
+    function ArrangeTile() {
+        WMStore.ArrangeTile();
     }
 </script>
 
 <template>
-    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top" ref="menuBarRef">
         <div class="container-fluid">
             <a class="vv-navbar-brand mr-0 mr-lg-2" aria-label="Vicav" href="/">
                 <img alt="logo" src="~/assets/vicav_logo.svg">
@@ -72,7 +72,6 @@
                     >
                         <VicavMenuNode
                             :menu-node="menuNode"
-                            @itemclick="ItemClick"
                         />
                     </li>
                 </ul>
@@ -91,6 +90,14 @@
                     <span class="navbar-toggler-icon vv-window-selector-icon" />
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end">
+                    <li v-if="windowList.length == 0">
+                        <a
+                            class="dropdown-item"
+                            href="#"
+                        >
+                            No windows open
+                        </a>
+                    </li>
                     <li
                         v-for="window in windowList"
                         :key="window.name"
@@ -103,7 +110,19 @@
                             {{ window.name }}
                         </a>
                     </li>
-                </ul>
+                    <li v-if="windowList.length > 0">
+                        <div class="dropdown-divider"></div>
+                    </li>
+                    <li v-if="windowList.length > 0">
+                        <a
+                            class="dropdown-item"
+                            href="#"
+                            @mousedown="ArrangeTile"
+                        >
+                            Tile
+                        </a>
+                    </li>
+                 </ul>
             </div>
         </div>
     </nav>

@@ -1,11 +1,9 @@
 <script setup lang="ts">
 	import { computed } from 'vue'
-	import { useAppDataStore } from '~~/store/appData'
 	import { useWMStore, INewWindow, IWindow, IWindowType } from '~~/store/wm'
 	import { VicavWinBox } from "./VicavWinBox.client"
 
-	const windowRefList = ref([])
-  	const WMStore = useWMStore()
+	const WMStore = useWMStore()
 	const windowList = computed(() => WMStore.windowList)
 	const windowTypes = {
 		DisplayHtml: {
@@ -38,7 +36,7 @@
 	})
 	function NewWindow(newWindow: INewWindow) {
 		let windowType = windowTypes[newWindow.windowTypeId as keyof typeof windowTypes]
-		if (windowType == undefined) {
+		if (windowType === undefined) {
 			ConsoleWarning("Window type undefined", newWindow)
 			return false
 		}
@@ -53,8 +51,8 @@
 			type: windowType as IWindowType,
 			winBoxOptions: {
 				title: windowType.title,
-				top: 35,
-				index: 10000,
+				top: WMStore.topMargin,
+				index: 1000,
 			},
 			params: newWindow.params,
 		}
@@ -65,30 +63,33 @@
 		console.warn("WindowManager:", text, data);
 	}
 
-	function RegisterWindowRef(i: number, ref: HTMLElement) {
+	function RegisterWindowRef(i: number, ref: any) {
 		WMStore.RegisterWindowRef(i, ref)
 	}
 
-	const AppDataStore = useAppDataStore()
-	function OnFocus() {
-		AppDataStore.isMobileMenuOpen = false
+	function RemoveWindowRef(i: number, ref: any) {
+		WMStore.RemoveWindowRef(i, ref)
 	}
 
-	function CloseWindow(windowIndex: number) {
-		WMStore.Close(windowIndex)
+	function RegisterClientSize() {
+		// warning: WMStore.topMargin must already be set by the MenuBar component's onmounted event handler
+		WMStore.RegisterClientSize(document.documentElement.clientWidth, document.documentElement.clientHeight - WMStore.topMargin)
 	}
+
+	onMounted(() =>{
+		RegisterClientSize()
+		window.addEventListener('resize', RegisterClientSize, true)
+	})
 </script>
 
 <template>
 	<div>
 		<VicavWinBox
 			v-for="(window, i) in windowList"
-			ref="windowRefList"
-			:key="i"
+			:key="window.id?.toString()"
 			:options="window.winBoxOptions"
 			@open="RegisterWindowRef(i, $event)"
-			@focus="OnFocus"
-			@close="CloseWindow(i)"
+			@close="RemoveWindowRef(i, $event)"
 		>
 			<component
 				:is="{...window.type.component}"

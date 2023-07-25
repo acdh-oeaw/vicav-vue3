@@ -1,5 +1,3 @@
-
-
 import type { PropType } from 'vue'
 import { Teleport, defineComponent, h, onMounted, onScopeDispose, ref } from 'vue'
 import { nanoid } from 'nanoid'
@@ -35,7 +33,6 @@ export const VicavWinBox = defineComponent({
             selector,
             winbox,
             initialized,
-            initialize,
         })
 
         function initialize() {
@@ -56,10 +53,8 @@ export const VicavWinBox = defineComponent({
                     })
                 },
                 onclose: () => {
-                    emit('close', { id: winbox.value?.id })
-                    initialized.value = false
-                    winbox.value = null
-                    return false
+                    emit('close', winbox.value);
+                    return true;
                 },
                 onfocus: () => {
                     emit('focus', { id: winbox.value?.id })
