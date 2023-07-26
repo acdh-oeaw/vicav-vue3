@@ -8,11 +8,11 @@ const props = defineProps<{
 const utterances = ref([])
 
 async function created() {
-  console.log(this.params.textId)
-  const text = await this.$api.corpusText.getCorpusText(
-      {id: this.params.textId},
+  console.log(props.params.textId)
+  const text = await $api.corpusText.getCorpusText(
+      {id: props.params.textId},
       { headers: { 'Accept': 'application/json' }})
-  this.utterances = text.data.utterances
+  utterances.value = text.data.utterances
 }
 </script>
 

@@ -9,13 +9,12 @@
 
   async function QueryButtonClicked(e)  {
     console.log("s")
-    const result = await this.$api.corpus.searchCorpus(
-        { query: this.queryString },
+    const result = await $api.corpus.searchCorpus(
+        { query: queryString },
         { headers: { 'Accept': 'application/json' }})
 
     if (result.error) return false;
-    this.resultQuery = result.data.query
-    this.hits = result.data.hits;
+    hits.value = result.data.hits;
   }
 
   function openCorpusText(e) {
