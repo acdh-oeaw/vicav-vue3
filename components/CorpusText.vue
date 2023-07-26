@@ -1,30 +1,29 @@
-<template>
-	<div id="corpus-text">
-		<h2>{{ textId }}</h2>
-		<div v-for="u in utterances">
-			<p class="corpus-utterance" :id="u.id" v-html="u.content"></p>
-		</div>
-	</div>
-</template>
-
-<script>
+<script setup lang="ts">
 const { $api } = useNuxtApp();
-export default {
-	props: ["params"],
-	data() {
-		return {
-			utterances: []
-		};
-	},
-	async created() {
-		console.log(this.params.textId)
-		const text = await this.$api.corpusText.getCorpusText(
-			{id: this.params.textId},
-			{ headers: { 'Accept': 'application/json' }})
-		this.utterances = text.data.utterances
-	}
-};
+
+const props = defineProps<{
+  params: Record<any, any>;
+}>();
+
+const utterances = ref([])
+
+async function created() {
+  console.log(this.params.textId)
+  const text = await this.$api.corpusText.getCorpusText(
+      {id: this.params.textId},
+      { headers: { 'Accept': 'application/json' }})
+  this.utterances = text.data.utterances
+}
 </script>
+
+<template>
+  <div id="corpus-text">
+    <h2>{{ params.textId }}</h2>
+    <div v-for="u in utterances">
+      <p class="corpus-utterance" :id="u.id" v-html="u.content"></p>
+    </div>
+  </div>
+</template>
 
 <style lang="scss" scoped>
 #corpus-text {
