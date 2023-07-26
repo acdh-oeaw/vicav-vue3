@@ -10,7 +10,7 @@
   async function QueryButtonClicked(e)  {
     console.log("s")
     const result = await $api.corpus.searchCorpus(
-        { query: queryString },
+        { query: queryString.value },
         { headers: { 'Accept': 'application/json' }})
 
     if (result.error) return false;
@@ -60,8 +60,8 @@
 
 	> .left {
 	  text-align: right;
-	  writing-mode: horizontal-rl;
-	  text-wrap: nowrap;
+	  writing-mode: horizontal-tb;
+	  white-space: nowrap;
 	  text-overflow: ellipsis;
 	}
 	> .keyword {
