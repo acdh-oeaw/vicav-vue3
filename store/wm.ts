@@ -28,6 +28,7 @@ export const useWMStore = defineStore(
 
 		const AddWindowToList = (window: IWindow) => {
 			windowList.value.push(window)
+			ArrangeWindows()
 		}
 
 		const RegisterWindowRef = (i: number, ref: HTMLElement) => {
@@ -40,6 +41,7 @@ export const useWMStore = defineStore(
 				ref.g.remove();
 				windowList.value.splice(index, 1);
 			}
+			ArrangeWindows()
 		}
 
 		const Focus = (windowId: number) => {
@@ -47,6 +49,24 @@ export const useWMStore = defineStore(
 			if (window != null) {
 				window.ref.focus()
 			}
+		}
+
+		const isMobile = false // @TODO
+		const ArrangeWindows = async () => {
+			await nextTick()
+			if (isMobile) {
+				ArrangeAllMaximize()
+			} else {
+				ArrangeSmartTile()
+			}
+		}
+
+		const ArrangeAllMaximize = () => {
+			windowList.value.forEach((w, i) => {
+				w.ref
+					.resize(clientSizeWidth.value, clientSizeHeight.value)
+					.move(0, topMargin.value)
+			})
 		}
 
 		const ArrangeTile = () => {
