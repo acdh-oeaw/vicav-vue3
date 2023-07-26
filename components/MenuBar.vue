@@ -42,6 +42,9 @@
     function ArrangeTile() {
         WMStore.ArrangeTile();
     }
+    function ArrangeSmartTile() {
+        WMStore.ArrangeSmartTile();
+    }
 </script>
 
 <template>
@@ -120,6 +123,15 @@
                             @mousedown="ArrangeTile"
                         >
                             Tile
+                        </a>
+                    </li>
+                    <li v-if="windowList.length > 0">
+                        <a
+                            class="dropdown-item"
+                            href="#"
+                            @mousedown="ArrangeSmartTile"
+                        >
+                            Smart Tile
                         </a>
                     </li>
                  </ul>

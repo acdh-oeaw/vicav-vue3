@@ -64,6 +64,29 @@ export const useWMStore = defineStore(
 			})
 		}
 
+		const ArrangeSmartTile = () => {
+			let N = windowList.value.length
+			let floorSqrtN = Math.floor(Math.sqrt(N))
+			let innerSquare = Math.pow(floorSqrtN, 2)
+			let isExtraRow = (N - innerSquare > floorSqrtN)
+			let extraColHeight = N - innerSquare - (isExtraRow ? floorSqrtN : 0)
+			let upperBlockSize = (floorSqrtN + 1) * extraColHeight
+
+			windowList.value.forEach((w, i) => {
+				let colNum = (i > upperBlockSize - 1
+					? (i - upperBlockSize) % floorSqrtN
+					: i % (floorSqrtN + 1))
+				let rowNum = (i > upperBlockSize - 1
+					? extraColHeight + Math.floor((i - upperBlockSize) / floorSqrtN)
+					: Math.floor(i / (floorSqrtN + 1)))
+				let windowWidth = Math.floor(clientSizeWidth.value / (i > upperBlockSize - 1 ? floorSqrtN : floorSqrtN + 1))
+				let windowHeight = Math.floor(clientSizeHeight.value / (isExtraRow ? floorSqrtN + 1 : floorSqrtN))
+				w.ref
+					.resize(windowWidth, windowHeight)
+					.move(windowWidth * colNum, topMargin.value + windowHeight * rowNum)
+			})
+		}
+
 		return {
 			topMargin,
 			SetTopMargin,
@@ -78,6 +101,7 @@ export const useWMStore = defineStore(
 			Focus,
 
 			ArrangeTile,
+			ArrangeSmartTile,
 		}
 	},
 	{
