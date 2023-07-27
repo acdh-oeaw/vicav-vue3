@@ -40,11 +40,25 @@
     }
 
     function ArrangeTile() {
-        WMStore.ArrangeTile();
+        WMStore.ArrangeTile()
     }
     function ArrangeSmartTile() {
-        WMStore.ArrangeSmartTile();
+        WMStore.ArrangeSmartTile()
     }
+    function ArrangeCascade() {
+        WMStore.ArrangeCascade()
+    }
+
+    const windowArrangeMethods = [{
+        name: "Cascade",
+        method: ArrangeCascade,
+    }, {
+        name: "Tile",
+        method: ArrangeTile,
+    }, {
+        name: "Smart Tile",
+        method: ArrangeSmartTile,
+    }]
 </script>
 
 <template>
@@ -116,22 +130,13 @@
                     <li v-if="windowList.length > 0">
                         <div class="dropdown-divider"></div>
                     </li>
-                    <li v-if="windowList.length > 0">
+                    <li v-if="windowList.length > 0" v-for="wam in windowArrangeMethods">
                         <a
                             class="dropdown-item"
                             href="#"
-                            @mousedown="ArrangeTile"
+                            @mousedown="wam.method"
                         >
-                            Tile
-                        </a>
-                    </li>
-                    <li v-if="windowList.length > 0">
-                        <a
-                            class="dropdown-item"
-                            href="#"
-                            @mousedown="ArrangeSmartTile"
-                        >
-                            Smart Tile
+                            {{ wam.name }}
                         </a>
                     </li>
                  </ul>
