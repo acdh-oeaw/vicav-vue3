@@ -27,6 +27,9 @@ export const useWMStore = defineStore(
 		}
 
 		const AddWindowToList = (window: IWindow) => {
+			window.winBoxOptions.index = windowList.value.length > 0
+				? Math.max(...windowList.value.map(w => parseInt(w.ref.index))) + 1
+				: 1000
 			windowList.value.push(window)
 		}
 
