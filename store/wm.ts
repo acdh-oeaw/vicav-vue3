@@ -111,7 +111,12 @@ export const useWMStore = defineStore(
 			let windowWidth = Math.floor(clientSizeWidth.value / 2)
 			let windowHeight = Math.floor(clientSizeHeight.value / 2)
 
-			windowList.value.forEach((w, i) => {
+			let windowArray = [...windowList.value]
+			windowArray.sort((a, b) => {
+				return a.ref.index - b.ref.index
+			})
+
+			windowArray.forEach((w, i) => {
 				let newX = i * 40 > clientSizeWidth.value - windowWidth ? clientSizeWidth.value - windowWidth : i * 40
 				let newY = topMargin.value + (i * 40 > clientSizeHeight.value - windowHeight ? clientSizeHeight.value - windowHeight : i * 40)
 				w.ref
