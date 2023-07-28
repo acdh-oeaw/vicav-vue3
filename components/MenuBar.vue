@@ -39,25 +39,15 @@
         windowListDropdown._isShown() ? windowListDropdown.show() : windowListDropdown.hide()
     }
 
-    function ArrangeTile() {
-        WMStore.ArrangeTile()
-    }
-    function ArrangeSmartTile() {
-        WMStore.ArrangeSmartTile()
-    }
-    function ArrangeCascade() {
-        WMStore.ArrangeCascade()
-    }
-
     const windowArrangeMethods = [{
         name: "Cascade",
-        method: ArrangeCascade,
+        method: WMStore.ArrangeCascade,
     }, {
         name: "Tile",
-        method: ArrangeTile,
+        method: WMStore.ArrangeTile,
     }, {
         name: "Smart Tile",
-        method: ArrangeSmartTile,
+        method: WMStore.ArrangeSmartTile,
     }]
 </script>
 
