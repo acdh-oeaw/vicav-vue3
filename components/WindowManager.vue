@@ -44,7 +44,6 @@
 			winBoxOptions: {
 				title: windowType.title,
 				top: WMStore.topMargin,
-				index: 1000,
 			},
 			params: newWindow.params,
 		}
