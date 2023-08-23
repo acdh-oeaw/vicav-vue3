@@ -8,7 +8,6 @@
   const hits = ref([]);
 
   async function QueryButtonClicked(e)  {
-    console.log("s")
     const result = await $api.corpus.searchCorpus(
         { query: queryString.value },
         { headers: { 'Accept': 'application/json' }})
@@ -18,16 +17,20 @@
   }
 
   function openCorpusText(e) {
-    WMStore.Open("CorpusText", { textId: e.target.innerText })
+    WMStore.Open("CorpusText", {
+      textId: e.currentTarget.dataset.doc,
+      hits: e.currentTarget.dataset.hits,
+      u: e.currentTarget.dataset.uid
+    });
   }
 
 </script>
 
 <template>
-  <div id="corpus-query">
-    <form class="newQueryForm form-inline mt-2 mt-md-0">
+  <div id="corpus-query" class="p-2">
+    <form class="d-flex">
       <input
-          class="form-control mr-sm-2"
+          class="form-control me-2"
           type="text"
           v-model="queryString"
           style="flex: 1;"
@@ -38,11 +41,19 @@
         Query</button
       ><br />
     </form>
-    <div v-for="hit in hits">
-      <a @click.prevent.stop="openCorpusText">
-        <strong>{{ hit.doc }}</strong>
-      </a>
-      <div class="corpus-search-results" v-html="hit.content"></div>
+    <div class="results">
+      <div v-if="hits.length > 0">CQL: [word="{{ queryString }}"]</div>
+      <table>
+        <tr v-for="hit in hits" class="hit flex">
+          <td class="pe-3">
+          <a href="#" @click.prevent="openCorpusText" :data-hits="hit.docHits" :data-doc="hit.doc" :data-uid="hit.u">
+            <strong>{{ hit.u }}</strong>
+          </a>
+          </td>
+          <td class="corpus-search-results" v-html="hit.content">
+          </td>
+        </tr>
+      </table>
     </div>
   </div>
 </template>
@@ -52,26 +63,4 @@
 	padding: 1rem;
 }
 
-
-.corpus-search-result {
-	display: grid;
-    grid-template-columns: 2fr 1fr 2fr;
-    width: 100%;
-
-	> .left {
-	  text-align: right;
-	  writing-mode: horizontal-tb;
-	  white-space: nowrap;
-	  text-overflow: ellipsis;
-	}
-	> .keyword {
-	  text-align: center;
-	  padding-left: 1em;
-	  padding-right: 1em;
-	  background-color: yellow;
-	}
-	> .right {
-	  text-align: left;
-	}
-}
 </style>
