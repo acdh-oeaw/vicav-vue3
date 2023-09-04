@@ -54,16 +54,6 @@ export const useWMStore = defineStore(
 			}
 		}
 
-		const isMobile = false // @TODO
-		const ArrangeWindows = async () => {
-			await nextTick()
-			if (isMobile) {
-				ArrangeAllMaximize()
-			} else {
-				ArrangeSmartTile()
-			}
-		}
-
 		const ArrangeAllMaximize = () => {
 			windowList.value.forEach((w, i) => {
 				w.ref
@@ -71,6 +61,8 @@ export const useWMStore = defineStore(
 					.move(0, topMargin.value)
 			})
 		}
+
+		const ArrangeNot = () => {}
 
 		const ArrangeTile = () => {
 			let cols = Math.floor(Math.sqrt(windowList.value.length - 1)) + 1
@@ -128,6 +120,52 @@ export const useWMStore = defineStore(
 			})
 		}
 
+
+		interface WindowArrangeMethod {
+			id: number
+			name: string
+			method: () => void
+		}
+		const desktopArrangeMethods = [{
+			id: 0,
+			name: "No arrangement",
+			method: ArrangeNot,
+		}, {
+			id: 1,
+			name: "Cascade",
+			method: ArrangeCascade,
+		}, {
+			id: 2,
+			name: "Tile",
+			method: ArrangeTile,
+		}, {
+			id: 3,
+			name: "Smart Tile",
+			method: ArrangeSmartTile,
+		}] as WindowArrangeMethod[]
+
+		const selectedDesktopArrangeMethodId = ref(3) // TODO: move magic number to settings
+
+		const SelectDesktopArrangeMethod = (wam: WindowArrangeMethod) => {
+			let index = desktopArrangeMethods.findIndex(m => m.id === wam.id)
+			if (index >= 0) {
+				selectedDesktopArrangeMethodId.value = wam.id
+				desktopArrangeMethods[index].method()
+			} else {
+				console.warn('Warning: invalid window arrange method id requested:', wam.id)
+			}
+		}
+
+		const isMobile = false // @TODO
+		const ArrangeWindows = async () => {
+			await nextTick()
+			if (isMobile) {
+				ArrangeAllMaximize()
+			} else {
+				desktopArrangeMethods.find(m => m.id === selectedDesktopArrangeMethodId.value)?.method()
+			}
+		}
+
 		return {
 			topMargin,
 			SetTopMargin,
@@ -141,9 +179,9 @@ export const useWMStore = defineStore(
 			RemoveWindowRef,
 			Focus,
 
-			ArrangeTile,
-			ArrangeSmartTile,
-			ArrangeCascade,
+			desktopArrangeMethods,
+			SelectDesktopArrangeMethod,
+			selectedDesktopArrangeMethodId,
 		}
 	},
 	{
