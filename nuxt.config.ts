@@ -4,7 +4,7 @@ export default defineNuxtConfig({
         head: {
             meta: [{
                 name: 'application-name',
-                content: 'VICAV Frontend'
+                content: 'VICAV  Frontend'
             }],
             link: [
                 {
@@ -19,6 +19,7 @@ export default defineNuxtConfig({
     css: [
         '~/assets/styles/main.scss',
         'leaflet/dist/leaflet.css',
+        '@fortawesome/fontawesome-svg-core/styles.css',
     ],
     dev: true,
     vite: {

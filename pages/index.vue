@@ -49,6 +49,7 @@
   <MenuBar/>
   <client-only>
     <WindowManager/>
-    <vicav-map :items="items" style="height:calc(100vh - 68px); position: relative; top: -36px; outline: none;"></vicav-map>
+      <VicavMapBar></VicavMapBar>
+      <vicav-map :items="items.data" style="height:calc(100vh - 68px); position: relative; top: -36px; outline: none;"></vicav-map>
   </client-only>
 </template>

@@ -24,7 +24,7 @@
 
     function ClickMenu(menuNode: IMenuItem) {
         if (menuNode.type === 'item') {
-            WMStore.Open(menuNode.windowTypeId, menuNode.params)
+            WMStore.Open(menuNode.windowTypeId, menuNode.name, menuNode.params)
         }
     }
 </script>
