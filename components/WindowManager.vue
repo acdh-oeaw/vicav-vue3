@@ -6,16 +6,13 @@
 	const WMStore = useWMStore()
 	const windowList = computed(() => WMStore.windowList)
 	const windowTypes = {
-		DisplayHtml: {
-			title: 'Display HTML Content',
-			component: resolveComponent('DisplayHtml'),
-		},
+		Text: {
+			component: resolveComponent('Text'),
+		} as IWindowType,
 		WMap: {
-			title: 'Map',
 			component: resolveComponent('WMap'),
 		} as IWindowType,
 		DictQuery: {
-			title: 'Dictionary query',
 			component: resolveComponent('DictQuery'),
 		} as IWindowType,
 	}
@@ -37,12 +34,14 @@
 			return false
 		}
 
+		console.log(newWindow)
+
 		var window: IWindow = {
 			id: newWindow.id,
 			ref: null,
 			type: windowType as IWindowType,
 			winBoxOptions: {
-				title: windowType.title,
+				title: newWindow.title,
 				top: WMStore.topMargin,
 				class: [ 'no-min', 'no-max', 'no-full', 'no-resize', 'no-move'],
 			},

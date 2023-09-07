@@ -19,8 +19,8 @@ export const useWMStore = defineStore(
 		const windowList = ref([] as IWindow[])
 		const newWindow = ref(null as INewWindow|null)
 
-		const Open = (windowTypeId: string, params: Object|null) => {
-			newWindow.value = { id: counter.value++, windowTypeId, params }
+		const Open = (windowTypeId: string, windowTitle: string, params: Object|null) => {
+			newWindow.value = { id: counter.value++, title: windowTitle, windowTypeId, params }
 			nextTick(() => {
 				newWindow.value = null
 			})
@@ -193,12 +193,12 @@ export const useWMStore = defineStore(
 
 export interface INewWindow {
 	id: number,
+	title: string,
 	windowTypeId: string,
 	params: Object|null,
 }
 
 export interface IWindowType {
-	title: string,
 	component: ConcreteComponent<{}, any, any, ComputedOptions, MethodOptions>,
 }
 
