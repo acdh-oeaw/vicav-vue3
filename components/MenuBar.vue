@@ -38,10 +38,6 @@
         AppDataStore.isMobileMenuOpen = false
         windowListDropdown._isShown() ? windowListDropdown.show() : windowListDropdown.hide()
     }
-
-    function ArrangeTile() {
-        WMStore.ArrangeTile();
-    }
 </script>
 
 <template>
@@ -110,16 +106,19 @@
                             {{ window.name }}
                         </a>
                     </li>
-                    <li v-if="windowList.length > 0">
+                    <li>
                         <div class="dropdown-divider"></div>
                     </li>
-                    <li v-if="windowList.length > 0">
+                    <li v-for="wam in WMStore.desktopArrangeMethods" :key="wam.id">
                         <a
                             class="dropdown-item"
                             href="#"
-                            @mousedown="ArrangeTile"
+                            @mousedown="WMStore.SelectDesktopArrangeMethod(wam)"
                         >
-                            Tile
+                            <span class="vv-navbar-wam-checkmark">
+                                {{ wam.id == WMStore.selectedDesktopArrangeMethodId ? '✓' : '' }}
+                            </span>
+                            {{ wam.name }}
                         </a>
                     </li>
                  </ul>
@@ -151,5 +150,9 @@
     }
     .vv-navbar-window-list {
         order: 7;
+    }
+    .vv-navbar-wam-checkmark {
+        display: inline-block;
+        width: 1em;
     }
 </style>

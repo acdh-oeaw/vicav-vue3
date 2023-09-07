@@ -44,6 +44,7 @@
 			winBoxOptions: {
 				title: windowType.title,
 				top: WMStore.topMargin,
+				class: [ 'no-min', 'no-max', 'no-full', 'no-resize', 'no-move'],
 			},
 			params: newWindow.params,
 		}
