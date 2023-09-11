@@ -41,6 +41,7 @@
 			ref: null,
 			type: windowType as IWindowType,
 			winBoxOptions: {
+				class: 'wb-vicav',
 				title: newWindow.title,
 				top: WMStore.topMargin,
 			},
@@ -89,3 +90,24 @@
 
 	</div>
 </template>
+
+<style>
+	.wb-vicav {
+		background-color: rgb(168, 93, 143);
+	}
+	.wb-vicav .wb-header {
+		height: 25px;
+		line-height: 25px;
+	}
+	.wb-vicav .wb-min { background-size: 10px auto; }
+	.wb-vicav .wb-max { background-size: 12px auto; }
+	.wb-vicav .wb-full { background-size: 11px auto; }
+	.wb-vicav .wb-close { background-size: 11px auto; }
+	.wb-vicav .wb-control * { width: 22px; }
+	.wb-vicav .wb-body {
+		top: 25px;
+		margin: 0;
+		padding: 20px;
+		background-color: #fff;
+	}
+</style>
