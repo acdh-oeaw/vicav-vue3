@@ -41,10 +41,9 @@
 			ref: null,
 			type: windowType as IWindowType,
 			winBoxOptions: {
-				class: 'wb-vicav',
 				title: newWindow.title,
 				top: WMStore.topMargin,
-				class: [ 'no-min', 'no-max', 'no-full', 'no-resize', 'no-move'],
+				class: [ 'wb-vicav', 'no-min', 'no-max', 'no-full', 'no-resize', 'no-move'],
 			},
 			params: newWindow.params,
 		}
