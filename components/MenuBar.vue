@@ -85,7 +85,7 @@
                 >
                     <span class="navbar-toggler-icon vv-window-selector-icon" />
                 </button>
-                <ul class="dropdown-menu dropdown-menu-end">
+                <ul class="vv dropdown-menu dropdown-menu-end">
                     <li v-if="windowList.length == 0">
                         <a
                             class="dropdown-item"
@@ -154,5 +154,8 @@
     .vv-navbar-wam-checkmark {
         display: inline-block;
         width: 1em;
+    }
+    .vv.dropdown-menu {
+        --bs-dropdown-link-active-bg: rgb(168, 93, 143);
     }
 </style>
