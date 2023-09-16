@@ -154,3 +154,90 @@ table {
   padding-right: 5px;
   background: rgb(222, 222, 222);
 }
+
+label {
+  display: inline-block;
+  margin-bottom: .5rem;
+}
+.checkboxLabel {
+  margin-right: 20px;
+  padding-left: 6px;
+}
+
+.dvDictResults {
+  border: 1px solid black;
+  color: rgb(93, 75, 24);
+  /* background: rgb(249, 246, 224); */
+  background: white;
+  margin-top: 20px;
+}
+.dvStats {
+  margin-bottom: 5px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  border: 1px solid rgb(168, 93, 143);
+  background: rgb(168, 93, 143);
+  color: white;
+  font-weight: bold;
+}
+.dvRoundLemmaBox_ltr {
+  text-align: left;
+  direction: ltr;
+  padding-top: 3px;
+  padding-left: 5px;
+  padding-bottom: 2px;
+  position: relative;
+  top: 3px;
+  left: -15px;
+  max-width: 420px;
+  border-radius: 5px;
+  background: rgb(222, 222, 222);
+  font-weight: bold;
+  font-size: larger;
+  color: rgb(168, 93, 143);
+  border: 1px solid rgb(168, 93, 143);
+  vertical-align: baseline;
+}
+.spGramGrp {
+  color: rgb(75, 131, 97);
+  font-style: italic;
+  font-size: smaller;
+  vertical-align: baseline;
+}
+.spRoot {
+  font-size: smaller;
+  color: rgb(155, 148, 23);
+  vertical-align: baseline;
+}
+.tbEntry {
+  margin-bottom: 10px;
+  margin-right: 10px;
+  width: 90%;
+  max-width: 90%;
+}
+.tdHead {
+  color: #fff;
+  text-align: right;
+  padding-right: 5px;
+  width: 150px;
+  word-wrap: break-word;
+  vertical-align: top;
+  background: rgb(168, 93, 143);
+  border-bottom: 0.5px dotted rgb(221, 157, 199);
+}
+.tdKWICMain {
+  border-bottom: 0.5px dotted rgb(85, 99, 201);
+  padding-left: 5px;
+}
+.tdCrossResultsLocation {
+  border: 1px solid black;
+  background: rgb(168, 93, 143);
+  color: white;
+  padding-left: 3px;
+  padding-right: 3px;
+}
+.tdCrossResultsLemma {
+  border: 1px solid black;
+  padding-left: 3px;
+  padding-right: 3px;
+}
