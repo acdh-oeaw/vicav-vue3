@@ -76,15 +76,15 @@
 		// based on the getDBSnippet parameter
 		console.log('getDBSnippet: ', params)
 
-		let splitPoint = params.indexOf(":");
-		let sHead = params.substring(0, splitPoint);
-		let sTail = params.substring(splitPoint + 1);
-		let sh = sTail.split("/");
-		let snippetID = sh[0].trim();
-		let secLabel = "";
+		let splitPoint = params.indexOf(":")
+		let sHead = params.substring(0, splitPoint)
+		let sTail = params.substring(splitPoint + 1)
+		let sh = sTail.split("/")
+		let snippetID = sh[0].trim()
+		let secLabel = ""
 		if (!!sh[1]) {
-			secLabel = sh[1].trim();
-			secLabel = secLabel.replace(/_/g, " ");
+			secLabel = sh[1].trim()
+			secLabel = secLabel.replace(/_/g, " ")
 		}
 		let sid = null;
 		let dict = null;
@@ -93,10 +93,11 @@
 				let st5 = sTail.split(",");
 				sid = st5[0];
 				dict = st5[1];
-				console.log ('getDBSnippet: dictID,', { dict, sid });
+				console.log ('getDBSnippet: dictID,', { dict, sid })
 				break;
 			default:
-				console.warn("getDBSnippet: sHead type unknown [" + sHead + "]");
+				console.warn("getDBSnippet: sHead type unknown [" + sHead + "]")
+				break;
 		}
 	}
 
