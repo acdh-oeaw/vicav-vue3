@@ -77,7 +77,7 @@
 		console.log('getDBSnippet: ', params)
 
 		let splitPoint = params.indexOf(":");
-		let sHead = params.substr(0, splitPoint);
+		let sHead = params.substring(0, splitPoint);
 		let sTail = params.substring(splitPoint + 1);
 		let sh = sTail.split("/");
 		let snippetID = sh[0].trim();

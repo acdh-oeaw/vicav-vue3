@@ -50,7 +50,7 @@
 		}
 	}
 
-	const LogError = async (error: unknown) => {
+	const LogError = async (error: any) => {
 		let errorXml = (new DOMParser()).parseFromString(await error.text(), 'text/xml')
 			console.error(errorXml)
 			alert(
