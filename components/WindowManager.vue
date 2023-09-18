@@ -95,6 +95,9 @@
 				dict = st5[1];
 				console.log ('getDBSnippet: dictID,', { dict, sid })
 				break;
+			case "text":
+				WMStore.Open('Text', secLabel, { id: snippetID })
+				break;
 			default:
 				console.warn("getDBSnippet: sHead type unknown [" + sHead + "]")
 				break;
