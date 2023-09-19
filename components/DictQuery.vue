@@ -1,5 +1,82 @@
+<script setup lang="ts">
+	import { useDictStore, IDictionary } from "~~/store/dict"
+    import { useWMStore } from '~~/store/wm';
+	import { Ref } from "@vue/runtime-dom"
+
+	const props = defineProps(['params'])
+
+	const DictStore = useDictStore()
+	const dictList = computed(() => DictStore.dictList)
+	const dictSelector: Ref<{ [dictId: string]: boolean }> = ref({})
+	dictList.value.forEach(d => { dictSelector.value[d.coll_name] = (props.params?.dictId == d.coll_name) })
+	if (!Object.keys(dictSelector.value).some(d => dictSelector.value[d])) {
+		Object.keys(dictSelector.value).forEach(d => { dictSelector.value[d] = true })
+	}
+	const normalizedDictList = computed(() => {
+		var newString = Object.keys(dictSelector.value)
+			.filter((e: string) => dictSelector.value[e])
+			.join(",")
+		return newString
+	})
+	const dictCrossQueryXslt = computed(() => DictStore.dictCrossQueryXslt)
+
+	const queryString: Ref<string> = ref('')
+	const normalizedQueryString = computed(() => {
+		if (queryString.value === "") {
+			return ""
+		}
+		let newString = queryString.value
+			.split("&")
+			.map((e: string) => e.split(","))
+			.flat()
+			.map((e: string) => e.trim())
+			.filter((e: string) => e != "")
+			.map((e: string) => (e.indexOf("=") == -1) ? 'any="' + e + '"' : e)
+			.join(",")
+		return newString
+	})
+
+	const QueryDictionaries = async () => {
+		const { $api } = useNuxtApp()
+		$api.baseUrl = ("" + import.meta.env.VITE_APIBASEURL);
+		try {
+			return (await $api.dictApi.getDictApi({
+				query: normalizedQueryString.value,
+				dict: normalizedDictList.value,
+				xslt: dictCrossQueryXslt.value
+			})).text()
+		} catch (error) {
+			LogError(error)
+		}
+	}
+
+	const LogError = async (error: any) => {
+		let errorXml = (new DOMParser()).parseFromString(await error.text(), 'text/xml')
+			console.error(errorXml)
+			alert(
+				'Status: ' + errorXml.querySelector('status')?.textContent + '\n\n'
+				+ errorXml.querySelector('title')?.textContent + '\n\n'
+				+ errorXml.querySelector('detail')?.textContent + '\n\n'
+				+ 'Trace: ' + errorXml.querySelector('trace')?.textContent
+			)
+	}
+
+	const resultHtml: Ref<string | undefined> = ref('')
+
+	const QueryButtonClicked = async (e: Event) => {
+		e.preventDefault()
+		resultHtml.value = await QueryDictionaries()
+	}
+
+    const WMStore = useWMStore()
+	const OpenExamples = (e: Event) => {
+		e.preventDefault()
+		WMStore.Open('Text', 'textQuery: TUNICO DICTIONARY', { id: 'dictFrontPage_Tunis', customClass: 'vicav-cover-page' })
+	}
+</script>
+
 <template>
-	<div id="dict-query">
+	<div class="vv-dict-query">
 		<form class="newQueryForm form-inline mt-2 mt-md-0">
 			<input
 				class="form-control mr-sm-2"
@@ -9,153 +86,50 @@
 				placeholder="Search in dictionaries ..."
 				aria-label="Search"
 			/>
-			<button class="crossDictQueryBtn" @click="QueryButtonClicked" :disabled="queryString === ''">
+			<button class="crossDictQueryBtn" @click="QueryButtonClicked" :disabled="queryString === '' || !Object.keys(dictSelector).some(d => dictSelector[d])">
 				Query</button
 			><br />
 		</form>
-		{{ normalizedQueryString }}<br />{{ normalizedDictList }}
+		<span style="font: small;">Normalized query string: {{ normalizedQueryString }}</span><br />
+		<span style="font: small;">Normalized dictionary list: {{ normalizedDictList }}</span>
 		<ul class="selQueryType">
 			<li v-for="dict in dictList" :key="dict.id">
-				<input type="checkbox" v-model="dict.selected" :id="'cb' + dict.id.toUpperCase()" />
-				<label class="checkboxLabel" :for="'cb' + dict.id.toUpperCase()">{{ dict.name }}</label>
+				<input type="checkbox" v-model="dictSelector[dict.coll_name]" :id="dict.id" />
+				<label class="checkboxLabel" :for="dict.id">{{ dict.name }}</label>
 			</li>
 		</ul>
 		<p>
 			For details as to how to formulate meaningful dictionary queries consult the
-			<a class="aVicText" href="" @click="UndefinedLink">examples of the TUNICO dictionary</a>.
+			<a class="aVicText" href="" @click="OpenExamples">examples of the TUNICO dictionary</a>.
 		</p>
 		<div v-html="resultHtml"></div>
 	</div>
 </template>
 
-<script>
-import axios from "axios";
-import { useDictStore } from '~~/store/dict'
-import { storeToRefs } from 'pinia';
-
-export default {
-	props: ["params"],
-	emits: ["new-window"],
-	setup() {
-		const dictStore = useDictStore()
-		const { dictList, dictCrossQueryXslt } = storeToRefs(dictStore)
-		return {
-			dictList,
-			dictCrossQueryXslt,
-		}
-	},
-	data() {
-		return {
-			queryString: "",
-			resultHtml: "",
-		};
-	},
-	computed: {
-		normalizedQueryString() {
-			if (this.queryString === "") {
-				return "";
-			}
-			var newString = this.queryString
-				.split("&")
-				.map(e => e.split(","))
-				.flat()
-				.map(e => e.trim())
-				.filter(e => e != "")
-				.map(e => (e.indexOf("=") == -1) ? 'any="' + e + '"' : e)
-				.join(",");
-			return newString;
-		},
-		normalizedDictList() {
-			var newString = Object.keys(this.dictList)
-				.filter(e => this.dictList[e].selected)
-				.map(e => this.dictList[e].coll_name)
-				.join(",");
-			return newString;
-		},
-	},
-	methods: {
-		QueryButtonClicked(e) {
-			e.preventDefault();
-			axios
-				.get(
-					"http://" + import.meta.env.VITE_BASEURL + "/dicts_api" +
-						"?query=" + this.normalizedQueryString +
-						"&dicts=" + this.normalizedDictList +
-						"&xslt=" + this.dictCrossQueryXslt,
-				)
-				.then(response => {
-					this.resultHtml = this.PostProcessResultList(response.data);
-					this.MakeDictEntryLinksClickable();
-				})
-				.catch(error => {
-					console.error(error);
-				});
-		},
-		PostProcessResultList(resultList) {
-			return resultList
-				.split(/\r\n/)
-				.map(str =>
-					str.replace(
-						/href=\"javascript:getDBSnippet\(&#34;(dictID:.*)&#34;\)\"/i,
-						'href="" data-params="$1"',
-					),
-				)
-				.join("\r\n");
-		},
-		MakeDictEntryLinksClickable() {
-			this.$nextTick(() => {
-				Array.prototype.slice.call(document.querySelectorAll('[data-params^="dictID"]')).map(
-					el => (el.onclick = e => {
-						e.preventDefault();
-						e.stopPropagation();
-						this.$emit("new-window", {
-							id: "vv-dict-entry",
-							title: "Dictionary entry " + e.target.dataset.params,
-							component: {
-								name: "DictEntry",
-								params: this.GetDbSnippetParams(e.target.dataset.params),
-							},
-						});
-					}),
-				);
-			});
-		},
-		GetDbSnippetParams(params) {
-			let splitPoint = params.indexOf(":");
-			let sHead = params.substr(0, splitPoint);
-			let sTail = params.substring(splitPoint + 1);
-			let sh = sTail.split("/");
-			let snippetID = sh[0].trim();
-			let secLabel = "";
-			if (!!sh[1]) {
-				secLabel = sh[1].trim();
-				secLabel = secLabel.replace(/_/g, " ");
-			}
-			let sid = null;
-			let dict = null;
-			switch (sHead) {
-				case "dictID":
-					let st5 = sTail.split(",");
-					sid = st5[0];
-					dict = this.dictList.find(dict => dict.query_selector == st5[1]);
-					if (dict == null) {
-						return "UNKNOWN_DICTIONARY";
-					}
-					break;
-				default:
-					return "NOT_IMPLEMENTED";
-			}
-			return { dict, sid };
-		},
-		UndefinedLink() {
-			alert("This link is undefined.");
-		},
-	},
-};
-</script>
-
 <style lang="scss" scoped>
-#dict-query {
-	padding: 1rem;
+.biblQueryBtn, .crossDictQueryBtn {
+    width: 300px;
+    height: 40px;
+    color: rgb(168, 93, 143);
+    border: 2px solid rgb(168, 93, 143);
+    font-weight: bold;
+    background: white;
+    display: inline-block;
+    font-weight: 400;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    border-radius: 0.25rem;
+}
+.biblQueryBtn:disabled, .crossDictQueryBtn:disabled {
+	opacity: 0.3;
+	background-color: lightgrey;
+}
+
+.selQueryType {
+    display: block;
+    margin-top: 5px;
+    margin-left: 3px;
+    /* border: 1px solid black; */
 }
 </style>
