@@ -1,4 +1,5 @@
 import {defineStore} from 'pinia';
+import type {ItemType} from '~/gen/Api';
 
 export const useAppDataStore = defineStore(
     'appData',
@@ -20,15 +21,14 @@ export const useAppDataStore = defineStore(
 			const { $api } = useNuxtApp();
 			$api.baseUrl = ("" + import.meta.env.VITE_APIBASEURL);
 			try {
-				let projectInfo = await $api.project.getProject({headers: { 'Accept': 'application/json' }});
+				let projectInfo = await $api.vicav.getProject({headers: { 'Accept': 'application/json' }});
 				appTitle.value = projectInfo.data.projectConfig.title;
 				appMenu.value = projectInfo.data.projectConfig.menu.main.map(m => {
 					return {
 						id: m.id,
 						type: 'submenu',
 						name: m.title,
-						submenu: m.item.map((item: { id: string; type: string; title: string; componentName: string; }) => {
-							console.log(item.type)
+						submenu: m.item.map((item: ItemType) => {
 							switch (item.type) {
 								case 'item':
 									return {
@@ -37,7 +37,7 @@ export const useAppDataStore = defineStore(
 										name: item.title,
 										windowTypeId: item.componentName,
 										params: {
-											id: item.id,
+											id: item.target||item.id,
 										}
 									} as IMenuItem
 								case 'separator':

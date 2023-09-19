@@ -14,7 +14,7 @@ const currentPage = ref(1)
 
 const loadNextPage = async function() {
   let text;
-  text = await $api.corpusText.getCorpusText(
+  text = await $api.vicav.getCorpusText(
     {
       id: props.params.textId,
       hits: props.params.hits,

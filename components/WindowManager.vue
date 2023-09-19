@@ -15,6 +15,9 @@
 		DictQuery: {
 			component: resolveComponent('DictQuery'),
 		} as IWindowType,
+		DictEntry: {
+			component: resolveComponent('DictEntry'),
+		} as IWindowType,
 		CorpusQuery: {
 			title: 'Corpus query',
 			component: resolveComponent('CorpusQuery'),
@@ -44,14 +47,18 @@
 
 		console.log(newWindow)
 
-		var window: IWindow = {
+		let windowClasses = [ 'wb-vicav', 'no-min', 'no-max', 'no-full', 'no-resize', 'no-move']
+		if (!!newWindow.params?.customClass) {
+			windowClasses.push(newWindow.params.customClass)
+		}
+		let window: IWindow = {
 			id: newWindow.id,
 			ref: null,
 			type: windowType as IWindowType,
 			winBoxOptions: {
 				title: newWindow.title,
 				top: WMStore.topMargin,
-				class: [ 'no-min', 'no-max', 'no-full', 'no-resize', 'no-move'],
+				class: windowClasses,
 			},
 			params: newWindow.params,
 		}
@@ -75,9 +82,44 @@
 		WMStore.RegisterClientSize(document.documentElement.clientWidth, document.documentElement.clientHeight - WMStore.topMargin)
 	}
 
+	const getDBSnippet = (params: string): void => {
+		// TODO: create a method in a "legacy vicav" helper plugin that returns a { windowTypeId, windowName, windowParams } object
+		// based on the getDBSnippet parameter
+		console.log('getDBSnippet: ', params)
+
+		let splitPoint = params.indexOf(":")
+		let sHead = params.substring(0, splitPoint)
+		let sTail = params.substring(splitPoint + 1)
+		let sh = sTail.split("/")
+		let snippetID = sh[0].trim()
+		let secLabel = ""
+		if (!!sh[1]) {
+			secLabel = sh[1].trim()
+			secLabel = secLabel.replace(/_/g, " ")
+		}
+		let sid = null;
+		let dict = null;
+		switch (sHead) {
+			case "dictID":
+				let st5 = sTail.split(",");
+				sid = st5[0];
+				dict = st5[1];
+				WMStore.Open('DictEntry', sid + ': ' + dict, { dict, sid })
+				console.log ('getDBSnippet: dictID,', { dict, sid })
+				break;
+			case "text":
+				WMStore.Open('Text', secLabel, { id: snippetID })
+				break;
+			default:
+				console.warn("getDBSnippet: sHead type unknown [" + sHead + "]")
+				break;
+		}
+	}
+
 	onMounted(() =>{
 		RegisterClientSize()
 		window.addEventListener('resize', RegisterClientSize, true)
+		window.getDBSnippet = getDBSnippet
 	})
 </script>
 
@@ -98,3 +140,28 @@
 
 	</div>
 </template>
+
+<style>
+	.wb-vicav {
+		background-color: rgb(168, 93, 143);
+	}
+	.wb-vicav .wb-header {
+		height: 25px;
+		line-height: 25px;
+	}
+	.wb-vicav .wb-min { background-size: 10px auto; }
+	.wb-vicav .wb-max { background-size: 12px auto; }
+	.wb-vicav .wb-full { background-size: 11px auto; }
+	.wb-vicav .wb-close { background-size: 11px auto; }
+	.wb-vicav .wb-control * { width: 22px; }
+	.wb-vicav .wb-body {
+		top: 25px;
+		margin: 0;
+		padding: 20px;
+		background-color: #fff;
+	}
+
+	.vicav-cover-page .wb-body {
+    	background-color: rgb(252, 244, 216);
+	}
+</style>

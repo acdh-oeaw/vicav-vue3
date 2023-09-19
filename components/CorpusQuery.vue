@@ -8,7 +8,7 @@
   const hits = ref([]);
 
   async function QueryButtonClicked(e)  {
-    const result = await $api.corpus.searchCorpus(
+    const result = await $api.vicav.searchCorpus(
         { query: queryString.value },
         { headers: { 'Accept': 'application/json' }})
 
@@ -17,7 +17,7 @@
   }
 
   function openCorpusText(e) {
-    WMStore.Open("CorpusText", {
+    WMStore.Open("CorpusText", "shawi corpus", {
       textId: e.currentTarget.dataset.doc,
       hits: e.currentTarget.dataset.hits,
       u: e.currentTarget.dataset.uid

@@ -62,7 +62,9 @@ export const useWMStore = defineStore(
 			})
 		}
 
-		const ArrangeNot = () => {}
+		const ArrangeNot = () => {
+			windowList.value.forEach(w => w.ref.removeClass('no-min').removeClass('no-max').removeClass('no-full').removeClass('no-resize').removeClass('no-move'))
+		}
 
 		const ArrangeTile = () => {
 			let cols = Math.floor(Math.sqrt(windowList.value.length - 1)) + 1
@@ -76,6 +78,7 @@ export const useWMStore = defineStore(
 				w.ref
 					.resize(windowWidth, windowHeight)
 					.move(newX, newY)
+					.addClass('no-min').addClass('no-max').addClass('no-full').addClass('no-resize').addClass('no-move')
 			})
 		}
 
@@ -99,6 +102,7 @@ export const useWMStore = defineStore(
 				w.ref
 					.resize(windowWidth, windowHeight)
 					.move(windowWidth * colNum, topMargin.value + windowHeight * rowNum)
+					.addClass('no-min').addClass('no-max').addClass('no-full').addClass('no-resize').addClass('no-move')
 			})
 		}
 
@@ -117,6 +121,7 @@ export const useWMStore = defineStore(
 				w.ref
 					.resize(windowWidth, windowHeight)
 					.move(newX, newY)
+					.addClass('no-min').addClass('no-max').addClass('no-full').addClass('no-resize').addClass('no-move')
 			})
 		}
 
@@ -126,7 +131,7 @@ export const useWMStore = defineStore(
 			name: string
 			method: () => void
 		}
-		const desktopArrangeMethods = [{
+		const desktopArrangeMethods: Array<WindowArrangeMethod> = [{
 			id: 0,
 			name: "No arrangement",
 			method: ArrangeNot,
@@ -142,7 +147,7 @@ export const useWMStore = defineStore(
 			id: 3,
 			name: "Smart Tile",
 			method: ArrangeSmartTile,
-		}] as WindowArrangeMethod[]
+		}]
 
 		const selectedDesktopArrangeMethodId = ref(3) // TODO: move magic number to settings
 

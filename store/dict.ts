@@ -3,20 +3,11 @@ import {defineStore} from 'pinia';
 export const useDictStore = defineStore(
     'dict',
     () => {
-        // A dictionary data object must have the following properties:
-        //   id: "cbCairo",
-        //   name: "Cairo",
-        //   long_name: "Cairo Dictionary",
-        //   selected: false,
-        //   coll_name: "dc_arz_eng_publ",
-        //   query_selector: "ar-arz-x-cairo-vicav",
-        //   xslt: "cairo_dict_001.xslt",
         const dictList = [
             {
                 id: "cbCairo",
                 name: "Cairo",
                 long_name: "Cairo Dictionary",
-                selected: false,
                 coll_name: "dc_arz_eng_publ",
                 query_selector: "ar-arz-x-cairo-vicav",
                 xslt: "cairo_dict_001.xslt",
@@ -25,7 +16,6 @@ export const useDictStore = defineStore(
                 id: "cbDamascus",
                 name: "Damascus",
                 long_name: "Damascus Dictionary",
-                selected: false,
                 coll_name: "dc_apc_eng_publ",
                 query_selector: "ar-apc-x-damascus-vicav",
                 xslt: "damascus_dict_001.xslt",
@@ -34,7 +24,6 @@ export const useDictStore = defineStore(
                 id: "cbTunis",
                 name: "Tunis",
                 long_name: "TUNICO Dictionary",
-                selected: true,
                 coll_name: "dc_tunico",
                 query_selector: "ar-aeb",
                 xslt: "tunis_dict_001.xslt",
@@ -43,7 +32,6 @@ export const useDictStore = defineStore(
                 id: "cbBaghdad",
                 name: "Baghdad",
                 long_name: "Baghdad Dictionary",
-                selected: true,
                 coll_name: "dc_acm_baghdad_eng_publ",
                 query_selector: "ar-acm-x-baghdad-vicav",
                 xslt: "baghdad_dict_001.xslt",
@@ -52,12 +40,11 @@ export const useDictStore = defineStore(
                 id: "cbMsa",
                 name: "MSA",
                 long_name: "MSA Dictionary",
-                selected: false,
                 coll_name: "dc_ar_en_publ",
                 query_selector: "ar-x-DMG",
                 xslt: "fusha_dict_001.xslt",
             },
-        ]
+        ] as Array<IDictionary>
 
         const dictCrossQueryXslt = "dicts_cross_query_001.xslt"
 
@@ -67,3 +54,12 @@ export const useDictStore = defineStore(
         }
     }
 )
+
+export interface IDictionary {
+    id:             string, // "cbCairo"                checkbox Id used in search form
+    name:           string, // "Cairo"                  label used in search form
+    long_name:      string, // "Cairo Dictionary"       long name
+    coll_name:      string, // "dc_arz_eng_publ"        dictionary id used in search query (comma separated)
+    query_selector: string, // "ar-arz-x-cairo-vicav"   dictionary id used in GetDbSnippetParams
+    xslt:           string, // "cairo_dict_001.xslt"    xslt parameter sent to backend in search query
+}
