@@ -26,7 +26,7 @@
 
   $api.baseUrl = ("" + import.meta.env.VITE_APIBASEURL);
   const { data, pending, error, refresh } = await useAsyncData(
-    () => $api.biblMarkersTei.getMarkers({query: ".*", scope: "geo"}, { headers: { accept: "application/json" }}),
+    () => $api.vicav.getMarkers({query: ".*", scope: "geo"}, { headers: { accept: "application/json" }}),
     {
       transform: (items) => items.data.filter((item) => {
         try {
@@ -50,6 +50,6 @@
   <client-only>
     <WindowManager/>
       <VicavMapBar></VicavMapBar>
-      <vicav-map :items="items.data" style="height:calc(100vh - 68px); position: relative; top: -36px; outline: none;"></vicav-map>
+      <vicav-map :items="items" style="height:calc(100vh - 68px); position: relative; top: -36px; outline: none;"></vicav-map>
   </client-only>
 </template>

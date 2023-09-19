@@ -20,7 +20,7 @@
 		$api.baseUrl = ("" + import.meta.env.VITE_APIBASEURL);
 		try {
 			// TODO: add GetDictEntry to api
-			// return (await $api.text.getDictEntry({id, dict})).text()
+			// return (await $api.vicav.getDictEntry({id, dict})).text()
 			return `Error showing dictionary entry for dict=${dict}&id=${id} – api is missing`
 		} catch (error) {
 			console.error(error)

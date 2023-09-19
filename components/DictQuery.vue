@@ -40,7 +40,7 @@
 		const { $api } = useNuxtApp()
 		$api.baseUrl = ("" + import.meta.env.VITE_APIBASEURL);
 		try {
-			return (await $api.dictApi.getDictApi({
+			return (await $api.vicav.getDictApi({
 				query: normalizedQueryString.value,
 				dict: normalizedDictList.value,
 				xslt: dictCrossQueryXslt.value

@@ -13,7 +13,7 @@
 		const id = String(props.params.id)
 		$api.baseUrl = ("" + import.meta.env.VITE_APIBASEURL);
 		try {
-			return (await $api.text.getText({id})).text()
+			return (await $api.vicav.getText({id})).text()
 		} catch (error) {
 			console.error(error)
 		}
