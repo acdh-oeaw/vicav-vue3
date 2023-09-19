@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts">
-import { Ref } from "@vue/runtime-dom"
+	import { Ref } from "@vue/runtime-dom"
 
 	const htmlContents: Ref<string | undefined> = ref("")
 	const props = defineProps(['params'])

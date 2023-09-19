@@ -15,6 +15,9 @@
 		DictQuery: {
 			component: resolveComponent('DictQuery'),
 		} as IWindowType,
+		DictEntry: {
+			component: resolveComponent('DictEntry'),
+		} as IWindowType,
 	}
 
 	const newWindow = computed(() => WMStore.newWindow)
@@ -93,6 +96,7 @@
 				let st5 = sTail.split(",");
 				sid = st5[0];
 				dict = st5[1];
+				WMStore.Open('DictEntry', sid + ': ' + dict, { dict, sid })
 				console.log ('getDBSnippet: dictID,', { dict, sid })
 				break;
 			case "text":
