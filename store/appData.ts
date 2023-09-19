@@ -1,4 +1,5 @@
 import {defineStore} from 'pinia';
+import type {ItemType} from '~/gen/Api';
 
 export const useAppDataStore = defineStore(
     'appData',
@@ -27,7 +28,7 @@ export const useAppDataStore = defineStore(
 						id: m.id,
 						type: 'submenu',
 						name: m.title,
-						submenu: m.item.map((item: { id: string; type: string; title: string; componentName: string; }) => {
+						submenu: m.item.map((item: ItemType) => {
 							switch (item.type) {
 								case 'item':
 									return {
@@ -36,7 +37,7 @@ export const useAppDataStore = defineStore(
 										name: item.title,
 										windowTypeId: item.componentName,
 										params: {
-											id: item.id,
+											id: item.target||item.id,
 										}
 									} as IMenuItem
 								case 'separator':
