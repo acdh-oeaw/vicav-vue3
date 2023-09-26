@@ -1,6 +1,6 @@
 # vicav-vue3
 
-A redevelopment of the [current vicav frontend](https://vicav.acdh.oeaw.ac.at/) using [Vue3](https://vuejs.org/) and [Nuxt](https://nuxt.com/)
+A redevelopment of the [current VICAV frontend](https://vicav.acdh.oeaw.ac.at/) using [Vue3](https://vuejs.org/) and [Nuxt](https://nuxt.com/)
 
 For basic info on how it works, check out [Nuxt 3 documentation](https://nuxt.com/docs/getting-started/introduction).
 
@@ -12,42 +12,27 @@ For basic info on how it works, check out [Nuxt 3 documentation](https://nuxt.co
 npm install
 ```
 
-### 2. Install API submodule
+### 2. Generate API client
 
-The current setup uses a [swagger-typescript-api](https://github.com/acacode/swagger-typescript-api) module for 
-communication with the REST-API of the vicav backend. 
+The current setup uses a [swagger-typescript-api](https://github.com/acacode/swagger-typescript-api) module for
+communication with the REST-API of the VICAV backend.
 
-The [OpenApi](https://swagger.io/specification/) - definition used is maintained [here](https://github.com/acdh-oeaw/vicav-app-api)
-and included as a submodule. It can be checked out and updated using
+The OpenAPI document is maintained [here](https://github.com/acdh-oeaw/vicav-app-api) and can be explored [here](https://vicav.acdh-ch-dev.oeaw.ac.at/openapi).
 
-```bash
-git submodule update
-```
-
-> **Note:** Currently the only way to set up the most up-to-date version is to ckeckout the indicated commit. Therefore, the following steps are also necessary:
+To generate the API client run:
 
 ```bash
-cd vicav-app-api
-git checkout <commit_hash> # for example dad2f8c
-cd ..
-```
-
-Having set up the code this way, the submodule is ready to be built:
-
-```bash
-sta -p ./vicav-app-api/openapi.yaml -o ./gen/
-#or
 npm run makeapi
 ```
 
-**Note:** The resulting `gen` folder SHOULD NOT be commited. 
+**Note:** The resulting `gen` folder SHOULD NOT be commited.
 
 ## Environment variables
 
-see [dev.env.template](dev.env.template) for recommended values 
+see [dev.env.template](dev.env.template) for recommended values
 
 ```
-VITE_BASEURL - base address of the app  
+VITE_BASEURL - base address of the app
 VITE_APIBASEURL - base address of the backend api
 VITE_MAP_TILELAYER - template URL for the leaflet map tile-layer
 VITE_MAP_INITIAL_X - coordinates for the the initial map view

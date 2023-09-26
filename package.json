@@ -5,8 +5,8 @@
     "npm": "9.x"
   },
   "scripts": {
-    "makeapi": "sta -p ./vicav-app-api/openapi.yaml -o ./gen/",
-    "build": "sta -p ./vicav-app-api/openapi.yaml -o ./gen/ && nuxt build",
+    "makeapi": "sta -p https://raw.githubusercontent.com/acdh-oeaw/vicav-app-api/master/openapi.json -o ./gen/",
+    "build": "sta -p https://raw.githubusercontent.com/acdh-oeaw/vicav-app-api/master/openapi.json -o ./gen/ && nuxt build",
     "start": "node .output/server/index.mjs",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
