@@ -1,4 +1,4 @@
-# vicav frontend
+# VICAV frontend
 
 frontend application for the VICAV project.
 

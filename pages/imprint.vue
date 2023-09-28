@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 definePageMeta({
-	title: "Impressum",
+	title: "Imprint",
 });
 
 const env = useRuntimeConfig();

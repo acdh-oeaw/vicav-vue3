@@ -138,4 +138,11 @@ provide(key, context);
 .leaflet-container:focus {
 	outline: none;
 }
+
+/** Fix a11y issues. */
+.leaflet-control-attribution a {
+	color: inherit;
+	text-decoration: underline;
+	text-underline-offset: 0.1em;
+}
 </style>

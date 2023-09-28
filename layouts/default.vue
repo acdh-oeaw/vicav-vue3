@@ -10,7 +10,7 @@ const { data, suspense } = useProjectInfo();
 await suspense();
 
 const siteTitle = computed(() => {
-	return data.value?.projectConfig?.title ?? "VICAV - Vienna Corpus of Arabic Varieties";
+	return data.value?.projectConfig?.title ?? "VICAV3.0 - Vienna Corpus of Arabic Varieties";
 });
 
 function toHsl(hex: string): string {
