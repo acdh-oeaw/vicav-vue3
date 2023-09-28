@@ -22,21 +22,26 @@ jobs:
       - name: Get environment from git ref
         id: environment
         run: |
-          echo "Running on branch ${{ github.ref_name }}"
           if [ "${{ github.ref }}" = "refs/heads/main" ]; then
-            echo "environment=production"
-            echo "environment=production" >> $GITHUB_OUTPUT
-            echo "environment_short=prod" >> $GITHUB_OUTPUT
+            environment="production"
+            app_name_suffix=""
+          elif [ "${{ github.ref }}" = "refs/heads/develop" ]; then
+            environment="development"
+            app_name_suffix="-development"
+          elif [ "${{github.event_name}}" = "pull_request"]; then
+            environment="pr/${{ github.event.pull_request.number }}"
+            app_name_suffix="-pr-${{ github.event.pull_request.number }}"
           else
-            echo "environment=review/${{ github.ref_name }}"
-            echo "environment=review/${{ github.ref_name }}" >> $GITHUB_OUTPUT
-            echo "environment_short=$(echo -n ${{ github.ref_name }} | sed 's/feature[_/]//' | tr '_' '-' | tr '[:upper:]' '[:lower:]' | cut -c1-24 | sed 's/-*$//' )" >> $GITHUB_OUTPUT
+            exit 1
           fi
+
+          echo "environment=$environment" >> $GITHUB_OUTPUT
+          echo "app_name_suffix=$app_name_suffix" >> $GITHUB_OUTPUT
     outputs:
       environment: "${{ steps.environment.outputs.environment }}"
-      environment_short: "${{ steps.environment.outputs.environment_short }}"
+      app_name_suffix: "${{ steps.environment.outputs.app_name_suffix }}"
       registry: ghcr.io
-      image: ${{ github.repository }}/${{ github.ref_name }}
+      image: ${{ github.repository }}
 
   vars:
     needs: [env]
@@ -48,10 +53,11 @@ jobs:
         id: public_url
         run: |
           if [[ -z "${{ vars.PUBLIC_URL }}" ]]; then
-            public_url=https://${{ needs.env.outputs.environment_short }}.${{ vars.KUBE_INGRESS_BASE_DOMAIN }}
+            public_url=https://${{ needs.env.outputs.app_name_suffix }}.${{ vars.KUBE_INGRESS_BASE_DOMAIN }}
           else
             public_url="${{ vars.PUBLIC_URL }}"
           fi
+
           echo "public_url=$public_url" >> $GITHUB_OUTPUT
     outputs:
       PUBLIC_URL: ${{ steps.public_url.outputs.public_url }}
@@ -111,7 +117,7 @@ jobs:
     with:
       environment: ${{ needs.env.outputs.environment }}
       DOCKER_TAG: ${{ needs.env.outputs.registry }}/${{ needs.env.outputs.image }}
-      APP_NAME: "nuxt-vicav-${{ needs.env.outputs.environment_short }}"
+      APP_NAME: "nuxt-vicav${{ needs.env.outputs.app_name_suffix }}"
       APP_ROOT: "/"
       SERVICE_ID: ${{ vars.SERVICE_ID }}
       PUBLIC_URL: ${{ needs.vars.outputs.PUBLIC_URL }}
