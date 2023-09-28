@@ -18,7 +18,8 @@ jobs:
       image_name: nuxt-vicav
       registry_root: ghcr.io/${{ github.repository }}/
       default_port: "3000"
-      submodules: "true"
+      fetch-depth: 10
+      submodules: "false"
       #      herokuish_base_image: ghcr.io/acdh-oeaw/herokuish-for-cypress/main:latest-22
       APP_NAME: nuxt-vicav
       # This together with the branch name is also used as the namespace to deploy to
@@ -41,6 +42,23 @@ jobs:
             echo "environment=review/${{ github.ref_name }}" >> $GITHUB_OUTPUT
             echo "environment_short=$(echo -n ${{ github.ref_name }} | sed 's/feat\(ure\)\{0,1\}[_/]//' | tr '_' '-' | tr '[:upper:]' '[:lower:]' )" >> $GITHUB_OUTPUT
           fi
+  generate_workflow_vars:
+    needs: [setup_workflow_env]
+    environment:
+      name: ${{ needs.setup_workflow_env.outputs.environment }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate PUBLIC_URL if not set
+        id: generate_public_url
+        run: |
+          kube_ingress_base_domain="${{ vars.KUBE_INGRESS_BASE_DOMAIN }}"
+          public_url="${{ needs.setup_workflow_env.outputs.PUBLIC_URL || vars.PUBLIC_URL }}"
+          if [ "${public_url}x" == 'x' ]
+          then public_url=https://${{ needs.setup_workflow_env.outputs.environment_short }}.${kube_ingress_base_domain}
+          fi
+          echo "public_url=$public_url" >> $GITHUB_OUTPUT
+    outputs:
+      PUBLIC_URL: ${{ steps.generate_public_url.outputs.public_url }}
   _1:
     needs: [setup_workflow_env]
     uses: acdh-oeaw/gl-autodevops-minimal-port/.github/workflows/build-herokuish-and-push-to-registry.yaml@main
@@ -52,6 +70,7 @@ jobs:
       image_name: ${{ needs.setup_workflow_env.outputs.image_name }}
       BUILDPACK_URL: ${{ needs.setup_workflow_env.outputs.BUILDPACK_URL }}
       default_port: ${{ needs.setup_workflow_env.outputs.default_port }}
+      fetch-depth: ${{ needs.setup_workflow_env.outputs.fetch-depth }}
       submodules: ${{ needs.setup_workflow_env.outputs.submodules }}
   _2:
     needs: [setup_workflow_env]
@@ -63,22 +82,17 @@ jobs:
       registry_root: ${{ needs.setup_workflow_env.outputs.registry_root }}
       image_name: ${{ needs.setup_workflow_env.outputs.image_name }}
       default_port: ${{ needs.setup_workflow_env.outputs.default_port }}
+      fetch-depth: ${{ needs.setup_workflow_env.outputs.fetch-depth }}
       herokuish_base_image: ${{ needs.setup_workflow_env.outputs.herokuish_base_image }}
       BUILDPACK_URL: ${{ needs.setup_workflow_env.outputs.BUILDPACK_URL }}
       submodules: ${{ needs.setup_workflow_env.outputs.submodules }}
   _3:
-    needs: [setup_workflow_env, _1, _2]
+    needs: [setup_workflow_env, generate_workflow_vars, _1, _2]
     uses: acdh-oeaw/gl-autodevops-minimal-port/.github/workflows/deploy.yml@main
     secrets: inherit
-    # if you run this outside of acdh-oeaw yo uneed to specify every secret you want to pass by name
-    #      KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
-    #      KUBE_INGRESS_BASE_DOMAIN: ${{ secrets.KUBE_INGRESS_BASE_DOMAIN }}
-    #      POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
-    #      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-    #      POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
-    #      K8S_SECRET_A_VAR_NAME: ${{  }}
     with:
       environment: ${{ needs.setup_workflow_env.outputs.environment}}
+      fetch-depth: ${{ needs.setup_workflow_env.outputs.fetch-depth }}
       DOCKER_TAG:
         ${{ needs.setup_workflow_env.outputs.registry_root }}${{
         needs.setup_workflow_env.outputs.image_name }}
