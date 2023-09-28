@@ -31,7 +31,7 @@ onScopeDispose(() => {
 <template>
 	<Sheet v-model:open="isSidepanelOpen">
 		<SheetTrigger aria-label="Toggle menu" class="cursor-default">
-			<MenuIcon class="h-5 w-5" />
+			<MenuIcon class="mx-3 my-1.5 h-5 w-5" />
 		</SheetTrigger>
 		<SheetContent class="overflow-y-auto">
 			<div class="grid divide-y divide-border py-8">
