@@ -1,5 +1,12 @@
 import { fileURLToPath } from "node:url";
 
+let nuxtdevtools_installed;
+try {
+	nuxtdevtools_installed = require("@nuxt/devtools") !== undefined;
+} catch {
+	// do nothing
+}
+
 export default defineNuxtConfig({
 	alias: {
 		"@": fileURLToPath(new URL("./", import.meta.url)),
@@ -16,7 +23,7 @@ export default defineNuxtConfig({
 		"winbox/dist/css/winbox.min.css",
 		"leaflet/dist/leaflet.css",
 	],
-	devtools: { enabled: true },
+	devtools: { enabled: nuxtdevtools_installed },
 	imports: { dirs: ["./config/", "./stores/"] },
 	modules: ["@pinia/nuxt", "@vueuse/nuxt"],
 	nitro: { compressPublicAssets: true },
