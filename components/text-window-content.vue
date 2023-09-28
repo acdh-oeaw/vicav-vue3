@@ -22,3 +22,10 @@ const { data, isFetching } = useTextById(params);
 		</Centered>
 	</div>
 </template>
+
+<style>
+/* stylelint-disable-next-line selector-class-pattern */
+.tbHeader {
+	margin: 0;
+}
+</style>
