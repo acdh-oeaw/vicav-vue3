@@ -1,4 +1,3 @@
-import { createUrl } from "@acdh-oeaw/lib";
 import { icon } from "leaflet";
 
 export function useGeoMapConfig() {
@@ -19,15 +18,7 @@ export function useGeoMapConfig() {
 		const url = data.value?.projectConfig?.icon;
 
 		// TODO: default should be set via zod schema
-		if (url == null) return "/assets/images/marker-icon.png";
-
-		// FIXME: api should return fully qualified url
-		return String(
-			createUrl({
-				baseUrl: env.public.NUXT_PUBLIC_API_BASE_URL,
-				pathname: `/vicav/vendor/images/${url}`,
-			}),
-		);
+		return url ?? "/assets/images/marker-icon.png";
 	});
 
 	return {

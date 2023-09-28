@@ -1,9 +1,7 @@
 <script lang="ts" setup>
-import { createUrl, isNonEmptyString } from "@acdh-oeaw/lib";
+import { isNonEmptyString } from "@acdh-oeaw/lib";
 
 import type { ItemType } from "@/lib/api-client/Api";
-
-const env = useRuntimeConfig();
 
 const windowsStore = useWindowsStore();
 const { addWindow } = windowsStore;
@@ -19,15 +17,7 @@ const logo = computed(() => {
 	const url = data.value?.projectConfig?.logo?.img;
 
 	// TODO: defaul should be set via zod schema
-	if (url == null) return "/assets/images/logo.svg";
-
-	// FIXME: api should return fully qualified url
-	return String(
-		createUrl({
-			baseUrl: env.public.NUXT_PUBLIC_API_BASE_URL,
-			pathname: `/vicav/${url}`,
-		}),
-	);
+	return url ?? "/assets/images/logo.svg";
 });
 
 function createWindowTitle(item: ItemType) {
