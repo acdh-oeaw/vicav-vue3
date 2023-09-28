@@ -16,10 +16,24 @@ const { menus } = toRefs(props);
 const windowsStore = useWindowsStore();
 const { setWindowArrangement } = windowsStore;
 const { arrangement: currentArrangement, registry } = storeToRefs(windowsStore);
+
+const currentMenu = ref("");
+
+function close() {
+	currentMenu.value = "";
+}
+
+onMounted(() => {
+	window.addEventListener("resize", close, { passive: true });
+});
+
+onScopeDispose(() => {
+	window.removeEventListener("resize", close);
+});
 </script>
 
 <template>
-	<Menubar class="w-full border-none">
+	<Menubar v-model="currentMenu" class="w-full border-none">
 		<MenubarMenu v-for="menu of menus" :key="menu.id">
 			<MenubarTrigger>
 				{{ menu.title }}

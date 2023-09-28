@@ -14,6 +14,18 @@ const emit = defineEmits<{
 const { menus } = toRefs(props);
 
 const isSidepanelOpen = ref(false);
+
+function close() {
+	isSidepanelOpen.value = false;
+}
+
+onMounted(() => {
+	window.addEventListener("resize", close, { passive: true });
+});
+
+onScopeDispose(() => {
+	window.removeEventListener("resize", close);
+});
 </script>
 
 <template>

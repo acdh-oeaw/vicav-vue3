@@ -12,7 +12,7 @@ export function useElementDimensions(element: Ref<HTMLElement | null>): Ref<DOMR
 		observer.observe(element.value);
 	});
 
-	onUnmounted(() => {
+	onScopeDispose(() => {
 		observer.disconnect();
 	});
 
