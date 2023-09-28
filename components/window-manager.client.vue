@@ -26,6 +26,10 @@ const { registry } = storeToRefs(windowsStore);
 	pointer-events: auto;
 }
 
+.winbox.no-move .wb-drag {
+	cursor: default;
+}
+
 .winbox .wb-header {
 	@apply text-on-primary;
 }
