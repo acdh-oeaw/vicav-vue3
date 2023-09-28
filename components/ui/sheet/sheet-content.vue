@@ -8,6 +8,7 @@ import {
 	type DialogContentProps,
 	DialogOverlay,
 	DialogPortal,
+	useEmitAsProps,
 } from "radix-vue";
 
 interface SheetContentProps extends DialogContentProps {

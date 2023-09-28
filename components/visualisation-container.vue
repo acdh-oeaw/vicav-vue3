@@ -3,7 +3,7 @@ import { ref } from "vue";
 
 const elementRef = ref<HTMLElement | null>(null);
 
-const dimensions = useElementDimensions(elementRef);
+const { width, height } = useElementSize(elementRef);
 </script>
 
 <template>
@@ -12,6 +12,6 @@ const dimensions = useElementDimensions(elementRef);
 		class="relative isolate grid h-full w-full overflow-hidden"
 		data-visualisation-container
 	>
-		<slot v-if="dimensions != null" :width="dimensions.width" :height="dimensions.height" />
+		<slot v-if="width && height" :width="width" :height="height" />
 	</div>
 </template>

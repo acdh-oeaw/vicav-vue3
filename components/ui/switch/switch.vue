@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import { SwitchRoot, type SwitchRootEmits, type SwitchRootProps, SwitchThumb } from "radix-vue";
+import {
+	SwitchRoot,
+	type SwitchRootEmits,
+	type SwitchRootProps,
+	SwitchThumb,
+	useEmitAsProps,
+} from "radix-vue";
 
 const props = defineProps<SwitchRootProps>();
 

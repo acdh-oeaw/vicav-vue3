@@ -1,5 +1,10 @@
 <script setup lang="ts">
-import { MenubarRoot, type MenubarRootEmits, type MenubarRootProps } from "radix-vue";
+import {
+	MenubarRoot,
+	type MenubarRootEmits,
+	type MenubarRootProps,
+	useEmitAsProps,
+} from "radix-vue";
 
 const props = defineProps<MenubarRootProps>();
 

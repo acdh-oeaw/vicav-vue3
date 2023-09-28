@@ -18,7 +18,7 @@ export default defineNuxtConfig({
 	],
 	devtools: { enabled: true },
 	imports: { dirs: ["./config/", "./stores/"] },
-	modules: ["@pinia/nuxt"],
+	modules: ["@pinia/nuxt", "@vueuse/nuxt"],
 	nitro: { compressPublicAssets: true },
 	pinia: { autoImports: ["defineStore", "storeToRefs"] },
 	postcss: {

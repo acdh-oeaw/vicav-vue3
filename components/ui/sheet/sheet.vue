@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { DialogRoot, type DialogRootEmits, type DialogRootProps } from "radix-vue";
+import { DialogRoot, type DialogRootEmits, type DialogRootProps, useEmitAsProps } from "radix-vue";
 
 const props = withDefaults(defineProps<DialogRootProps>(), {
 	/**

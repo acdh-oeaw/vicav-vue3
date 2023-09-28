@@ -1,5 +1,10 @@
 <script setup lang="ts">
-import { MenubarItem, type MenubarItemEmits, type MenubarItemProps } from "radix-vue";
+import {
+	MenubarItem,
+	type MenubarItemEmits,
+	type MenubarItemProps,
+	useEmitAsProps,
+} from "radix-vue";
 
 const props = defineProps<MenubarItemProps & { inset?: boolean }>();
 

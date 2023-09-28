@@ -149,7 +149,6 @@ export const useWindowsStore = defineStore("windows", () => {
 
 			case "none": {
 				arrange.none(viewport, windows);
-
 				break;
 			}
 
