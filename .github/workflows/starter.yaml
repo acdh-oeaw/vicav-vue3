@@ -70,7 +70,7 @@ jobs:
       image_name: ${{ needs.setup_workflow_env.outputs.image_name }}
       BUILDPACK_URL: ${{ needs.setup_workflow_env.outputs.BUILDPACK_URL }}
       default_port: ${{ needs.setup_workflow_env.outputs.default_port }}
-      fetch-depth: ${{ needs.setup_workflow_env.outputs.fetch-depth }}
+      fetch-depth: ${{ toJson(needs.setup_workflow_env.outputs.fetch-depth) }}
       submodules: ${{ needs.setup_workflow_env.outputs.submodules }}
   _2:
     needs: [setup_workflow_env]
@@ -82,7 +82,7 @@ jobs:
       registry_root: ${{ needs.setup_workflow_env.outputs.registry_root }}
       image_name: ${{ needs.setup_workflow_env.outputs.image_name }}
       default_port: ${{ needs.setup_workflow_env.outputs.default_port }}
-      fetch-depth: ${{ needs.setup_workflow_env.outputs.fetch-depth }}
+      fetch-depth: ${{ toJson(needs.setup_workflow_env.outputs.fetch-depth) }}
       herokuish_base_image: ${{ needs.setup_workflow_env.outputs.herokuish_base_image }}
       BUILDPACK_URL: ${{ needs.setup_workflow_env.outputs.BUILDPACK_URL }}
       submodules: ${{ needs.setup_workflow_env.outputs.submodules }}
@@ -92,7 +92,7 @@ jobs:
     secrets: inherit
     with:
       environment: ${{ needs.setup_workflow_env.outputs.environment}}
-      fetch-depth: ${{ needs.setup_workflow_env.outputs.fetch-depth }}
+      fetch-depth: ${{ toJson(needs.setup_workflow_env.outputs.fetch-depth) }}
       DOCKER_TAG:
         ${{ needs.setup_workflow_env.outputs.registry_root }}${{
         needs.setup_workflow_env.outputs.image_name }}
