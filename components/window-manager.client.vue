@@ -1,13 +1,21 @@
 <script lang="ts" setup>
-import "winbox";
+import { debounce } from "@acdh-oeaw/lib";
 
 const windowsStore = useWindowsStore();
+const { arrangeWindows } = windowsStore;
 const { registry } = storeToRefs(windowsStore);
+
+const rootElement = ref<HTMLElement | null>(null);
+
+const debouncedArrangeWindows = debounce(arrangeWindows, 150);
+
+useResizeObserver(rootElement, debouncedArrangeWindows);
 </script>
 
 <template>
 	<div
 		:id="windowRootId"
+		ref="rootElement"
 		class="pointer-events-none absolute inset-0 isolate z-10 grid h-full w-full overflow-hidden"
 	>
 		<template v-for="[id, item] of registry" :key="id">

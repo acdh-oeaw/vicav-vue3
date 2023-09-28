@@ -94,6 +94,9 @@ export const useWindowsStore = defineStore("windows", () => {
 		kind: Kind;
 		params: WindowItemMap[Kind]["params"];
 	}) {
+		const rootElement = document.getElementById(windowRootId);
+		if (rootElement == null) return;
+
 		const prefix = "window";
 		const id = [prefix, params.id ?? nanoid()].join("-");
 		const { title, kind } = params;
@@ -112,8 +115,7 @@ export const useWindowsStore = defineStore("windows", () => {
 				registry.value.delete(id);
 				return false;
 			},
-			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-			root: document.getElementById(windowRootId)!,
+			root: rootElement,
 		});
 
 		registry.value.set(id, {
@@ -174,5 +176,6 @@ export const useWindowsStore = defineStore("windows", () => {
 		registry,
 		arrangement,
 		setWindowArrangement,
+		arrangeWindows,
 	};
 });
