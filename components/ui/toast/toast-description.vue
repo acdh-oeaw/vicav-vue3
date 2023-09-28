@@ -5,7 +5,7 @@ const props = defineProps<ToastDescriptionProps>();
 </script>
 
 <template>
-	<ToastDescription v-bind="props" class="text-sm opacity-90">
+	<ToastDescription v-bind="props" class="line-clamp-3 text-sm opacity-90">
 		<slot />
 	</ToastDescription>
 </template>
