@@ -41,4 +41,8 @@ useResizeObserver(rootElement, debouncedArrangeWindows);
 .winbox .wb-header {
 	@apply text-on-primary;
 }
+
+.winbox .wb-title {
+	@apply font-body;
+}
 </style>
