@@ -13,6 +13,7 @@ export const useWMStore = defineStore(
 		const RegisterClientSize = (width: number, height: number) => {
 			clientSizeWidth.value = width
 			clientSizeHeight.value = height - topMargin.value
+			ArrangeWindows()
 		}
 
 		const windowMarginPx = ref(5) // must be in sync with css class .wb-vicav in WindowManager.vue
