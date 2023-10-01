@@ -146,7 +146,7 @@
 	.wb-vicav .wb-body {
 		top: 25px;
 		margin: 0;
-		padding: 20px;
+		/* padding: */ /* each content type should set the padding itself; standard is 20px */
 		background-color: #fff;
 	}
 

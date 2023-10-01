@@ -1,5 +1,5 @@
 <template>
-	<div v-html="htmlContents"></div>
+	<div v-html="htmlContents" class="vv-dict-entry"></div>
 </template>
 
 <script setup lang="ts">
@@ -29,3 +29,9 @@
 
 	htmlContents.value = await GetDictEntry()
 </script>
+
+<style>
+	.vv-dict-entry {
+		padding: 20px;
+	}
+</style>

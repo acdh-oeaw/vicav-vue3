@@ -1,5 +1,5 @@
 <template>
-	<div v-html="htmlContents"></div>
+	<div v-html="htmlContents" class="vv-text"></div>
 </template>
 
 <script setup lang="ts">
@@ -21,3 +21,9 @@
 
 	htmlContents.value = await GetText()
 </script>
+
+<style>
+	.vv-text {
+		padding: 20px;
+	}
+</style>

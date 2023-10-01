@@ -107,6 +107,10 @@
 </template>
 
 <style lang="scss" scoped>
+.vv-dict-query {
+	padding: 20px;
+}
+
 .biblQueryBtn, .crossDictQueryBtn {
     width: 300px;
     height: 40px;
