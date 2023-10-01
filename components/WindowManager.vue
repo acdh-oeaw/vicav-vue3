@@ -46,7 +46,7 @@
 			ref: null,
 			type: windowType as IWindowType,
 			winBoxOptions: {
-				title: newWindow.title,
+				title: '[' + newWindow.windowTypeId + '] ' + newWindow.title,
 				top: WMStore.topMargin,
 				class: windowClasses,
 			},
