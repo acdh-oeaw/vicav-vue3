@@ -37,8 +37,6 @@
 			return false
 		}
 
-		console.log(newWindow)
-
 		let windowClasses = [ 'wb-vicav', 'no-min', 'no-max', 'no-full', 'no-resize', 'no-move']
 		if (!!newWindow.params?.customClass) {
 			windowClasses.push(newWindow.params.customClass)
@@ -70,8 +68,7 @@
 	}
 
 	function RegisterClientSize() {
-		// warning: WMStore.topMargin must already be set by the MenuBar component's onmounted event handler
-		WMStore.RegisterClientSize(document.documentElement.clientWidth, document.documentElement.clientHeight - WMStore.topMargin)
+		WMStore.RegisterClientSize(document.documentElement.clientWidth, document.documentElement.clientHeight)
 	}
 
 	const getDBSnippet = (params: string): void => {
@@ -129,13 +126,13 @@
 				:params="window.params"
 			/>
 		</VicavWinBox>
-
 	</div>
 </template>
 
 <style>
 	.wb-vicav {
 		background-color: rgb(168, 93, 143);
+		margin: 5px; /* must be in sync with windowMarginPx in WMStore */
 	}
 	.wb-vicav .wb-header {
 		height: 25px;

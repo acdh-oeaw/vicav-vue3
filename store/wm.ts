@@ -12,9 +12,10 @@ export const useWMStore = defineStore(
 		const clientSizeHeight = ref(0)
 		const RegisterClientSize = (width: number, height: number) => {
 			clientSizeWidth.value = width
-			clientSizeHeight.value = height
+			clientSizeHeight.value = height - topMargin.value
 		}
 
+		const windowMarginPx = ref(5) // must be in sync with css class .wb-vicav in WindowManager.vue
 		const counter = ref(0)
 		const windowList = ref([] as IWindow[])
 		const newWindow = ref(null as INewWindow|null)
@@ -57,7 +58,7 @@ export const useWMStore = defineStore(
 		const ArrangeAllMaximize = () => {
 			windowList.value.forEach((w, i) => {
 				w.ref
-					.resize(clientSizeWidth.value, clientSizeHeight.value)
+					.resize(clientSizeWidth.value - 2 * windowMarginPx.value, clientSizeHeight.value - 2 * windowMarginPx.value)
 					.move(0, topMargin.value)
 			})
 		}
@@ -76,7 +77,7 @@ export const useWMStore = defineStore(
 				let newX = windowWidth * (i % cols),
 					newY = topMargin.value + windowHeight * Math.floor(i / cols)
 				w.ref
-					.resize(windowWidth, windowHeight)
+					.resize(windowWidth - 2 * windowMarginPx.value, windowHeight - 2 * windowMarginPx.value)
 					.move(newX, newY)
 					.addClass('no-min').addClass('no-max').addClass('no-full').addClass('no-resize').addClass('no-move')
 			})
@@ -100,7 +101,7 @@ export const useWMStore = defineStore(
 				let windowWidth = Math.floor(clientSizeWidth.value / (i > upperBlockSize - 1 ? floorSqrtN : floorSqrtN + 1))
 				let windowHeight = Math.floor(clientSizeHeight.value / (isExtraRow ? floorSqrtN + 1 : floorSqrtN))
 				w.ref
-					.resize(windowWidth, windowHeight)
+					.resize(windowWidth - 2 * windowMarginPx.value, windowHeight - 2 * windowMarginPx.value)
 					.move(windowWidth * colNum, topMargin.value + windowHeight * rowNum)
 					.addClass('no-min').addClass('no-max').addClass('no-full').addClass('no-resize').addClass('no-move')
 			})
@@ -119,7 +120,7 @@ export const useWMStore = defineStore(
 				let newX = i * 40 > clientSizeWidth.value - windowWidth ? clientSizeWidth.value - windowWidth : i * 40
 				let newY = topMargin.value + (i * 40 > clientSizeHeight.value - windowHeight ? clientSizeHeight.value - windowHeight : i * 40)
 				w.ref
-					.resize(windowWidth, windowHeight)
+					.resize(windowWidth - 2 * windowMarginPx.value, windowHeight - 2 * windowMarginPx.value)
 					.move(newX, newY)
 					.addClass('no-min').addClass('no-max').addClass('no-full').addClass('no-resize').addClass('no-move')
 			})
