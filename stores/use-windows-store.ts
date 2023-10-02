@@ -103,8 +103,7 @@ export const useWindowsStore = defineStore("windows", () => {
 		const rootElement = document.getElementById(windowRootId);
 		if (rootElement == null) return;
 
-		const prefix = "window";
-		const id = [prefix, params.id ?? nanoid()].join("-");
+		const id = params.id ?? nanoid();
 		const { title, kind } = params;
 
 		if (registry.value.has(id)) {
