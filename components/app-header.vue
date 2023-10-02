@@ -16,7 +16,7 @@ const menus = computed(() => {
 const logo = computed(() => {
 	const url = data.value?.projectConfig?.logo?.img;
 
-	// TODO: defaul should be set via zod schema
+	// TODO: default should be set via zod schema
 	return url ?? "/assets/images/logo.svg";
 });
 
@@ -30,7 +30,7 @@ function onSelectMenuItem(item: ItemType) {
 	switch (item.componentName) {
 		case "BiblioQuery": {
 			addWindow({
-				id: item.id,
+				id: item.target,
 				title: createWindowTitle(item),
 				kind: "bibliography-query",
 				params: {},
@@ -40,7 +40,7 @@ function onSelectMenuItem(item: ItemType) {
 
 		case "CorpusQuery": {
 			addWindow({
-				id: item.id,
+				id: item.target,
 				title: createWindowTitle(item),
 				kind: "corpus-query",
 				params: {},
@@ -50,7 +50,7 @@ function onSelectMenuItem(item: ItemType) {
 
 		case "CrossDictQuery": {
 			addWindow({
-				id: item.id,
+				id: item.target,
 				title: createWindowTitle(item),
 				kind: "cross-dictionary-query",
 				params: {},
@@ -60,7 +60,7 @@ function onSelectMenuItem(item: ItemType) {
 
 		case "DataList": {
 			addWindow({
-				id: item.id,
+				id: item.target,
 				title: createWindowTitle(item),
 				kind: "data-list",
 				params: {},
@@ -70,7 +70,7 @@ function onSelectMenuItem(item: ItemType) {
 
 		case "DictQuery": {
 			addWindow({
-				id: item.id,
+				id: item.target,
 				title: createWindowTitle(item),
 				kind: "dictionary-query",
 				params: {},
@@ -80,7 +80,7 @@ function onSelectMenuItem(item: ItemType) {
 
 		case "SampleText": {
 			addWindow({
-				id: item.id,
+				id: item.target,
 				title: createWindowTitle(item),
 				kind: "sample-text",
 				params: {},
@@ -90,7 +90,7 @@ function onSelectMenuItem(item: ItemType) {
 
 		case "Text": {
 			addWindow({
-				id: item.id,
+				id: item.target,
 				title: createWindowTitle(item),
 				kind: "text",
 				params: {
@@ -103,7 +103,7 @@ function onSelectMenuItem(item: ItemType) {
 
 		case "WMap": {
 			addWindow({
-				id: item.id,
+				id: item.target,
 				title: createWindowTitle(item),
 				kind: "geo-map",
 				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
