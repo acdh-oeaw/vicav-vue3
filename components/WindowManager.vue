@@ -71,44 +71,9 @@
 		WMStore.RegisterClientSize(document.documentElement.clientWidth, document.documentElement.clientHeight)
 	}
 
-	const getDBSnippet = (params: string): void => {
-		// TODO: create a method in a "legacy vicav" helper plugin that returns a { windowTypeId, windowName, windowParams } object
-		// based on the getDBSnippet parameter
-		console.log('getDBSnippet: ', params)
-
-		let splitPoint = params.indexOf(":")
-		let sHead = params.substring(0, splitPoint)
-		let sTail = params.substring(splitPoint + 1)
-		let sh = sTail.split("/")
-		let snippetID = sh[0].trim()
-		let secLabel = ""
-		if (!!sh[1]) {
-			secLabel = sh[1].trim()
-			secLabel = secLabel.replace(/_/g, " ")
-		}
-		let sid = null;
-		let dict = null;
-		switch (sHead) {
-			case "dictID":
-				let st5 = sTail.split(",");
-				sid = st5[0];
-				dict = st5[1];
-				WMStore.Open('DictEntry', sid + ': ' + dict, { dict, sid })
-				console.log ('getDBSnippet: dictID,', { dict, sid })
-				break;
-			case "text":
-				WMStore.Open('Text', secLabel, { id: snippetID })
-				break;
-			default:
-				console.warn("getDBSnippet: sHead type unknown [" + sHead + "]")
-				break;
-		}
-	}
-
 	onMounted(() =>{
 		RegisterClientSize()
 		window.addEventListener('resize', RegisterClientSize, true)
-		window.getDBSnippet = getDBSnippet
 	})
 </script>
 
