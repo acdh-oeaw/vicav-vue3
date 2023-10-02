@@ -48,6 +48,16 @@ function onSelectMenuItem(item: ItemType) {
 			break;
 		}
 
+		case "CorpusText": {
+			addWindow({
+				id: item.target,
+				title: createWindowTitle(item),
+				kind: "corpus-text",
+				params: {},
+			});
+			break;
+		}
+
 		case "CrossDictQuery": {
 			addWindow({
 				id: item.target,

@@ -19,6 +19,11 @@ export interface CorpusQueryWindowItem extends WindowItemBase {
 	params: unknown;
 }
 
+export interface CorpusTextWindowItem extends WindowItemBase {
+	kind: "corpus-text";
+	params: unknown;
+}
+
 export interface CrossDictionaryQueryWindowItem extends WindowItemBase {
 	kind: "cross-dictionary-query";
 	params: unknown;
@@ -59,6 +64,7 @@ export interface TextWindowItem extends WindowItemBase {
 export type WindowItem =
 	| BibliographyQueryWindowItem
 	| CorpusQueryWindowItem
+	| CorpusTextWindowItem
 	| CrossDictionaryQueryWindowItem
 	| DataListWindowItem
 	| DictionaryEntryWindowItem
