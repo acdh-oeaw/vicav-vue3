@@ -105,7 +105,7 @@ function onSelectMenuItem(item: ItemType) {
 				kind: "text",
 				params: {
 					// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-					id: item.id!,
+					id: item.target!,
 				},
 			});
 			break;
