@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { keyByToMap } from "@acdh-oeaw/lib";
 
-import type { SubnavType } from "@/lib/api-client/Api";
+import type { ItemType } from "@/lib/api-client/Api";
 
 const windowsStore = useWindowsStore();
 const { registry } = storeToRefs(windowsStore);
@@ -11,12 +11,12 @@ const { data } = useProjectInfo();
 const itemsById = computed(() => {
 	const items = data.value?.projectConfig?.menu?.subnav;
 
-	if (items == null) return new Map<SubnavType["id"], SubnavType>();
+	if (items == null) return new Map<ItemType["target"], ItemType>();
 
-	return keyByToMap(items, (item) => item.id);
+	return keyByToMap(items, (item) => item.target);
 });
 
-const selected = ref<SubnavType["id"] | null>(null);
+const selected = ref<ItemType["target"] | null>(null);
 
 watch(
 	itemsById,
@@ -39,11 +39,10 @@ const params = computed(() => {
 
 	const item = itemsById.value.get(selected.value);
 
-	// @ts-expect-error Property missing in api types.
 	return item?.query ?? null;
 });
 
-function onSelect(id: SubnavType["id"]) {
+function onSelect(id: ItemType["target"]) {
 	selected.value = id;
 }
 </script>

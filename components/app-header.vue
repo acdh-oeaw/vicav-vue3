@@ -16,7 +16,7 @@ const menus = computed(() => {
 const logo = computed(() => {
 	const url = data.value?.projectConfig?.logo?.img;
 
-	// TODO: defaul should be set via zod schema
+	// TODO: default should be set via zod schema
 	return url ?? "/assets/images/logo.svg";
 });
 
@@ -43,6 +43,16 @@ function onSelectMenuItem(item: ItemType) {
 				id: item.target,
 				title: createWindowTitle(item),
 				kind: "corpus-query",
+				params: {},
+			});
+			break;
+		}
+
+		case "CorpusText": {
+			addWindow({
+				id: item.target,
+				title: createWindowTitle(item),
+				kind: "corpus-text",
 				params: {},
 			});
 			break;
