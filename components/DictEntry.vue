@@ -17,12 +17,10 @@
 	const GetDictEntry = async () => {
 		const { $api } = useNuxtApp()
 		const id = String(props.params.sid)
-		const dict = String(props.params.sid)
+		const dict = String(props.params.dict)
 		$api.baseUrl = ("" + import.meta.env.VITE_APIBASEURL);
 		try {
-			// TODO: add GetDictEntry to api
-			// return (await $api.vicav.getDictEntry({id, dict})).text()
-			return `Error showing dictionary entry for dict=${dict}&id=${id} – api is missing`
+			return (await $api.restvle.getDictDictNameEntry(dict, id)).text()
 		} catch (error) {
 			console.error(error)
 		}

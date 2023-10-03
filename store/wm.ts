@@ -200,6 +200,7 @@ export const useWMStore = defineStore(
 		}
 
 		const GetDbSnippet_YesThisIsDeprecatedAndWillBeRemovedASAP = (params: string) => {
+			console.log('getDBSnippet input: ', params)
 			let splitPoint = params.indexOf(":")
 			let sHead = params.substring(0, splitPoint)
 			let sTail = params.substring(splitPoint + 1)
@@ -217,7 +218,7 @@ export const useWMStore = defineStore(
 					let st5 = sTail.split(",");
 					sid = st5[0];
 					dict = st5[1];
-					Open ('DictEntry', sid + ': ' + dict, { dict, sid })
+					Open ('DictEntry', dict + ': ' + sid, { dict, sid })
 					console.log('getDBSnippet: dictID,', { dict, sid })
 					break;
 				case "text":
