@@ -63,12 +63,17 @@
 
 	const resultHtml: Ref<string | undefined> = ref('')
 
+	const domId = 'id-' + Math.floor(Math.random() * 1000000)
+    const WMStore = useWMStore()
+
 	const QueryButtonClicked = async (e: Event) => {
 		e.preventDefault()
 		resultHtml.value = await QueryDictionaries()
+		nextTick(() => {
+			WMStore.SanitizeLinks(domId)
+		})
 	}
 
-    const WMStore = useWMStore()
 	const OpenExamples = (e: Event) => {
 		e.preventDefault()
 		WMStore.Open('Text', 'textQuery: TUNICO DICTIONARY', { id: 'dictFrontPage_Tunis', customClass: 'vicav-cover-page' })
@@ -102,7 +107,7 @@
 			For details as to how to formulate meaningful dictionary queries consult the
 			<a class="aVicText" href="" @click="OpenExamples">examples of the TUNICO dictionary</a>.
 		</p>
-		<div v-html="resultHtml"></div>
+		<div v-html="resultHtml" :id="domId"></div>
 	</div>
 </template>
 

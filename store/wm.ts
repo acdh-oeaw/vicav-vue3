@@ -173,6 +173,64 @@ export const useWMStore = defineStore(
 			}
 		}
 
+		const SanitizeLinks = (domId: string) => {
+			console.log('SanitizeLinks starts')
+			document.querySelectorAll(`#${domId} a`)
+			.forEach(a => {
+				console.log("SanitizeLinks focuses at:", a)
+				if (a instanceof HTMLAnchorElement) {
+					let targetType = a.getAttribute('data-target-type') as string,
+						textId = a.getAttribute('data-text-id') as string
+					console.log("SanitizeLinks found this:", targetType, textId)
+					a.addEventListener("click", e => {
+						let windowTitle = e.target.innerText
+						console.log(`You clicked a link, target-type: ${targetType}, text-id: ${textId}, reference text: ${windowTitle}`)
+						if (targetType == 'external-link') {
+							return
+						}
+						e.preventDefault()
+						if (targetType == null || textId == null) {
+							GetDbSnippet_YesThisIsDeprecatedAndWillBeRemovedASAP(a.href.split("\"")[1])
+							return
+						}
+						Open(targetType.charAt(0).toUpperCase() + targetType.slice(1), windowTitle, { id: textId })
+					}, false)
+				}
+			})
+		}
+
+		const GetDbSnippet_YesThisIsDeprecatedAndWillBeRemovedASAP = (params: string) => {
+			let splitPoint = params.indexOf(":")
+			let sHead = params.substring(0, splitPoint)
+			let sTail = params.substring(splitPoint + 1)
+			let sh = sTail.split("/")
+			let snippetID = sh[0].trim()
+			let secLabel = ""
+			if (!!sh[1]) {
+				secLabel = sh[1].trim()
+				secLabel = secLabel.replace(/_/g, " ")
+			}
+			let sid = null;
+			let dict = null;
+			switch (sHead) {
+				case "dictID":
+					let st5 = sTail.split(",");
+					sid = st5[0];
+					dict = st5[1];
+					Open ('DictEntry', sid + ': ' + dict, { dict, sid })
+					console.log('getDBSnippet: dictID,', { dict, sid })
+					break;
+				case "text":
+					Open('Text', secLabel, { id: snippetID })
+					console.log('getDBSnippet: text,', secLabel, { id: snippetID })
+					break;
+				default:
+					console.warn("getDBSnippet: sHead type unknown [" + sHead + "]")
+					break;
+			}
+		}
+	
+
 		return {
 			topMargin,
 			SetTopMargin,
@@ -189,6 +247,8 @@ export const useWMStore = defineStore(
 			desktopArrangeMethods,
 			SelectDesktopArrangeMethod,
 			selectedDesktopArrangeMethodId,
+
+			SanitizeLinks,
 		}
 	},
 	{

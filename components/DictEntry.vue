@@ -1,9 +1,10 @@
 <template>
-	<div v-html="htmlContents" class="vv-dict-entry"></div>
+	<div v-html="htmlContents" class="vv-dict-entry" :id="domId"></div>
 </template>
 
 <script setup lang="ts">
 	import { Ref } from "@vue/runtime-dom"
+	import { useWMStore } from '~~/store/wm'
 
 	const htmlContents: Ref<string | undefined> = ref("")
 	const props = defineProps<{
@@ -28,6 +29,12 @@
 	}
 
 	htmlContents.value = await GetDictEntry()
+
+	const domId = 'id-' + Math.floor(Math.random() * 1000000)
+	const WMStore = useWMStore()
+	onMounted(() => {
+		WMStore.SanitizeLinks(domId)
+	})
 </script>
 
 <style>

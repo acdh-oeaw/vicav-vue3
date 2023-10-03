@@ -4,11 +4,10 @@
 
 <script setup lang="ts">
 	import { Ref } from "@vue/runtime-dom"
+	import { useWMStore } from '~~/store/wm'
 
 	const htmlContents: Ref<string | undefined> = ref("")
 	const props = defineProps(['params'])
-
-	const domId = 'id-' + Math.floor(Math.random() * 1000000)
 
 	const GetText = async () => {
 		const { $api } = useNuxtApp()
@@ -20,26 +19,12 @@
 			console.error(error)
 		}
 	}
-
-	const SanitizeLinks = () => {
-		document.querySelectorAll(`#${domId} .aVicText`)
-		.forEach(a => {
-			let targetType = a.getAttribute('data-target-type'),
-				textId = a.getAttribute('data-text-id')
-			console.log('Link', targetType, textId)
-			if (targetType == 'external-link') {
-				return
-			}
-			a.addEventListener("click", e => {
-				e.preventDefault()
-				console.log(`You clicked a link, target-type: ${targetType}, text-id: ${textId}`)
-			}, false)
-		})
-	}
-
 	htmlContents.value = await GetText()
+
+	const domId = 'id-' + Math.floor(Math.random() * 1000000)
+	const WMStore = useWMStore()
 	onMounted(() => {
-		SanitizeLinks()
+		WMStore.SanitizeLinks(domId)
 	})
 </script>
 
