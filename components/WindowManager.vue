@@ -98,6 +98,7 @@
 	.wb-vicav {
 		background-color: rgb(168, 93, 143);
 		margin: 5px; /* must be in sync with windowMarginPx in WMStore */
+		box-shadow: 0 0 28px rgba(0,0,0,.22),0 0 10px rgba(0,0,0,.76);
 	}
 	.wb-vicav .wb-header {
 		height: 25px;
