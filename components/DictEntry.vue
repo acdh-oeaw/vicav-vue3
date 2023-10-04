@@ -1,9 +1,10 @@
 <template>
-	<div v-html="htmlContents"></div>
+	<div v-html="htmlContents" class="vv-dict-entry" :id="domId"></div>
 </template>
 
 <script setup lang="ts">
 	import { Ref } from "@vue/runtime-dom"
+	import { useWMStore } from '~~/store/wm'
 
 	const htmlContents: Ref<string | undefined> = ref("")
 	const props = defineProps<{
@@ -16,16 +17,26 @@
 	const GetDictEntry = async () => {
 		const { $api } = useNuxtApp()
 		const id = String(props.params.sid)
-		const dict = String(props.params.sid)
+		const dict = String(props.params.dict)
 		$api.baseUrl = ("" + import.meta.env.VITE_APIBASEURL);
 		try {
-			// TODO: add GetDictEntry to api
-			// return (await $api.vicav.getDictEntry({id, dict})).text()
-			return `Error showing dictionary entry for dict=${dict}&id=${id} – api is missing`
+			return (await $api.restvle.getDictDictNameEntry(dict, id)).text()
 		} catch (error) {
 			console.error(error)
 		}
 	}
 
 	htmlContents.value = await GetDictEntry()
+
+	const domId = 'id-' + Math.floor(Math.random() * 1000000)
+	const WMStore = useWMStore()
+	onMounted(() => {
+		WMStore.SanitizeLinks(domId)
+	})
 </script>
+
+<style>
+	.vv-dict-entry {
+		padding: 20px;
+	}
+</style>
