@@ -87,7 +87,7 @@ useHead({
 </script>
 
 <template>
-	<div class="grid min-h-full grid-rows-[auto_1fr_auto]">
+	<div class="grid min-h-full grid-rows-[auto_1fr_auto] bg-neutral-50">
 		<SkipLink :target-id="mainContentId">Skip to main content</SkipLink>
 
 		<AppHeader />

@@ -1,7 +1,9 @@
 <script lang="ts" setup>
 import { keyByToMap } from "@acdh-oeaw/lib";
 
-import type { ItemType } from "@/lib/api-client/Api";
+import type { ItemType, QueryDescription } from "@/lib/api-client/Api";
+
+type ItemId = NonNullable<ItemType["target"]>;
 
 interface Props {
 	params: GeoMapWindowItem["params"];
@@ -15,14 +17,15 @@ const { data: projectData } = useProjectInfo();
 const itemsById = computed(() => {
 	const items = projectData.value?.projectConfig?.menu?.subnav;
 
-	if (items == null) return new Map<ItemType["target"], ItemType>();
+	if (items == null) return new Map<ItemId, ItemType>();
 
-	return keyByToMap(items, (item) => item.target);
+	// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+	return keyByToMap(items, (item) => item.target!);
 });
 
-const selected = ref<Set<ItemType["target"]>>(new Set([params.value.id]));
+const selected = ref<Set<ItemId>>(new Set([params.value.id]));
 
-function onSelect(id: ItemType["target"]) {
+function onSelect(id: ItemId) {
 	if (selected.value.has(id)) {
 		selected.value.delete(id);
 	} else {
@@ -30,11 +33,22 @@ function onSelect(id: ItemType["target"]) {
 	}
 }
 
-// TODO: useQueries to fetch and merge multiple geojson feature groups
-const { data, isFetching } = useGeoMarkers(params);
+const queries = useGeoMarkerLayers(
+	computed(() => {
+		return Array.from(selected.value).map((id) => {
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+			return itemsById.value.get(id)!.query! as Required<QueryDescription>;
+		});
+	}),
+);
 
+const isFetching = computed(() => {
+	return queries.value.some((query) => query.isFetching);
+});
+
+// TODO: pass as separate feature groups to geo map (?)
 const markers = computed(() => {
-	return data.value ?? [];
+	return queries.value.flatMap((query) => query.data ?? []);
 });
 </script>
 
