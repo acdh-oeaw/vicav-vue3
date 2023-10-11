@@ -95,7 +95,7 @@ export const useWindowsStore = defineStore("windows", () => {
 	const arrangement = ref<WindowArrangement>("smart-tile");
 
 	function addWindow<Kind extends WindowItemKind>(params: {
-		id?: string;
+		id?: string | null;
 		title: string;
 		kind: Kind;
 		params: WindowItemMap[Kind]["params"];

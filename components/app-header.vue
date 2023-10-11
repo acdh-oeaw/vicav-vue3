@@ -20,6 +20,15 @@ const logo = computed(() => {
 	return url ?? "/assets/images/logo.svg";
 });
 
+function createWindowId(_item: ItemType) {
+	/**
+	 * We intentionally do *not* use `item.target` for window id, because we don't want to
+	 * deduplicate windows. It should be possible to open multiple instances of the same
+	 * window, so we rely on the store to assign a unique id.
+	 */
+	return null;
+}
+
 function createWindowTitle(item: ItemType) {
 	if (isNonEmptyString(item.label)) return item.label;
 	// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -30,7 +39,7 @@ function onSelectMenuItem(item: ItemType) {
 	switch (item.componentName) {
 		case "BiblioQuery": {
 			addWindow({
-				id: item.target,
+				id: createWindowId(item),
 				title: createWindowTitle(item),
 				kind: "bibliography-query",
 				params: {},
@@ -40,7 +49,7 @@ function onSelectMenuItem(item: ItemType) {
 
 		case "CorpusQuery": {
 			addWindow({
-				id: item.target,
+				id: createWindowId(item),
 				title: createWindowTitle(item),
 				kind: "corpus-query",
 				params: {},
@@ -50,7 +59,7 @@ function onSelectMenuItem(item: ItemType) {
 
 		case "CorpusText": {
 			addWindow({
-				id: item.target,
+				id: createWindowId(item),
 				title: createWindowTitle(item),
 				kind: "corpus-text",
 				params: {},
@@ -60,7 +69,7 @@ function onSelectMenuItem(item: ItemType) {
 
 		case "CrossDictQuery": {
 			addWindow({
-				id: item.target,
+				id: createWindowId(item),
 				title: createWindowTitle(item),
 				kind: "cross-dictionary-query",
 				params: {},
@@ -70,7 +79,7 @@ function onSelectMenuItem(item: ItemType) {
 
 		case "DataList": {
 			addWindow({
-				id: item.target,
+				id: createWindowId(item),
 				title: createWindowTitle(item),
 				kind: "data-list",
 				params: {},
@@ -80,7 +89,7 @@ function onSelectMenuItem(item: ItemType) {
 
 		case "DictQuery": {
 			addWindow({
-				id: item.target,
+				id: createWindowId(item),
 				title: createWindowTitle(item),
 				kind: "dictionary-query",
 				params: {},
@@ -90,7 +99,7 @@ function onSelectMenuItem(item: ItemType) {
 
 		case "SampleText": {
 			addWindow({
-				id: item.target,
+				id: createWindowId(item),
 				title: createWindowTitle(item),
 				kind: "sample-text",
 				params: {},
@@ -100,7 +109,7 @@ function onSelectMenuItem(item: ItemType) {
 
 		case "Text": {
 			addWindow({
-				id: item.target,
+				id: createWindowId(item),
 				title: createWindowTitle(item),
 				kind: "text",
 				params: {
@@ -113,7 +122,7 @@ function onSelectMenuItem(item: ItemType) {
 
 		case "WMap": {
 			addWindow({
-				id: item.target,
+				id: createWindowId(item),
 				title: createWindowTitle(item),
 				kind: "geo-map",
 				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -130,7 +139,7 @@ function onSelectMenuItem(item: ItemType) {
 <template>
 	<header class="border-b border-border bg-surface text-on-surface">
 		<div class="flex items-center justify-between gap-4 px-8 py-4">
-			<!-- TODO: do we really need this logo/link -->
+			<!-- TODO: do we really need this logo/link? -->
 			<NuxtLink class="flex shrink-0" href="/">
 				<span class="sr-only">Home</span>
 				<img alt="" class="h-10 hue-rotate-180 invert" :src="logo" />
