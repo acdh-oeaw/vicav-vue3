@@ -10,11 +10,11 @@ import {
 	tileLayer,
 } from "leaflet";
 
-import { type GeoMapContext, key, type PointProperties } from "@/components/geo-map.context";
+import { type GeoMapContext, key, type MarkerProperties } from "@/components/geo-map.context";
 
 interface Props {
 	height: number;
-	markers: Array<Feature<Point, PointProperties>>;
+	markers: Array<Feature<Point, MarkerProperties>>;
 	width: number;
 }
 
@@ -67,7 +67,7 @@ onMounted(async () => {
 		attribution: config.baseLayer.attribution,
 	}).addTo(context.map);
 
-	context.featureGroups.markers = geoJSON<PointProperties, Point>(undefined, {
+	context.featureGroups.markers = geoJSON<MarkerProperties, Point>(undefined, {
 		onEachFeature(feature, layer) {
 			const tooltipContent = `${feature.properties.name} (${feature.properties.hitCount})`;
 

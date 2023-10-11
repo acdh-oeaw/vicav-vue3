@@ -2,18 +2,15 @@ import type { Point } from "geojson";
 import type { GeoJSON, Map as LeafletMap, TileLayer } from "leaflet";
 import type { InjectionKey } from "vue";
 
-// TODO: this should come from api client types
-export interface PointProperties {
-	type: "geo" | "reg";
-	name: string;
-	hitCount: string;
-}
+import type { MarkerProperties } from "@/lib/api-client/Api";
+
+export type { MarkerProperties };
 
 export interface GeoMapContext {
 	map: LeafletMap | null;
 	baseLayer: TileLayer | null;
 	featureGroups: {
-		markers: GeoJSON<PointProperties, Point> | null;
+		markers: GeoJSON<MarkerProperties, Point> | null;
 	};
 }
 

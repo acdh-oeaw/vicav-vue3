@@ -46,7 +46,7 @@ export interface DictionaryQueryWindowItem extends WindowItemBase {
 
 export interface GeoMapWindowItem extends WindowItemBase {
 	kind: "geo-map";
-	params: QueryDescription;
+	params: QueryDescription & { id: string };
 }
 
 export interface SampleTextWindowItem extends WindowItemBase {

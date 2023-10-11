@@ -125,8 +125,11 @@ function onSelectMenuItem(item: ItemType) {
 				id: createWindowId(item),
 				title: createWindowTitle(item),
 				kind: "geo-map",
-				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-				params: item.query!,
+				params: {
+					// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+					...item.query!,
+					id: item.target!,
+				},
 			});
 			break;
 		}
