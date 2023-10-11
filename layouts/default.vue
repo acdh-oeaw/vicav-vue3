@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { isNonEmptyString } from "@acdh-oeaw/lib";
-import color from "color";
+import Color from "colorjs.io";
 import type { WebSite, WithContext } from "schema-dts";
 
 const env = useRuntimeConfig();
@@ -14,8 +14,7 @@ const siteTitle = computed(() => {
 });
 
 function toHsl(hex: string): string {
-	// @ts-expect-error Upstream types are outdated.
-	const [h, s, l] = color(hex).hsl().color;
+	const [h, s, l] = new Color(hex).to("hsl").coords;
 	return `${h}deg ${s}% ${l}%`;
 }
 
