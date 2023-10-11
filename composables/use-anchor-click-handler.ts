@@ -1,3 +1,5 @@
+import { isNonEmptyString } from "@acdh-oeaw/lib";
+
 import { isWindowType, windowTypeMap } from "@/utils/is-window-type";
 
 export function useAnchorClickHandler() {
@@ -11,18 +13,18 @@ export function useAnchorClickHandler() {
 		const element = event.target;
 
 		if (element instanceof HTMLAnchorElement) {
-			const { id, targetType } = element.dataset;
+			const { label, targetType, textId } = element.dataset;
 
-			if (id == null) return;
+			if (textId == null) return;
 			if (!isWindowType(targetType)) return;
 
 			event.preventDefault();
 
 			const kind = windowTypeMap[targetType];
-			const params = { id };
+			const params = { id: textId };
 
 			addWindow({
-				title: element.innerText,
+				title: isNonEmptyString(label) ? label : element.innerText,
 				kind,
 				params,
 			});
