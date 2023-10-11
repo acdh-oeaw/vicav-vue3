@@ -128,6 +128,7 @@ function onSelectMenuItem(item: ItemType) {
 				params: {
 					// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 					...item.query!,
+					// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 					id: item.target!,
 				},
 			});

@@ -64,7 +64,7 @@
 		"@acdh-oeaw/stylelint-config": "^1.0.6",
 		"@acdh-oeaw/tsconfig": "^1.0.1",
 		"@axe-core/playwright": "^4.7.3",
-		"@nuxt/devtools": "latest",
+		"@nuxt/devtools": "^1.0.0-beta.1",
 		"@playwright/test": "^1.38.1",
 		"@tailwindcss/typography": "^0.5.10",
 		"@types/geojson": "^7946.0.11",
