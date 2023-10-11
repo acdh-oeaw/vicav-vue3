@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/vue-query";
-import type { Feature, Point } from "geojson";
 
 import type { MarkersType, QueryDescription } from "@/lib/api-client/Api";
 
@@ -25,10 +24,7 @@ export function useGeoMarkers(params: MaybeRef<QueryDescription>, options?: { en
 							{ headers: { accept: "application/json" } },
 					  );
 
-			// FIXME: api-client generator should use correct return type.
-			return response.data as Array<
-				Feature<Point, { type: "geo" | "reg"; name: string; hitCount: string }>
-			>;
+			return response.data;
 		},
 	});
 }
