@@ -1,4 +1,4 @@
-import { Api } from "@/lib/api-client/Api";
+import { Api } from "@/lib/api-client";
 
 const api = new Api();
 

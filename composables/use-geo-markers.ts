@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/vue-query";
 import type { Feature, Point } from "geojson";
 
-import type { MarkerProperties, MarkersType, QueryDescription } from "@/lib/api-client/Api";
+import type { MarkerProperties, MarkersType, QueryDescription } from "@/lib/api-client";
 
 export function useGeoMarkers(
 	params: MaybeRef<Required<QueryDescription>>,

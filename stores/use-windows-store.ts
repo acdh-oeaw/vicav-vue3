@@ -1,7 +1,7 @@
 import { nanoid } from "nanoid";
 import WinBox from "winbox";
 
-import type { QueryDescription } from "@/lib/api-client/Api";
+import type { QueryDescription } from "@/lib/api-client";
 import * as arrange from "@/utils/window-arrangement";
 
 interface WindowItemBase {

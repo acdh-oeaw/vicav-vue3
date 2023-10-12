@@ -1,4 +1,4 @@
-import type { ItemType } from "@/lib/api-client/Api";
+import type { ItemType } from "@/lib/api-client";
 
 type WindowType = Exclude<NonNullable<ItemType["componentName"]>, "UnknownTypeWarning">;
 

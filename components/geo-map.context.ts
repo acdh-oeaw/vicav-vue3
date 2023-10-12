@@ -2,7 +2,7 @@ import type { Point } from "geojson";
 import type { GeoJSON, Map as LeafletMap, TileLayer } from "leaflet";
 import type { InjectionKey } from "vue";
 
-import type { MarkerProperties } from "@/lib/api-client/Api";
+import type { MarkerProperties } from "@/lib/api-client";
 
 export type { MarkerProperties };
 

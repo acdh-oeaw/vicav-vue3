@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { isNonEmptyString } from "@acdh-oeaw/lib";
 
-import type { ItemType } from "@/lib/api-client/Api";
+import type { ItemType } from "@/lib/api-client";
 
 const windowsStore = useWindowsStore();
 const { addWindow } = windowsStore;

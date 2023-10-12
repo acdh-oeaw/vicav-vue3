@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { ItemType } from "@/lib/api-client/Api";
+import type { ItemType } from "@/lib/api-client";
 
 type ItemId = NonNullable<ItemType["target"]>;
 

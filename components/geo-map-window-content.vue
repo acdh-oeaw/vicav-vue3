@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { keyByToMap } from "@acdh-oeaw/lib";
 
-import type { ItemType, QueryDescription } from "@/lib/api-client/Api";
+import type { ItemType, QueryDescription } from "@/lib/api-client";
 
 type ItemId = NonNullable<ItemType["target"]>;
 

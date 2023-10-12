@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { ChevronRightIcon, MenuIcon } from "lucide-vue-next";
 
-import type { ItemType, MainItemType } from "@/lib/api-client/Api";
+import type { ItemType, MainItemType } from "@/lib/api-client";
 
 const props = defineProps<{
 	menus: Array<MainItemType>;
