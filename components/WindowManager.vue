@@ -3,8 +3,8 @@
 	import { useWMStore, INewWindow, IWindow, IWindowType } from '~~/store/wm'
 	import { VicavWinBox } from "./VicavWinBox.client"
 
-	const WMStore = useWMStore()
-	const windowList = computed(() => WMStore.windowList)
+	const wmStore = useWMStore()
+	const windowList = computed(() => wmStore.windowList)
 	const windowTypes = {
 		Text: {
 			component: resolveComponent('Text'),
@@ -20,20 +20,20 @@
 		} as IWindowType,
 	}
 
-	const newWindow = computed(() => WMStore.newWindow)
+	const newWindow = computed(() => wmStore.newWindow)
 	watch(newWindow, (window) => {
 		if (window != null) {
-			NewWindow(window)
+			createNewWindow(window)
 		}
 	})
-	function NewWindow(newWindow: INewWindow) {
+	function createNewWindow(newWindow: INewWindow) {
 		let windowType = windowTypes[newWindow.windowTypeId as keyof typeof windowTypes]
 		if (windowType === undefined) {
-			ConsoleWarning("Window type undefined", newWindow)
+			consoleWarning("Window type undefined", newWindow)
 			return false
 		}
 		if (typeof windowType.component === "string") {
-			ConsoleWarning("Window type '" + windowType + "' was not resolved", newWindow)
+			consoleWarning("Window type '" + windowType + "' was not resolved", newWindow)
 			return false
 		}
 
@@ -47,33 +47,33 @@
 			type: windowType as IWindowType,
 			winBoxOptions: {
 				title: '[' + newWindow.windowTypeId + '] ' + newWindow.title,
-				top: WMStore.topMargin,
+				top: wmStore.topMargin,
 				class: windowClasses,
 			},
 			params: newWindow.params,
 		}
 
-		WMStore.AddWindowToList(window)
+		wmStore.addWindowToList(window)
 	}
-	function ConsoleWarning(text: string, data: Object) {
+	function consoleWarning(text: string, data: Object) {
 		console.warn("WindowManager:", text, data);
 	}
 
-	function RegisterWindowRef(i: number, ref: any) {
-		WMStore.RegisterWindowRef(i, ref)
+	function registerWindowRef(i: number, ref: any) {
+		wmStore.registerWindowRef(i, ref)
 	}
 
-	function RemoveWindowRef(i: number, ref: any) {
-		WMStore.RemoveWindowRef(i, ref)
+	function removeWindowRef(i: number, ref: any) {
+		wmStore.removeWindowRef(i, ref)
 	}
 
-	function RegisterClientSize() {
-		WMStore.RegisterClientSize(document.documentElement.clientWidth, document.documentElement.clientHeight)
+	function registerClientSize() {
+		wmStore.registerClientSize(document.documentElement.clientWidth, document.documentElement.clientHeight)
 	}
 
 	onMounted(() =>{
-		RegisterClientSize()
-		window.addEventListener('resize', RegisterClientSize, true)
+		registerClientSize()
+		window.addEventListener('resize', registerClientSize, true)
 	})
 </script>
 
@@ -83,8 +83,8 @@
 			v-for="(window, i) in windowList"
 			:key="window.id?.toString()"
 			:options="window.winBoxOptions"
-			@open="RegisterWindowRef(i, $event)"
-			@close="RemoveWindowRef(i, $event)"
+			@open="registerWindowRef(i, $event)"
+			@close="removeWindowRef(i, $event)"
 		>
 			<component
 				:is="{...window.type.component}"

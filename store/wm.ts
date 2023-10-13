@@ -5,15 +5,15 @@ export const useWMStore = defineStore(
 	'wm',
 	() => {
 		const topMargin = ref(0)
-		const SetTopMargin = (heightInPixels: number) => {
+		const setTopMargin = (heightInPixels: number) => {
 			topMargin.value = heightInPixels
 		}
 		const clientSizeWidth = ref(0)
 		const clientSizeHeight = ref(0)
-		const RegisterClientSize = (width: number, height: number) => {
+		const registerClientSize = (width: number, height: number) => {
 			clientSizeWidth.value = width
 			clientSizeHeight.value = height - topMargin.value
-			ArrangeWindows()
+			arrangeWindows()
 		}
 
 		const windowMarginPx = ref(5) // must be in sync with css class .wb-vicav in WindowManager.vue
@@ -21,42 +21,42 @@ export const useWMStore = defineStore(
 		const windowList = ref([] as IWindow[])
 		const newWindow = ref(null as INewWindow|null)
 
-		const Open = (windowTypeId: string, windowTitle: string, params: Object|null) => {
+		const open = (windowTypeId: string, windowTitle: string, params: Object|null) => {
 			newWindow.value = { id: counter.value++, title: windowTitle, windowTypeId, params }
 			nextTick(() => {
 				newWindow.value = null
 			})
 		}
 
-		const AddWindowToList = (window: IWindow) => {
+		const addWindowToList = (window: IWindow) => {
 			window.winBoxOptions.index = windowList.value.length > 0
 				? Math.max(...windowList.value.map(w => parseInt(w.ref.index))) + 1
 				: 1000
 			windowList.value.push(window)
-			ArrangeWindows()
+			arrangeWindows()
 		}
 
-		const RegisterWindowRef = (i: number, ref: HTMLElement) => {
+		const registerWindowRef = (i: number, ref: HTMLElement) => {
 			windowList.value[i].ref = ref
 		}
 
-		const RemoveWindowRef = (i: number, ref: any) => {
+		const removeWindowRef = (i: number, ref: any) => {
 			let index = windowList.value.findIndex(w => w.ref.id === ref.id);
 			if(index >= 0) {
 				ref.g.remove();
 				windowList.value.splice(index, 1);
 			}
-			ArrangeWindows()
+			arrangeWindows()
 		}
 
-		const Focus = (windowId: number) => {
+		const focus = (windowId: number) => {
 			let window = windowList.value.find(w => w.id == windowId)
 			if (window != null) {
 				window.ref.focus()
 			}
 		}
 
-		const ArrangeAllMaximize = () => {
+		const arrangeAllMaximize = () => {
 			windowList.value.forEach((w, i) => {
 				w.ref
 					.resize(clientSizeWidth.value - 2 * windowMarginPx.value, clientSizeHeight.value - 2 * windowMarginPx.value)
@@ -64,11 +64,18 @@ export const useWMStore = defineStore(
 			})
 		}
 
-		const ArrangeNot = () => {
-			windowList.value.forEach(w => w.ref.removeClass('no-min').removeClass('no-max').removeClass('no-full').removeClass('no-resize').removeClass('no-move'))
+		const arrangeNot = () => {
+			windowList.value.forEach(
+				w => w.ref
+					.removeClass('no-min')
+					.removeClass('no-max')
+					.removeClass('no-full')
+					.removeClass('no-resize')
+					.removeClass('no-move')
+			)
 		}
 
-		const ArrangeTile = () => {
+		const arrangeTile = () => {
 			let cols = Math.floor(Math.sqrt(windowList.value.length - 1)) + 1
 			let rows = Math.ceil(windowList.value.length / cols)
 			let windowWidth = Math.floor(clientSizeWidth.value / cols)
@@ -84,7 +91,7 @@ export const useWMStore = defineStore(
 			})
 		}
 
-		const ArrangeSmartTile = () => {
+		const arrangeSmartTile = () => {
 			let N = windowList.value.length
 			let floorSqrtN = Math.floor(Math.sqrt(N))
 			let innerSquare = Math.pow(floorSqrtN, 2)
@@ -108,7 +115,7 @@ export const useWMStore = defineStore(
 			})
 		}
 
-		const ArrangeCascade = () => {
+		const arrangeCascade = () => {
 			let windowWidth = Math.floor(clientSizeWidth.value / 2)
 			let windowHeight = Math.floor(clientSizeHeight.value / 2)
 
@@ -136,24 +143,24 @@ export const useWMStore = defineStore(
 		const desktopArrangeMethods: Array<WindowArrangeMethod> = [{
 			id: 0,
 			name: "No arrangement",
-			method: ArrangeNot,
+			method: arrangeNot,
 		}, {
 			id: 1,
 			name: "Cascade",
-			method: ArrangeCascade,
+			method: arrangeCascade,
 		}, {
 			id: 2,
 			name: "Tile",
-			method: ArrangeTile,
+			method: arrangeTile,
 		}, {
 			id: 3,
 			name: "Smart Tile",
-			method: ArrangeSmartTile,
+			method: arrangeSmartTile,
 		}]
 
 		const selectedDesktopArrangeMethodId = ref(3) // TODO: move magic number to settings
 
-		const SelectDesktopArrangeMethod = (wam: WindowArrangeMethod) => {
+		const selectDesktopArrangeMethod = (wam: WindowArrangeMethod) => {
 			let index = desktopArrangeMethods.findIndex(m => m.id === wam.id)
 			if (index >= 0) {
 				selectedDesktopArrangeMethodId.value = wam.id
@@ -164,16 +171,16 @@ export const useWMStore = defineStore(
 		}
 
 		const isMobile = false // @TODO
-		const ArrangeWindows = async () => {
+		const arrangeWindows = async () => {
 			await nextTick()
 			if (isMobile) {
-				ArrangeAllMaximize()
+				arrangeAllMaximize()
 			} else {
 				desktopArrangeMethods.find(m => m.id === selectedDesktopArrangeMethodId.value)?.method()
 			}
 		}
 
-		const SanitizeLinks = (domId: string) => {
+		const sanitizeLinks = (domId: string) => {
 			console.log('SanitizeLinks starts')
 			document.querySelectorAll(`#${domId} a`)
 			.forEach(a => {
@@ -190,16 +197,16 @@ export const useWMStore = defineStore(
 						}
 						e.preventDefault()
 						if (targetType == null || textId == null) {
-							GetDbSnippet_YesThisIsDeprecatedAndWillBeRemovedASAP(a.href.split("\"")[1])
+							getDbSnippet_YesThisIsDeprecatedAndWillBeRemovedASAP(a.href.split("\"")[1])
 							return
 						}
-						Open(targetType.charAt(0).toUpperCase() + targetType.slice(1), windowTitle, { id: textId })
+						open(targetType.charAt(0).toUpperCase() + targetType.slice(1), windowTitle, { id: textId })
 					}, false)
 				}
 			})
 		}
 
-		const GetDbSnippet_YesThisIsDeprecatedAndWillBeRemovedASAP = (params: string) => {
+		const getDbSnippet_YesThisIsDeprecatedAndWillBeRemovedASAP = (params: string) => {
 			console.log('getDBSnippet input: ', params)
 			let splitPoint = params.indexOf(":")
 			let sHead = params.substring(0, splitPoint)
@@ -218,11 +225,11 @@ export const useWMStore = defineStore(
 					let st5 = sTail.split(",");
 					sid = st5[0];
 					dict = st5[1];
-					Open ('DictEntry', dict + ': ' + sid, { dict, sid })
+					open ('DictEntry', dict + ': ' + sid, { dict, sid })
 					console.log('getDBSnippet: dictID,', { dict, sid })
 					break;
 				case "text":
-					Open('Text', secLabel, { id: snippetID })
+					open('Text', secLabel, { id: snippetID })
 					console.log('getDBSnippet: text,', secLabel, { id: snippetID })
 					break;
 				default:
@@ -234,27 +241,27 @@ export const useWMStore = defineStore(
 
 		return {
 			topMargin,
-			SetTopMargin,
-			RegisterClientSize,
+			setTopMargin,
+			registerClientSize,
 
 			windowList,
 			newWindow,
-			Open,
-			AddWindowToList,
-			RegisterWindowRef,
-			RemoveWindowRef,
-			Focus,
+			open,
+			addWindowToList,
+			registerWindowRef,
+			removeWindowRef,
+			focus,
 
 			desktopArrangeMethods,
-			SelectDesktopArrangeMethod,
+			selectDesktopArrangeMethod,
 			selectedDesktopArrangeMethodId,
 
-			SanitizeLinks,
+			sanitizeLinks,
 		}
 	},
 	{
 		logger: {
-			actions: ["Open"],
+			actions: ["open"],
 		},
 	}
 )
