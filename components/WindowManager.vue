@@ -1,62 +1,19 @@
 <script setup lang="ts">
-	import { computed } from 'vue'
-	import { useWMStore, INewWindow, IWindow, IWindowType } from '~~/store/wm'
+	import { computed, ConcreteComponent, ComputedOptions, MethodOptions } from 'vue'
+	import { useWMStore, windowTypes } from '~~/store/wm'
 	import { VicavWinBox } from "./VicavWinBox.client"
 
 	const wmStore = useWMStore()
 	const windowList = computed(() => wmStore.windowList)
-	const windowTypes = {
-		Text: {
-			component: resolveComponent('Text'),
-		} as IWindowType,
-		WMap: {
-			component: resolveComponent('WMap'),
-		} as IWindowType,
-		DictQuery: {
-			component: resolveComponent('DictQuery'),
-		} as IWindowType,
-		DictEntry: {
-			component: resolveComponent('DictEntry'),
-		} as IWindowType,
-	}
 
-	const newWindow = computed(() => wmStore.newWindow)
-	watch(newWindow, (window) => {
-		if (window != null) {
-			createNewWindow(window)
-		}
-	})
-	function createNewWindow(newWindow: INewWindow) {
-		let windowType = windowTypes[newWindow.windowTypeId as keyof typeof windowTypes]
-		if (windowType === undefined) {
-			consoleWarning("Window type undefined", newWindow)
-			return false
-		}
-		if (typeof windowType.component === "string") {
-			consoleWarning("Window type '" + windowType + "' was not resolved", newWindow)
-			return false
-		}
-
-		let windowClasses = [ 'wb-vicav', 'no-min', 'no-max', 'no-full', 'no-resize', 'no-move']
-		if (!!newWindow.params?.customClass) {
-			windowClasses.push(newWindow.params.customClass)
-		}
-		let window: IWindow = {
-			id: newWindow.id,
-			ref: null,
-			type: windowType as IWindowType,
-			winBoxOptions: {
-				title: '[' + newWindow.windowTypeId + '] ' + newWindow.title,
-				top: wmStore.topMargin,
-				class: windowClasses,
-			},
-			params: newWindow.params,
-		}
-
-		wmStore.addWindowToList(window)
-	}
-	function consoleWarning(text: string, data: Object) {
-		console.warn("WindowManager:", text, data);
+	/* nuxt cannot resolve components from variables in setup, see https://github.com/nuxt/nuxt/issues/14036 */
+	/* otherwise this block could be deleted and only window.type be passed on to the component in the :is */
+	type ContentComponents = {[key: string]: string | ConcreteComponent<{}, any, any, ComputedOptions, MethodOptions>}
+	const contentComponents: ContentComponents = {
+		Text: resolveComponent('Text'),
+		WMap: resolveComponent('WMap'),
+		DictQuery: resolveComponent('DictQuery'),
+		DictEntry: resolveComponent('DictQuery'),
 	}
 
 	function registerWindowRef(i: number, ref: any) {
@@ -87,7 +44,7 @@
 			@close="removeWindowRef(i, $event)"
 		>
 			<component
-				:is="{...window.type.component}"
+				:is="contentComponents[window.type]"
 				:params="window.params"
 			/>
 		</VicavWinBox>

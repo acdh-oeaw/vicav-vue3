@@ -19,21 +19,45 @@ export const useWMStore = defineStore(
 		const windowMarginPx = ref(5) // must be in sync with css class .wb-vicav in WindowManager.vue
 		const counter = ref(0)
 		const windowList = ref([] as IWindow[])
-		const newWindow = ref(null as INewWindow|null)
 
 		const open = (windowTypeId: string, windowTitle: string, params: Object|null) => {
-			newWindow.value = { id: counter.value++, title: windowTitle, windowTypeId, params }
-			nextTick(() => {
-				newWindow.value = null
-			})
-		}
+			let windowType: WindowType
+			try {
+				windowType = validateWindowType(windowTypeId)
+			} catch (error: Error) {
+				console.warn("WindowManager: " + error.message)
+				return
+			}
 
-		const addWindowToList = (window: IWindow) => {
-			window.winBoxOptions.index = windowList.value.length > 0
+			let windowClasses = [ 'wb-vicav', 'no-min', 'no-max', 'no-full', 'no-resize', 'no-move']
+			if (!!params?.customClass) {
+				windowClasses.push(params.customClass)
+			}
+			let newWindow: IWindow = {
+				id: counter.value++,
+				ref: null,
+				type: windowType,
+				winBoxOptions: {
+					title: '[' + windowTypeId + '] ' + windowTitle,
+					top: topMargin,
+					class: windowClasses,
+				},
+				params: params,
+			}
+
+			newWindow.winBoxOptions.index = windowList.value.length > 0
 				? Math.max(...windowList.value.map(w => parseInt(w.ref.index))) + 1
 				: 1000
-			windowList.value.push(window)
+			windowList.value.push(newWindow)
 			arrangeWindows()
+		}
+
+		const validateWindowType = (windowTypeId: string): WindowType => {
+			const windowType = windowTypes.find(t => t === windowTypeId)
+			if (windowType) {
+				return windowType
+			}
+			throw new Error("Window type '" + windowTypeId + "' unknown")
 		}
 
 		const registerWindowRef = (i: number, ref: HTMLElement) => {
@@ -245,9 +269,7 @@ export const useWMStore = defineStore(
 			registerClientSize,
 
 			windowList,
-			newWindow,
 			open,
-			addWindowToList,
 			registerWindowRef,
 			removeWindowRef,
 			focus,
@@ -266,21 +288,13 @@ export const useWMStore = defineStore(
 	}
 )
 
-export interface INewWindow {
-	id: number,
-	title: string,
-	windowTypeId: string,
-	params: Object|null,
-}
-
-export interface IWindowType {
-	component: ConcreteComponent<{}, any, any, ComputedOptions, MethodOptions>,
-}
+export const windowTypes = ['Text', 'WMap', 'DictQuery', 'DictEntry'] as const
+export type WindowType = typeof windowTypes[number]
 
 export interface IWindow {
 	id: number | null
 	ref: any
-	type: IWindowType
+	type: WindowType
 	winBoxOptions: any
 	params: Object|null
 }
