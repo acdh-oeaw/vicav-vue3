@@ -11,16 +11,16 @@
         AppDataStore.isMobileMenuOpen = !AppDataStore.isMobileMenuOpen
     }
 
-    const WMStore = useWMStore()
+    const wmStore = useWMStore()
     const windowList = computed(() => {
-        return WMStore.windowList.map(w => { return {
+        return wmStore.windowList.map(w => { return {
             id: w.id,
             name: w.id?.toString() + ': ' + w.winBoxOptions?.title
         }})
     })
     function SelectWindow(windowId: number | null) {
         if (windowId != null) {
-            WMStore.Focus(windowId);
+            wmStore.focus(windowId);
         }
     }
 
@@ -32,7 +32,7 @@
     onMounted(() => {
         windowListDropdown = new $bootstrap.Dropdown(windowListTogglerRef.value)
         let menuBarHeight = menuBarRef.value.offsetHeight
-        WMStore.SetTopMargin(menuBarHeight)
+        wmStore.setTopMargin(menuBarHeight)
     })
     function ToggleWindowListCollapse(e) {
         AppDataStore.isMobileMenuOpen = false
@@ -109,14 +109,14 @@
                     <li>
                         <div class="dropdown-divider"></div>
                     </li>
-                    <li v-for="wam in WMStore.desktopArrangeMethods" :key="wam.id">
+                    <li v-for="wam in wmStore.desktopArrangeMethods" :key="wam.id">
                         <a
                             class="dropdown-item"
                             href="#"
-                            @mousedown="WMStore.SelectDesktopArrangeMethod(wam)"
+                            @mousedown="wmStore.SelectDesktopArrangeMethod(wam)"
                         >
                             <span class="vv-navbar-wam-checkmark">
-                                {{ wam.id == WMStore.selectedDesktopArrangeMethodId ? '✓' : '' }}
+                                {{ wam.id == wmStore.selectedDesktopArrangeMethodId ? '✓' : '' }}
                             </span>
                             {{ wam.name }}
                         </a>

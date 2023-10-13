@@ -17,7 +17,7 @@ export const useAppDataStore = defineStore(
 			{"id": "subNavVicavDictMarkers", "icon": "fa fa-map", "title": "VICAV Dictionaries"}]  as IMapBarItem[]);
 
 
-		const GetProjectData = async () => {
+		const getProjectData = async () => {
 			const { $api } = useNuxtApp();
 			$api.baseUrl = ("" + import.meta.env.VITE_APIBASEURL);
 			try {
@@ -59,7 +59,7 @@ export const useAppDataStore = defineStore(
 			}
 		}
 
-		GetProjectData()
+		getProjectData()
 
 		const isMobileMenuOpen = ref(false);
 		const isMobile = ref(false);

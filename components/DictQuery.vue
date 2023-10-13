@@ -5,8 +5,8 @@
 
 	const props = defineProps(['params'])
 
-	const DictStore = useDictStore()
-	const dictList = computed(() => DictStore.dictList)
+	const dictStore = useDictStore()
+	const dictList = computed(() => dictStore.dictList)
 	const dictSelector: Ref<{ [dictId: string]: boolean }> = ref({})
 	dictList.value.forEach(d => { dictSelector.value[d.coll_name] = (props.params?.dictId == d.coll_name) })
 	if (!Object.keys(dictSelector.value).some(d => dictSelector.value[d])) {
@@ -18,7 +18,7 @@
 			.join(",")
 		return newString
 	})
-	const dictCrossQueryXslt = computed(() => DictStore.dictCrossQueryXslt)
+	const dictCrossQueryXslt = computed(() => dictStore.dictCrossQueryXslt)
 
 	const queryString: Ref<string> = ref('')
 	const normalizedQueryString = computed(() => {
@@ -36,7 +36,7 @@
 		return newString
 	})
 
-	const QueryDictionaries = async () => {
+	const queryDictionaries = async () => {
 		const { $api } = useNuxtApp()
 		$api.baseUrl = ("" + import.meta.env.VITE_APIBASEURL);
 		try {
@@ -46,11 +46,11 @@
 				xslt: dictCrossQueryXslt.value
 			})).text()
 		} catch (error) {
-			LogError(error)
+			logError(error)
 		}
 	}
 
-	const LogError = async (error: any) => {
+	const logError = async (error: any) => {
 		let errorXml = (new DOMParser()).parseFromString(await error.text(), 'text/xml')
 			console.error(errorXml)
 			alert(
@@ -64,19 +64,19 @@
 	const resultHtml: Ref<string | undefined> = ref('')
 
 	const domId = 'id-' + Math.floor(Math.random() * 1000000)
-    const WMStore = useWMStore()
+    const wmStore = useWMStore()
 
-	const QueryButtonClicked = async (e: Event) => {
+	const queryButtonClicked = async (e: Event) => {
 		e.preventDefault()
-		resultHtml.value = await QueryDictionaries()
+		resultHtml.value = await queryDictionaries()
 		nextTick(() => {
-			WMStore.SanitizeLinks(domId)
+			wmStore.sanitizeLinks(domId)
 		})
 	}
 
-	const OpenExamples = (e: Event) => {
+	const openExamples = (e: Event) => {
 		e.preventDefault()
-		WMStore.Open('Text', 'textQuery: TUNICO DICTIONARY', { id: 'dictFrontPage_Tunis', customClass: 'vicav-cover-page' })
+		wmStore.open('Text', 'textQuery: TUNICO DICTIONARY', { id: 'dictFrontPage_Tunis', customClass: 'vicav-cover-page' })
 	}
 </script>
 
@@ -91,7 +91,7 @@
 				placeholder="Search in dictionaries ..."
 				aria-label="Search"
 			/>
-			<button class="crossDictQueryBtn" @click="QueryButtonClicked" :disabled="queryString === '' || !Object.keys(dictSelector).some(d => dictSelector[d])">
+			<button class="crossDictQueryBtn" @click="queryButtonClicked" :disabled="queryString === '' || !Object.keys(dictSelector).some(d => dictSelector[d])">
 				Query</button
 			><br />
 		</form>
@@ -105,7 +105,7 @@
 		</ul>
 		<p>
 			For details as to how to formulate meaningful dictionary queries consult the
-			<a class="aVicText" href="" @click="OpenExamples">examples of the TUNICO dictionary</a>.
+			<a class="aVicText" href="" @click="openExamples">examples of the TUNICO dictionary</a>.
 		</p>
 		<div v-html="resultHtml" :id="domId"></div>
 	</div>

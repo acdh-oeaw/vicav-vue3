@@ -9,7 +9,7 @@
 	const htmlContents: Ref<string | undefined> = ref("")
 	const props = defineProps(['params'])
 
-	const GetText = async () => {
+	const getText = async () => {
 		const { $api } = useNuxtApp()
 		const id = String(props.params.id)
 		$api.baseUrl = ("" + import.meta.env.VITE_APIBASEURL);
@@ -19,12 +19,12 @@
 			console.error(error)
 		}
 	}
-	htmlContents.value = await GetText()
+	htmlContents.value = await getText()
 
 	const domId = 'id-' + Math.floor(Math.random() * 1000000)
-	const WMStore = useWMStore()
+	const wmStore = useWMStore()
 	onMounted(() => {
-		WMStore.SanitizeLinks(domId)
+		wmStore.sanitizeLinks(domId)
 	})
 </script>
 

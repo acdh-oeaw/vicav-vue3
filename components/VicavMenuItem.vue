@@ -3,7 +3,7 @@
 		<a
 			class="dropdown-item"
 			href="#"
-			@mousedown="ClickMenu(menuNode)"
+			@mousedown="clickMenu(menuNode)"
 		>
 			{{ menuNode.name }}
 		</a>
@@ -11,20 +11,18 @@
 </template>
 
 <script setup lang="ts">
-    import { useAppDataStore } from '~~/store/appData';
     import { IMenuItem } from "~/store/appData";
     import { useWMStore } from '~~/store/wm';
 
-    const AppDataStore = useAppDataStore()
-    const WMStore = useWMStore()
+    const wmStore = useWMStore()
 
-	const props = defineProps<{
+	defineProps<{
         menuNode: IMenuItem;
     }>();
 
-    function ClickMenu(menuNode: IMenuItem) {
+    function clickMenu(menuNode: IMenuItem) {
         if (menuNode.type === 'item') {
-            WMStore.Open(menuNode.windowTypeId, menuNode.name, menuNode.params)
+            wmStore.open(menuNode.windowTypeId, menuNode.name, menuNode.params)
         }
     }
 </script>

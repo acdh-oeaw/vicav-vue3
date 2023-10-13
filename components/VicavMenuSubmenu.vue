@@ -3,7 +3,7 @@
         <a
             :id="menuNode.id"
             ref="buttonRef"
-            @click="ToggleMenu(dropdown)"
+            @click="toggleMenu(dropdown)"
             class="nav-link dropdown-toggle"
             role="button"
             data-bs-toggle="dropdown"
@@ -39,7 +39,7 @@
 
     let dropdown: Dropdown | null = null;
 
-    function ToggleMenu(dropdown: Dropdown | null) {
+    function toggleMenu(dropdown: Dropdown | null) {
         if (dropdown == null) {
             return
         }

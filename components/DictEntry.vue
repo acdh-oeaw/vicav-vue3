@@ -14,7 +14,7 @@
 		},
 	}>()
 
-	const GetDictEntry = async () => {
+	const getDictEntry = async () => {
 		const { $api } = useNuxtApp()
 		const id = String(props.params.sid)
 		const dict = String(props.params.dict)
@@ -26,12 +26,12 @@
 		}
 	}
 
-	htmlContents.value = await GetDictEntry()
+	htmlContents.value = await getDictEntry()
 
 	const domId = 'id-' + Math.floor(Math.random() * 1000000)
-	const WMStore = useWMStore()
+	const wmStore = useWMStore()
 	onMounted(() => {
-		WMStore.SanitizeLinks(domId)
+		wmStore.sanitizeLinks(domId)
 	})
 </script>
 
