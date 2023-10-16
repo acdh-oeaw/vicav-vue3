@@ -1,7 +1,10 @@
 <script lang="ts" setup>
 import { isNonEmptyString } from "@acdh-oeaw/lib";
-import Color from "colorjs.io";
+import { ColorSpace, getLuminance, HSL, parse, sRGB, to as convert } from "colorjs.io/fn";
 import type { WebSite, WithContext } from "schema-dts";
+
+ColorSpace.register(sRGB);
+ColorSpace.register(HSL);
 
 const env = useRuntimeConfig();
 const route = useRoute();
@@ -14,8 +17,8 @@ const siteTitle = computed(() => {
 });
 
 function convertColor(hex: string): [string, string] {
-	const color = new Color(hex).to("hsl");
-	const contrast = color.luminance > 0.5 ? "0deg 0% 0%" : "0deg 0% 100%";
+	const color = convert(parse(hex), "hsl");
+	const contrast = getLuminance(color) > 0.5 ? "0deg 0% 0%" : "0deg 0% 100%";
 	const [h, s, l] = color.coords;
 	return [`${h}deg ${s}% ${l}%`, contrast];
 }
