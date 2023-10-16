@@ -35,6 +35,8 @@ const config = {
 				"on-secondary": "hsl(var(--color-on-secondary) / <alpha-value>)",
 				accent: "hsl(var(--color-accent) / <alpha-value>)",
 				"on-accent": "hsl(var(--color-on-accent) / <alpha-value>)",
+				header: "hsl(var(--color-header) / <alpha-value>)",
+				"on-header": "hsl(var(--color-on-header) / <alpha-value>)",
 				negative: "hsl(var(--color-negative) / <alpha-value>)",
 				"on-negative": "hsl(var(--color-on-negative) / <alpha-value>)",
 				border: "hsl(var(--color-border) / <alpha-value>)",

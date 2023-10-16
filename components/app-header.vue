@@ -141,12 +141,11 @@ function onSelectMenuItem(item: ItemType) {
 </script>
 
 <template>
-	<header class="border-b border-border bg-surface text-on-surface">
+	<header class="border-b border-border bg-header text-on-header">
 		<div class="flex items-center justify-between gap-4 px-8 py-4">
-			<!-- TODO: do we really need this logo/link? -->
 			<NuxtLink class="flex shrink-0" href="/">
 				<span class="sr-only">Home</span>
-				<img alt="" class="h-10 hue-rotate-180 invert" :src="logo" />
+				<img alt="" class="h-10" :src="logo" />
 			</NuxtLink>
 
 			<div class="hidden flex-1 lg:flex">

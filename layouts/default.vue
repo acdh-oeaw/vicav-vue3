@@ -13,17 +13,31 @@ const siteTitle = computed(() => {
 	return data.value?.projectConfig?.title ?? "VICAV3.0 - Vienna Corpus of Arabic Varieties";
 });
 
-function toHsl(hex: string): string {
-	const [h, s, l] = new Color(hex).to("hsl").coords;
-	return `${h}deg ${s}% ${l}%`;
+function convertColor(hex: string): [string, string] {
+	const color = new Color(hex).to("hsl");
+	const contrast = color.luminance > 0.5 ? "0deg 0% 0%" : "0deg 0% 100%";
+	const [h, s, l] = color.coords;
+	return [`${h}deg ${s}% ${l}%`, contrast];
 }
 
 const style = computed(() => {
 	const colors = data.value?.projectConfig?.styleSettings?.colors;
 
-	if (colors?.subNav == null) return undefined;
+	const style = [];
 
-	return `--color-primary: ${toHsl(colors.subNav)};`;
+	if (colors?.nav != null) {
+		const [color, contrast] = convertColor(colors.nav);
+		style.push(`--color-header: ${color}`);
+		style.push(`--color-on-header: ${contrast}`);
+	}
+
+	if (colors?.subNav != null) {
+		const [color, contrast] = convertColor(colors.subNav);
+		style.push(`--color-primary: ${color}`);
+		style.push(`--color-on-primary: ${contrast}`);
+	}
+
+	return style.join(";");
 });
 
 useHead({
