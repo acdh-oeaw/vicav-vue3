@@ -17,10 +17,9 @@ export default defineNuxtConfig({
 		"leaflet/dist/leaflet.css",
 	],
 	devtools: { enabled: import.meta.env.DEV },
-	imports: { dirs: ["./config/", "./stores/"] },
+	imports: { dirs: ["./config/"] },
 	modules: ["@pinia/nuxt", "@vueuse/nuxt"],
 	nitro: { compressPublicAssets: true },
-	pinia: { autoImports: ["defineStore", "storeToRefs"] },
 	postcss: {
 		plugins: {
 			tailwindcss: {},
