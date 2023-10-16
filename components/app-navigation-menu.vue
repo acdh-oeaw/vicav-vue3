@@ -13,6 +13,9 @@ const emit = defineEmits<{
 
 const { menus } = toRefs(props);
 
+const router = useRouter();
+const route = useRoute();
+
 const windowsStore = useWindowsStore();
 const { setWindowArrangement } = windowsStore;
 const { arrangement: currentArrangement, registry } = storeToRefs(windowsStore);
@@ -79,6 +82,11 @@ onScopeDispose(() => {
 								}
 
 								item.winbox.focus();
+
+								/** Windows are only displayed on `/`. */
+								if (route.path !== '/') {
+									void router.push('/');
+								}
 							}
 						"
 					>

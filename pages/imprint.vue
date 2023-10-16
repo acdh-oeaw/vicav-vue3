@@ -16,9 +16,9 @@ const imprint = await useFetch(String(createImprintUrl(defaultLocale, redmineId)
 </script>
 
 <template>
-	<MainContent class="prose mx-auto w-full max-w-3xl py-8">
+	<div class="prose mx-auto w-full max-w-3xl py-8">
 		<h1>Imprint</h1>
 		<!-- eslint-disable-next-line vue/no-v-html -->
 		<div v-if="imprint.data.value" v-html="imprint.data.value" />
-	</MainContent>
+	</div>
 </template>

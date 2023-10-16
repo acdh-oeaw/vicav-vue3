@@ -95,6 +95,7 @@ export const useWindowsStore = defineStore("windows", () => {
 	const arrangement = ref<WindowArrangement>("smart-tile");
 
 	const router = useRouter();
+	const route = useRoute();
 
 	function addWindow<Kind extends WindowItemKind>(params: {
 		id?: string | null;
@@ -106,7 +107,9 @@ export const useWindowsStore = defineStore("windows", () => {
 		if (rootElement == null) return;
 
 		/** Ensure windows open only on `/`. */
-		void router.push("/");
+		if (route.path !== "/") {
+			void router.push("/");
+		}
 
 		const id = params.id ?? `window-${nanoid()}`;
 		const { title, kind } = params;
