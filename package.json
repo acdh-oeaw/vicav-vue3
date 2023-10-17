@@ -40,7 +40,7 @@
 		"@acdh-oeaw/lib": "^0.1.6",
 		"@fontsource-variable/roboto-flex": "^5.0.8",
 		"@pinia/nuxt": "^0.5.1",
-		"@tanstack/vue-query": "^5.0.0-rc.11",
+		"@tanstack/vue-query": "^5.0.0",
 		"@vueuse/core": "^10.5.0",
 		"@vueuse/nuxt": "^10.5.0",
 		"colorjs.io": "^0.4.5",
