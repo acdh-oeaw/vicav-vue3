@@ -42,8 +42,8 @@ const queries = useGeoMarkerLayers(
 	}),
 );
 
-const isFetching = computed(() => {
-	return queries.value.some((query) => query.isFetching);
+const isPending = computed(() => {
+	return queries.value.some((query) => query.isPending);
 });
 
 // TODO: pass as separate feature groups to geo map (?)
@@ -63,11 +63,11 @@ const markers = computed(() => {
 
 		<VisualisationContainer
 			v-slot="{ width, height }"
-			:class="{ 'opacity-50 grayscale': isFetching }"
+			:class="{ 'opacity-50 grayscale': isPending }"
 		>
 			<GeoMap :height="height" :markers="markers" :width="width" />
 
-			<Centered v-if="isFetching">
+			<Centered v-if="isPending">
 				<LoadingIndicator />
 			</Centered>
 		</VisualisationContainer>

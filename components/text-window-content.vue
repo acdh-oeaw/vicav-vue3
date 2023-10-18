@@ -6,19 +6,19 @@ interface Props {
 const props = defineProps<Props>();
 const { params } = toRefs(props);
 
-const { data, isFetching } = useTextById(params);
+const { data, isPending } = useTextById(params);
 const onClick = useAnchorClickHandler();
 </script>
 
 <template>
 	<div
 		class="relative isolate grid h-full w-full overflow-auto"
-		:class="{ 'opacity-50 grayscale': isFetching }"
+		:class="{ 'opacity-50 grayscale': isPending }"
 	>
 		<!-- eslint-disable-next-line vue/no-v-html, vuejs-accessibility/click-events-have-key-events, vuejs-accessibility/no-static-element-interactions -->
 		<div v-if="data" class="prose max-w-3xl p-8" @click="onClick" v-html="data" />
 
-		<Centered v-if="isFetching">
+		<Centered v-if="isPending">
 			<LoadingIndicator />
 		</Centered>
 	</div>
