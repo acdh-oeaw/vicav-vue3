@@ -26,7 +26,7 @@ export default defineNuxtConfig({
 		},
 	},
 	routeRules: {
-		"**/*": {
+		"**": {
 			headers: process.env.BOTS !== "enabled" ? { "X-Robots-Tag": "noindex, nofollow" } : {},
 		},
 	},
