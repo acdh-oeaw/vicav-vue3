@@ -1,0 +1,80 @@
+diff --git a/package.json b/package.json
+index f3ed2fae019f0bf86c13216343a944019533d82a..07e78e8f3ea3f0b0a0dd7001e81e4cf3c96ff772 100644
+--- a/package.json
++++ b/package.json
+@@ -24,6 +24,10 @@
+   "type": "module",
+   "browser": "dist/winbox.bundle.min.js",
+   "preferGlobal": false,
++  "exports": {
++    ".": "./src/js/winbox.js",
++    "./dist/css/winbox.min.css": "./dist/css/winbox.min.css"
++  },
+   "repository": {
+     "type": "git",
+     "url": "https://github.com/nextapps-de/winbox.git"
+diff --git a/src/js/template.js b/src/js/template.js
+index f87db70ba5468eae1e151ac991af58be1d98f842..1d61d84fb260bf929b96f56ae03504b74e235e16 100644
+--- a/src/js/template.js
++++ b/src/js/template.js
+@@ -1,5 +1,5 @@
+-const template = document.createElement("div");
+-template.innerHTML = (
++let template;
++const html = (
+ 
+     //'<div class=winbox>' +
+ 
+@@ -31,6 +31,10 @@ template.innerHTML = (
+ );
+ 
+ export default function(tpl){
++    if (!template) {
++        template = document.createElement("div");
++        template.innerHTML = html;
++    }
+ 
+     return (tpl || template).cloneNode(true);
+ }
+diff --git a/src/js/winbox.js b/src/js/winbox.js
+index dba496358929efe4cded3adb5b0e9fd5bbd0e2f1..50724e268001cb61f7fc34758040dcfc9172a559 100644
+--- a/src/js/winbox.js
++++ b/src/js/winbox.js
+@@ -20,6 +20,7 @@ const stack_win = [];
+ const eventOptions = { "capture": true, "passive": false };
+ const eventOptionsPassive = { "capture": true, "passive": true };
+ let body;
++let root;
+ let id_counter = 0;
+ let index_counter = 10;
+ let is_fullscreen;
+@@ -42,11 +43,8 @@ function WinBox(params, _title){
+         return new WinBox(params);
+     }
+ 
+-    body || setup();
+-
+     let id,
+         index,
+-        root,
+         tpl,
+         title,
+         icon,
+@@ -162,6 +160,8 @@ function WinBox(params, _title){
+         }
+     }
+ 
++    body || setup();
++
+     this.dom = template(tpl);
+     this.dom.id = this.id = id || ("winbox-" + (++id_counter));
+     this.dom.className = "winbox" + (classname ? " " + (typeof classname === "string" ? classname : classname.join(" ")) : "") + (modal ? " modal" : "");
+@@ -801,7 +801,7 @@ function init(){
+     // root_w = body.clientWidth;
+     // root_h = body.clientHeight;
+ 
+-    const doc = document.documentElement;
++    const doc = root || body;
+     root_w = doc.clientWidth;
+     root_h = doc.clientHeight;
+ }
