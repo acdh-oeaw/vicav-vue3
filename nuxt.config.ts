@@ -16,7 +16,9 @@ export default defineNuxtConfig({
 		"winbox/dist/css/winbox.min.css",
 		"leaflet/dist/leaflet.css",
 	],
-	devtools: { enabled: import.meta.env.DEV },
+	devtools: {
+		enabled: process.env.NODE_ENV === "development",
+	},
 	imports: { dirs: ["./config/"] },
 	modules: ["@pinia/nuxt", "@vueuse/nuxt"],
 	nitro: { compressPublicAssets: true },
@@ -26,7 +28,7 @@ export default defineNuxtConfig({
 		},
 	},
 	routeRules: {
-		"**": {
+		"/**": {
 			headers: process.env.BOTS !== "enabled" ? { "X-Robots-Tag": "noindex, nofollow" } : {},
 		},
 	},
