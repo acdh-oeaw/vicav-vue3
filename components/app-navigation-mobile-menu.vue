@@ -34,6 +34,7 @@ onScopeDispose(() => {
 			<MenuIcon class="mx-3 my-1.5 h-5 w-5" />
 		</SheetTrigger>
 		<SheetContent class="overflow-y-auto">
+			<SheetTitle class="sr-only">Navigation menu</SheetTitle>
 			<div class="grid divide-y divide-border py-8">
 				<details v-for="menu of menus" :key="menu.id" class="group py-4" name="menu-accordion">
 					<summary class="flex cursor-pointer list-none items-center justify-between font-medium">
