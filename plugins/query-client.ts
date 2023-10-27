@@ -2,6 +2,7 @@ import {
 	dehydrate,
 	type DehydratedState,
 	hydrate,
+	keepPreviousData,
 	QueryCache,
 	QueryClient,
 	VueQueryPlugin,
@@ -14,7 +15,12 @@ export default defineNuxtPlugin((nuxt) => {
 	const { addToast } = toastsStore;
 
 	const queryClient = new QueryClient({
-		defaultOptions: { queries: { staleTime: 1000 * 60 * 15 } },
+		defaultOptions: {
+			queries: {
+				placeholderData: keepPreviousData,
+				staleTime: 1000 * 60 * 15,
+			},
+		},
 		queryCache: new QueryCache({
 			onError(error) {
 				// FIXME:
