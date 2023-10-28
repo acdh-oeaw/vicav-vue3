@@ -17,6 +17,9 @@ const imprint = await useFetch(String(createImprintUrl(defaultLocale, redmineId)
 
 <template>
 	<div class="prose mx-auto w-full max-w-3xl py-8">
+		<NuxtLink class="float-right no-underline hover:underline hover:underline-offset-2" href="/">
+			×
+		</NuxtLink>
 		<h1>Imprint</h1>
 		<!-- eslint-disable-next-line vue/no-v-html -->
 		<div v-if="imprint.data.value" v-html="imprint.data.value" />

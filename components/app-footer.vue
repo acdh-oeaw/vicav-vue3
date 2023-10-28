@@ -1,4 +1,86 @@
 <template>
+	<div id="wrapper-footer-full" class="mt-auto w-full bg-white px-0 py-8 text-gray-900">
+		<div id="footer-full-content" class="mx-auto w-full px-4" tabindex="-1">
+			<div class="mb-4 flex items-center pb-4 pt-2 text-sm font-semibold">
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					width="24"
+					height="24"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					class="mr-1"
+				>
+					<path
+						d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"
+					></path>
+				</svg>
+				CONTACT
+			</div>
+			<div class="-mx-4 flex flex-wrap">
+				<div class="footer-logo-widget relative mt-4 w-full px-4">
+					<div class="textwidget custom-html-widget">
+						<a href="/">
+							<img
+								src="https://fundament.acdh.oeaw.ac.at/common-assets/images/acdh_logo.svg"
+								class="image"
+								alt="ACDH Logo"
+								style="max-width: 100%; height: auto"
+								title="ACDH Logo"
+							/>
+						</a>
+					</div>
+				</div>
+				<!-- .footer-widget -->
+				<div class="footer-widget mt-4">
+					<div class="textwidget custom-html-widget">
+						<p class="mb-4 mt-0 block">
+							ACDH-CH
+							<br />
+							Austrian Centre for Digital Humanities
+							<br />
+							and Cultural Heritage
+							<br />
+							Austrian Academy of Sciences
+						</p>
+						<p class="mb-4 mt-0 block">
+							Bäckerstraße 13,
+							<br />
+							1010 Vienna
+						</p>
+						<p class="mb-4 mt-0 block">
+							T: +43 1 51581-2200
+							<br />
+							E:
+							<a href="mailto:acdh-ch@oeaw.ac.at">acdh-ch@oeaw.ac.at</a>
+						</p>
+					</div>
+				</div>
+				<!-- .footer-widget -->
+				<div class="footer-widget ml-auto mt-4">
+					<div class="textwidget custom-html-widget">
+						<h6 class="block font-bold">HELPDESK</h6>
+						<p class="mb-4 mt-0 block">
+							ACDH-CH runs a helpdesk offering advice for questions related to various digital
+							humanities topics.
+						</p>
+						<p class="mb-4 mt-0 block">
+							<a
+								class="helpdesk-button block bg-white text-xs font-semibold text-teal-300"
+								href="mailto:acdh-ch-helpdesk@oeaw.ac.at"
+							>
+								ASK US!
+							</a>
+						</p>
+					</div>
+				</div>
+				<!-- .footer-widget -->
+			</div>
+		</div>
+	</div>
 	<footer class="border-t border-border bg-surface text-on-surface">
 		<div class="flex items-center justify-center gap-2 px-8 py-1.5 text-xs">
 			<span class="flex gap-1">
@@ -12,3 +94,38 @@
 		</div>
 	</footer>
 </template>
+
+<style>
+svg.feather {
+	vertical-align: bottom;
+	width: 1.1rem;
+	max-width: 100%;
+}
+
+.footer-logo-widget {
+	flex: 0 0 8.333%;
+	max-width: 8.333%;
+}
+
+.footer-widget {
+	flex: 0 0 33.333%;
+	max-width: 33.333%;
+}
+
+.helpdesk-button {
+	max-width: 16rem;
+	padding: 0.25rem 1.25rem;
+	border: 1px solid #88dbdf;
+	border-radius: 20px;
+	transition:
+		background-color ease 0.2s,
+		color ease 0.2s;
+}
+
+.helpdesk-button:hover,
+.helpdesk-button:focus {
+	background-color: #88dbdf;
+	color: #fff;
+	text-decoration: none;
+}
+</style>
