@@ -1,3 +1,5 @@
+## .gitignore ##
+
 # dependencies
 node_modules/
 .pnpm-store/
@@ -33,3 +35,24 @@ dist
 
 # auto-generated api-client
 /lib/api-client/
+
+
+## .dockerignore ##
+
+# git
+.git/
+.gitignore
+
+# github
+.github/
+
+# vscode settings
+.vscode/
+
+# environment variables
+.env
+.env.*
+
+# tests
+/e2e/
+/test/
