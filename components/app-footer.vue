@@ -21,7 +21,7 @@
 				CONTACT
 			</div>
 			<div class="-mx-4 flex flex-wrap">
-				<div class="mt-4 w-1/4 flex-none border border-red-900 px-4 sm:w-1/6 md:w-1/6 lg:w-1/12">
+				<div class="mt-4 w-1/4 flex-none px-4 sm:w-1/6 md:w-1/6 lg:w-1/12">
 					<div class="">
 						<a href="/">
 							<img
@@ -34,7 +34,7 @@
 					</div>
 				</div>
 				<!-- .footer-widget -->
-				<div class="mt-4 w-3/4 flex-none border border-blue-900 px-4 sm:w-1/2 md:w-1/3 lg:w-1/3">
+				<div class="mt-4 w-3/4 flex-none px-4 sm:w-1/2 md:w-1/3 lg:w-1/3">
 					<div class="custom-html-widget">
 						<p class="mb-4 mt-0 block">
 							ACDH-CH
@@ -59,17 +59,15 @@
 					</div>
 				</div>
 				<!-- .footer-widget -->
-				<div
-					class="ml-auto mt-4 w-full flex-none border border-green-900 px-4 sm:w-1/3 md:w-1/3 lg:w-1/4"
-				>
-					<h6 class="block font-bold">HELPDESK</h6>
+				<div class="ml-auto mt-4 w-full flex-none px-4 sm:w-1/3 md:w-1/3 lg:w-1/4">
+					<h6 class="mb-2 block font-bold">HELPDESK</h6>
 					<p class="mb-4 mt-0 block">
 						ACDH-CH runs a helpdesk offering advice for questions related to various digital
 						humanities topics.
 					</p>
 					<p class="mb-4 mt-0 block">
 						<a
-							class="helpdesk-button block bg-white text-xs font-semibold text-[#88dbdf]"
+							class="block rounded-3xl border border-[#88dbdf] bg-white px-5 py-1 text-xs font-semibold text-[#88dbdf] transition-colors duration-200 ease-in-out hover:bg-[#88dbdf] hover:text-white"
 							href="mailto:acdh-ch-helpdesk@oeaw.ac.at"
 						>
 							ASK US!
@@ -124,22 +122,5 @@
 .footer-widget {
 	flex: 0 0 33.333%;
 	max-width: 33.333%;
-}
-
-.helpdesk-button {
-	max-width: 16rem;
-	padding: 0.25rem 1.25rem;
-	border: 1px solid #88dbdf;
-	border-radius: 20px;
-	transition:
-		background-color ease 0.2s,
-		color ease 0.2s;
-}
-
-.helpdesk-button:hover,
-.helpdesk-button:focus {
-	background-color: #88dbdf;
-	color: #fff;
-	text-decoration: none;
 }
 </style>
