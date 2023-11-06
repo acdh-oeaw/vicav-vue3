@@ -67,7 +67,7 @@
 					</p>
 					<p class="mb-4 mt-0 block">
 						<a
-							class="block rounded-3xl border border-[#88dbdf] bg-white px-5 py-1 text-xs font-semibold text-[#88dbdf] transition-colors duration-200 ease-in-out hover:bg-[#88dbdf] hover:text-white"
+							class="block max-w-xs rounded-3xl border border-[#88dbdf] bg-white px-5 py-1 text-xs font-semibold text-[#88dbdf] transition-colors duration-200 ease-in-out hover:bg-[#88dbdf] hover:text-white"
 							href="mailto:acdh-ch-helpdesk@oeaw.ac.at"
 						>
 							ASK US!
