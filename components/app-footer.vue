@@ -1,7 +1,7 @@
 <template>
 	<div id="wrapper-footer-full" class="mt-auto w-full bg-white px-0 py-8 text-gray-900">
 		<div id="footer-full-content" class="mx-auto w-full px-4" tabindex="-1">
-			<div class="mb-4 flex items-center pb-4 pt-2 text-sm font-semibold">
+			<div class="mb-4 flex items-center border-b pb-4 pt-2 text-sm font-semibold">
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
 					width="24"
@@ -12,7 +12,7 @@
 					stroke-width="2"
 					stroke-linecap="round"
 					stroke-linejoin="round"
-					class="mr-1"
+					class="mr-1 w-4 max-w-full align-bottom"
 				>
 					<path
 						d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"
@@ -21,12 +21,11 @@
 				CONTACT
 			</div>
 			<div class="-mx-4 flex flex-wrap">
-				<div class="footer-logo-widget relative mt-4 w-full px-4">
-					<div class="textwidget custom-html-widget">
+				<div class="mt-4 w-1/4 flex-none border border-red-900 px-4 sm:w-1/6 md:w-1/6 lg:w-1/12">
+					<div class="">
 						<a href="/">
 							<img
 								src="https://fundament.acdh.oeaw.ac.at/common-assets/images/acdh_logo.svg"
-								class="image"
 								alt="ACDH Logo"
 								style="max-width: 100%; height: auto"
 								title="ACDH Logo"
@@ -35,8 +34,8 @@
 					</div>
 				</div>
 				<!-- .footer-widget -->
-				<div class="footer-widget mt-4">
-					<div class="textwidget custom-html-widget">
+				<div class="mt-4 w-3/4 flex-none border border-blue-900 px-4 sm:w-1/2 md:w-1/3 lg:w-1/3">
+					<div class="custom-html-widget">
 						<p class="mb-4 mt-0 block">
 							ACDH-CH
 							<br />
@@ -60,22 +59,22 @@
 					</div>
 				</div>
 				<!-- .footer-widget -->
-				<div class="footer-widget ml-auto mt-4">
-					<div class="textwidget custom-html-widget">
-						<h6 class="block font-bold">HELPDESK</h6>
-						<p class="mb-4 mt-0 block">
-							ACDH-CH runs a helpdesk offering advice for questions related to various digital
-							humanities topics.
-						</p>
-						<p class="mb-4 mt-0 block">
-							<a
-								class="helpdesk-button block bg-white text-xs font-semibold text-teal-300"
-								href="mailto:acdh-ch-helpdesk@oeaw.ac.at"
-							>
-								ASK US!
-							</a>
-						</p>
-					</div>
+				<div
+					class="ml-auto mt-4 w-full flex-none border border-green-900 px-4 sm:w-1/3 md:w-1/3 lg:w-1/4"
+				>
+					<h6 class="block font-bold">HELPDESK</h6>
+					<p class="mb-4 mt-0 block">
+						ACDH-CH runs a helpdesk offering advice for questions related to various digital
+						humanities topics.
+					</p>
+					<p class="mb-4 mt-0 block">
+						<a
+							class="helpdesk-button block bg-white text-xs font-semibold text-[#88dbdf]"
+							href="mailto:acdh-ch-helpdesk@oeaw.ac.at"
+						>
+							ASK US!
+						</a>
+					</p>
 				</div>
 				<!-- .footer-widget -->
 			</div>
@@ -96,10 +95,25 @@
 </template>
 
 <style>
-svg.feather {
-	vertical-align: bottom;
-	width: 1.1rem;
-	max-width: 100%;
+@media (width >= 640px) {
+	/* sm */
+	#footer-full-content {
+		max-width: 540px;
+	}
+}
+
+@media (width >= 768px) {
+	/* md */
+	#footer-full-content {
+		max-width: 720px;
+	}
+}
+
+@media (width >= 1024px) {
+	/* lg */
+	#footer-full-content {
+		max-width: 960px;
+	}
 }
 
 .footer-logo-widget {
