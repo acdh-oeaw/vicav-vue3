@@ -9,5 +9,7 @@ const props = defineProps<Props>();
 <template>
 	<GeoMapWindowContent v-if="props.item.kind === 'geo-map'" :params="props.item.params" />
 	<TextWindowContent v-if="props.item.kind === 'text'" :params="props.item.params" />
+	<CorpusQuery v-if="props.item.kind === 'corpus-query'" :params="props.item.params" />
+	<CorpusText v-if="props.item.kind === 'corpus-text'" :params="props.item.params" />
 	<pre v-else>{{ props }}</pre>
 </template>
