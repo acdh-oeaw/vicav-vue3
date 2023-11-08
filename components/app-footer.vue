@@ -114,6 +114,13 @@
 	}
 }
 
+@media (width >= 1200px) {
+	/* xl */
+	#footer-full-content {
+		max-width: 1140px;
+	}
+}
+
 .footer-logo-widget {
 	flex: 0 0 8.333%;
 	max-width: 8.333%;
