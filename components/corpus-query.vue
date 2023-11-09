@@ -20,7 +20,7 @@ function openCorpusText(e) {
 		kind: "corpus-text",
 		title: "shawi corpus",
 		params: {
-			textId: e.currentTarget.dataset.doc,
+			id: e.currentTarget.dataset.doc,
 			hits: e.currentTarget.dataset.hits,
 			u: e.currentTarget.dataset.uid,
 		},

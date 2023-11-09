@@ -16,7 +16,7 @@ const loadNextPage = async function () {
 	let text;
 	text = await api.vicav.getCorpusText(
 		{
-			id: props.params.textId,
+			id: props.params.id,
 			hits: props.params.hits,
 			page: currentPage.value,
 		},
@@ -60,8 +60,8 @@ onMounted(async () => {
 </script>
 
 <template>
-	<div :id="params.textId" class="corpus-text">
-		<h2>{{ params.textId }}</h2>
+	<div :id="params.id" class="corpus-text">
+		<h2>{{ params.id }}</h2>
 		<div
 			v-for="u in utterances"
 			:id="u.id"
