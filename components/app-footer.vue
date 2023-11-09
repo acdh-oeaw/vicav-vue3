@@ -1,8 +1,8 @@
 <script setup lang="ts"></script>
 
 <template>
-	<footer class="absolute inset-x-0 bottom-0 border-t border-border bg-surface text-on-surface">
-		<div id="wrapper-footer-full" class="mb-0 w-full bg-white px-0 py-8 text-gray-900">
+	<footer class="absolute inset-x-0 bottom-0 bg-surface text-on-surface">
+		<div class="mb-0 w-full bg-neutral-50 px-0 py-8 text-gray-900">
 			<div id="footer-full-content" class="mx-auto w-full px-4" tabindex="-1">
 				<div class="footer-logo-widget mb-4 flex items-center border-b pb-4 pt-2 text-sm font-semibold">
 					<svg
