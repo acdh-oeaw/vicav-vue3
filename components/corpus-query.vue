@@ -51,7 +51,7 @@ function openCorpusText(e) {
 		<div class="results">
 			<div v-if="hits.length > 0">CQL: [word="{{ queryString }}"]</div>
 			<table>
-				<tr v-for="hit in hits" :key="hit.u" class="hit flex">
+				<tr v-for="hit in hits" :key="hit.u" class="hit">
 					<td class="pe-3">
 						<a
 							href="#"
@@ -63,7 +63,9 @@ function openCorpusText(e) {
 							<strong>{{ hit.u }}</strong>
 						</a>
 					</td>
-					<td class="corpus-search-results" v-html="hit.content"></td>
+					<td class="left" v-html="hit.content.left"></td>
+					<td class="kwic bg-warning" v-html="hit.content.kwic"></td>
+					<td class="right" v-html="hit.content.right"></td>
 				</tr>
 			</table>
 		</div>
@@ -73,5 +75,21 @@ function openCorpusText(e) {
 <style lang="scss">
 #corpus-query {
 	padding: 1rem;
+}
+
+.results td {
+	padding: 0 0 0 0;
+}
+
+.left {
+	text-align: right;
+}
+
+.kwic {
+	text-align: center;
+}
+
+.bg-warning {
+	background-color: beige;
 }
 </style>
