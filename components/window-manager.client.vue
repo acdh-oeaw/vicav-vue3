@@ -24,9 +24,9 @@ useResizeObserver(rootElement, debouncedArrangeWindows);
 			</Teleport>
 		</template>
 
-		<Centered v-if="registry.size === 0">
+		<div v-if="registry.size === 0" class="absolute inset-0 grid h-1/4 w-full place-items-center">
 			<div class="text-sm text-on-muted">Select a menu item to open a new window.</div>
-		</Centered>
+		</div>
 	</div>
 </template>
 
