@@ -14,15 +14,11 @@ const menus = computed(() => {
 });
 
 const logo = computed(() => {
-	const url = data.value?.projectConfig?.logo?.img;
-	// TODO: default should be set via zod schema
-	return url;
+	return data.value?.projectConfig?.logo?.img;
 });
 
 const titlestring = computed(() => {
-	const titlestring = data.value?.projectConfig?.logo?.string;
-	// TODO: default should be set via zod schema
-	return titlestring;
+	return data.value?.projectConfig?.logo?.string;
 });
 
 
@@ -152,7 +148,7 @@ function onSelectMenuItem(item: ItemType) {
 		<div class="flex items-center justify-between gap-4 px-8 py-4">
 			<NuxtLink class="flex shrink-0" href="/">
 				<span v-if="titlestring" class="titlestring">{{ titlestring }}</span>
-				<img alt="" class="h-10" :src="logo" v-if="logo" />
+				<img v-if="logo" alt="" class="h-10" :src="logo" />
 			</NuxtLink>
 
 			<div class="hidden flex-1 lg:flex">
@@ -176,11 +172,11 @@ function onSelectMenuItem(item: ItemType) {
 
 <style>
 .titlestring {
+	margin-top: -10px;
 	font-weight: 700;
+	font-style: italic;
 	font-size: 2.5em;
 	font-family: Times, serif;
-	font-style: italic;
 	line-height: 1;
-	margin-top: -10px;
 }
 </style>
