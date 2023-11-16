@@ -14,11 +14,14 @@ const menus = computed(() => {
 });
 
 const logo = computed(() => {
-	const url = data.value?.projectConfig?.logo?.img;
-
-	// TODO: default should be set via zod schema
-	return url ?? "/assets/images/logo.svg";
+	return data.value?.projectConfig?.logo?.img;
 });
+
+const titlestring = computed(() => {
+	return data.value?.projectConfig?.logo?.string;
+});
+
+
 
 function createWindowId(_item: ItemType) {
 	/**
@@ -144,8 +147,8 @@ function onSelectMenuItem(item: ItemType) {
 	<header class="border-b border-border bg-header text-on-header">
 		<div class="flex items-center justify-between gap-4 px-8 py-4">
 			<NuxtLink class="flex shrink-0" href="/">
-				<span class="sr-only">Home</span>
-				<img alt="" class="h-10" :src="logo" />
+				<span v-if="titlestring" class="titlestring">{{ titlestring }}</span>
+				<img v-if="logo" alt="" class="h-10" :src="logo" />
 			</NuxtLink>
 
 			<div class="hidden flex-1 lg:flex">
@@ -166,3 +169,14 @@ function onSelectMenuItem(item: ItemType) {
 		</div>
 	</header>
 </template>
+
+<style>
+.titlestring {
+	margin-top: -10px;
+	font-weight: 700;
+	font-style: italic;
+	font-size: 2.5em;
+	font-family: Times, serif;
+	line-height: 1;
+}
+</style>
