@@ -61,6 +61,11 @@ export interface TextWindowItem extends WindowItemBase {
 	};
 }
 
+export interface SpecCharInputDemo extends WindowItemBase {
+	kind: "spec-char-input-demo";
+	params: object;
+}
+
 export type WindowItem =
 	| BibliographyQueryWindowItem
 	| CorpusQueryWindowItem
@@ -71,6 +76,7 @@ export type WindowItem =
 	| DictionaryQueryWindowItem
 	| GeoMapWindowItem
 	| SampleTextWindowItem
+	| SpecCharInputDemo
 	| TextWindowItem;
 
 export type WindowItemKind = WindowItem["kind"];

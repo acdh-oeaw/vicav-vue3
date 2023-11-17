@@ -21,8 +21,6 @@ const titlestring = computed(() => {
 	return data.value?.projectConfig?.logo?.string;
 });
 
-
-
 function createWindowId(_item: ItemType) {
 	/**
 	 * We intentionally do *not* use `item.target` for window id, because we don't want to
@@ -40,6 +38,16 @@ function createWindowTitle(item: ItemType) {
 
 function onSelectMenuItem(item: ItemType) {
 	switch (item.componentName) {
+		case "SpecCharInputDemo": {
+			addWindow({
+				id: createWindowId(null),
+				title: "Special Character Input Demo",
+				kind: "spec-char-input-demo",
+				params: {},
+			});
+			break;
+		}
+
 		case "BiblioQuery": {
 			addWindow({
 				id: createWindowId(item),
@@ -166,6 +174,20 @@ function onSelectMenuItem(item: ItemType) {
 					@select-menu-item="onSelectMenuItem"
 				/>
 			</div>
+
+			<button
+				class="btn"
+				@click="
+					onSelectMenuItem({
+						id: 'SpecCharInputDemo',
+						type: 'item',
+						componentName: 'SpecCharInputDemo',
+						params: {},
+					})
+				"
+			>
+				Showtime
+			</button>
 		</div>
 	</header>
 </template>

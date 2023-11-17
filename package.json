@@ -48,6 +48,7 @@
 		"is-ci": "^3.0.1",
 		"leaflet": "^1.9.4",
 		"lucide-vue-next": "^0.289.0",
+		"nanoid": "^5.0.3",
 		"npm-run-all2": "^6.1.1",
 		"nuxt": "^3.7.4",
 		"pinia": "^2.1.7",
