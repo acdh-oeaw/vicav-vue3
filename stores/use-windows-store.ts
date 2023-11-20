@@ -4,11 +4,6 @@ import WinBox from "winbox";
 import type { QueryDescription } from "@/lib/api-client";
 import * as arrange from "@/utils/window-arrangement";
 
-interface WindowState {
-	x: number;
-	y: number;
-}
-
 interface WindowItemBase {
 	id: string;
 	winbox: WinBox;
@@ -96,6 +91,16 @@ export const arrangements = {
 
 export type WindowArrangement = keyof typeof arrangements;
 
+interface WindowState {
+	x: number;
+	y: number;
+	width: number;
+	height: number;
+	kind: WindowItemKind;
+	title: string;
+	params: unknown;
+}
+
 export const useWindowsStore = defineStore("windows", () => {
 	const registry = ref<WindowRegistry>(new Map());
 	const arrangement = ref<WindowArrangement>("smart-tile");
@@ -142,17 +147,6 @@ export const useWindowsStore = defineStore("windows", () => {
 			},
 			root: rootElement,
 		});
-
-		const windowState = {
-			x: winbox.x as number,
-			y: winbox.y as number,
-			focus: winbox.focus as boolean,
-			width: winbox.width as number,
-			height: winbox.height as number,
-			fullscreen: winbox.fullscreen as boolean,
-			minimized: winbox.minimized as boolean,
-			maximized: winbox.maximized as boolean,
-		};
 
 		registry.value.set(id, {
 			id,
@@ -209,7 +203,7 @@ export const useWindowsStore = defineStore("windows", () => {
 	});
 
 	function serializeWindowStates() {
-		let windowStates = [];
+		let windowStates: Array<WindowState> = [];
 		registry.value.forEach((w, id) => {
 			windowStates.push({
 				x: w.winbox.x,
@@ -219,7 +213,7 @@ export const useWindowsStore = defineStore("windows", () => {
 				kind: w.kind,
 				title: w.winbox.title,
 				params: w.params,
-			});
+			} as WindowState);
 		});
 		console.log(JSON.stringify(windowStates));
 		return windowStates;
