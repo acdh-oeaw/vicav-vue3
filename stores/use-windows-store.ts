@@ -4,9 +4,15 @@ import WinBox from "winbox";
 import type { QueryDescription } from "@/lib/api-client";
 import * as arrange from "@/utils/window-arrangement";
 
+interface WindowState {
+	x: number;
+	y: number;
+}
+
 interface WindowItemBase {
 	id: string;
 	winbox: WinBox;
+	windowState: WindowState;
 }
 
 export interface BibliographyQueryWindowItem extends WindowItemBase {
@@ -124,6 +130,12 @@ export const useWindowsStore = defineStore("windows", () => {
 			title,
 			x: "center",
 			y: "center",
+			onresize(width, height) {
+				serializeWindowStates();
+			},
+			onmove(x, y) {
+				serializeWindowStates();
+			},
 			onclose() {
 				registry.value.delete(id);
 				return false;
@@ -131,9 +143,21 @@ export const useWindowsStore = defineStore("windows", () => {
 			root: rootElement,
 		});
 
+		const windowState = {
+			x: winbox.x as number,
+			y: winbox.y as number,
+			focus: winbox.focus as boolean,
+			width: winbox.width as number,
+			height: winbox.height as number,
+			fullscreen: winbox.fullscreen as boolean,
+			minimized: winbox.minimized as boolean,
+			maximized: winbox.maximized as boolean,
+		};
+
 		registry.value.set(id, {
 			id,
 			winbox,
+			windowState,
 			kind,
 			params: params.params,
 		} as WindowItem);
@@ -181,7 +205,37 @@ export const useWindowsStore = defineStore("windows", () => {
 
 	watch([() => registry.value.size, arrangement], () => {
 		arrangeWindows();
+		updateUrl();
 	});
+
+	function serializeWindowStates() {
+		let windowStates = [];
+		registry.value.forEach((w, id) => {
+			windowStates.push({
+				x: w.winbox.x,
+				y: w.winbox.y,
+				width: w.winbox.width,
+				height: w.winbox.height,
+				kind: w.kind,
+				title: w.winbox.title,
+				params: w.params,
+			});
+		});
+		console.log(JSON.stringify(windowStates));
+		return windowStates;
+	}
+
+	function updateUrl() {
+		let windowStates = serializeWindowStates();
+		// TODO: check url length, it may be too long
+		navigateTo({
+			path: "/",
+			query: {
+				w: JSON.stringify(windowStates),
+				a: arrangement.value,
+			},
+		});
+	}
 
 	return {
 		addWindow,
