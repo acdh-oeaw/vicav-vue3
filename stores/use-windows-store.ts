@@ -221,7 +221,7 @@ export const useWindowsStore = defineStore("windows", () => {
 
 	function updateUrl() {
 		let windowStates = serializeWindowStates();
-		// TODO: check url length, it may be too long
+		// TODO: check url length, it may be too long. Note: shortest limit is 2047 (MS Edge) https://serpstat.com/blog/how-long-should-be-the-page-url-length-for-seo/
 		navigateTo({
 			path: "/",
 			query: {
