@@ -1,11 +1,9 @@
 <script lang="ts" setup>
 import { debounce } from "@acdh-oeaw/lib";
-import type { LocationQueryRaw } from "vue-router";
 
 const windowsStore = useWindowsStore();
 const { arrangeWindows } = windowsStore;
 const { registry } = storeToRefs(windowsStore);
-const route = useRoute();
 
 const rootElement = ref<HTMLElement | null>(null);
 
@@ -13,34 +11,7 @@ const debouncedArrangeWindows = debounce(arrangeWindows, 150);
 
 useResizeObserver(rootElement, debouncedArrangeWindows);
 
-onMounted(async () => {
-	if (!route.query.w || !route.query.a) {
-		navigateEmpty();
-	}
-
-	// TODO validate with zod
-	let windowState = JSON.parse(route.query.w as string);
-	if (!Array.isArray(windowState)) {
-		navigateEmpty();
-	}
-
-	await nextTick();
-	windowState.forEach((w) => {
-		windowsStore.addWindow({
-			title: w.title,
-			kind: w.kind,
-			params: w.params,
-		});
-	});
-	windowsStore.setWindowArrangement(route.query.a as WindowArrangement);
-});
-
-function navigateEmpty() {
-	navigateTo({
-		path: "/",
-		query: { w: "[]", a: windowsStore.arrangement },
-	});
-}
+onMounted(windowsStore.restoreState);
 </script>
 
 <template>

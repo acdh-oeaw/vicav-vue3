@@ -7,7 +7,6 @@ import * as arrange from "@/utils/window-arrangement";
 interface WindowItemBase {
 	id: string;
 	winbox: WinBox;
-	windowState: WindowState;
 }
 
 export interface BibliographyQueryWindowItem extends WindowItemBase {
@@ -108,6 +107,35 @@ export const useWindowsStore = defineStore("windows", () => {
 	const router = useRouter();
 	const route = useRoute();
 
+	function initializeScreen() {
+		navigateTo({
+			path: "/",
+			query: { w: "[]", a: windowsStore.arrangement },
+		});
+	}
+
+	const restoreState = async () => {
+		if (!route.query.w || !route.query.a) {
+			initializeScreen();
+		}
+
+		// TODO validate with zod
+		let windowState = JSON.parse(route.query.w as string);
+		if (!Array.isArray(windowState)) {
+			initializeScreen();
+		}
+
+		await nextTick();
+		windowState.forEach((w) => {
+			addWindow({
+				title: w.title,
+				kind: w.kind,
+				params: w.params,
+			});
+		});
+		setWindowArrangement(route.query.a as WindowArrangement);
+	};
+
 	function addWindow<Kind extends WindowItemKind>(params: {
 		id?: string | null;
 		title: string;
@@ -151,7 +179,6 @@ export const useWindowsStore = defineStore("windows", () => {
 		registry.value.set(id, {
 			id,
 			winbox,
-			windowState,
 			kind,
 			params: params.params,
 		} as WindowItem);
@@ -232,6 +259,7 @@ export const useWindowsStore = defineStore("windows", () => {
 	}
 
 	return {
+		restoreState,
 		addWindow,
 		removeWindow,
 		registry,
