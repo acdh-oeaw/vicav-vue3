@@ -101,6 +101,7 @@ const WindowState = z.object({
 	title: z.string(),
 	params: z.unknown(),
 });
+type WindowStateInferred = z.infer<typeof WindowState>;
 
 export const useWindowsStore = defineStore("windows", () => {
 	const registry = ref<WindowRegistry>(new Map());
@@ -124,9 +125,9 @@ export const useWindowsStore = defineStore("windows", () => {
 			return;
 		}
 
-		let windowStates: Array<WindowState>;
+		let windowStates: Array<WindowStateInferred>;
 		try {
-			windowStates = JSON.parse(route.query.w as string) as Array<WindowState>;
+			windowStates = JSON.parse(route.query.w as string) as Array<WindowStateInferred>;
 		} catch (e) {
 			toasts.addToast({ title: "Error: JSON parse failed", description: e.message });
 			await initializeScreen();
@@ -264,7 +265,7 @@ export const useWindowsStore = defineStore("windows", () => {
 	});
 
 	function serializeWindowStates() {
-		const windowStates: Array<WindowState> = [];
+		const windowStates: Array<WindowStateInferred> = [];
 		registry.value.forEach((w) => {
 			windowStates.push({
 				x: w.winbox.x as number,
@@ -274,7 +275,7 @@ export const useWindowsStore = defineStore("windows", () => {
 				kind: w.kind,
 				title: w.winbox.title,
 				params: w.params,
-			} as z.infer<typeof WindowState>);
+			} as WindowStateInferred);
 		});
 		console.log(JSON.stringify(windowStates));
 		return windowStates;
