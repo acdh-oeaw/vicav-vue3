@@ -121,7 +121,9 @@ export const useWindowsStore = defineStore("windows", () => {
 		}
 
 		// TODO validate with zod
-		let windowState = JSON.parse(route.query.w as string);
+		const windowState: Array<WindowState> = JSON.parse(
+			route.query.w as string,
+		) as Array<WindowState>;
 		if (!Array.isArray(windowState)) {
 			await initializeScreen();
 			return;
@@ -165,11 +167,11 @@ export const useWindowsStore = defineStore("windows", () => {
 			title,
 			x: "center",
 			y: "center",
-			onresize(width, height) {
-				serializeWindowStates();
+			onresize() {
+				updateUrl();
 			},
-			onmove(x, y) {
-				serializeWindowStates();
+			onmove() {
+				updateUrl();
 			},
 			onclose() {
 				registry.value.delete(id);
@@ -232,13 +234,13 @@ export const useWindowsStore = defineStore("windows", () => {
 	});
 
 	function serializeWindowStates() {
-		let windowStates: Array<WindowState> = [];
-		registry.value.forEach((w, id) => {
+		const windowStates: Array<WindowState> = [];
+		registry.value.forEach((w) => {
 			windowStates.push({
-				x: w.winbox.x,
-				y: w.winbox.y,
-				width: w.winbox.width,
-				height: w.winbox.height,
+				x: w.winbox.x as number,
+				y: w.winbox.y as number,
+				width: w.winbox.width as number,
+				height: w.winbox.height as number,
 				kind: w.kind,
 				title: w.winbox.title,
 				params: w.params,
@@ -249,9 +251,9 @@ export const useWindowsStore = defineStore("windows", () => {
 	}
 
 	function updateUrl() {
-		let windowStates = serializeWindowStates();
+		const windowStates = serializeWindowStates();
 		// TODO: check url length, it may be too long. Note: shortest limit is 2047 (MS Edge) https://serpstat.com/blog/how-long-should-be-the-page-url-length-for-seo/
-		navigateTo({
+		void navigateTo({
 			path: "/",
 			query: {
 				w: JSON.stringify(windowStates),
