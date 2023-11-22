@@ -1,5 +1,6 @@
 import { nanoid } from "nanoid";
 import WinBox from "winbox";
+import { z } from "zod";
 
 import type { QueryDescription } from "@/lib/api-client";
 import * as arrange from "@/utils/window-arrangement";
@@ -90,15 +91,15 @@ export const arrangements = {
 
 export type WindowArrangement = keyof typeof arrangements;
 
-interface WindowState {
-	x: number;
-	y: number;
-	width: number;
-	height: number;
-	kind: WindowItemKind;
-	title: string;
-	params: unknown;
-}
+const WindowState = z.object({
+	x: z.number(),
+	y: z.number(),
+	width: z.number(),
+	height: z.number(),
+	kind: z.string(),
+	title: z.string(),
+	params: z.unknown(),
+});
 
 export const useWindowsStore = defineStore("windows", () => {
 	const registry = ref<WindowRegistry>(new Map());
@@ -120,27 +121,36 @@ export const useWindowsStore = defineStore("windows", () => {
 			return;
 		}
 
-		// TODO validate with zod
-		const windowState: Array<WindowState> = JSON.parse(
-			route.query.w as string,
-		) as Array<WindowState>;
-		if (!Array.isArray(windowState)) {
+		let windowStates: Array<WindowState>;
+		try {
+			windowStates = JSON.parse(route.query.w as string) as Array<WindowState>;
+		} catch (e) {
+			await initializeScreen();
+			return;
+		}
+
+		if (!Array.isArray(windowStates)) {
 			await initializeScreen();
 			return;
 		}
 
 		await nextTick();
 		//TODO recalculate x/y/width/height according to current screen size
-		windowState.forEach((w) => {
-			addWindow({
-				title: w.title,
-				kind: w.kind,
-				params: w.params,
-				x: w.x,
-				y: w.y,
-				height: w.height,
-				width: w.width,
-			});
+		windowStates.forEach((w) => {
+			try {
+				WindowState.parse(w);
+				addWindow({
+					title: w.title,
+					kind: w.kind,
+					params: w.params,
+					x: w.x,
+					y: w.y,
+					height: w.height,
+					width: w.width,
+				});
+			} catch (e) {
+				console.error(e);
+			}
 		});
 		setWindowArrangement(route.query.a as WindowArrangement);
 	};
@@ -255,7 +265,7 @@ export const useWindowsStore = defineStore("windows", () => {
 				kind: w.kind,
 				title: w.winbox.title,
 				params: w.params,
-			} as WindowState);
+			} as z.infer<typeof WindowState>);
 		});
 		console.log(JSON.stringify(windowStates));
 		return windowStates;
