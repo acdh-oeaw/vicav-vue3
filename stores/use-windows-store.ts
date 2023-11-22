@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import type { QueryDescription } from "@/lib/api-client";
 import * as arrange from "@/utils/window-arrangement";
+import { useToastsStore } from "./use-toasts-store";
 
 interface WindowItemBase {
 	id: string;
@@ -108,6 +109,8 @@ export const useWindowsStore = defineStore("windows", () => {
 	const router = useRouter();
 	const route = useRoute();
 
+	const toasts = useToastsStore();
+
 	async function initializeScreen() {
 		await navigateTo({
 			path: "/",
@@ -125,11 +128,16 @@ export const useWindowsStore = defineStore("windows", () => {
 		try {
 			windowStates = JSON.parse(route.query.w as string) as Array<WindowState>;
 		} catch (e) {
+			toasts.addToast({ title: "Error: JSON parse failed", description: e.message });
 			await initializeScreen();
 			return;
 		}
 
 		if (!Array.isArray(windowStates)) {
+			toasts.addToast({
+				title: "Error: Window list is not array",
+				description: "Window list parameter must be an array",
+			});
 			await initializeScreen();
 			return;
 		}
@@ -149,6 +157,7 @@ export const useWindowsStore = defineStore("windows", () => {
 					width: w.width,
 				});
 			} catch (e) {
+				toasts.addToast({ title: "Error: WindowState parse failed", description: e.message });
 				console.error(e);
 			}
 		});
