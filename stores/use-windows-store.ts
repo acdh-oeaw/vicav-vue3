@@ -130,11 +130,16 @@ export const useWindowsStore = defineStore("windows", () => {
 		}
 
 		await nextTick();
+		//TODO recalculate x/y/width/height according to current screen size
 		windowState.forEach((w) => {
 			addWindow({
 				title: w.title,
 				kind: w.kind,
 				params: w.params,
+				x: w.x,
+				y: w.y,
+				height: w.height,
+				width: w.width,
 			});
 		});
 		setWindowArrangement(route.query.a as WindowArrangement);
@@ -145,6 +150,10 @@ export const useWindowsStore = defineStore("windows", () => {
 		title: string;
 		kind: Kind;
 		params: WindowItemMap[Kind]["params"];
+		x?: number;
+		y?: number;
+		width?: number;
+		height?: number;
 	}) {
 		const rootElement = document.getElementById(windowRootId);
 		if (rootElement == null) return;
@@ -165,8 +174,10 @@ export const useWindowsStore = defineStore("windows", () => {
 		const winbox = new WinBox({
 			id,
 			title,
-			x: "center",
-			y: "center",
+			x: params.x ? params.x : "center",
+			y: params.y ? params.y : "center",
+			width: params.width,
+			height: params.height,
 			onresize() {
 				updateUrl();
 			},
