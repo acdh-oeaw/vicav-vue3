@@ -149,7 +149,6 @@ export const useWindowsStore = defineStore("windows", () => {
 		}
 
 		await nextTick();
-		//TODO recalculate x/y/width/height according to current screen size
 		windowStates.forEach((w) => {
 			try {
 				WindowState.parse(w);
@@ -157,10 +156,10 @@ export const useWindowsStore = defineStore("windows", () => {
 					title: w.title,
 					kind: w.kind as WindowItemKind,
 					params: w.params,
-					x: w.x,
-					y: w.y,
-					height: w.height,
-					width: w.width,
+					x: String(w.x) + "%",
+					y: String(w.y) + "%",
+					height: String(w.height) + "%",
+					width: String(w.width) + "%",
 				});
 			} catch (e) {
 				toasts.addToast({
@@ -178,10 +177,10 @@ export const useWindowsStore = defineStore("windows", () => {
 		title: string;
 		kind: Kind;
 		params: WindowItemMap[Kind]["params"];
-		x?: number;
-		y?: number;
-		width?: number;
-		height?: number;
+		x?: number | string; // string support added for "px" and "%" typed values
+		y?: number | string;
+		width?: number | string;
+		height?: number | string;
 	}) {
 		const rootElement = document.getElementById(windowRootId);
 		if (rootElement == null) return;
@@ -274,12 +273,21 @@ export const useWindowsStore = defineStore("windows", () => {
 
 	function serializeWindowStates() {
 		const windowStates: Array<WindowStateInferred> = [];
+
+		const rootElement = document.getElementById(windowRootId);
+		if (rootElement == null) return;
+		const viewport = rootElement.getBoundingClientRect();
+
+		function viewportPercentageWith2DigitPrecision(x: number, dir: "height" | "width") {
+			return Math.floor((10000 * x) / viewport[dir]) / 100;
+		}
+
 		registry.value.forEach((w) => {
 			windowStates.push({
-				x: w.winbox.x as number,
-				y: w.winbox.y as number,
-				width: w.winbox.width as number,
-				height: w.winbox.height as number,
+				x: viewportPercentageWith2DigitPrecision(w.winbox.x as number, "width"),
+				y: viewportPercentageWith2DigitPrecision(w.winbox.y as number, "height"),
+				width: viewportPercentageWith2DigitPrecision(w.winbox.width as number, "width"),
+				height: viewportPercentageWith2DigitPrecision(w.winbox.height as number, "height"),
 				kind: w.kind,
 				title: w.winbox.title,
 				params: w.params,
