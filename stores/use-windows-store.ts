@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import type { QueryDescription } from "@/lib/api-client";
 import * as arrange from "@/utils/window-arrangement";
+
 import { useToastsStore } from "./use-toasts-store";
 
 interface WindowItemBase {
@@ -129,14 +130,18 @@ export const useWindowsStore = defineStore("windows", () => {
 		try {
 			windowStates = JSON.parse(route.query.w as string) as Array<WindowStateInferred>;
 		} catch (e) {
-			toasts.addToast({ title: "Error: JSON parse failed", description: e.message });
+			toasts.addToast({
+				title: "RestoreState Error: JSON parse failed",
+				description: e instanceof Error ? e.message : "Unknown error, check console",
+			});
+			console.error(e);
 			await initializeScreen();
 			return;
 		}
 
 		if (!Array.isArray(windowStates)) {
 			toasts.addToast({
-				title: "Error: Window list is not array",
+				title: "RestoreState Error: Window list is not array",
 				description: "Window list parameter must be an array",
 			});
 			await initializeScreen();
@@ -150,7 +155,7 @@ export const useWindowsStore = defineStore("windows", () => {
 				WindowState.parse(w);
 				addWindow({
 					title: w.title,
-					kind: w.kind,
+					kind: w.kind as WindowItemKind,
 					params: w.params,
 					x: w.x,
 					y: w.y,
@@ -158,7 +163,10 @@ export const useWindowsStore = defineStore("windows", () => {
 					width: w.width,
 				});
 			} catch (e) {
-				toasts.addToast({ title: "Error: WindowState parse failed", description: e.message });
+				toasts.addToast({
+					title: "RestoreState Error: WindowState parse failed",
+					description: e instanceof Error ? e.message : "Unknown error, check console",
+				});
 				console.error(e);
 			}
 		});
