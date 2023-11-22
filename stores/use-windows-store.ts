@@ -110,7 +110,7 @@ export const useWindowsStore = defineStore("windows", () => {
 	async function initializeScreen() {
 		await navigateTo({
 			path: "/",
-			query: { w: "[]", a: arrangement },
+			query: { w: "[]", a: arrangement.value },
 		});
 	}
 
