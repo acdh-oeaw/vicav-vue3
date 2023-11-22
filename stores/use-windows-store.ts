@@ -107,22 +107,24 @@ export const useWindowsStore = defineStore("windows", () => {
 	const router = useRouter();
 	const route = useRoute();
 
-	function initializeScreen() {
-		navigateTo({
+	async function initializeScreen() {
+		await navigateTo({
 			path: "/",
-			query: { w: "[]", a: windowsStore.arrangement },
+			query: { w: "[]", a: arrangement },
 		});
 	}
 
 	const restoreState = async () => {
 		if (!route.query.w || !route.query.a) {
-			initializeScreen();
+			await initializeScreen();
+			return;
 		}
 
 		// TODO validate with zod
 		let windowState = JSON.parse(route.query.w as string);
 		if (!Array.isArray(windowState)) {
-			initializeScreen();
+			await initializeScreen();
+			return;
 		}
 
 		await nextTick();
