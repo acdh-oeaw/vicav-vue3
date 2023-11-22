@@ -96,6 +96,7 @@ export type WindowArrangement = keyof typeof arrangements;
 const WindowState = z.object({
 	x: z.number(),
 	y: z.number(),
+	z: z.number(),
 	width: z.number(),
 	height: z.number(),
 	kind: z.string(),
@@ -158,6 +159,7 @@ export const useWindowsStore = defineStore("windows", () => {
 					params: w.params,
 					x: String(w.x) + "%",
 					y: String(w.y) + "%",
+					zIndex: w.z,
 					height: String(w.height) + "%",
 					width: String(w.width) + "%",
 				});
@@ -181,6 +183,7 @@ export const useWindowsStore = defineStore("windows", () => {
 		y?: number | string;
 		width?: number | string;
 		height?: number | string;
+		zIndex?: number;
 	}) {
 		const rootElement = document.getElementById(windowRootId);
 		if (rootElement == null) return;
@@ -201,10 +204,14 @@ export const useWindowsStore = defineStore("windows", () => {
 		const winbox = new WinBox({
 			id,
 			title,
+			index: params.zIndex ? params.zIndex : undefined,
 			x: params.x ? params.x : "center",
 			y: params.y ? params.y : "center",
 			width: params.width,
 			height: params.height,
+			onfocus() {
+				updateUrl();
+			},
 			onresize() {
 				updateUrl();
 			},
@@ -286,6 +293,7 @@ export const useWindowsStore = defineStore("windows", () => {
 			windowStates.push({
 				x: viewportPercentageWith2DigitPrecision(w.winbox.x as number, "width"),
 				y: viewportPercentageWith2DigitPrecision(w.winbox.y as number, "height"),
+				z: w.winbox.index,
 				width: viewportPercentageWith2DigitPrecision(w.winbox.width as number, "width"),
 				height: viewportPercentageWith2DigitPrecision(w.winbox.height as number, "height"),
 				kind: w.kind,
