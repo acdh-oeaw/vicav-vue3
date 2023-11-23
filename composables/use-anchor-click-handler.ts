@@ -9,7 +9,7 @@ export function useAnchorClickHandler() {
 	/**
 	 * Intercept anchor clicks to open window instead of navigating.
 	 */
-	function onClick(event: MouseEvent) {
+	function openNewWindowFromAnchor(event: MouseEvent) {
 		const element = event.target;
 
 		if (element instanceof HTMLAnchorElement) {
@@ -31,5 +31,5 @@ export function useAnchorClickHandler() {
 		}
 	}
 
-	return onClick;
+	return openNewWindowFromAnchor;
 }
