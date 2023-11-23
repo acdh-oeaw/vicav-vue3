@@ -117,7 +117,7 @@ export const useWindowsStore = defineStore("windows", () => {
 	async function initializeScreen() {
 		await navigateTo({
 			path: "/",
-			query: { w: "[]", a: arrangement.value },
+			query: { w: atob("[]"), a: arrangement.value },
 		});
 	}
 
