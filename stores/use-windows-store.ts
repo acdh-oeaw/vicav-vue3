@@ -126,10 +126,11 @@ export const useWindowsStore = defineStore("windows", () => {
 			await initializeScreen();
 			return;
 		}
+		const w = atob(route.query.w);
 
 		let windowStates: Array<WindowStateInferred>;
 		try {
-			windowStates = JSON.parse(route.query.w as string) as Array<WindowStateInferred>;
+			windowStates = JSON.parse(w) as Array<WindowStateInferred>;
 		} catch (e) {
 			toasts.addToast({
 				title: "RestoreState Error: JSON parse failed",
@@ -311,7 +312,7 @@ export const useWindowsStore = defineStore("windows", () => {
 		void navigateTo({
 			path: "/",
 			query: {
-				w: JSON.stringify(windowStates),
+				w: btoa(JSON.stringify(windowStates)),
 				a: arrangement.value,
 			},
 		});
