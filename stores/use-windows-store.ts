@@ -21,7 +21,9 @@ export interface CorpusQueryWindowItem extends WindowItemBase {
 
 export interface CorpusTextWindowItem extends WindowItemBase {
 	kind: "corpus-text";
-	params: unknown;
+	params: {
+		id: string;
+	};
 }
 
 export interface CrossDictionaryQueryWindowItem extends WindowItemBase {
@@ -61,6 +63,13 @@ export interface TextWindowItem extends WindowItemBase {
 	};
 }
 
+export interface ProfileWindowItem extends WindowItemBase {
+	kind: "text";
+	params: {
+		id: string;
+	};
+}
+
 export type WindowItem =
 	| BibliographyQueryWindowItem
 	| CorpusQueryWindowItem
@@ -70,6 +79,7 @@ export type WindowItem =
 	| DictionaryEntryWindowItem
 	| DictionaryQueryWindowItem
 	| GeoMapWindowItem
+	| ProfileWindowItem
 	| SampleTextWindowItem
 	| TextWindowItem;
 
