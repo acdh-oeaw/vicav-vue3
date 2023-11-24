@@ -49,7 +49,7 @@ function openCorpusText(e) {
 			<br />
 		</form>
 		<div class="results">
-			<div v-if="hits.length > 0">CQL: [word="{{ queryString }}"]</div>
+			<div v-if="hits.length > 0">TODO write the CQL here: "{{ queryString }}"</div>
 			<table>
 				<tr v-for="hit in hits" :key="hit.u" class="hit">
 					<td class="pe-3">
