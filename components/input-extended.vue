@@ -38,25 +38,29 @@ const specChars = [
 ];
 
 let cursorPosition = 0;
-const Type = (htmlChar: string): void => {
+const InsertChar = async (htmlChar: string): Promise<void> => {
 	let decodedChar = parseHtmlEntities(htmlChar);
 	myString.value =
 		myString.value.substring(0, cursorPosition) +
 		decodedChar +
 		myString.value.substring(cursorPosition, myString.value.length);
 	cursorPosition += decodedChar.length;
+	await nextTick();
 	setCursorPosition(cursorPosition);
 };
 
 const setCursorPosition = (pos: number) => {
-	if (inputElement.value.createTextRange) {
+	if (typeof inputElement.value.createTextRange !== "undefined") {
 		var range = inputElement.value.createTextRange();
 		range.move("character", pos);
 		range.select();
-	}
-	if (inputElement.value.selectionStart) {
+	} else if (typeof inputElement.value.setSelectionRange !== "undefined") {
 		inputElement.value.focus();
 		inputElement.value.setSelectionRange(pos, pos);
+	} else if (typeof inputElement.value.selectionStart !== "undefined") {
+		inputElement.value.focus();
+		inputElement.value.selectionStart = pos;
+		inputElement.value.selectionEnd = pos;
 	}
 };
 
@@ -68,7 +72,7 @@ function parseHtmlEntities(str: string) {
 }
 
 const registerCursorPosition = (e: Event) => {
-	cursorPosition = e.target.selectionStart;
+	cursorPosition = Number((e.target as HTMLInputElement).selectionStart);
 };
 </script>
 
@@ -79,7 +83,7 @@ const registerCursorPosition = (e: Event) => {
 			v-for="(c, i) in specChars"
 			:key="i"
 			class="bg-gray-300 px-4 py-2 font-bold text-gray-800 hover:bg-gray-400"
-			@click="Type(c)"
+			@click="InsertChar(c)"
 			v-html="c"
 		></button>
 	</div>
