@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 interface Props {
-	params: TextWindowItem["params"];
+	params: ProfileWindowItem["params"];
 }
 
 const props = defineProps<Props>();
