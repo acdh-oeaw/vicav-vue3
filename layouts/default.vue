@@ -123,12 +123,10 @@ const isWindowManagerVisible = computed(() => {
 
 			<div :class="{ hidden: !isWindowManagerVisible }" class="relative isolate grid h-full w-full">
 				<WindowManager />
+				<Toaster />
 				<AppFooter />
 			</div>
 		</MainContent>
-
-		<Toaster />
-
 		<RouteAnnouncer />
 	</div>
 </template>
