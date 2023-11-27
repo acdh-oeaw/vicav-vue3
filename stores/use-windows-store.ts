@@ -126,10 +126,10 @@ export const useWindowsStore = defineStore("windows", () => {
 			await initializeScreen();
 			return;
 		}
-		const w = atob(route.query.w);
 
 		let windowStates: Array<WindowStateInferred>;
 		try {
+			const w = atob(route.query.w as string);
 			windowStates = JSON.parse(w) as Array<WindowStateInferred>;
 		} catch (e) {
 			toasts.addToast({
