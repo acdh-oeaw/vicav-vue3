@@ -7,6 +7,8 @@ import * as arrange from "@/utils/window-arrangement";
 
 import { useToastsStore } from "./use-toasts-store";
 
+const narrowScreenBreakpoint = 1024;
+
 interface WindowItemBase {
 	id: string;
 	winbox: WinBox;
@@ -250,6 +252,11 @@ export const useWindowsStore = defineStore("windows", () => {
 
 		const viewport = rootElement.getBoundingClientRect();
 		const windows = Array.from(registry.value.values());
+
+		if (viewport.width < narrowScreenBreakpoint) {
+			arrange.maximize(viewport, windows);
+			return;
+		}
 
 		switch (arrangement.value) {
 			case "cascade": {
