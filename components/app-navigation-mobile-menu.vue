@@ -31,7 +31,7 @@ onScopeDispose(() => {
 <template>
 	<Sheet v-model:open="isSidepanelOpen">
 		<Menubar class="w-full border-none">
-			<WindowListDropdown :isMobile="true" />
+			<WindowListDropdown :is-mobile="true" />
 		</Menubar>
 		<SheetTrigger aria-label="Toggle menu" class="cursor-default">
 			<MenuIcon class="mx-3 my-1.5 h-5 w-5" />
