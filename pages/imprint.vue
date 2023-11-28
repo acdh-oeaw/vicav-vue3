@@ -17,7 +17,11 @@ const imprint = await useFetch(String(createImprintUrl(defaultLocale, redmineId)
 
 <template>
 	<div class="prose mx-auto w-full max-w-3xl py-8">
-		<NuxtLink class="float-right no-underline hover:underline hover:underline-offset-2" href="/">
+		<NuxtLink
+			aria-label="Navigate Back"
+			class="float-right no-underline hover:underline hover:underline-offset-2"
+			@click="useRouter().go(-1)"
+		>
 			×
 		</NuxtLink>
 		<h1>Imprint</h1>
