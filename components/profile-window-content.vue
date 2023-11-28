@@ -1,12 +1,12 @@
 <script lang="ts" setup>
 interface Props {
-	params: TextWindowItem["params"];
+	params: ProfileWindowItem["params"];
 }
 
 const props = defineProps<Props>();
 const { params } = toRefs(props);
 
-const { data, isPending, isPlaceholderData } = useTextById(params);
+const { data, isPending, isPlaceholderData } = useProfileById(params);
 const openNewWindowFromAnchor = useAnchorClickHandler();
 
 const isLoading = computed(() => {
