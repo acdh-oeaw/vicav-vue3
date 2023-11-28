@@ -18,7 +18,7 @@ export function cascade(viewport: DOMRect, windows: Array<WindowItem>): void {
 
 export function maximize(viewport: DOMRect, windows: Array<WindowItem>): void {
 	windows.forEach((item) => {
-		item.winbox.maximize();
+		item.winbox.resize(viewport.width, viewport.height).move(0, 0);
 		removeWindowControls(item.winbox);
 	});
 }
