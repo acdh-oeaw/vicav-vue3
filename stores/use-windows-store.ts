@@ -309,7 +309,6 @@ export const useWindowsStore = defineStore("windows", () => {
 				params: w.params,
 			} as WindowStateInferred);
 		});
-		console.log(JSON.stringify(windowStates));
 		return windowStates;
 	}
 
