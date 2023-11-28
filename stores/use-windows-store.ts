@@ -292,10 +292,14 @@ export const useWindowsStore = defineStore("windows", () => {
 
 		registry.value.forEach((w) => {
 			windowStates.push({
+				// @ts-expect-error Property missing in upstream types.
 				x: viewportPercentageWith2DigitPrecision(w.winbox.x as number, "width"),
+				// @ts-expect-error Property missing in upstream types.
 				y: viewportPercentageWith2DigitPrecision(w.winbox.y as number, "height"),
 				z: w.winbox.index,
+				// @ts-expect-error Property missing in upstream types.
 				width: viewportPercentageWith2DigitPrecision(w.winbox.width as number, "width"),
+				// @ts-expect-error Property missing in upstream types.
 				height: viewportPercentageWith2DigitPrecision(w.winbox.height as number, "height"),
 				kind: w.kind,
 				title: w.winbox.title,
