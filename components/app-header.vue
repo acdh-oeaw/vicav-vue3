@@ -21,8 +21,6 @@ const titlestring = computed(() => {
 	return data.value?.projectConfig?.logo?.string;
 });
 
-
-
 function createWindowId(_item: ItemType) {
 	/**
 	 * We intentionally do *not* use `item.target` for window id, because we don't want to

@@ -49,6 +49,6 @@ onScopeDispose(() => {
 				</template>
 			</MenubarContent>
 		</MenubarMenu>
-		<WindowListDropdown :isMobile="false" />
+		<WindowListDropdown :is-mobile="false" />
 	</Menubar>
 </template>
