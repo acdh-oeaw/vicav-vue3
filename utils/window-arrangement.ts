@@ -1,3 +1,5 @@
+import type WinBox from "winbox";
+
 export function cascade(viewport: DOMRect, windows: Array<WindowItem>): void {
 	const windowWidth = Math.floor(viewport.width / 2);
 	const windowHeight = Math.floor(viewport.height / 2);
@@ -9,26 +11,22 @@ export function cascade(viewport: DOMRect, windows: Array<WindowItem>): void {
 		const y =
 			index * 40 > viewport.height - windowHeight ? viewport.height - windowHeight : index * 40;
 
-		item.winbox
-			.resize(windowWidth, windowHeight)
-			.move(x, y)
-			.addClass("no-min")
-			.addClass("no-max")
-			.addClass("no-full")
-			.addClass("no-resize")
-			.addClass("no-move");
+		item.winbox.resize(windowWidth, windowHeight).move(x, y);
+		removeWindowControls(item.winbox);
+	});
+}
+
+export function maximize(viewport: DOMRect, windows: Array<WindowItem>): void {
+	windows.forEach((item) => {
+		item.winbox.resize(viewport.width, viewport.height).move(0, 0);
+		removeWindowControls(item.winbox);
 	});
 }
 
 export function none(viewport: DOMRect, windows: Array<WindowItem>): void {
-	windows.forEach((item) =>
-		item.winbox
-			.removeClass("no-min")
-			.removeClass("no-max")
-			.removeClass("no-full")
-			.removeClass("no-resize")
-			.removeClass("no-move"),
-	);
+	windows.forEach((item) => {
+		addWindowControls(item.winbox);
+	});
 }
 
 export function smartTile(viewport: DOMRect, windows: Array<WindowItem>): void {
@@ -53,12 +51,8 @@ export function smartTile(viewport: DOMRect, windows: Array<WindowItem>): void {
 
 		item.winbox
 			.resize(windowWidth, windowHeight)
-			.move(windowWidth * columnNumber, windowHeight * rowNumber)
-			.addClass("no-min")
-			.addClass("no-max")
-			.addClass("no-full")
-			.addClass("no-resize")
-			.addClass("no-move");
+			.move(windowWidth * columnNumber, windowHeight * rowNumber);
+		removeWindowControls(item.winbox);
 	});
 }
 
@@ -73,13 +67,25 @@ export function tile(viewport: DOMRect, windows: Array<WindowItem>): void {
 		const x = windowWidth * (index % cols);
 		const y = windowHeight * Math.floor(index / cols);
 
-		item.winbox
-			.resize(windowWidth, windowHeight)
-			.move(x, y)
-			.addClass("no-min")
-			.addClass("no-max")
-			.addClass("no-full")
-			.addClass("no-resize")
-			.addClass("no-move");
+		item.winbox.resize(windowWidth, windowHeight).move(x, y);
+		removeWindowControls(item.winbox);
 	});
+}
+
+function removeWindowControls(winbox: WinBox) {
+	winbox
+		.addClass("no-min")
+		.addClass("no-max")
+		.addClass("no-full")
+		.addClass("no-resize")
+		.addClass("no-move");
+}
+
+function addWindowControls(winbox: WinBox) {
+	winbox
+		.removeClass("no-min")
+		.removeClass("no-max")
+		.removeClass("no-full")
+		.removeClass("no-resize")
+		.removeClass("no-move");
 }
