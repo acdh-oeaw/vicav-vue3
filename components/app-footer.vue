@@ -2,7 +2,7 @@
 
 <template>
 	<footer
-		class="absolute inset-x-0 bottom-0 h-7 bg-surface text-on-surface transition duration-500 hover:-translate-y-80 active:-translate-y-80"
+		class="inset-x-0 bottom-0 h-7 bg-surface text-on-surface transition duration-500 hover:-translate-y-80"
 	>
 		<div class="flex items-center justify-center gap-2 border px-8 py-1.5 text-xs">
 			<span class="flex gap-1">
