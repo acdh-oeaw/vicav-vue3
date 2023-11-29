@@ -1,10 +1,24 @@
 <script setup lang="ts"></script>
 
 <template>
-	<footer class="absolute inset-x-0 bottom-0 bg-surface text-on-surface">
-		<div class="mb-0 w-full bg-neutral-50 px-0 py-8 text-gray-900">
+	<footer
+		class="inset-x-0 bottom-0 h-7 bg-surface text-on-surface transition duration-500 hover:-translate-y-80"
+	>
+		<div class="flex items-center justify-center gap-2 border px-8 py-1.5 text-xs">
+			<span class="flex gap-1">
+				<span>&copy; {{ new Date().getUTCFullYear() }}</span>
+				<a class="hover:underline hover:underline-offset-2" href="https://www.oeaw.ac.at/acdh">
+					ACDH-CH
+				</a>
+			</span>
+			<span>|</span>
+			<NuxtLink class="hover:underline hover:underline-offset-2" href="/imprint">Imprint</NuxtLink>
+		</div>
+		<div class="mb-0 w-full bg-neutral-50 px-0 text-gray-900">
 			<div id="footer-full-content" class="mx-auto w-full px-4" tabindex="-1">
-				<div class="footer-logo-widget mb-4 flex items-center border-b pb-4 pt-2 text-sm font-semibold">
+				<div
+					class="footer-logo-widget mb-4 flex items-center border-b pb-4 pt-2 text-sm font-semibold"
+				>
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
 						width="24"
@@ -81,16 +95,6 @@
 				</div>
 			</div>
 		</div>
-		<div class="flex items-center justify-center gap-2 px-8 py-1.5 text-xs">
-			<span class="flex gap-1">
-				<span>&copy; {{ new Date().getUTCFullYear() }}</span>
-				<a class="hover:underline hover:underline-offset-2" href="https://www.oeaw.ac.at/acdh">
-					ACDH-CH
-				</a>
-			</span>
-			<span>|</span>
-			<NuxtLink class="hover:underline hover:underline-offset-2" href="/imprint">Imprint</NuxtLink>
-		</div>
 	</footer>
 </template>
 
@@ -131,5 +135,26 @@
 .footer-widget {
 	flex: 0 0 33.333%;
 	max-width: 33.333%;
+}
+
+@keyframes slide-in-out {
+	0% {
+		transform: translateY(0);
+	}
+
+	50% {
+		transform: translateY(-20rem);
+	}
+
+	100% {
+		transform: translateY(0);
+	}
+}
+
+footer {
+	animation-name: slide-in-out;
+	animation-duration: 2s !important;
+	animation-timing-function: ease-in-out;
+	animation-delay: 500ms;
 }
 </style>

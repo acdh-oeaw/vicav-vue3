@@ -10,6 +10,8 @@ const rootElement = ref<HTMLElement | null>(null);
 const debouncedArrangeWindows = debounce(arrangeWindows, 150);
 
 useResizeObserver(rootElement, debouncedArrangeWindows);
+
+onMounted(windowsStore.restoreState);
 </script>
 
 <template>
