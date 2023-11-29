@@ -7,7 +7,7 @@ export function useFeatureById(params: MaybeRef<{ id: string }>, options?: { ena
 		enabled: options?.enabled,
 		queryKey: ["get-feature-by-id", params] as const,
 		async queryFn({ queryKey: [, params] }) {
-			const response = await api.vicav.getProfile(params, {
+			const response = await api.vicav.getLingFeature(params, {
 				headers: { accept: "application/xml" },
 			});
 			return response.text();
