@@ -207,9 +207,23 @@ export const useWindowsStore = defineStore("windows", () => {
 		const id = params.id ?? `window-${nanoid()}`;
 		const { title, kind } = params;
 
-		if (registry.value.has(id)) {
-			registry.value.get(id)?.winbox.focus();
-			return;
+		if (typeof params.params === "object" && params.params !== null && "id" in params.params) {
+			let hasFoundIdentical = false;
+			registry.value.forEach((w) => {
+				if (
+					!hasFoundIdentical &&
+					w.kind === params.kind &&
+					typeof w.params === "object" &&
+					w.params !== null &&
+					"id" in w.params &&
+					w.params.id === params.params.id
+				) {
+					w.winbox.focus();
+					hasFoundIdentical = true;
+				}
+			});
+			// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+			if (hasFoundIdentical) return;
 		}
 
 		const winbox = new WinBox({
