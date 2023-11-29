@@ -106,7 +106,6 @@ useHead({
  *
  * We always render the window manager in the layout, to avoid remounting the window root,
  * and consequently having to manually mount/unmount every single window.
- * of every single window.
  */
 const isWindowManagerVisible = computed(() => {
 	return route.path === "/";
@@ -114,7 +113,7 @@ const isWindowManagerVisible = computed(() => {
 </script>
 
 <template>
-	<div class="grid min-h-full grid-rows-[auto_1fr_auto] bg-neutral-50">
+	<div class="grid max-h-screen min-h-full grid-rows-[auto_1fr_auto] overflow-hidden bg-neutral-50">
 		<SkipLink :target-id="mainContentId">Skip to main content</SkipLink>
 
 		<AppHeader />
@@ -123,12 +122,10 @@ const isWindowManagerVisible = computed(() => {
 
 			<div :class="{ hidden: !isWindowManagerVisible }" class="relative isolate grid h-full w-full">
 				<WindowManager />
-				<AppFooter />
 			</div>
 		</MainContent>
-
+		<AppFooter />
 		<Toaster />
-
 		<RouteAnnouncer />
 	</div>
 </template>

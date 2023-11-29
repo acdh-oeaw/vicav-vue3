@@ -7,6 +7,8 @@ import * as arrange from "@/utils/window-arrangement";
 
 import { useToastsStore } from "./use-toasts-store";
 
+const narrowScreenBreakpoint = 1024;
+
 interface WindowItemBase {
 	id: string;
 	winbox: WinBox;
@@ -142,10 +144,10 @@ export const useWindowsStore = defineStore("windows", () => {
 			await initializeScreen();
 			return;
 		}
-		const w = atob(route.query.w);
 
 		let windowStates: Array<WindowStateInferred>;
 		try {
+			const w = atob(route.query.w as string);
 			windowStates = JSON.parse(w) as Array<WindowStateInferred>;
 		} catch (e) {
 			toasts.addToast({
@@ -267,6 +269,11 @@ export const useWindowsStore = defineStore("windows", () => {
 		const viewport = rootElement.getBoundingClientRect();
 		const windows = Array.from(registry.value.values());
 
+		if (viewport.width < narrowScreenBreakpoint) {
+			arrange.maximize(viewport, windows);
+			return;
+		}
+
 		switch (arrangement.value) {
 			case "cascade": {
 				arrange.cascade(viewport, windows);
@@ -308,21 +315,25 @@ export const useWindowsStore = defineStore("windows", () => {
 
 		registry.value.forEach((w) => {
 			windowStates.push({
+				// @ts-expect-error Property missing in upstream types.
 				x: viewportPercentageWith2DigitPrecision(w.winbox.x as number, "width"),
+				// @ts-expect-error Property missing in upstream types.
 				y: viewportPercentageWith2DigitPrecision(w.winbox.y as number, "height"),
 				z: w.winbox.index,
+				// @ts-expect-error Property missing in upstream types.
 				width: viewportPercentageWith2DigitPrecision(w.winbox.width as number, "width"),
+				// @ts-expect-error Property missing in upstream types.
 				height: viewportPercentageWith2DigitPrecision(w.winbox.height as number, "height"),
 				kind: w.kind,
 				title: w.winbox.title,
 				params: w.params,
 			} as WindowStateInferred);
 		});
-		console.log(JSON.stringify(windowStates));
 		return windowStates;
 	}
 
 	function updateUrl() {
+		if (route.path === "/imprint") return;
 		const windowStates = serializeWindowStates();
 		// TODO: check url length, it may be too long. Note: shortest limit is 2047 (MS Edge) https://serpstat.com/blog/how-long-should-be-the-page-url-length-for-seo/
 		void navigateTo({
