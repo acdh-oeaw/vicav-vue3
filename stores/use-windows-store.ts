@@ -207,24 +207,7 @@ export const useWindowsStore = defineStore("windows", () => {
 		const id = params.id ?? `window-${nanoid()}`;
 		const { title, kind } = params;
 
-		if (typeof params.params === "object" && params.params !== null && "id" in params.params) {
-			let hasFoundIdentical = false;
-			registry.value.forEach((w) => {
-				if (
-					!hasFoundIdentical &&
-					w.kind === params.kind &&
-					typeof w.params === "object" &&
-					w.params !== null &&
-					"id" in w.params &&
-					w.params.id === params.params.id
-				) {
-					w.winbox.focus();
-					hasFoundIdentical = true;
-				}
-			});
-			// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-			if (hasFoundIdentical) return;
-		}
+		if (isWindowContentAlreadyOpen(params.kind, params.params)) return;
 
 		const winbox = new WinBox({
 			id,
@@ -256,6 +239,27 @@ export const useWindowsStore = defineStore("windows", () => {
 			kind,
 			params: params.params,
 		} as WindowItem);
+	}
+
+	function isWindowContentAlreadyOpen(kind: Kind, params: WindowItemMap[Kind]["params"]) {
+		let hasFoundIdentical = false;
+		if (typeof params === "object" && params !== null && "id" in params) {
+			registry.value.forEach((w) => {
+				if (
+					!hasFoundIdentical &&
+					w.kind === kind &&
+					typeof w.params === "object" &&
+					w.params !== null &&
+					"id" in w.params &&
+					// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+					w.params.id === params.id
+				) {
+					w.winbox.focus();
+					hasFoundIdentical = true;
+				}
+			});
+		}
+		return hasFoundIdentical;
 	}
 
 	function removeWindow(id: WindowItem["id"]) {
