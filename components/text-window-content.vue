@@ -29,83 +29,53 @@ const isLoading = computed(() => {
 </template>
 
 <style>
-/* stylelint-disable selector-class-pattern, color-no-hex, block-no-empty */
+/* stylelint-disable selector-class-pattern, block-no-empty */
 .tbHeader {
-	width: 100%;
-	margin: 0;
+	@apply w-full m-0;
 }
 
 .imgIllustration {
-	float: right;
-	height: 100px;
-	margin: 5px;
+	@apply float-right h-[100px] m-[5px];
 }
 
 .aVicText {
-	@apply text-primary;
-
-	background-color: transparent;
-	text-decoration: none !important;
-	cursor: pointer;
+	@apply text-primary bg-transparent no-underline cursor-pointer;
 }
 
 .aVicText:hover {
-	@apply bg-primary text-on-primary;
-
-	cursor: pointer;
+	@apply bg-primary text-on-primary cursor-pointer;
 }
 
 .info-block-wrap > .aVicText {
-	color: #335175 !important;
+	@apply text-[#335175];
 }
 
 .newsHeader {
-	@apply bg-primary text-on-primary;
-
-	padding-bottom: 5px;
-	padding-left: 20px;
+	@apply bg-primary text-on-primary pb-[5px] pl-5;
 }
 
 .newsItem {
-	@apply bg-on-primary border-primary;
-
-	margin-top: 2px;
-	padding-top: 2px;
-	padding-left: 5px;
-	border: 0.5px dotted;
+	@apply bg-on-primary border-primary mt-0.5 pt-0.5 pl-[5px] border-dotted border-[1px];
 }
 
 .dvContributor p {
-	display: flex;
-	flex-flow: row;
-	justify-content: space-between;
-	align-items: flex-start;
-	padding: 10px 5px;
+	@apply flex flex-row justify-between items-start py-2.5 px-[5px];
 }
 
 .dvContributor p span {
-	flex-basis: 460px;
+	@apply basis-[460px];
 }
 
 .dvContributor p img {
-	width: 100px;
-	height: 100px;
-	padding: 5px;
-	border-radius: 50%;
+	@apply w-[100px] h-[100px] p-[5px] rounded-[50%];
 }
 
 .tbQueryExamples {
-	width: 100%;
-	border-collapse: collapse;
+	@apply w-full border-collapse;
 }
 
 .tdQuery {
-	@apply bg-on-primary border-primary;
-
-	vertical-align: top;
-	padding-right: 5px;
-	padding-left: 5px;
-	border: 1px solid;
+	@apply bg-on-primary border-primary border-solid border-[1px] align-top pr-[5px] pl-[5px];
 }
 
 .tdCommentSpan {
