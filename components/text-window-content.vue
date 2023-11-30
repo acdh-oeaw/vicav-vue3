@@ -29,7 +29,7 @@ const isLoading = computed(() => {
 </template>
 
 <style>
-/* stylelint-disable selector-class-pattern, color-function-notation, color-named, color-no-hex, block-no-empty */
+/* stylelint-disable selector-class-pattern, color-no-hex, block-no-empty */
 .tbHeader {
 	width: 100%;
 	margin: 0;
@@ -42,15 +42,16 @@ const isLoading = computed(() => {
 }
 
 .aVicText {
+	@apply text-primary;
+
 	background-color: transparent;
-	color: rgb(168, 93, 143) !important;
 	text-decoration: none !important;
 	cursor: pointer;
 }
 
 .aVicText:hover {
-	background-color: rgb(168, 93, 143);
-	color: white !important;
+	@apply bg-primary text-on-primary;
+
 	cursor: pointer;
 }
 
@@ -59,18 +60,19 @@ const isLoading = computed(() => {
 }
 
 .newsHeader {
+	@apply bg-primary text-on-primary;
+
 	padding-bottom: 5px;
 	padding-left: 20px;
-	background: rgb(168, 93, 143);
-	color: white;
 }
 
 .newsItem {
+	@apply bg-on-primary border-primary;
+
 	margin-top: 2px;
 	padding-top: 2px;
 	padding-left: 5px;
-	border: 0.5px dotted rgb(168, 93, 143);
-	background: rgb(246, 237, 243);
+	border: 0.5px dotted;
 }
 
 .dvContributor p {
@@ -98,11 +100,12 @@ const isLoading = computed(() => {
 }
 
 .tdQuery {
+	@apply bg-on-primary border-primary;
+
 	vertical-align: top;
 	padding-right: 5px;
 	padding-left: 5px;
-	border: 1px solid rgb(168, 93, 143);
-	background: rgb(222, 222, 222);
+	border: 1px solid;
 }
 
 .tdCommentSpan {
