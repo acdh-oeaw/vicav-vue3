@@ -343,6 +343,7 @@ export const useWindowsStore = defineStore("windows", () => {
 	}
 
 	function updateUrl() {
+		if (route.path === "/imprint") return;
 		const windowStates = serializeWindowStates();
 		// TODO: check url length, it may be too long. Note: shortest limit is 2047 (MS Edge) https://serpstat.com/blog/how-long-should-be-the-page-url-length-for-seo/
 		void navigateTo({
