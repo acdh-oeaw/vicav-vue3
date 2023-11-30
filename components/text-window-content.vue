@@ -29,8 +29,82 @@ const isLoading = computed(() => {
 </template>
 
 <style>
-/* stylelint-disable-next-line selector-class-pattern */
+/* stylelint-disable selector-class-pattern, color-function-notation, color-named, color-no-hex, block-no-empty */
 .tbHeader {
+	width: 100%;
 	margin: 0;
+}
+
+.imgIllustration {
+	float: right;
+	height: 100px;
+	margin: 5px;
+}
+
+.aVicText {
+	background-color: transparent;
+	color: rgb(168, 93, 143) !important;
+	text-decoration: none !important;
+	cursor: pointer;
+}
+
+.aVicText:hover {
+	background-color: rgb(168, 93, 143);
+	color: white !important;
+	cursor: pointer;
+}
+
+.info-block-wrap > .aVicText {
+	color: #335175 !important;
+}
+
+.newsHeader {
+	padding-bottom: 5px;
+	padding-left: 20px;
+	background: rgb(168, 93, 143);
+	color: white;
+}
+
+.newsItem {
+	margin-top: 2px;
+	padding-top: 2px;
+	padding-left: 5px;
+	border: 0.5px dotted rgb(168, 93, 143);
+	background: rgb(246, 237, 243);
+}
+
+.dvContributor p {
+	display: flex;
+	flex-flow: row;
+	justify-content: space-between;
+	align-items: flex-start;
+	padding: 10px 5px;
+}
+
+.dvContributor p span {
+	flex-basis: 460px;
+}
+
+.dvContributor p img {
+	width: 100px;
+	height: 100px;
+	padding: 5px;
+	border-radius: 50%;
+}
+
+.tbQueryExamples {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.tdQuery {
+	vertical-align: top;
+	padding-right: 5px;
+	padding-left: 5px;
+	border: 1px solid rgb(168, 93, 143);
+	background: rgb(222, 222, 222);
+}
+
+.tdCommentSpan {
 }
 </style>
