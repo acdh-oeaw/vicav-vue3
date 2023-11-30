@@ -207,7 +207,11 @@ export const useWindowsStore = defineStore("windows", () => {
 		const id = params.id ?? `window-${nanoid()}`;
 		const { title, kind } = params;
 
-		if (isWindowContentAlreadyOpen(params.kind, params.params)) return;
+		const w = windowWithContentId(params.kind, params.params);
+		if (w != null) {
+			w.winbox.focus();
+			return;
+		}
 
 		const winbox = new WinBox({
 			id,
@@ -241,25 +245,26 @@ export const useWindowsStore = defineStore("windows", () => {
 		} as WindowItem);
 	}
 
-	function isWindowContentAlreadyOpen(kind: Kind, params: WindowItemMap[Kind]["params"]) {
-		let hasFoundIdentical = false;
+	function windowWithContentId(
+		kind: WindowItemKind,
+		params: WindowItemMap[WindowItemKind]["params"],
+	): WindowItem | null {
+		let foundWindow: WindowItem | null = null;
 		if (typeof params === "object" && params !== null && "id" in params) {
 			registry.value.forEach((w) => {
 				if (
-					!hasFoundIdentical &&
+					foundWindow === null &&
 					w.kind === kind &&
 					typeof w.params === "object" &&
 					w.params !== null &&
 					"id" in w.params &&
-					// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 					w.params.id === params.id
 				) {
-					w.winbox.focus();
-					hasFoundIdentical = true;
+					foundWindow = w;
 				}
 			});
 		}
-		return hasFoundIdentical;
+		return foundWindow;
 	}
 
 	function removeWindow(id: WindowItem["id"]) {
