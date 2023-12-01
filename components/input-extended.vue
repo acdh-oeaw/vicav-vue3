@@ -12,18 +12,20 @@ watch(myString, (val) => {
 	emit("update:modelValue", val);
 });
 
-let cursorPosition = 0;
 const InsertSnippet = async (snippet: string): Promise<void> => {
-	myString.value =
-		myString.value.substring(0, cursorPosition) +
-		snippet +
-		myString.value.substring(cursorPosition, myString.value.length);
-	cursorPosition += snippet.length;
-	await nextTick();
-	setCursorPosition(cursorPosition);
+	if (typeof inputElement.value.selectionStart !== "undefined") {
+		let cursorPosition = Number(inputElement.value.selectionStart);
+		myString.value =
+			myString.value.substring(0, cursorPosition) +
+			snippet +
+			myString.value.substring(cursorPosition, myString.value.length);
+		cursorPosition += snippet.length;
+		await nextTick();
+		restoreCursorPosition(cursorPosition);
+	}
 };
 
-const setCursorPosition = (pos: number) => {
+const restoreCursorPosition = (pos: number) => {
 	if (typeof inputElement.value.createTextRange !== "undefined") {
 		var range = inputElement.value.createTextRange();
 		range.move("character", pos);
@@ -36,10 +38,6 @@ const setCursorPosition = (pos: number) => {
 		inputElement.value.selectionStart = pos;
 		inputElement.value.selectionEnd = pos;
 	}
-};
-
-const recordCursorPosition = (e: Event) => {
-	cursorPosition = Number((e.target as HTMLInputElement).selectionStart);
 };
 </script>
 
@@ -56,13 +54,7 @@ const recordCursorPosition = (e: Event) => {
 		</div>
 		<div class="ei-textinput">
 			<!-- eslint-disable-next-line vuejs-accessibility/form-control-has-label -->
-			<input
-				ref="inputElement"
-				v-model="myString"
-				type="text"
-				@keyup="recordCursorPosition"
-				@click="recordCursorPosition"
-			/>
+			<input ref="inputElement" v-model="myString" type="text" />
 		</div>
 	</div>
 </template>
