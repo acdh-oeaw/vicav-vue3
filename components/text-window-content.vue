@@ -55,7 +55,7 @@ const isLoading = computed(() => {
 }
 
 .newsItem {
-	@apply bg-on-primary border-primary mt-0.5 pt-0.5 pl-[5px] border-dotted border-[1px];
+	@apply bg-on-primary border-primary mt-0.5 pt-0.5 pl-[5px] border-dotted border;
 }
 
 .dvContributor p {
@@ -75,7 +75,7 @@ const isLoading = computed(() => {
 }
 
 .tdQuery {
-	@apply bg-on-primary border-primary border-solid border-[1px] align-top pr-[5px] pl-[5px];
+	@apply bg-on-primary border-primary border-solid border align-top pr-[5px] pl-[5px];
 }
 
 .tdCommentSpan {
