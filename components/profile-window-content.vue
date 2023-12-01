@@ -29,120 +29,77 @@ const isLoading = computed(() => {
 </template>
 
 <style>
-/* stylelint-disable selector-class-pattern, color-no-hex, color-named */
+/* stylelint-disable selector-class-pattern */
 
 .tbProfile {
-	border: 1px solid rgb(89 83 60);
+	@apply border border-solid border-[#59533c];
 }
 
 .tdHead {
-	vertical-align: top;
-	width: 150px;
-	padding-right: 5px;
-	border-bottom: 0.5px dotted rgb(221 157 199);
-	background: rgb(168 93 143);
-	color: #fff;
-	text-align: right;
-	word-wrap: break-word;
+	@apply align-top w-[150px] pr-[5px] border-dotted border-primary border-b bg-primary text-on-primary text-right break-words;
 }
 
 .tdProfileTableRight {
-	vertical-align: top;
-	padding-left: 5px;
-	border-bottom: 0.5px dotted rgb(168 93 143);
-	background: rgb(222 222 222);
-	color: rgb(168 93 143);
+	@apply align-top pl-[5px] border-dotted border-primary border-b bg-[#dedede] text-primary;
 }
 
 .aExplBar {
-	background-color: transparent;
-	color: #252771 !important;
-	text-decoration: none;
-	cursor: pointer;
+	@apply bg-transparent text-[#252771] no-underline cursor-pointer;
 }
 
 .aExplBar:hover {
-	text-decoration: underline;
-	cursor: pointer;
+	@apply underline cursor-pointer;
 }
 
 .aVicText {
-	background-color: transparent;
-	color: rgb(168 93 143) !important;
-	text-decoration: none !important;
-	cursor: pointer;
+	@apply bg-transparent text-primary no-underline cursor-pointer;
 }
 
 .aVicText:hover {
-	/* color: white !important; */
-	background-color: rgb(168 93 143);
-	color: white !important;
-	cursor: pointer;
+	@apply bg-primary text-on-primary cursor-pointer;
 }
 
 .info-block-wrap > .aVicText {
-	color: #335175 !important;
+	@apply text-[#335175];
 }
 
 a:hover {
-	color: #252771;
-	text-decoration: underline;
+	@apply text-[#252771] underline;
 }
 
 .spTeiLink {
-	padding: 5px 8px;
-	border: 1px solid rgb(168 93 143);
-	border-radius: 5px;
-	font-weight: 500;
-	font-size: 12px;
-	transition: all 0.3s ease;
+	@apply py-[5px] px-2 border-solid border-primary border rounded-[5px] font-medium text-xs transition-all duration-300 ease-in-out;
 }
 
 .spTeiLink:hover {
-	background-color: #a85c8e;
-	color: white;
-	text-decoration: none;
+	@apply bg-primary text-on-primary no-underline;
 }
 
 .tbHeader {
-	width: 100%;
-	margin: 0;
+	@apply w-full m-0;
 }
 
 .profileHeader {
-	display: flex;
-	gap: 3%;
-	align-items: flex-start;
+	@apply flex gap-[3%] items-start;
 }
 
 .pNorm {
-	margin-bottom: 10px;
+	@apply mb-[10px];
 }
 
 .imgCaption {
-	padding-bottom: 8px;
-	font-style: italic;
-	font-size: 12px;
-	text-align: center;
+	@apply pb-2 italic text-xs text-center;
 }
 
 .h3ProfileTypology {
-	margin-top: 1rem;
-	margin-bottom: 0.2rem;
-	border-bottom: none;
-	font-weight: 500;
-	font-size: 1.2rem;
+	@apply mt-4 mb-1 border-b-0 font-medium text-[1.2rem];
 }
 
 .h3Profile {
-	margin-top: 1rem;
-	margin-bottom: 0.2rem;
-	border-bottom: 1px dotted rgb(168 93 143);
-	font-weight: 500;
-	font-size: 1.2rem;
+	@apply mt-4 mb-1 border-dotted border-primary border-b font-medium text-[1.2rem];
 }
 
 .dvImgProfile {
-	order: 1;
+	@apply order-1;
 }
 </style>
