@@ -38,11 +38,11 @@ const specialCharacters: Array<string> = [
 </template>
 
 <style>
-.ei button {
+.ie button {
 	@apply bg-gray-300 px-4 py-2 font-bold text-gray-800 hover:bg-gray-400;
 }
 
-.ei input {
+.ie input {
 	@apply m-2 border px-3 py-2 shadow;
 }
 </style>

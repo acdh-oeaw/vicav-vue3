@@ -43,8 +43,8 @@ const restoreCursorPosition = (pos: number) => {
 
 <template>
 	<!-- eslint-disable tailwindcss/no-custom-classname -->
-	<div class="ei">
-		<div class="ei-buttons">
+	<div class="ie">
+		<div class="ie-buttons">
 			<button
 				v-for="(c, i) in stringSnippets"
 				:key="i"
@@ -52,7 +52,7 @@ const restoreCursorPosition = (pos: number) => {
 				v-text="c"
 			></button>
 		</div>
-		<div class="ei-textinput">
+		<div class="ie-textinput">
 			<!-- eslint-disable-next-line vuejs-accessibility/form-control-has-label -->
 			<input ref="inputElement" v-model="myString" type="text" />
 		</div>
