@@ -66,6 +66,20 @@ export interface TextWindowItem extends WindowItemBase {
 	};
 }
 
+export interface ProfileWindowItem extends WindowItemBase {
+	kind: "profile";
+	params: {
+		id: string;
+	};
+}
+
+export interface FeatureWindowItem extends WindowItemBase {
+	kind: "feature";
+	params: {
+		id: string;
+	};
+}
+
 export type WindowItem =
 	| BibliographyQueryWindowItem
 	| CorpusQueryWindowItem
@@ -74,7 +88,9 @@ export type WindowItem =
 	| DataListWindowItem
 	| DictionaryEntryWindowItem
 	| DictionaryQueryWindowItem
+	| FeatureWindowItem
 	| GeoMapWindowItem
+	| ProfileWindowItem
 	| SampleTextWindowItem
 	| TextWindowItem;
 

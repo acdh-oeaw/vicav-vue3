@@ -7,7 +7,7 @@ const props = defineProps<Props>();
 const { params } = toRefs(props);
 
 const { data, isPending, isPlaceholderData } = useTextById(params);
-const onClick = useAnchorClickHandler();
+const openNewWindowFromAnchor = useAnchorClickHandler();
 
 const isLoading = computed(() => {
 	return isPending.value || isPlaceholderData.value;
@@ -20,7 +20,7 @@ const isLoading = computed(() => {
 		:class="{ 'opacity-50 grayscale': isLoading }"
 	>
 		<!-- eslint-disable-next-line vue/no-v-html, vuejs-accessibility/click-events-have-key-events, vuejs-accessibility/no-static-element-interactions -->
-		<div v-if="data" class="prose max-w-3xl p-8" @click="onClick" v-html="data" />
+		<div v-if="data" class="prose max-w-3xl p-8" @click="openNewWindowFromAnchor" v-html="data" />
 
 		<Centered v-if="isLoading">
 			<LoadingIndicator />
