@@ -210,6 +210,10 @@ export const useWindowsStore = defineStore("windows", () => {
 		const w = windowWithContentId(params.kind, params.params);
 		if (w != null) {
 			w.winbox.focus();
+			w.winbox.addClass("highlighted");
+			setTimeout(() => {
+				w.winbox.removeClass("highlighted");
+			}, 1000);
 			return;
 		}
 
