@@ -29,8 +29,55 @@ const isLoading = computed(() => {
 </template>
 
 <style>
-/* stylelint-disable-next-line selector-class-pattern */
+/* stylelint-disable selector-class-pattern, block-no-empty */
 .tbHeader {
-	margin: 0;
+	@apply w-full m-0;
+}
+
+.imgIllustration {
+	@apply float-right h-[100px] m-[5px];
+}
+
+.aVicText {
+	@apply text-primary bg-transparent no-underline cursor-pointer;
+}
+
+.aVicText:hover {
+	@apply bg-primary text-on-primary cursor-pointer;
+}
+
+.info-block-wrap > .aVicText {
+	@apply text-[#335175];
+}
+
+.newsHeader {
+	@apply bg-primary text-on-primary pb-[5px] pl-5;
+}
+
+.newsItem {
+	@apply bg-on-primary border-primary mt-0.5 pt-0.5 pl-[5px] border-dotted border;
+}
+
+.dvContributor p {
+	@apply flex flex-row justify-between items-start py-2.5 px-[5px];
+}
+
+.dvContributor p span {
+	@apply basis-[460px];
+}
+
+.dvContributor p img {
+	@apply w-[100px] h-[100px] p-[5px] rounded-[50%];
+}
+
+.tbQueryExamples {
+	@apply w-full border-collapse;
+}
+
+.tdQuery {
+	@apply bg-on-primary border-primary border-solid border align-top pr-[5px] pl-[5px];
+}
+
+.tdCommentSpan {
 }
 </style>
