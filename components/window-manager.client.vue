@@ -68,4 +68,12 @@ onMounted(windowsStore.restoreState);
 		animation-timing-function: ease-in-out;
 	}
 }
+
+.winbox .wb-tei {
+	background-color: hsl(var(--color-on-primary));
+	mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22128%22%20height%3D%2270%22%20viewBox%3D%220%200%20128%2070%22%20fill%3D%22none%22%3E%3Cpath%20d%3D%22M10%2010%20h40%20v10%20h-15%20v40%20h-10%20v-40%20h-15%20v-10%22%20fill%3D%22black%22%2F%3E%3Cpath%20d%3D%22M57%2010%20h30%20v10%20h-20%20v10%20h15%20v10%20h-15%20v10%20h20%20v10%20h-30%20v-50%22%20fill%3D%22black%22%2F%3E%3Cpath%20d%3D%22M100%2010%20h10%20v50%20h-10%20v-50%22%20fill%3D%22black%22%2F%3E%3C%2Fsvg%3E");
+	mask-position: 50% 50%;
+	mask-size: 100%;
+	mask-repeat: no-repeat;
+}
 </style>

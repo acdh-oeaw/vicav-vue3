@@ -42,6 +42,7 @@ export default defineNuxtConfig({
 			NUXT_PUBLIC_MATOMO_BASE_URL: process.env.NUXT_PUBLIC_MATOMO_BASE_URL,
 			NUXT_PUBLIC_MATOMO_ID: process.env.NUXT_PUBLIC_MATOMO_ID,
 			NUXT_PUBLIC_REDMINE_ID: process.env.SERVICE_ID ?? process.env.NUXT_PUBLIC_REDMINE_ID,
+			TEI_BASEURL: process.env.TEI_BASEURL,
 		},
 	},
 	typescript: {

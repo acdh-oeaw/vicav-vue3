@@ -249,6 +249,20 @@ export const useWindowsStore = defineStore("windows", () => {
 			root: rootElement,
 		});
 
+		if (hasContentId(params.params)) {
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-call
+			winbox.addControl({
+				index: 0,
+				class: "wb-tei",
+				click: function () {
+					const env = useRuntimeConfig();
+					if (env.public.TEI_BASEURL) {
+						window.open(`${env.public.TEI_BASEURL}&id=${params.params.id}`, "_blank");
+					}
+				},
+			});
+		}
+
 		registry.value.set(id, {
 			id,
 			winbox,
@@ -257,19 +271,21 @@ export const useWindowsStore = defineStore("windows", () => {
 		} as WindowItem);
 	}
 
+	function hasContentId(params: WindowItemMap[WindowItemKind]["params"]) {
+		return typeof params === "object" && params !== null && "id" in params;
+	}
+
 	function windowWithContentId(
 		kind: WindowItemKind,
 		params: WindowItemMap[WindowItemKind]["params"],
 	): WindowItem | null {
 		let foundWindow: WindowItem | null = null;
-		if (typeof params === "object" && params !== null && "id" in params) {
+		if (hasContentId(params)) {
 			registry.value.forEach((w) => {
 				if (
 					foundWindow === null &&
 					w.kind === kind &&
-					typeof w.params === "object" &&
-					w.params !== null &&
-					"id" in w.params &&
+					hasContentId(w.params) &&
 					w.params.id === params.id
 				) {
 					foundWindow = w;
