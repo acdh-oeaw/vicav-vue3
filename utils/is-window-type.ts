@@ -4,6 +4,7 @@ type WindowType = Exclude<NonNullable<ItemType["componentName"]>, "UnknownTypeWa
 
 export const windowTypeMap: Record<WindowType, WindowItemKind> = {
 	BiblioQuery: "bibliography-query",
+	Bibl: "bibliography-entries",
 	CorpusQuery: "corpus-query",
 	CorpusText: "corpus-text",
 	CrossDictQuery: "cross-dictionary-query",

@@ -19,6 +19,11 @@ export interface BibliographyQueryWindowItem extends WindowItemBase {
 	params: unknown;
 }
 
+export interface BibliographyEntriesWindowItem extends WindowItemBase {
+	kind: "bibliography-entries";
+	params: { query: string; xslt?: string };
+}
+
 export interface CorpusQueryWindowItem extends WindowItemBase {
 	kind: "corpus-query";
 	params: unknown;
@@ -81,6 +86,7 @@ export interface FeatureWindowItem extends WindowItemBase {
 }
 
 export type WindowItem =
+	| BibliographyEntriesWindowItem
 	| BibliographyQueryWindowItem
 	| CorpusQueryWindowItem
 	| CorpusTextWindowItem
