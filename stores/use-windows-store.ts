@@ -215,8 +215,13 @@ export const useWindowsStore = defineStore("windows", () => {
 		const id = params.id ?? `window-${nanoid()}`;
 		const { title, kind } = params;
 
-		if (registry.value.has(id)) {
-			registry.value.get(id)?.winbox.focus();
+		const w = windowWithContentId(params.kind, params.params);
+		if (w != null) {
+			w.winbox.focus();
+			w.winbox.addClass("highlighted");
+			setTimeout(() => {
+				w.winbox.removeClass("highlighted");
+			}, 1000);
 			return;
 		}
 
@@ -250,6 +255,28 @@ export const useWindowsStore = defineStore("windows", () => {
 			kind,
 			params: params.params,
 		} as WindowItem);
+	}
+
+	function windowWithContentId(
+		kind: WindowItemKind,
+		params: WindowItemMap[WindowItemKind]["params"],
+	): WindowItem | null {
+		let foundWindow: WindowItem | null = null;
+		if (typeof params === "object" && params !== null && "id" in params) {
+			registry.value.forEach((w) => {
+				if (
+					foundWindow === null &&
+					w.kind === kind &&
+					typeof w.params === "object" &&
+					w.params !== null &&
+					"id" in w.params &&
+					w.params.id === params.id
+				) {
+					foundWindow = w;
+				}
+			});
+		}
+		return foundWindow;
 	}
 
 	function removeWindow(id: WindowItem["id"]) {
