@@ -26,3 +26,38 @@ const isLoading = computed(() => {
 		</Centered>
 	</div>
 </template>
+
+<style>
+/* stylelint-disable selector-class-pattern, block-no-empty */
+.dvStats {
+	@apply mb-[5px] pb-[5px] pl-[5px] border border-solid border-primary bg-primary text-on-primary font-bold;
+}
+
+.spQueryText {
+	@apply text-gray-200 italic;
+}
+
+.dvAuthor {
+	@apply block border-t border-dotted border-primary;
+}
+
+.dvBiblBlock {
+	@apply block ml-5 pb-2.5;
+}
+
+.imgBiblItem {
+	@apply inline max-w-full m-0 border-none pr-1.5 align-middle box-border;
+}
+
+.dvBibBook,
+.dvBibBookSection,
+.dvBibArticle,
+.dvThesis {
+}
+
+.dvBibArticle .fa-book,
+.dvBibBook .fa-file-text,
+.dvBibBookSection .fa-file-text {
+	@apply block;
+}
+</style>
