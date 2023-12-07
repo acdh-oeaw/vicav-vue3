@@ -5,10 +5,6 @@ export function useBiblioTeiQuery(
 	options?: { enabled?: boolean },
 ) {
 	const api = useApiClient();
-	const paramsRef = ref(params);
-	console.log(params);
-	paramsRef.value.xslt = "biblio_tei_01.xslt";
-
 	return useQuery({
 		enabled: options?.enabled,
 		queryKey: ["get-biblio-tei", params] as const,

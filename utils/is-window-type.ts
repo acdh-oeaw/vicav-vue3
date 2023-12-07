@@ -1,10 +1,10 @@
 import type { ItemType } from "@/lib/api-client";
 
-type WindowType = Exclude<NonNullable<ItemType["componentName"]>, "UnknownTypeWarning">;
+type WindowType = Exclude<NonNullable<ItemType["targetType"]>, "UnknownTypeWarning">;
 
 export const windowTypeMap: Record<WindowType, WindowItemKind> = {
 	BiblioQuery: "bibliography-query",
-	Bibl: "bibliography-entries",
+	BiblioEntries: "bibliography-entries",
 	CorpusQuery: "corpus-query",
 	CorpusText: "corpus-text",
 	CrossDictQuery: "cross-dictionary-query",
