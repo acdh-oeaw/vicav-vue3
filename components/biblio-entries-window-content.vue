@@ -23,7 +23,7 @@ function submitNewQuery(): void {
 		params.value.query = queryString.value;
 	}
 	if (isMapQuery.value) {
-		console.log("map query not implemented");
+		alert("map query not implemented");
 	}
 }
 </script>
@@ -33,7 +33,6 @@ function submitNewQuery(): void {
 		class="relative isolate grid h-full w-full overflow-auto"
 		:class="{ 'opacity-50 grayscale': isLoading }"
 	>
-		{{ queryString }} {{ isTextQuery }} {{ isMapQuery }}
 		<!-- eslint-disable vuejs-accessibility/form-control-has-label, tailwindcss/no-custom-classname -->
 		<div class="max-w-3xl px-8 pb-4 pt-8">
 			<div class="dvStats">
