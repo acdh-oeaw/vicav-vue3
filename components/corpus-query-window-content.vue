@@ -26,15 +26,39 @@ function openCorpusText(e) {
 		},
 	});
 }
+
+const specialCharacters: Array<string> = [
+	"ē",
+	"ṛ",
+	"ṯ",
+	"ẓ",
+	"ū",
+	"ī",
+	"ō",
+	"ā",
+	"š",
+	"ḏ",
+	"ṭ",
+	"ǧ",
+	"ḥ",
+	"ž",
+	"ṣ",
+	"ḏ̣",
+	"ʕ",
+	"ʔ",
+	"ġ",
+	"ḅ",
+	"ṃ",
+];
 </script>
 
 <template>
 	<div id="corpus-query" class="p-2">
 		<form class="d-flex">
-			<input
+			<InputExtended
 				v-model="queryString"
+				:string-snippets="specialCharacters"
 				class="form-control me-2"
-				type="text"
 				style="flex: 1"
 				placeholder="Search in corpus ..."
 				aria-label="Search"
@@ -91,5 +115,14 @@ function openCorpusText(e) {
 
 .bg-warning {
 	background-color: beige;
+}
+
+/* InputExtended stylesheet */
+.ie button {
+	@apply bg-gray-300 px-4 py-2 font-bold text-gray-800 hover:bg-gray-400;
+}
+
+.ie input {
+	@apply m-2 border px-3 py-2 shadow;
 }
 </style>
