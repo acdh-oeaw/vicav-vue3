@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+import { Collapse, initTE } from "tw-elements";
+
+onMounted(() => {
+	console.log("initializing TE");
+	initTE({ Collapse });
+});
+
 interface Props {
 	params: BibliographyEntriesWindowItem["params"];
 }
@@ -35,11 +42,19 @@ function submitNewQuery(): void {
 	>
 		<!-- eslint-disable vuejs-accessibility/form-control-has-label, tailwindcss/no-custom-classname -->
 		<div class="prose max-w-3xl px-8 pb-4 pt-8">
-			<div class="dvStats">
+			<button
+				class="dvStats w-full text-left"
+				type="button"
+				tabindex="0"
+				data-te-collapse-init
+				data-te-target="queryForm"
+				aria-expanded="false"
+				aria-controls="queryForm"
+			>
 				Query:&nbsp;&nbsp;
 				<span class="spQueryText">{{ queryString }}</span>
-			</div>
-			<div class="max-w-3xl bg-gray-200 px-4">
+			</button>
+			<div id="queryForm" class="!visible hidden max-w-3xl bg-gray-200 px-4" data-te-collapse-item>
 				<div class="pt-3">
 					<input
 						v-model="queryString"
