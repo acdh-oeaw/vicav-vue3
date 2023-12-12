@@ -34,7 +34,7 @@ function submitNewQuery(): void {
 		:class="{ 'opacity-50 grayscale': isLoading }"
 	>
 		<!-- eslint-disable vuejs-accessibility/form-control-has-label, tailwindcss/no-custom-classname -->
-		<div class="max-w-3xl px-8 pb-4 pt-8">
+		<div class="prose max-w-3xl px-8 pb-4 pt-8">
 			<div class="dvStats">
 				Query:&nbsp;&nbsp;
 				<span class="spQueryText">{{ queryString }}</span>
