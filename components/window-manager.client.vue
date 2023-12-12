@@ -51,4 +51,21 @@ onMounted(windowsStore.restoreState);
 .winbox .wb-title {
 	@apply font-body;
 }
+
+.winbox.highlighted {
+	animation: bounce 0.2s 3;
+}
+
+@keyframes bounce {
+	0%,
+	100% {
+		transform: translateY(-3%);
+		animation-timing-function: ease-in-out;
+	}
+
+	50% {
+		transform: translateY(0);
+		animation-timing-function: ease-in-out;
+	}
+}
 </style>

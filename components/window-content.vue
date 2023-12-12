@@ -11,5 +11,7 @@ const props = defineProps<Props>();
 	<TextWindowContent v-else-if="props.item.kind === 'text'" :params="props.item.params" />
 	<CorpusQuery v-else-if="props.item.kind === 'corpus-query'" :params="props.item.params" />
 	<CorpusText v-else-if="props.item.kind === 'corpus-text'" :params="props.item.params" />
+	<ProfileWindowContent v-else-if="props.item.kind === 'profile'" :params="props.item.params" />
+	<FeatureWindowContent v-else-if="props.item.kind === 'feature'" :params="props.item.params" />
 	<pre v-else>{{ props }}</pre>
 </template>

@@ -7,6 +7,14 @@ import * as arrange from "@/utils/window-arrangement";
 
 import { useToastsStore } from "./use-toasts-store";
 
+const narrowScreenBreakpoint = 1024;
+
+export interface CorpusTextParams {
+	id: string;
+	hits: string;
+	u: string;
+}
+
 interface WindowItemBase {
 	id: string;
 	winbox: WinBox;
@@ -24,9 +32,7 @@ export interface CorpusQueryWindowItem extends WindowItemBase {
 
 export interface CorpusTextWindowItem extends WindowItemBase {
 	kind: "corpus-text";
-	params: {
-		id: string;
-	};
+	params: CorpusTextParams;
 }
 
 export interface CrossDictionaryQueryWindowItem extends WindowItemBase {
@@ -67,7 +73,14 @@ export interface TextWindowItem extends WindowItemBase {
 }
 
 export interface ProfileWindowItem extends WindowItemBase {
-	kind: "text";
+	kind: "profile";
+	params: {
+		id: string;
+	};
+}
+
+export interface FeatureWindowItem extends WindowItemBase {
+	kind: "feature";
 	params: {
 		id: string;
 	};
@@ -81,6 +94,7 @@ export type WindowItem =
 	| DataListWindowItem
 	| DictionaryEntryWindowItem
 	| DictionaryQueryWindowItem
+	| FeatureWindowItem
 	| GeoMapWindowItem
 	| ProfileWindowItem
 	| SampleTextWindowItem
@@ -136,10 +150,10 @@ export const useWindowsStore = defineStore("windows", () => {
 			await initializeScreen();
 			return;
 		}
-		const w = atob(route.query.w);
 
 		let windowStates: Array<WindowStateInferred>;
 		try {
+			const w = atob(route.query.w as string);
 			windowStates = JSON.parse(w) as Array<WindowStateInferred>;
 		} catch (e) {
 			toasts.addToast({
@@ -207,8 +221,13 @@ export const useWindowsStore = defineStore("windows", () => {
 		const id = params.id ?? `window-${nanoid()}`;
 		const { title, kind } = params;
 
-		if (registry.value.has(id)) {
-			registry.value.get(id)?.winbox.focus();
+		const w = windowWithContentId(params.kind, params.params);
+		if (w != null) {
+			w.winbox.focus();
+			w.winbox.addClass("highlighted");
+			setTimeout(() => {
+				w.winbox.removeClass("highlighted");
+			}, 1000);
 			return;
 		}
 
@@ -244,6 +263,28 @@ export const useWindowsStore = defineStore("windows", () => {
 		} as WindowItem);
 	}
 
+	function windowWithContentId(
+		kind: WindowItemKind,
+		params: WindowItemMap[WindowItemKind]["params"],
+	): WindowItem | null {
+		let foundWindow: WindowItem | null = null;
+		if (typeof params === "object" && params !== null && "id" in params) {
+			registry.value.forEach((w) => {
+				if (
+					foundWindow === null &&
+					w.kind === kind &&
+					typeof w.params === "object" &&
+					w.params !== null &&
+					"id" in w.params &&
+					w.params.id === params.id
+				) {
+					foundWindow = w;
+				}
+			});
+		}
+		return foundWindow;
+	}
+
 	function removeWindow(id: WindowItem["id"]) {
 		registry.value.get(id)?.winbox.close();
 	}
@@ -260,6 +301,11 @@ export const useWindowsStore = defineStore("windows", () => {
 
 		const viewport = rootElement.getBoundingClientRect();
 		const windows = Array.from(registry.value.values());
+
+		if (viewport.width < narrowScreenBreakpoint) {
+			arrange.maximize(viewport, windows);
+			return;
+		}
 
 		switch (arrangement.value) {
 			case "cascade": {
@@ -302,10 +348,14 @@ export const useWindowsStore = defineStore("windows", () => {
 
 		registry.value.forEach((w) => {
 			windowStates.push({
+				// @ts-expect-error Property missing in upstream types.
 				x: viewportPercentageWith2DigitPrecision(w.winbox.x as number, "width"),
+				// @ts-expect-error Property missing in upstream types.
 				y: viewportPercentageWith2DigitPrecision(w.winbox.y as number, "height"),
 				z: w.winbox.index,
+				// @ts-expect-error Property missing in upstream types.
 				width: viewportPercentageWith2DigitPrecision(w.winbox.width as number, "width"),
+				// @ts-expect-error Property missing in upstream types.
 				height: viewportPercentageWith2DigitPrecision(w.winbox.height as number, "height"),
 				kind: w.kind,
 				title: w.winbox.title,
@@ -316,6 +366,7 @@ export const useWindowsStore = defineStore("windows", () => {
 	}
 
 	function updateUrl() {
+		if (route.path === "/imprint") return;
 		const windowStates = serializeWindowStates();
 		// TODO: check url length, it may be too long. Note: shortest limit is 2047 (MS Edge) https://serpstat.com/blog/how-long-should-be-the-page-url-length-for-seo/
 		void navigateTo({

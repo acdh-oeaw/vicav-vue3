@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { AppWindowIcon, CheckIcon } from "lucide-vue-next";
 
-// const props = defineProps(["isMobile"]);
+const props = defineProps<{
+	isMobile: boolean;
+}>();
 
 const router = useRouter();
 const route = useRoute();
@@ -45,24 +47,24 @@ const { arrangement: currentArrangement, registry } = storeToRefs(windowsStore);
 				>
 					{{ item.winbox.title }}
 				</MenubarItem>
-				<template v-if="$props.isMobile === false">
-					<MenubarSeparator />
-					<MenubarLabel>Arrangement</MenubarLabel>
-					<MenubarSeparator />
-					<MenubarItem
-						v-for="(arrangement, id) of arrangements"
-						:key="id"
-						class="justify-between"
-						@select="
-							() => {
-								setWindowArrangement(id);
-							}
-						"
-					>
-						{{ arrangement.label }}
-						<CheckIcon v-if="id === currentArrangement" class="h-4 w-4" />
-					</MenubarItem>
-				</template>
+			</template>
+			<template v-if="!props.isMobile">
+				<MenubarSeparator />
+				<MenubarLabel>Arrangement</MenubarLabel>
+				<MenubarSeparator />
+				<MenubarItem
+					v-for="(arrangement, id) of arrangements"
+					:key="id"
+					class="justify-between"
+					@select="
+						() => {
+							setWindowArrangement(id);
+						}
+					"
+				>
+					{{ arrangement.label }}
+					<CheckIcon v-if="id === currentArrangement" class="h-4 w-4" />
+				</MenubarItem>
 			</template>
 		</MenubarContent>
 	</MenubarMenu>

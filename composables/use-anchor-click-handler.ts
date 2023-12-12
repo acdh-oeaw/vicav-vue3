@@ -9,7 +9,7 @@ export function useAnchorClickHandler() {
 	/**
 	 * Intercept anchor clicks to open window instead of navigating.
 	 */
-	function onClick(event: MouseEvent) {
+	function openNewWindowFromAnchor(event: MouseEvent) {
 		const element = event.target;
 
 		if (element instanceof HTMLAnchorElement) {
@@ -20,7 +20,8 @@ export function useAnchorClickHandler() {
 
 			event.preventDefault();
 
-			const kind = windowTypeMap[targetType];
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+			const kind = windowTypeMap[String(targetType)]!;
 			const params = { id: textId };
 
 			addWindow({
@@ -31,5 +32,5 @@ export function useAnchorClickHandler() {
 		}
 	}
 
-	return onClick;
+	return openNewWindowFromAnchor;
 }

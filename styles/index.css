@@ -35,6 +35,7 @@
 :root,
 body,
 #__nuxt {
+	overflow: hidden;
 	block-size: 100%;
 }
 

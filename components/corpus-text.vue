@@ -6,12 +6,6 @@ import type { StateHandler } from "v3-infinite-loading/lib/types";
 
 import type { CorpusText, CorpusTextUtterances, HttpResponse } from "@/lib/api-client";
 
-interface CorpusTextParams {
-	id: string;
-	hits: string;
-	u: string;
-}
-
 const props = defineProps<{
 	params: CorpusTextParams;
 }>();
@@ -45,7 +39,7 @@ const handleInfiniteScroll = async function ($state: StateHandler) {
 		$state.loaded();
 		if (text.data.utterances !== undefined && text.data.utterances.length < 10) $state.complete();
 	} catch (e) {
-		$state.error(e);
+		$state.error();
 	}
 };
 

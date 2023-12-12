@@ -12,6 +12,8 @@ export const windowTypeMap: Record<WindowType, WindowItemKind> = {
 	SampleText: "sample-text",
 	Text: "text",
 	WMap: "geo-map",
+	Profile: "profile",
+	Feature: "feature",
 };
 
 export function isWindowType(value: string | undefined): value is WindowType {
