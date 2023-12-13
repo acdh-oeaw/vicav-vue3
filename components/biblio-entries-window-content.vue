@@ -2,7 +2,6 @@
 import { Collapse, initTE } from "tw-elements";
 
 onMounted(() => {
-	console.log("initializing TE");
 	initTE({ Collapse });
 });
 
@@ -37,7 +36,7 @@ function submitNewQuery(): void {
 
 <template>
 	<div
-		class="relative isolate grid h-full w-full overflow-auto"
+		class="relative isolate h-full w-full overflow-auto"
 		:class="{ 'opacity-50 grayscale': isLoading }"
 	>
 		<!-- eslint-disable vuejs-accessibility/form-control-has-label, tailwindcss/no-custom-classname -->
@@ -120,7 +119,7 @@ function submitNewQuery(): void {
 		</div>
 
 		<!-- eslint-disable-next-line vue/no-v-html, vuejs-accessibility/click-events-have-key-events, vuejs-accessibility/no-static-element-interactions -->
-		<div v-if="data" class="prose max-w-3xl p-8" v-html="data" />
+		<div v-if="data" class="prose mb-auto max-w-3xl p-8" v-html="data" />
 
 		<Centered v-if="isLoading">
 			<LoadingIndicator />
