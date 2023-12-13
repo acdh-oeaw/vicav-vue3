@@ -47,7 +47,7 @@ function submitNewQuery(): void {
 				type="button"
 				tabindex="0"
 				data-te-collapse-init
-				data-te-target="queryForm"
+				data-te-target="#queryForm"
 				aria-expanded="false"
 				aria-controls="queryForm"
 			>
