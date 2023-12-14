@@ -1,9 +1,6 @@
 <script lang="ts" setup>
+import { nanoid } from "nanoid";
 import { Collapse, initTE } from "tw-elements";
-
-onMounted(() => {
-	initTE({ Collapse });
-});
 
 interface Props {
 	params: BibliographyEntriesWindowItem["params"];
@@ -12,6 +9,7 @@ interface Props {
 const props = defineProps<Props>();
 const { params } = toRefs(props);
 
+const formId = "biblioQueryForm-" + nanoid();
 const { data, isPending, isPlaceholderData } = useBiblioTeiQuery(params);
 const openNewWindowFromAnchor = useAnchorClickHandler();
 
@@ -32,6 +30,13 @@ function submitNewQuery(): void {
 		alert("map query not implemented");
 	}
 }
+
+onMounted(() => {
+	initTE({ Collapse });
+	new Collapse(document.getElementById(formId), {
+		toggle: queryString.value === "",
+	});
+});
 </script>
 
 <template>
@@ -46,14 +51,14 @@ function submitNewQuery(): void {
 				type="button"
 				tabindex="0"
 				data-te-collapse-init
-				data-te-target="#queryForm"
+				:data-te-target="`#${formId}`"
 				aria-expanded="false"
 				aria-controls="queryForm"
 			>
 				Query:&nbsp;&nbsp;
 				<span class="spQueryText">{{ queryString }}</span>
 			</button>
-			<div id="queryForm" class="!visible hidden max-w-3xl bg-gray-200 px-4" data-te-collapse-item>
+			<div :id="formId" class="!visible hidden max-w-3xl bg-gray-200 px-4" data-te-collapse-item>
 				<div class="pt-3">
 					<input
 						v-model="queryString"
