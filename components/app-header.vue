@@ -43,7 +43,7 @@ function onSelectMenuItem(item: ItemType) {
 				id: createWindowId(item),
 				title: createWindowTitle(item),
 				kind: "bibliography-entries",
-				params: { query: item.target ?? "" },
+				params: { query: item.query ?? "" },
 			});
 			break;
 		}
