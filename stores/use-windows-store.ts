@@ -2,7 +2,6 @@ import { nanoid } from "nanoid";
 import WinBox from "winbox";
 import { z } from "zod";
 
-import type { QueryDescription } from "@/lib/api-client";
 import * as arrange from "@/utils/window-arrangement";
 
 import { useToastsStore } from "./use-toasts-store";
@@ -57,7 +56,7 @@ export const GeoMapWindowItemParams = z.object({
 
 export interface GeoMapWindowItem extends WindowItemBase {
 	kind: "geo-map";
-	params: QueryDescription & { id: string };
+	params: z.infer<typeof GeoMapWindowItemParams> & { id: string };
 }
 
 export interface SampleTextWindowItem extends WindowItemBase {
@@ -65,11 +64,13 @@ export interface SampleTextWindowItem extends WindowItemBase {
 	params: unknown;
 }
 
+export const TextWindowItem = z.object({
+	id: z.string(),
+});
+
 export interface TextWindowItem extends WindowItemBase {
 	kind: "text";
-	params: {
-		id: string;
-	};
+	params: z.infer<typeof TextWindowItem>;
 }
 
 export interface ProfileWindowItem extends WindowItemBase {
