@@ -10,6 +10,7 @@ const props = defineProps<Props>();
 const { params } = toRefs(props);
 
 const formId = "biblioQueryForm-" + nanoid();
+let isFormOpen = ref(false);
 const { data, isPending, isPlaceholderData } = useBiblioTeiQuery(params);
 const openNewWindowFromAnchor = useAnchorClickHandler();
 
@@ -33,7 +34,14 @@ function submitNewQuery(): void {
 
 onMounted(() => {
 	initTE({ Collapse });
-	new Collapse(document.getElementById(formId), {
+	let formElement = document.getElementById(formId);
+	formElement?.addEventListener("shown.te.collapse", () => {
+		isFormOpen.value = true;
+	});
+	formElement?.addEventListener("hidden.te.collapse", () => {
+		isFormOpen.value = false;
+	});
+	new Collapse(formElement, {
 		toggle: queryString.value === "",
 	});
 });
@@ -47,7 +55,7 @@ onMounted(() => {
 		<!-- eslint-disable vuejs-accessibility/form-control-has-label, tailwindcss/no-custom-classname -->
 		<div class="prose max-w-3xl px-8 pb-4 pt-8">
 			<button
-				class="dvStats w-full text-left"
+				class="dvStats flex w-full items-baseline"
 				type="button"
 				tabindex="0"
 				data-te-collapse-init
@@ -57,6 +65,46 @@ onMounted(() => {
 			>
 				Query:&nbsp;&nbsp;
 				<span class="spQueryText">{{ queryString }}</span>
+				<div class="relative top-1 ml-auto mr-4">
+					<div v-if="!isFormOpen">
+						<svg
+							class="svg-icon"
+							style="
+								vertical-align: middle;
+								overflow: hidden;
+								width: 1em;
+								height: 1em;
+								fill: currentColor;
+							"
+							viewBox="0 0 1024 1024"
+							version="1.1"
+							xmlns="http://www.w3.org/2000/svg"
+						>
+							<path
+								d="M511.5 789.9 80.6 359c-22.8-22.8-22.8-59.8 0-82.6 22.8-22.8 59.8-22.8 82.6 0l348.3 348.3 348.3-348.3c22.8-22.8 59.8-22.8 82.6 0 22.8 22.8 22.8 59.8 0 82.6L511.5 789.9 511.5 789.9zM511.5 789.9"
+							/>
+						</svg>
+					</div>
+					<div v-if="isFormOpen">
+						<svg
+							class="svg-icon"
+							style="
+								vertical-align: middle;
+								overflow: hidden;
+								width: 1em;
+								height: 1em;
+								fill: currentColor;
+							"
+							viewBox="0 0 1024 1024"
+							version="1.1"
+							xmlns="http://www.w3.org/2000/svg"
+						>
+							<path
+								d="M511.5 259.3 942.4 690.1c22.8 22.8 22.8 59.8 0 82.6-22.8 22.8-59.8 22.8-82.6 0L511.5 424.5 163.2 772.8c-22.8 22.8-59.8 22.8-82.6 0-22.8-22.8-22.8-59.8 0-82.6L511.5 259.3 511.5 259.3zM511.5 259.3"
+							/>
+						</svg>
+					</div>
+				</div>
 			</button>
 			<div :id="formId" class="!visible hidden max-w-3xl bg-gray-200 px-4" data-te-collapse-item>
 				<div class="pt-3">
