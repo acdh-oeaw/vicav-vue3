@@ -9,6 +9,7 @@ export function useBiblioTeiQuery(
 		enabled: options?.enabled,
 		queryKey: ["get-biblio-tei", params] as const,
 		async queryFn({ queryKey: [, params] }) {
+			if (params.query === "") return "";
 			const response = await api.vicav.getBiblioTei(params, {
 				headers: { accept: "application/xml" },
 			});
