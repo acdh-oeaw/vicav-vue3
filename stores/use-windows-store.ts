@@ -49,6 +49,12 @@ export interface DictionaryQueryWindowItem extends WindowItemBase {
 	params: unknown;
 }
 
+export const GeoMapWindowItemParams = z.object({
+	endpoint: z.string(),
+	query: z.string().optional(),
+	scope: z.enum(["reg", "geo", "diaGroup"]).optional(),
+});
+
 export interface GeoMapWindowItem extends WindowItemBase {
 	kind: "geo-map";
 	params: QueryDescription & { id: string };
