@@ -9,6 +9,8 @@ interface Props {
 const props = defineProps<Props>();
 const { params } = toRefs(props);
 
+const emit = defineEmits(["updateQueryString"]);
+
 const formId = "biblioQueryForm-" + nanoid();
 let isFormOpen = ref(false);
 const { data, isPending, isPlaceholderData } = useBiblioTeiQuery(params);
@@ -26,6 +28,7 @@ function submitNewQuery(): void {
 	if (!isTextQuery.value && !isMapQuery.value) isTextQuery.value = true;
 	if (isTextQuery.value) {
 		params.value.query = queryString.value;
+		emit("updateQueryString", queryString.value);
 	}
 	if (isMapQuery.value) {
 		alert("map query not implemented");

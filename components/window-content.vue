@@ -3,7 +3,13 @@ interface Props {
 	item: WindowItem;
 }
 
+const windowsStore = useWindowsStore();
+
 const props = defineProps<Props>();
+
+function updateQueryString(queryString: string) {
+	windowsStore.updateQueryString(props.item.id, queryString);
+}
 </script>
 
 <template>
@@ -14,6 +20,7 @@ const props = defineProps<Props>();
 	<BiblioEntriesWindowContent
 		v-else-if="props.item.kind === 'bibliography-entries'"
 		:params="props.item.params"
+		@update-query-string="updateQueryString"
 	/>
 	<pre v-else>{{ props }}</pre>
 </template>
