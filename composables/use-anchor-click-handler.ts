@@ -13,7 +13,7 @@ export function useAnchorClickHandler() {
 		const element = event.target;
 
 		if (element instanceof HTMLAnchorElement) {
-			const { label, targetType, textId, endpoint } = element.dataset;
+			const { label, targetType, textId, queryString, endpoint } = element.dataset;
 
 			if (!isWindowType(targetType)) return;
 			if (
@@ -35,15 +35,17 @@ export function useAnchorClickHandler() {
 					params = { id: textId };
 					break;
 				case "BiblioEntries":
-					params = { query: element.dataset["query-1"] };
+					params = { query: queryString };
 					break;
 				case "WMap":
-					title = `BiblioEntries: ${element.dataset["query-1"]}`;
-					params = { endpoint, query: element.dataset["query-1"], id: "BiblGeoMarkers" };
+					title = `BiblioEntries: ${queryString}`;
+					params = { endpoint, query: queryString, id: "BiblGeoMarkers" };
 					break;
 				default:
 					return;
 			}
+
+			console.log("click", params);
 
 			addWindow({
 				title,
