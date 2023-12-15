@@ -38,7 +38,7 @@ function submitNewQuery(): void {
 onMounted(() => {
 	initTE({ Collapse });
 	let formElement = document.getElementById(formId);
-	formElement?.addEventListener("shown.te.collapse", () => {
+	formElement?.addEventListener("show.te.collapse", () => {
 		isFormOpen.value = true;
 	});
 	formElement?.addEventListener("hidden.te.collapse", () => {
