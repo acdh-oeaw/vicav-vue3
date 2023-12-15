@@ -45,8 +45,6 @@ export function useAnchorClickHandler() {
 					return;
 			}
 
-			console.log("click", params);
-
 			addWindow({
 				title,
 				kind,
