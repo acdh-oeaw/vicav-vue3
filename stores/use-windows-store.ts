@@ -382,8 +382,8 @@ export const useWindowsStore = defineStore("windows", () => {
 		const w = registry.value.get(id);
 		if (typeof w.params.query !== "undefined") {
 			w.params.query = query;
+			updateUrl();
 		}
-		updateUrl();
 	}
 
 	return {
