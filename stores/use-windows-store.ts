@@ -132,17 +132,18 @@ export const arrangements = {
 
 export type WindowArrangement = keyof typeof arrangements;
 
-const WindowState = z.object({
-	x: z.number(),
-	y: z.number(),
-	z: z.number(),
-	width: z.number(),
-	height: z.number(),
-	kind: z.string(),
-	title: z.string(),
-	params: z.unknown(),
-});
-type WindowStateInferred = z.infer<typeof WindowState>;
+const WindowState = z.intersection(
+	Schema,
+	z.object({
+		x: z.number().or(z.string()).optional(),
+		y: z.number().or(z.string()).optional(),
+		zIndex: z.number().optional(),
+		width: z.number().or(z.string()).optional(),
+		height: z.number().or(z.string()).optional(),
+		title: z.string(),
+	}),
+);
+type WindowState = z.infer<typeof WindowState>;
 
 export const useWindowsStore = defineStore("windows", () => {
 	const registry = ref<WindowRegistry>(new Map());
@@ -166,10 +167,10 @@ export const useWindowsStore = defineStore("windows", () => {
 			return;
 		}
 
-		let windowStates: Array<WindowStateInferred>;
+		let windowStates: Array<WindowState>;
 		try {
 			const w = atob(route.query.w as string);
-			windowStates = JSON.parse(w) as Array<WindowStateInferred>;
+			windowStates = JSON.parse(w) as Array<WindowState>;
 		} catch (e) {
 			toasts.addToast({
 				title: "RestoreState Error: JSON parse failed",
@@ -192,17 +193,8 @@ export const useWindowsStore = defineStore("windows", () => {
 		await nextTick();
 		windowStates.forEach((w) => {
 			try {
-				WindowState.parse(w);
-				addWindow({
-					title: w.title,
-					kind: w.kind as WindowItemKind,
-					params: w.params,
-					x: String(w.x) + "%",
-					y: String(w.y) + "%",
-					zIndex: w.z,
-					height: String(w.height) + "%",
-					width: String(w.width) + "%",
-				});
+				const windowState = WindowState.parse(w);
+				addWindow(windowState);
 			} catch (e) {
 				toasts.addToast({
 					title: "RestoreState Error: WindowState parse failed",
@@ -214,17 +206,7 @@ export const useWindowsStore = defineStore("windows", () => {
 		setWindowArrangement(route.query.a as WindowArrangement);
 	};
 
-	function addWindow<Kind extends WindowItemKind>(params: {
-		id?: string | null;
-		title: string;
-		kind: Kind;
-		params: WindowItemMap[Kind]["params"];
-		x?: number | string; // string support added for "px" and "%" typed values
-		y?: number | string;
-		width?: number | string;
-		height?: number | string;
-		zIndex?: number;
-	}) {
+	function addWindow(params: WindowState) {
 		const rootElement = document.getElementById(windowRootId);
 		if (rootElement == null) return;
 
@@ -233,7 +215,7 @@ export const useWindowsStore = defineStore("windows", () => {
 			void router.push("/");
 		}
 
-		const id = params.id ?? `window-${nanoid()}`;
+		const id = `window-${nanoid()}`;
 		const { title, kind } = params;
 
 		const w = windowWithContentId(params.kind, params.params);
@@ -351,7 +333,7 @@ export const useWindowsStore = defineStore("windows", () => {
 	});
 
 	function serializeWindowStates() {
-		const windowStates: Array<WindowStateInferred> = [];
+		const windowStates: Array<WindowState> = [];
 
 		const rootElement = document.getElementById(windowRootId);
 		if (rootElement == null) return;
@@ -375,7 +357,7 @@ export const useWindowsStore = defineStore("windows", () => {
 				kind: w.kind,
 				title: w.winbox.title,
 				params: w.params,
-			} as WindowStateInferred);
+			} as WindowState);
 		});
 		return windowStates;
 	}
