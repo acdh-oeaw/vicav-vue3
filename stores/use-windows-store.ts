@@ -29,38 +29,38 @@ export type BibliographyEntriesWindowItem = WindowItemBase &
 
 export const CorpusQuerySchema = z.object({
 	kind: z.literal("corpus-query"),
-	params: z.unknown(),
+	params: z.never(),
 });
 export type CorpusQueryWindowItem = WindowItemBase & z.infer<typeof CorpusQuerySchema>;
 
 export const CorpusTextSchema = z.object({
 	kind: z.literal("corpus-text"),
-	params: z.unknown(),
+	params: z.never(),
 });
 export type CorpusTextWindowItem = WindowItemBase & z.infer<typeof CorpusTextSchema>;
 
 export const CrossDictionaryQuerySchema = z.object({
 	kind: z.literal("cross-dictionary-query"),
-	params: z.unknown(),
+	params: z.never(),
 });
 export type CrossDictionaryQueryWindowItem = WindowItemBase &
 	z.infer<typeof CrossDictionaryQuerySchema>;
 
 export const DataListSchema = z.object({
 	kind: z.literal("data-list"),
-	params: z.unknown(),
+	params: z.never(),
 });
 export type DataListWindowItem = WindowItemBase & z.infer<typeof DataListSchema>;
 
 export const DictionaryEntrySchema = z.object({
 	kind: z.literal("dictionary-entry"),
-	params: z.unknown(),
+	params: z.never(),
 });
 export type DictionaryEntryWindowItem = WindowItemBase & z.infer<typeof DictionaryEntrySchema>;
 
 export const DictionaryQuerySchema = z.object({
 	kind: z.literal("dictionary-query"),
-	params: z.unknown(),
+	params: z.never(),
 });
 export type DictionaryQueryWindowItem = WindowItemBase & z.infer<typeof DictionaryQuerySchema>;
 
@@ -76,7 +76,7 @@ export type GeoMapWindowItem = WindowItemBase & z.infer<typeof GeoMapSchema>;
 
 export const SampleTextSchema = z.object({
 	kind: z.literal("sample-text"),
-	params: z.unknown(),
+	params: z.never(),
 });
 export type SampleTextWindowItem = WindowItemBase & z.infer<typeof SampleTextSchema>;
 
