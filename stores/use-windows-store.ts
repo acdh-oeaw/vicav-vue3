@@ -100,7 +100,7 @@ export const FeatureSchema = z.object({
 });
 export type FeatureWindowItem = WindowItemBase & z.infer<typeof FeatureSchema>;
 
-export const Schema = z.union([
+export const Schema = z.discriminatedUnion("kind", [
 	BibliographyEntriesSchema,
 	CorpusQuerySchema,
 	CorpusTextSchema,
