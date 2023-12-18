@@ -28,27 +28,11 @@ function createWindowTitle(item: ItemType) {
 	return item.title!;
 }
 
-function createWindowParams(kind: WindowItemKind, item: ItemType): WindowItem["params"] | null {
-	switch (kind) {
-		case "bibliography-entries":
-			return { query: item.query ?? "" } as BibliographyEntriesWindowItem["params"];
-		case "feature":
-			return { id: item.id ?? "" } as FeatureWindowItem["params"];
-		case "profile":
-			return { id: item.id ?? "" } as ProfileWindowItem["params"];
-		case "text":
-			return { id: item.id ?? "" } as TextWindowItem["params"];
-		default:
-	}
-	return null;
-}
-
 function onSelectMenuItem(item: ItemType) {
 	if (!isWindowType(item.targetType)) return;
 	const kind = windowTypeMap[item.targetType];
 	const title = createWindowTitle(item);
-	const params = createWindowParams(kind, item);
-	if (params === null) return;
+	const params = item;
 	addWindow({ title, kind, params } as WindowState);
 }
 </script>
