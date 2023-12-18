@@ -92,7 +92,7 @@ const WindowState = z.intersection(
 		title: z.string(),
 	}),
 );
-type WindowState = z.infer<typeof WindowState>;
+export type WindowState = z.infer<typeof WindowState>;
 
 export const useWindowsStore = defineStore("windows", () => {
 	const registry = ref<WindowRegistry>(new Map());

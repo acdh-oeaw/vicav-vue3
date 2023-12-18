@@ -2,6 +2,7 @@
 import { isNonEmptyString } from "@acdh-oeaw/lib";
 
 import type { ItemType } from "@/lib/api-client";
+import { isWindowType, windowTypeMap } from "@/utils/is-window-type";
 
 const windowsStore = useWindowsStore();
 const { addWindow } = windowsStore;
@@ -21,123 +22,34 @@ const titlestring = computed(() => {
 	return data.value?.projectConfig?.logo?.string;
 });
 
-function createWindowId(_item: ItemType) {
-	/**
-	 * We intentionally do *not* use `item.target` for window id, because we don't want to
-	 * deduplicate windows. It should be possible to open multiple instances of the same
-	 * window, so we rely on the store to assign a unique id.
-	 */
-	return null;
-}
-
 function createWindowTitle(item: ItemType) {
 	if (isNonEmptyString(item.label)) return item.label;
 	// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 	return item.title!;
 }
 
-function onSelectMenuItem(item: ItemType) {
-	switch (item.targetType) {
-		case "BiblioEntries": {
-			addWindow({
-				id: createWindowId(item),
-				title: createWindowTitle(item),
-				kind: "bibliography-entries",
-				params: { query: item.query ?? "" },
-			});
-			break;
-		}
-
-		case "CorpusQuery": {
-			addWindow({
-				id: createWindowId(item),
-				title: createWindowTitle(item),
-				kind: "corpus-query",
-				params: {},
-			});
-			break;
-		}
-
-		case "CorpusText": {
-			addWindow({
-				id: createWindowId(item),
-				title: createWindowTitle(item),
-				kind: "corpus-text",
-				params: {},
-			});
-			break;
-		}
-
-		case "CrossDictQuery": {
-			addWindow({
-				id: createWindowId(item),
-				title: createWindowTitle(item),
-				kind: "cross-dictionary-query",
-				params: {},
-			});
-			break;
-		}
-
-		case "DataList": {
-			addWindow({
-				id: createWindowId(item),
-				title: createWindowTitle(item),
-				kind: "data-list",
-				params: {},
-			});
-			break;
-		}
-
-		case "DictQuery": {
-			addWindow({
-				id: createWindowId(item),
-				title: createWindowTitle(item),
-				kind: "dictionary-query",
-				params: {},
-			});
-			break;
-		}
-
-		case "SampleText": {
-			addWindow({
-				id: createWindowId(item),
-				title: createWindowTitle(item),
-				kind: "sample-text",
-				params: {},
-			});
-			break;
-		}
-
-		case "Text": {
-			addWindow({
-				id: createWindowId(item),
-				title: createWindowTitle(item),
-				kind: "text",
-				params: {
-					// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-					id: item.target!,
-				},
-			});
-			break;
-		}
-
-		case "WMap": {
-			addWindow({
-				id: createWindowId(item),
-				title: createWindowTitle(item),
-				kind: "geo-map",
-				params: {
-					// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-					...item.query!,
-					// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-					id: item.target!,
-				},
-			});
-			break;
-		}
-
+function createWindowParams(kind: WindowItemKind, item: ItemType): WindowItem["params"] | null {
+	switch (kind) {
+		case "bibliography-entries":
+			return { query: item.query ?? "" } as BibliographyEntriesWindowItem["params"];
+		case "feature":
+			return { id: item.id ?? "" } as FeatureWindowItem["params"];
+		case "profile":
+			return { id: item.id ?? "" } as ProfileWindowItem["params"];
+		case "text":
+			return { id: item.id ?? "" } as TextWindowItem["params"];
 		default:
 	}
+	return null;
+}
+
+function onSelectMenuItem(item: ItemType) {
+	if (!isWindowType(item.targetType)) return;
+	const kind = windowTypeMap[item.targetType];
+	const title = createWindowTitle(item);
+	const params = createWindowParams(kind, item);
+	if (params === null) return;
+	addWindow({ title, kind, params } as WindowState);
 }
 </script>
 
