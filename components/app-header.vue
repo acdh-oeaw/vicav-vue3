@@ -30,10 +30,11 @@ function createWindowTitle(item: ItemType) {
 
 function onSelectMenuItem(item: ItemType) {
 	if (!isWindowType(item.targetType)) return;
-	const kind = windowTypeMap[item.targetType];
-	const title = createWindowTitle(item);
-	const params = item;
-	addWindow({ title, kind, params } as WindowState);
+	addWindow({
+		kind: windowTypeMap[item.targetType],
+		params: item,
+		title: createWindowTitle(item),
+	} as WindowState);
 }
 </script>
 
