@@ -37,13 +37,13 @@ function createWindowTitle(item: ItemType) {
 }
 
 function onSelectMenuItem(item: ItemType) {
-	switch (item.componentName) {
-		case "BiblioQuery": {
+	switch (item.targetType) {
+		case "BiblioEntries": {
 			addWindow({
 				id: createWindowId(item),
 				title: createWindowTitle(item),
-				kind: "bibliography-query",
-				params: {},
+				kind: "bibliography-entries",
+				params: { query: item.query ?? "" },
 			});
 			break;
 		}

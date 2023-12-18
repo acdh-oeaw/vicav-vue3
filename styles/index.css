@@ -42,3 +42,6 @@ body,
 #__nuxt {
 	isolation: isolate;
 }
+
+@tailwind components;
+@tailwind utilities;
