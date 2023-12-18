@@ -13,99 +13,107 @@ interface WindowItemBase {
 	winbox: WinBox;
 }
 
-export interface BibliographyQueryWindowItem extends WindowItemBase {
-	kind: "bibliography-query";
-	params: unknown;
-}
-
-export interface BibliographyEntriesWindowItem extends WindowItemBase {
-	kind: "bibliography-entries";
-	params: { query: string; xslt?: string };
-}
-
-export interface CorpusQueryWindowItem extends WindowItemBase {
-	kind: "corpus-query";
-	params: unknown;
-}
-
-export interface CorpusTextWindowItem extends WindowItemBase {
-	kind: "corpus-text";
-	params: unknown;
-}
-
-export interface CrossDictionaryQueryWindowItem extends WindowItemBase {
-	kind: "cross-dictionary-query";
-	params: unknown;
-}
-
-export interface DataListWindowItem extends WindowItemBase {
-	kind: "data-list";
-	params: unknown;
-}
-
-export interface DictionaryEntryWindowItem extends WindowItemBase {
-	kind: "dictionary-entry";
-	params: unknown;
-}
-
-export interface DictionaryQueryWindowItem extends WindowItemBase {
-	kind: "dictionary-query";
-	params: unknown;
-}
-
-export const GeoMapWindowItemParams = z.object({
-	endpoint: z.string(),
-	query: z.string().optional(),
-	scope: z.enum(["reg", "geo", "diaGroup"]).optional(),
+export const BibliographyEntriesSchema = z.object({
+	kind: z.literal("bibliography-entries"),
+	params: z.object({
+		query: z.string(),
+		xslt: z.string().optional(),
+	}),
 });
+export type BibliographyEntriesWindowItem = WindowItemBase &
+	z.infer<typeof BibliographyEntriesSchema>;
 
-export interface GeoMapWindowItem extends WindowItemBase {
-	kind: "geo-map";
-	params: z.infer<typeof GeoMapWindowItemParams> & { id: string };
-}
-
-export interface SampleTextWindowItem extends WindowItemBase {
-	kind: "sample-text";
-	params: unknown;
-}
-
-export const TextWindowItem = z.object({
-	id: z.string(),
+export const CorpusQuerySchema = z.object({
+	kind: z.literal("corpus-query"),
+	params: z.unknown(),
 });
+export type CorpusQueryWindowItem = WindowItemBase & z.infer<typeof CorpusQuerySchema>;
 
-export interface TextWindowItem extends WindowItemBase {
-	kind: "text";
-	params: z.infer<typeof TextWindowItem>;
-}
+export const CorpusTextSchema = z.object({
+	kind: z.literal("corpus-text"),
+	params: z.unknown(),
+});
+export type CorpusTextWindowItem = WindowItemBase & z.infer<typeof CorpusTextSchema>;
 
-export interface ProfileWindowItem extends WindowItemBase {
-	kind: "profile";
-	params: {
-		id: string;
-	};
-}
+export const CrossDictionaryQuerySchema = z.object({
+	kind: z.literal("cross-dictionary-query"),
+	params: z.unknown(),
+});
+export type CrossDictionaryQueryWindowItem = WindowItemBase &
+	z.infer<typeof CrossDictionaryQuerySchema>;
 
-export interface FeatureWindowItem extends WindowItemBase {
-	kind: "feature";
-	params: {
-		id: string;
-	};
-}
+export const DataListSchema = z.object({
+	kind: z.literal("data-list"),
+	params: z.unknown(),
+});
+export type DataListWindowItem = WindowItemBase & z.infer<typeof DataListSchema>;
 
-export type WindowItem =
-	| BibliographyEntriesWindowItem
-	| BibliographyQueryWindowItem
-	| CorpusQueryWindowItem
-	| CorpusTextWindowItem
-	| CrossDictionaryQueryWindowItem
-	| DataListWindowItem
-	| DictionaryEntryWindowItem
-	| DictionaryQueryWindowItem
-	| FeatureWindowItem
-	| GeoMapWindowItem
-	| ProfileWindowItem
-	| SampleTextWindowItem
-	| TextWindowItem;
+export const DictionaryEntrySchema = z.object({
+	kind: z.literal("dictionary-entry"),
+	params: z.unknown(),
+});
+export type DictionaryEntryWindowItem = WindowItemBase & z.infer<typeof DictionaryEntrySchema>;
+
+export const DictionaryQuerySchema = z.object({
+	kind: z.literal("dictionary-query"),
+	params: z.unknown(),
+});
+export type DictionaryQueryWindowItem = WindowItemBase & z.infer<typeof DictionaryQuerySchema>;
+
+export const GeoMapSchema = z.object({
+	kind: z.literal("geo-map"),
+	params: z.object({
+		endpoint: z.string(),
+		query: z.string().optional(),
+		scope: z.enum(["reg", "geo", "diaGroup"]).optional(),
+	}),
+});
+export type GeoMapWindowItem = WindowItemBase & z.infer<typeof GeoMapSchema>;
+
+export const SampleTextSchema = z.object({
+	kind: z.literal("sample-text"),
+	params: z.unknown(),
+});
+export type SampleTextWindowItem = WindowItemBase & z.infer<typeof SampleTextSchema>;
+
+export const TextSchema = z.object({
+	kind: z.literal("text"),
+	params: z.object({
+		id: z.string(),
+	}),
+});
+export type TextWindowItem = WindowItemBase & z.infer<typeof TextSchema>;
+
+export const ProfileSchema = z.object({
+	kind: z.literal("profile"),
+	params: z.object({
+		id: z.string(),
+	}),
+});
+export type ProfileWindowItem = WindowItemBase & z.infer<typeof ProfileSchema>;
+
+export const FeatureSchema = z.object({
+	kind: z.literal("feature"),
+	params: z.object({
+		id: z.string(),
+	}),
+});
+export type FeatureWindowItem = WindowItemBase & z.infer<typeof FeatureSchema>;
+
+export const Schema = z.union([
+	BibliographyEntriesSchema,
+	CorpusQuerySchema,
+	CorpusTextSchema,
+	CrossDictionaryQuerySchema,
+	DataListSchema,
+	DictionaryEntrySchema,
+	DictionaryQuerySchema,
+	FeatureSchema,
+	GeoMapSchema,
+	ProfileSchema,
+	SampleTextSchema,
+]);
+export type WindowItem = WindowItemBase & z.infer<typeof Schema>;
 
 export type WindowItemKind = WindowItem["kind"];
 
