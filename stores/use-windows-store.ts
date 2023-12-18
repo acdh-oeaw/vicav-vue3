@@ -13,6 +13,10 @@ interface WindowItemBase {
 	winbox: WinBox;
 }
 
+export const ContentId = z.object({
+	id: z.string(),
+});
+
 export const BibliographyEntriesSchema = z.object({
 	kind: z.literal("bibliography-entries"),
 	params: z.object({
@@ -78,25 +82,19 @@ export type SampleTextWindowItem = WindowItemBase & z.infer<typeof SampleTextSch
 
 export const TextSchema = z.object({
 	kind: z.literal("text"),
-	params: z.object({
-		id: z.string(),
-	}),
+	params: ContentId,
 });
 export type TextWindowItem = WindowItemBase & z.infer<typeof TextSchema>;
 
 export const ProfileSchema = z.object({
 	kind: z.literal("profile"),
-	params: z.object({
-		id: z.string(),
-	}),
+	params: ContentId,
 });
 export type ProfileWindowItem = WindowItemBase & z.infer<typeof ProfileSchema>;
 
 export const FeatureSchema = z.object({
 	kind: z.literal("feature"),
-	params: z.object({
-		id: z.string(),
-	}),
+	params: ContentId,
 });
 export type FeatureWindowItem = WindowItemBase & z.infer<typeof FeatureSchema>;
 
@@ -193,21 +191,12 @@ export const useWindowsStore = defineStore("windows", () => {
 
 		await nextTick();
 		windowStates.forEach((w) => {
-			try {
-				const windowState = WindowState.parse(w);
-				addWindow(windowState);
-			} catch (e) {
-				toasts.addToast({
-					title: "RestoreState Error: WindowState parse failed",
-					description: e instanceof Error ? e.message : "Unknown error, check console",
-				});
-				console.error(e);
-			}
+			addWindow(w);
 		});
 		setWindowArrangement(route.query.a as WindowArrangement);
 	};
 
-	function addWindow(params: WindowState) {
+	function addWindow(stateParams: WindowState) {
 		const rootElement = document.getElementById(windowRootId);
 		if (rootElement == null) return;
 
@@ -216,27 +205,41 @@ export const useWindowsStore = defineStore("windows", () => {
 			void router.push("/");
 		}
 
-		const id = `window-${nanoid()}`;
-		const { title, kind } = params;
-
-		const w = windowWithContentId(params.kind, params.params);
-		if (w != null) {
-			w.winbox.focus();
-			w.winbox.addClass("highlighted");
-			setTimeout(() => {
-				w.winbox.removeClass("highlighted");
-			}, 1000);
+		let windowState: WindowState;
+		try {
+			windowState = WindowState.parse(stateParams);
+		} catch (e) {
+			toasts.addToast({
+				title: "RestoreState Error: WindowState parse failed",
+				description: e instanceof Error ? e.message : "Unknown error, check console",
+			});
+			console.error(e);
 			return;
+		}
+
+		const id = `window-${nanoid()}`;
+		const { title, kind, params } = windowState;
+
+		if (ContentId.safeParse(params).success) {
+			const w = findWindowByContentId(kind, params.id as string);
+			if (w !== null) {
+				w.winbox.focus();
+				w.winbox.addClass("highlighted");
+				setTimeout(() => {
+					w.winbox.removeClass("highlighted");
+				}, 1000);
+				return;
+			}
 		}
 
 		const winbox = new WinBox({
 			id,
 			title,
-			index: params.zIndex ? params.zIndex : undefined,
-			x: params.x ? params.x : "center",
-			y: params.y ? params.y : "center",
-			width: params.width,
-			height: params.height,
+			index: windowState.zIndex ? windowState.zIndex : undefined,
+			x: windowState.x ? windowState.x : "center",
+			y: windowState.y ? windowState.y : "center",
+			width: windowState.width,
+			height: windowState.height,
 			onfocus() {
 				updateUrl();
 			},
@@ -257,29 +260,22 @@ export const useWindowsStore = defineStore("windows", () => {
 			id,
 			winbox,
 			kind,
-			params: params.params,
+			params,
 		} as WindowItem);
 	}
 
-	function windowWithContentId(
-		kind: WindowItemKind,
-		params: WindowItemMap[WindowItemKind]["params"],
-	): WindowItem | null {
+	function findWindowByContentId(kind: WindowItemKind, contentId: string): WindowItem | null {
 		let foundWindow: WindowItem | null = null;
-		if (typeof params === "object" && params !== null && "id" in params) {
-			registry.value.forEach((w) => {
-				if (
-					foundWindow === null &&
-					w.kind === kind &&
-					typeof w.params === "object" &&
-					w.params !== null &&
-					"id" in w.params &&
-					w.params.id === params.id
-				) {
-					foundWindow = w;
-				}
-			});
-		}
+		registry.value.forEach((w) => {
+			if (
+				foundWindow === null &&
+				w.kind === kind &&
+				ContentId.safeParse(w.params).success &&
+				w.params.id === contentId
+			) {
+				foundWindow = w;
+			}
+		});
 		return foundWindow;
 	}
 
