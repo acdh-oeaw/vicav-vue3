@@ -112,6 +112,7 @@ export const Schema = z.union([
 	GeoMapSchema,
 	ProfileSchema,
 	SampleTextSchema,
+	TextSchema,
 ]);
 export type WindowItem = WindowItemBase & z.infer<typeof Schema>;
 
