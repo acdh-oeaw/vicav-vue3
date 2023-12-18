@@ -7,8 +7,8 @@ const windowsStore = useWindowsStore();
 
 const props = defineProps<Props>();
 
-function updateQueryString(queryString: string) {
-	windowsStore.updateQueryString(props.item.id, queryString);
+function updateQueryParam(queryString: string) {
+	windowsStore.updateQueryParam(props.item.id, queryString);
 }
 </script>
 
@@ -20,7 +20,7 @@ function updateQueryString(queryString: string) {
 	<BiblioEntriesWindowContent
 		v-else-if="props.item.kind === 'bibliography-entries'"
 		:params="props.item.params"
-		@update-query-string="updateQueryString"
+		@update-query-param="updateQueryParam"
 	/>
 	<pre v-else>{{ props }}</pre>
 </template>

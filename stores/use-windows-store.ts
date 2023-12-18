@@ -385,7 +385,7 @@ export const useWindowsStore = defineStore("windows", () => {
 		});
 	}
 
-	function updateQueryString(id: WindowItem["id"], query: string) {
+	function updateQueryParam(id: WindowItem["id"], query: string) {
 		const w = registry.value.get(id);
 		if (typeof w.params.query !== "undefined") {
 			w.params.query = query;
@@ -397,7 +397,7 @@ export const useWindowsStore = defineStore("windows", () => {
 		restoreState,
 		addWindow,
 		removeWindow,
-		updateQueryString,
+		updateQueryParam,
 		registry,
 		arrangement,
 		setWindowArrangement,
