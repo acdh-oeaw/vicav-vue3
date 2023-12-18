@@ -27,42 +27,11 @@ export const BibliographyEntriesSchema = z.object({
 export type BibliographyEntriesWindowItem = WindowItemBase &
 	z.infer<typeof BibliographyEntriesSchema>;
 
-export const CorpusQuerySchema = z.object({
-	kind: z.literal("corpus-query"),
-	params: z.never(),
+export const FeatureSchema = z.object({
+	kind: z.literal("feature"),
+	params: ContentId,
 });
-export type CorpusQueryWindowItem = WindowItemBase & z.infer<typeof CorpusQuerySchema>;
-
-export const CorpusTextSchema = z.object({
-	kind: z.literal("corpus-text"),
-	params: z.never(),
-});
-export type CorpusTextWindowItem = WindowItemBase & z.infer<typeof CorpusTextSchema>;
-
-export const CrossDictionaryQuerySchema = z.object({
-	kind: z.literal("cross-dictionary-query"),
-	params: z.never(),
-});
-export type CrossDictionaryQueryWindowItem = WindowItemBase &
-	z.infer<typeof CrossDictionaryQuerySchema>;
-
-export const DataListSchema = z.object({
-	kind: z.literal("data-list"),
-	params: z.never(),
-});
-export type DataListWindowItem = WindowItemBase & z.infer<typeof DataListSchema>;
-
-export const DictionaryEntrySchema = z.object({
-	kind: z.literal("dictionary-entry"),
-	params: z.never(),
-});
-export type DictionaryEntryWindowItem = WindowItemBase & z.infer<typeof DictionaryEntrySchema>;
-
-export const DictionaryQuerySchema = z.object({
-	kind: z.literal("dictionary-query"),
-	params: z.never(),
-});
-export type DictionaryQueryWindowItem = WindowItemBase & z.infer<typeof DictionaryQuerySchema>;
+export type FeatureWindowItem = WindowItemBase & z.infer<typeof FeatureSchema>;
 
 export const GeoMapSchema = z.object({
 	kind: z.literal("geo-map"),
@@ -74,11 +43,11 @@ export const GeoMapSchema = z.object({
 });
 export type GeoMapWindowItem = WindowItemBase & z.infer<typeof GeoMapSchema>;
 
-export const SampleTextSchema = z.object({
-	kind: z.literal("sample-text"),
-	params: z.never(),
+export const ProfileSchema = z.object({
+	kind: z.literal("profile"),
+	params: ContentId,
 });
-export type SampleTextWindowItem = WindowItemBase & z.infer<typeof SampleTextSchema>;
+export type ProfileWindowItem = WindowItemBase & z.infer<typeof ProfileSchema>;
 
 export const TextSchema = z.object({
 	kind: z.literal("text"),
@@ -86,30 +55,11 @@ export const TextSchema = z.object({
 });
 export type TextWindowItem = WindowItemBase & z.infer<typeof TextSchema>;
 
-export const ProfileSchema = z.object({
-	kind: z.literal("profile"),
-	params: ContentId,
-});
-export type ProfileWindowItem = WindowItemBase & z.infer<typeof ProfileSchema>;
-
-export const FeatureSchema = z.object({
-	kind: z.literal("feature"),
-	params: ContentId,
-});
-export type FeatureWindowItem = WindowItemBase & z.infer<typeof FeatureSchema>;
-
 export const Schema = z.discriminatedUnion("kind", [
 	BibliographyEntriesSchema,
-	CorpusQuerySchema,
-	CorpusTextSchema,
-	CrossDictionaryQuerySchema,
-	DataListSchema,
-	DictionaryEntrySchema,
-	DictionaryQuerySchema,
 	FeatureSchema,
 	GeoMapSchema,
 	ProfileSchema,
-	SampleTextSchema,
 	TextSchema,
 ]);
 export type WindowItem = WindowItemBase & z.infer<typeof Schema>;
