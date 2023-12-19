@@ -13,6 +13,7 @@ export function useAnchorClickHandler() {
 		if (element instanceof HTMLAnchorElement) {
 			const item = element.dataset;
 
+			if (element.dataset.targetType === "External-link") return;
 			event.preventDefault();
 
 			if (typeof item.textId !== "undefined") item.id = item.textId; // TODO: standardize param names coming from the backend
