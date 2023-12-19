@@ -16,13 +16,17 @@ interface WindowItemBase {
 export const ContentId = z.object({
 	id: z.string(),
 });
+export const QueryString = z.object({
+	query: z.string(),
+});
 
 export const BibliographyEntriesSchema = z.object({
 	kind: z.literal("BiblioEntries"),
-	params: z.object({
-		query: z.string(),
-		xslt: z.string().optional(),
-	}),
+	params: QueryString.merge(
+		z.object({
+			xslt: z.string().optional(),
+		}),
+	),
 });
 export type BibliographyEntriesWindowItem = WindowItemBase &
 	z.infer<typeof BibliographyEntriesSchema>;
@@ -330,8 +334,9 @@ export const useWindowsStore = defineStore("windows", () => {
 
 	function updateQueryParam(id: WindowItem["id"], query: string) {
 		const w = registry.value.get(id);
-		if (typeof w.params.query !== "undefined") {
+		if (QueryString.safeParse(w.params).success) {
 			w.params.query = query;
+			w.winbox.setTitle(query);
 			updateUrl();
 		}
 	}
