@@ -124,6 +124,8 @@ export const useWindowsStore = defineStore("windows", () => {
 			toasts.addToast({
 				title: "RestoreState Error: JSON parse failed",
 				description: e instanceof Error ? e.message : "Unknown error, check console",
+				type: "foreground",
+				variant: "negative",
 			});
 			console.error(e);
 			await initializeScreen();
@@ -134,6 +136,8 @@ export const useWindowsStore = defineStore("windows", () => {
 			toasts.addToast({
 				title: "RestoreState Error: Window list is not array",
 				description: "Window list parameter must be an array",
+				type: "foreground",
+				variant: "negative",
 			});
 			await initializeScreen();
 			return;
@@ -160,8 +164,10 @@ export const useWindowsStore = defineStore("windows", () => {
 			windowState = WindowState.parse(stateParams);
 		} catch (e) {
 			toasts.addToast({
-				title: "RestoreState Error: WindowState parse failed",
-				description: e instanceof Error ? e.message : "Unknown error, check console",
+				title: "AddWindow Error: parameter parse failed",
+				description: "Check the console for details.",
+				type: "foreground",
+				variant: "negative",
 			});
 			console.error(e);
 			return;
