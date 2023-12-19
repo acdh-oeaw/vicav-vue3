@@ -13,12 +13,12 @@ function updateQueryParam(queryString: string) {
 </script>
 
 <template>
-	<GeoMapWindowContent v-if="props.item.kind === 'geo-map'" :params="props.item.params" />
-	<TextWindowContent v-else-if="props.item.kind === 'text'" :params="props.item.params" />
-	<ProfileWindowContent v-else-if="props.item.kind === 'profile'" :params="props.item.params" />
-	<FeatureWindowContent v-else-if="props.item.kind === 'feature'" :params="props.item.params" />
+	<GeoMapWindowContent v-if="props.item.kind === 'WMap'" :params="props.item.params" />
+	<TextWindowContent v-else-if="props.item.kind === 'Text'" :params="props.item.params" />
+	<ProfileWindowContent v-else-if="props.item.kind === 'Profile'" :params="props.item.params" />
+	<FeatureWindowContent v-else-if="props.item.kind === 'Feature'" :params="props.item.params" />
 	<BiblioEntriesWindowContent
-		v-else-if="props.item.kind === 'bibliography-entries'"
+		v-else-if="props.item.kind === 'BiblioEntries'"
 		:params="props.item.params"
 		@update-query-param="updateQueryParam"
 	/>

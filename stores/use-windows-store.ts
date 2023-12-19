@@ -18,7 +18,7 @@ export const ContentId = z.object({
 });
 
 export const BibliographyEntriesSchema = z.object({
-	kind: z.literal("bibliography-entries"),
+	kind: z.literal("BiblioEntries"),
 	params: z.object({
 		query: z.string(),
 		xslt: z.string().optional(),
@@ -28,13 +28,13 @@ export type BibliographyEntriesWindowItem = WindowItemBase &
 	z.infer<typeof BibliographyEntriesSchema>;
 
 export const FeatureSchema = z.object({
-	kind: z.literal("feature"),
+	kind: z.literal("Feature"),
 	params: ContentId,
 });
 export type FeatureWindowItem = WindowItemBase & z.infer<typeof FeatureSchema>;
 
 export const GeoMapSchema = z.object({
-	kind: z.literal("geo-map"),
+	kind: z.literal("WMap"),
 	params: z.object({
 		endpoint: z.string(),
 		query: z.string().optional(),
@@ -44,13 +44,13 @@ export const GeoMapSchema = z.object({
 export type GeoMapWindowItem = WindowItemBase & z.infer<typeof GeoMapSchema>;
 
 export const ProfileSchema = z.object({
-	kind: z.literal("profile"),
+	kind: z.literal("Profile"),
 	params: ContentId,
 });
 export type ProfileWindowItem = WindowItemBase & z.infer<typeof ProfileSchema>;
 
 export const TextSchema = z.object({
-	kind: z.literal("text"),
+	kind: z.literal("Text"),
 	params: ContentId,
 });
 export type TextWindowItem = WindowItemBase & z.infer<typeof TextSchema>;

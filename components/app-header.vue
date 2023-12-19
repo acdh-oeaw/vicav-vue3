@@ -2,7 +2,6 @@
 import { isNonEmptyString } from "@acdh-oeaw/lib";
 
 import type { ItemType } from "@/lib/api-client";
-import { isWindowType, windowTypeMap } from "@/utils/is-window-type";
 
 const windowsStore = useWindowsStore();
 const { addWindow } = windowsStore;
@@ -29,9 +28,8 @@ function createWindowTitle(item: ItemType) {
 }
 
 function onSelectMenuItem(item: ItemType) {
-	if (!isWindowType(item.targetType)) return;
 	addWindow({
-		kind: windowTypeMap[item.targetType],
+		kind: item.targetType,
 		params: item,
 		title: createWindowTitle(item),
 	} as WindowState);
