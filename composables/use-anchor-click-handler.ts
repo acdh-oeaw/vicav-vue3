@@ -15,6 +15,8 @@ export function useAnchorClickHandler() {
 
 			event.preventDefault();
 
+			if (typeof item.textId !== "undefined") item.id = item.textId; // TODO: standardize param names coming from the backend
+
 			addWindow({
 				kind: item.targetType,
 				params: item,
