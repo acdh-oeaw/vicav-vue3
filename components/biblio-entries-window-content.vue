@@ -20,14 +20,14 @@ const isLoading = computed(() => {
 	return isPending.value || isPlaceholderData.value;
 });
 
-const queryString: Ref<string> = ref(params.value.query);
+const queryString: Ref<string> = ref(params.value.queryString);
 const isTextQuery: Ref<boolean> = ref(true);
 const isMapQuery: Ref<boolean> = ref(false);
 
 function submitNewQuery(): void {
 	if (!isTextQuery.value && !isMapQuery.value) isTextQuery.value = true;
 	if (isTextQuery.value) {
-		params.value.query = queryString.value;
+		params.value.queryString = queryString.value;
 		emit("updateQueryParam", queryString.value);
 	}
 	if (isMapQuery.value) {

@@ -17,7 +17,7 @@ export const ContentId = z.object({
 	id: z.string(),
 });
 export const QueryString = z.object({
-	query: z.string(),
+	queryString: z.string(),
 });
 
 export const BibliographyEntriesSchema = z.object({
