@@ -30,7 +30,10 @@ function createWindowTitle(item: ItemType) {
 function onSelectMenuItem(item: ItemType) {
 	addWindow({
 		kind: item.targetType,
-		params: item,
+		params:
+			item.targetType === "BiblioEntries" && typeof item.queryString === "undefined"
+				? { queryString: "" }
+				: item, // TODO: standardize parameters and replace this simply with "item"
 		title: createWindowTitle(item),
 	} as WindowState);
 }
