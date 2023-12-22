@@ -180,8 +180,9 @@ export const useWindowsStore = defineStore("windows", () => {
 		const id = `window-${nanoid()}`;
 		const { title, kind, params } = windowState;
 
-		if (ContentId.safeParse(params).success) {
-			const w = findWindowByContentId(kind, params.id as string);
+		const ci = ContentId.safeParse(params);
+		if (ci.success) {
+			const w = findWindowByContentId(kind, ci.data.id);
 			if (w !== null) {
 				w.winbox.focus();
 				w.winbox.addClass("highlighted");
@@ -227,12 +228,8 @@ export const useWindowsStore = defineStore("windows", () => {
 	function findWindowByContentId(kind: WindowItemKind, contentId: string): WindowItem | null {
 		let foundWindow: WindowItem | null = null;
 		registry.value.forEach((w) => {
-			if (
-				foundWindow === null &&
-				w.kind === kind &&
-				ContentId.safeParse(w.params).success &&
-				w.params.id === contentId
-			) {
+			const ci = ContentId.safeParse(w.params);
+			if (foundWindow === null && w.kind === kind && ci.success && ci.data.id === contentId) {
 				foundWindow = w;
 			}
 		});
@@ -334,8 +331,9 @@ export const useWindowsStore = defineStore("windows", () => {
 
 	function updateQueryParam(id: WindowItem["id"], query: string) {
 		const w = registry.value.get(id);
-		if (QueryString.safeParse(w.params).success) {
-			w.params.query = query;
+		const wi = QueryString.safeParse(w.params);
+		if (w && wi.success) {
+			wi.data.query = query;
 			w.winbox.setTitle(query);
 			updateUrl();
 		}
