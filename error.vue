@@ -1,6 +1,12 @@
+<script setup lang="ts">
+const props = defineProps({
+	error: Object,
+});
+</script>
+
 <template>
 	<div
-		class="flex h-full w-full items-center justify-center bg-[url('/images/tlemcen.jpg')] bg-cover"
+		class="flex h-full w-full flex-col items-center justify-center bg-[url('/images/tlemcen.jpg')] bg-cover"
 	>
 		<div
 			class="max-w-sm overflow-hidden rounded shadow-lg backdrop-blur"
@@ -80,6 +86,37 @@
 				>
 					This site is under maintenance right now. Please check back later!
 				</p>
+			</div>
+		</div>
+		<div
+			style="background-color: hsl(0deg 0% 100% / 25%)"
+			class="mt-4 flex flex-col items-center justify-center p-3 text-sm backdrop-blur"
+		>
+			<div class="flex flex-col">
+				<div>
+					<span class="font-bold">URL:</span>
+					{{ props.error?.url }}
+				</div>
+				<div>
+					<span class="font-bold">Status code:</span>
+					{{ props.error?.statusCode }}
+				</div>
+				<div>
+					<span class="font-bold">Status message:</span>
+					{{ props.error?.statusMessage }}
+				</div>
+				<div>
+					<span class="font-bold">Message:</span>
+					{{ props.error?.message }}
+				</div>
+				<div>
+					<span class="font-bold">Description:</span>
+					{{ props.error?.description }}
+				</div>
+				<div>
+					<span class="font-bold">Data:</span>
+					{{ props.error?.data }}
+				</div>
 			</div>
 		</div>
 	</div>
