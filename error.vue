@@ -102,10 +102,10 @@ const props = defineProps<Props>();
 			</div>
 		</div>
 		<div
-			style="background-color: hsl(0deg 0% 100% / 25%)"
-			class="mt-4 flex flex-col items-center justify-center p-3 text-sm backdrop-blur"
+			style="background-color: hsl(0deg 0% 100% / 50%)"
+			class="mt-8 flex w-3/4 flex-col items-center justify-center p-4 text-sm backdrop-blur"
 		>
-			<div class="flex flex-col">
+			<div class="flex w-full flex-col">
 				<div>
 					<span class="font-bold">URL:</span>
 					{{ props.error?.url }}
