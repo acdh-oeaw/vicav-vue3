@@ -1,7 +1,15 @@
 <script setup lang="ts">
-const props = defineProps({
-	error: Object,
-});
+interface Props {
+	error: {
+		url: string;
+		statusCode: string;
+		statusMessage: string;
+		message: string;
+		description: string;
+		data: unknown;
+	};
+}
+const props = defineProps<Props>();
 </script>
 
 <template>
