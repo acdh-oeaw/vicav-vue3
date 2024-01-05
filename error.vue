@@ -2,7 +2,7 @@
 interface Props {
 	error: {
 		url: string;
-		statusCode: string;
+		statusCode: number;
 		statusMessage: string;
 		message: string;
 		description: string;
@@ -92,7 +92,12 @@ const props = defineProps<Props>();
 					class="rounded p-4 text-xl text-gray-700"
 					style="background-color: hsl(0deg 0% 100% / 50%)"
 				>
-					This site is under maintenance right now. Please check back later!
+					<span v-if="props.error?.statusCode == 404">
+						The page you are looking for does not exist. Check the url in the browser or go to the
+						<NuxtLink to="/" class="text-blue-700 underline">main site</NuxtLink>
+						.
+					</span>
+					<span v-else>This site is under maintenance right now. Please check back later!</span>
 				</p>
 			</div>
 		</div>
