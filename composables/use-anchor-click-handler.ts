@@ -13,18 +13,40 @@ export function useAnchorClickHandler() {
 		const element = event.target;
 
 		if (element instanceof HTMLAnchorElement) {
-			const { label, targetType, textId } = element.dataset;
+			const { label, targetType, textId, queryString, endpoint } = element.dataset;
 
-			if (textId == null) return;
 			if (!isWindowType(targetType)) return;
+			if (
+				(["Text", "Profile", "Feature"].includes(targetType) && textId == null) ||
+				(targetType === "WMap" && endpoint == null)
+			)
+				return;
 
 			event.preventDefault();
 
+			let title = isNonEmptyString(label) ? label : element.innerText;
 			const kind = windowTypeMap[targetType];
-			const params = { id: textId };
+
+			let params;
+			switch (targetType) {
+				case "Text":
+				case "Profile":
+				case "Feature":
+					params = { id: textId };
+					break;
+				case "BiblioEntries":
+					params = { query: queryString };
+					break;
+				case "WMap":
+					title = `BiblioEntries: ${queryString}`;
+					params = { endpoint, query: queryString, id: "BiblGeoMarkers" };
+					break;
+				default:
+					return;
+			}
 
 			addWindow({
-				title: isNonEmptyString(label) ? label : element.innerText,
+				title,
 				kind,
 				params,
 			});
