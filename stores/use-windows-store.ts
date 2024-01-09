@@ -2,7 +2,7 @@ import { nanoid } from "nanoid";
 import WinBox from "winbox";
 import { z } from "zod";
 
-import type { QueryDescription } from "@/lib/api-client";
+import type { GeoTargetTypeParameters } from "@/lib/api-client";
 import * as arrange from "@/utils/window-arrangement";
 
 import { useToastsStore } from "./use-toasts-store";
@@ -56,7 +56,7 @@ export interface DictionaryQueryWindowItem extends WindowItemBase {
 
 export interface GeoMapWindowItem extends WindowItemBase {
 	kind: "geo-map";
-	params: QueryDescription & { id: string };
+	params: GeoTargetTypeParameters & { id: string };
 }
 
 export interface SampleTextWindowItem extends WindowItemBase {

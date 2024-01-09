@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/vue-query";
 import type { Feature, Point } from "geojson";
 
-import type { MarkerProperties, MarkersType, QueryDescription } from "@/lib/api-client";
+import type { GeoTargetTypeParameters, MarkerProperties, MarkersType } from "@/lib/api-client";
 
 export function useGeoMarkers(
-	params: MaybeRef<Required<QueryDescription>>,
+	params: MaybeRef<Required<GeoTargetTypeParameters>>,
 	options?: { enabled?: boolean },
 ) {
 	const api = useApiClient();
@@ -13,12 +13,12 @@ export function useGeoMarkers(
 		enabled: options?.enabled,
 		queryKey: ["get-markers", params] as const,
 		async queryFn({ queryKey: [, params] }) {
-			const { endpoint, query, scope } = params;
+			const { endpoint, queryString, scope } = params;
 
 			const response =
 				endpoint === "bibl_markers_tei"
 					? await api.vicav.getMarkers(
-							{ query, scope },
+							{ query: queryString, scope },
 							{ headers: { accept: "application/json" } },
 					  )
 					: await api.vicav.getGeoMarkers(
