@@ -1,6 +1,4 @@
 <script lang="ts" setup>
-import { isNonEmptyString } from "@acdh-oeaw/lib";
-
 import type { ItemType } from "@/lib/api-client";
 
 const windowsStore = useWindowsStore();
@@ -21,21 +19,49 @@ const titlestring = computed(() => {
 	return data.value?.projectConfig?.logo?.string;
 });
 
-function createWindowTitle(item: ItemType) {
-	if (isNonEmptyString(item.label)) return item.label;
-	// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-	return item.title!;
-}
-
 function onSelectMenuItem(item: ItemType) {
-	addWindow({
-		kind: item.targetType,
-		params:
-			item.targetType === "BiblioEntries" && typeof item.queryString === "undefined"
-				? { queryString: "" }
-				: item, // TODO: standardize parameters and replace this simply with "item"
-		title: createWindowTitle(item),
-	} as WindowState);
+	let newWindowState: WindowState;
+	// TODO: move zod-based typing to the api definition, so this switch can be deleted
+	switch (item.targetType) {
+		case "BiblioEntries":
+			newWindowState = {
+				targetType: "BiblioEntries",
+				params: item.params as BibliographyEntriesWindowItem["params"],
+				title: item.label ?? "",
+			};
+			break;
+		case "Feature":
+			newWindowState = {
+				targetType: "Feature",
+				params: item.params as FeatureWindowItem["params"],
+				title: item.label ?? "",
+			};
+			break;
+		case "WMap":
+			newWindowState = {
+				targetType: "WMap",
+				params: item.params as GeoMapWindowItem["params"],
+				title: item.label ?? "",
+			};
+			break;
+		case "Profile":
+			newWindowState = {
+				targetType: "Profile",
+				params: item.params as ProfileWindowItem["params"],
+				title: item.label ?? "",
+			};
+			break;
+		case "Text":
+			newWindowState = {
+				targetType: "Text",
+				params: item.params as TextWindowItem["params"],
+				title: item.label ?? "",
+			};
+			break;
+		default:
+			throw new Error(`Window targetType not implemented on front-end: ${item.targetType}`);
+	}
+	addWindow(newWindowState);
 }
 </script>
 
@@ -43,6 +69,7 @@ function onSelectMenuItem(item: ItemType) {
 	<header class="border-b border-border bg-header text-on-header">
 		<div class="flex items-center justify-between gap-4 px-8 py-4">
 			<NuxtLink class="flex shrink-0" href="/">
+				<!-- eslint-disable-next-line tailwindcss/no-custom-classname -->
 				<span v-if="titlestring" class="titlestring">{{ titlestring }}</span>
 				<img v-if="logo" alt="" class="h-10" :src="logo" />
 			</NuxtLink>

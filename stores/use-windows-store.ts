@@ -13,15 +13,15 @@ interface WindowItemBase {
 	winbox: WinBox;
 }
 
-export const ContentId = z.object({
-	id: z.string(),
+export const TextId = z.object({
+	textId: z.string(),
 });
 export const QueryString = z.object({
 	queryString: z.string(),
 });
 
 export const BibliographyEntriesSchema = z.object({
-	kind: z.literal("BiblioEntries"),
+	targetType: z.literal("BiblioEntries"),
 	params: QueryString.merge(
 		z.object({
 			xslt: z.string().optional(),
@@ -32,13 +32,13 @@ export type BibliographyEntriesWindowItem = WindowItemBase &
 	z.infer<typeof BibliographyEntriesSchema>;
 
 export const FeatureSchema = z.object({
-	kind: z.literal("Feature"),
-	params: ContentId,
+	targetType: z.literal("Feature"),
+	params: TextId,
 });
 export type FeatureWindowItem = WindowItemBase & z.infer<typeof FeatureSchema>;
 
 export const GeoMapSchema = z.object({
-	kind: z.literal("WMap"),
+	targetType: z.literal("WMap"),
 	params: z.object({
 		endpoint: z.string(),
 		query: z.string().optional(),
@@ -48,18 +48,18 @@ export const GeoMapSchema = z.object({
 export type GeoMapWindowItem = WindowItemBase & z.infer<typeof GeoMapSchema>;
 
 export const ProfileSchema = z.object({
-	kind: z.literal("Profile"),
-	params: ContentId,
+	targetType: z.literal("Profile"),
+	params: TextId,
 });
 export type ProfileWindowItem = WindowItemBase & z.infer<typeof ProfileSchema>;
 
 export const TextSchema = z.object({
-	kind: z.literal("Text"),
-	params: ContentId,
+	targetType: z.literal("Text"),
+	params: TextId,
 });
 export type TextWindowItem = WindowItemBase & z.infer<typeof TextSchema>;
 
-export const Schema = z.discriminatedUnion("kind", [
+export const Schema = z.discriminatedUnion("targetType", [
 	BibliographyEntriesSchema,
 	FeatureSchema,
 	GeoMapSchema,
@@ -68,10 +68,10 @@ export const Schema = z.discriminatedUnion("kind", [
 ]);
 export type WindowItem = WindowItemBase & z.infer<typeof Schema>;
 
-export type WindowItemKind = WindowItem["kind"];
+export type WindowItemTargetType = WindowItem["targetType"];
 
 export type WindowItemMap = {
-	[Kind in WindowItemKind]: Extract<WindowItem, { kind: Kind }>;
+	[TargetType in WindowItemTargetType]: Extract<WindowItem, { targetType: TargetType }>;
 };
 
 export type WindowRegistry = Map<WindowItem["id"], WindowItem>;
@@ -178,11 +178,11 @@ export const useWindowsStore = defineStore("windows", () => {
 		}
 
 		const id = `window-${nanoid()}`;
-		const { title, kind, params } = windowState;
+		const { title, targetType, params } = windowState;
 
-		const ci = ContentId.safeParse(params);
+		const ci = TextId.safeParse(params);
 		if (ci.success) {
-			const w = findWindowByContentId(kind, ci.data.id);
+			const w = findWindowByTextId(targetType, String(ci.data.textId));
 			if (w !== null) {
 				w.winbox.focus();
 				w.winbox.addClass("highlighted");
@@ -220,16 +220,21 @@ export const useWindowsStore = defineStore("windows", () => {
 		registry.value.set(id, {
 			id,
 			winbox,
-			kind,
+			targetType,
 			params,
 		} as WindowItem);
 	}
 
-	function findWindowByContentId(kind: WindowItemKind, contentId: string): WindowItem | null {
+	function findWindowByTextId(targetType: WindowItemTargetType, textId: string): WindowItem | null {
 		let foundWindow: WindowItem | null = null;
 		registry.value.forEach((w) => {
-			const ci = ContentId.safeParse(w.params);
-			if (foundWindow === null && w.kind === kind && ci.success && ci.data.id === contentId) {
+			const ci = TextId.safeParse(w.params);
+			if (
+				foundWindow === null &&
+				w.targetType === targetType &&
+				ci.success &&
+				ci.data.textId === textId
+			) {
 				foundWindow = w;
 			}
 		});
@@ -308,7 +313,7 @@ export const useWindowsStore = defineStore("windows", () => {
 				width: viewportPercentageWith2DigitPrecision(w.winbox.width as number, "width"),
 				// @ts-expect-error Property missing in upstream types.
 				height: viewportPercentageWith2DigitPrecision(w.winbox.height as number, "height"),
-				kind: w.kind,
+				targetType: w.targetType,
 				title: w.winbox.title,
 				params: w.params,
 			} as WindowState);
@@ -331,11 +336,13 @@ export const useWindowsStore = defineStore("windows", () => {
 
 	function updateQueryParam(id: WindowItem["id"], query: string) {
 		const w = registry.value.get(id);
-		const wi = QueryString.safeParse(w.params);
-		if (w && wi.success) {
-			wi.data.query = query;
-			w.winbox.setTitle(query);
-			updateUrl();
+		if (w) {
+			const wi = QueryString.safeParse(w.params);
+			if (wi.success) {
+				wi.data.queryString = query;
+				w.winbox.setTitle(query);
+				updateUrl();
+			}
 		}
 	}
 
