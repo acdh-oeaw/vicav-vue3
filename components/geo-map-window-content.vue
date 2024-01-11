@@ -1,12 +1,12 @@
 <script lang="ts" setup>
 import { keyByToMap } from "@acdh-oeaw/lib";
 
-import type { ItemType, QueryDescription } from "@/lib/api-client";
+import type { GeoTargetTypeParameters, ItemType } from "@/lib/api-client";
 
 type ItemId = NonNullable<ItemType["target"]>;
 
 interface Props {
-	params: GeoMapWindowItem["params"];
+	params: Zod.infer<typeof GeoMapSchema>["params"];
 }
 
 const props = defineProps<Props>();
@@ -23,7 +23,12 @@ const itemsById = computed(() => {
 	return keyByToMap(items, (item) => item.target!);
 });
 
-const selected = ref<Set<ItemId>>(new Set([params.value.id]));
+const createId = function (params: Zod.infer<typeof GeoMapSchema>["params"]): ItemId {
+	return params.endpoint + ":" + (params.query ?? "") + ":" + (params.scope ?? "");
+};
+
+const id = createId(params.value);
+const selected = ref<Set<ItemId>>(new Set([id]));
 
 function onSelect(id: ItemId) {
 	if (selected.value.has(id)) {
@@ -37,7 +42,7 @@ const queries = useGeoMarkerLayers(
 	computed(() => {
 		return Array.from(selected.value).map((id) => {
 			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-			return itemsById.value.get(id)!.query! as Required<QueryDescription>;
+			return itemsById.value.get(id)!.params as Required<GeoTargetTypeParameters>;
 		});
 	}),
 );

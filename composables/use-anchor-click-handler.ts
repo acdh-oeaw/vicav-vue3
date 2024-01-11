@@ -16,10 +16,8 @@ export function useAnchorClickHandler() {
 			if (element.dataset.targetType === "External-link") return;
 			event.preventDefault();
 
-			if (typeof item.textId !== "undefined") item.id = item.textId; // TODO: standardize param names coming from the backend
-
 			addWindow({
-				kind: item.targetType,
+				targetType: item.targetType,
 				params: item,
 				title: isNonEmptyString(item.label) ? item.label : element.innerText,
 			} as WindowState);

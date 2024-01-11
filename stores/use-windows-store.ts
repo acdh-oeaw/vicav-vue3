@@ -37,12 +37,13 @@ export const FeatureSchema = z.object({
 });
 export type FeatureWindowItem = WindowItemBase & z.infer<typeof FeatureSchema>;
 
+export const GeoMapScope = z.enum(["reg", "geo", "diaGroup"]);
 export const GeoMapSchema = z.object({
 	targetType: z.literal("WMap"),
 	params: z.object({
 		endpoint: z.string(),
 		query: z.string().optional(),
-		scope: z.enum(["reg", "geo", "diaGroup"]).optional(),
+		scope: GeoMapScope.optional(),
 	}),
 });
 export type GeoMapWindowItem = WindowItemBase & z.infer<typeof GeoMapSchema>;

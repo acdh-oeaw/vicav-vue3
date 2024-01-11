@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/vue-query";
 
 export function useBiblioTeiQuery(
-	params: MaybeRef<BibliographyEntriesWindowItem["params"]>,
+	params: MaybeRef<Zod.infer<typeof BibliographyEntriesSchema>["params"]>,
 	options?: { enabled?: boolean },
 ) {
 	const api = useApiClient();
@@ -10,9 +10,9 @@ export function useBiblioTeiQuery(
 		queryKey: ["get-biblio-tei", params] as const,
 		async queryFn({ queryKey: [, params] }) {
 			if (params.queryString === "") return "";
-			const apiParams = {
+			const apiParams: { query: string; xslt?: string } = {
 				query: params.queryString,
-			} as BibliographyEntriesWindowItem["params"];
+			};
 			if (typeof params.xslt !== "undefined") apiParams.xslt = params.xslt;
 			const response = await api.vicav.getBiblioTei(apiParams, {
 				headers: { accept: "application/xml" },
