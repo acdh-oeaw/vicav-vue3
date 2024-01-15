@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import type { WindowItem } from "@/types/global.d";
+
 interface Props {
 	item: WindowItem;
 }

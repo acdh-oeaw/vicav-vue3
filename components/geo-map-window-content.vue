@@ -2,6 +2,7 @@
 import { keyByToMap } from "@acdh-oeaw/lib";
 
 import type { GeoTargetTypeParameters, ItemType } from "@/lib/api-client";
+import type { GeoMapSchema } from "@/types/global.d";
 
 type ItemId = NonNullable<ItemType["target"]>;
 

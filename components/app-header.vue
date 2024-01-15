@@ -1,5 +1,12 @@
 <script lang="ts" setup>
 import type { ItemType } from "@/lib/api-client";
+import type {
+	BibliographyEntriesWindowItem,
+	FeatureWindowItem,
+	GeoMapWindowItem,
+	ProfileWindowItem,
+	TextWindowItem,
+} from "@/types/global.d";
 
 const windowsStore = useWindowsStore();
 const { addWindow } = windowsStore;

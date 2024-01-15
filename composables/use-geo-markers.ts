@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/vue-query";
 import type { Feature, Point } from "geojson";
 
 import type { MarkerProperties, MarkersType } from "@/lib/api-client";
+import type { GeoMapSchema } from "@/types/global.d";
 
 export function useGeoMarkers(
 	params: MaybeRef<Zod.infer<typeof GeoMapSchema>["params"]>,

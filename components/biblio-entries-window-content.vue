@@ -2,6 +2,8 @@
 import { nanoid } from "nanoid";
 import { Collapse, initTE } from "tw-elements";
 
+import type { BibliographyEntriesWindowItem } from "@/types/global.d";
+
 interface Props {
 	params: BibliographyEntriesWindowItem["params"];
 }

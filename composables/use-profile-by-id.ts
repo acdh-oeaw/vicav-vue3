@@ -1,5 +1,7 @@
 import { useQuery } from "@tanstack/vue-query";
 
+import type { TextId } from "@/types/global.d";
+
 export function useProfileById(
 	params: MaybeRef<Zod.infer<typeof TextId>>,
 	options?: { enabled?: boolean },
