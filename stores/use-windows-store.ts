@@ -43,7 +43,7 @@ export const GeoMapSchema = z.object({
 	params: z.object({
 		endpoint: z.string(),
 		query: z.string().optional(),
-		scope: GeoMapScope.optional(),
+		scope: z.array(GeoMapScope).optional(),
 	}),
 });
 export type GeoMapWindowItem = WindowItemBase & z.infer<typeof GeoMapSchema>;
