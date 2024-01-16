@@ -14,12 +14,13 @@ export function useGeoMarkers(
 		enabled: options?.enabled,
 		queryKey: ["get-markers", params] as const,
 		async queryFn({ queryKey: [, params] }) {
-			const { endpoint, query, scope } = params;
+			const { endpoint, queryString, scope } = params;
 
 			const response =
 				endpoint === "bibl_markers_tei"
 					? await api.vicav.getMarkers(
-							{ query: query ?? "", scope: [scope ?? "reg"] }, // TODO: fix unmatching parameter object in schema and api
+							// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+							{ query: queryString ?? "", scope: scope ?? ["reg"] }, // TODO: fix unmatching parameter object in schema and api
 							{ headers: { accept: "application/json" } },
 					  )
 					: await api.vicav.getGeoMarkers(

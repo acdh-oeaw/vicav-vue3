@@ -35,13 +35,18 @@ export type FeatureWindowItem = WindowItemBase & z.infer<typeof FeatureSchema>;
 export const GeoMapScope = z.enum(["reg", "geo", "diaGroup"]);
 export const GeoMapSchema = z.object({
 	targetType: z.literal("WMap"),
-	params: z.object({
-		endpoint: z.string(),
-		query: z.string().optional(),
-		scope: z.array(GeoMapScope).optional(),
-	}),
+	params: QueryString.merge(
+		z.object({
+			endpoint: z.string(),
+			scope: z.array(GeoMapScope).optional(),
+		}),
+	),
 });
 export type GeoMapWindowItem = WindowItemBase & z.infer<typeof GeoMapSchema>;
+export const GeoMapSubnavItemSchema = z.intersection(
+	GeoMapSchema,
+	z.object({ id: z.string(), title: z.string() }),
+);
 
 export const ProfileSchema = z.object({
 	targetType: z.literal("Profile"),

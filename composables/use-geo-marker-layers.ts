@@ -21,7 +21,8 @@ export function useGeoMarkerLayers(
 						const response =
 							endpoint === "bibl_markers_tei"
 								? await api.vicav.getMarkers(
-										{ query: queryString, scope },
+										// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+										{ query: queryString ?? ".*", scope },
 										{ headers: { accept: "application/json" } },
 								  )
 								: await api.vicav.getGeoMarkers(

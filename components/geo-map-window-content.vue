@@ -1,10 +1,10 @@
 <script lang="ts" setup>
 import { keyByToMap } from "@acdh-oeaw/lib";
 
-import type { GeoTargetTypeParameters, ItemType } from "@/lib/api-client";
-import type { GeoMapSchema } from "@/types/global.d";
+import type { GeoTargetTypeParameters } from "@/lib/api-client";
+import { type GeoMapSchema, GeoMapSubnavItemSchema } from "@/types/global.d";
 
-type ItemId = NonNullable<ItemType["target"]>;
+type ItemId = string;
 
 interface Props {
 	params: Zod.infer<typeof GeoMapSchema>["params"];
@@ -15,20 +15,39 @@ const { params } = toRefs(props);
 
 const { data: projectData } = useProjectInfo();
 
-const itemsById = computed(() => {
-	const items = projectData.value?.projectConfig?.menu?.subnav;
-
-	if (items == null) return new Map<ItemId, ItemType>();
-
-	// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-	return keyByToMap(items, (item) => item.target!);
-});
-
 const createId = function (params: Zod.infer<typeof GeoMapSchema>["params"]): ItemId {
-	return params.endpoint + ":" + (params.query ?? "") + ":" + (params.scope ?? "");
+	let endpoint = params.endpoint,
+		// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+		queryString = params.queryString ?? "",
+		scope = params.scope?.join(",") ?? "";
+	return `${endpoint}:${queryString}:${scope}`;
 };
 
+const itemsById = computed(() => {
+	const items = projectData.value?.projectConfig?.menu?.subnav?.reduce(
+		(filtered: Array<Zod.infer<typeof GeoMapSubnavItemSchema>>, item) => {
+			let safeParse = GeoMapSubnavItemSchema.safeParse(item);
+			if (safeParse.success) {
+				safeParse.data.id = createId(safeParse.data.params);
+				filtered.push(safeParse.data);
+			}
+			return filtered;
+		},
+		[] as Array<Zod.infer<typeof GeoMapSubnavItemSchema>>,
+	);
+
+	if (items == null) return new Map<ItemId, Zod.infer<typeof GeoMapSubnavItemSchema>>();
+
+	return keyByToMap(items, (item) => item.id);
+});
+
 const id = createId(params.value);
+if (!itemsById.value.has(id)) {
+	itemsById.value.set(id, {
+		title: id,
+		params: params.value,
+	} as Zod.infer<typeof GeoMapSubnavItemSchema>);
+}
 const selected = ref<Set<ItemId>>(new Set([id]));
 
 function onSelect(id: ItemId) {
