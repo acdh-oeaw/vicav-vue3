@@ -17,8 +17,7 @@ const { data: projectData } = useProjectInfo();
 
 const createId = function (params: Zod.infer<typeof GeoMapSchema>["params"]): ItemId {
 	let endpoint = params.endpoint,
-		// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-		queryString = params.queryString ?? "",
+		queryString = params.queryString,
 		scope = params.scope?.join(",") ?? "";
 	return `${endpoint}:${queryString}:${scope}`;
 };
