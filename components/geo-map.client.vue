@@ -47,6 +47,17 @@ function updateMarkers() {
 	props.markers.forEach((marker) => {
 		featureGroup.addData(marker);
 	});
+
+	fitAllMarkersOnViewport();
+}
+
+function fitAllMarkersOnViewport() {
+	if (context.featureGroups.markers !== null) {
+		let boundingBox = context.featureGroups.markers.getBounds();
+		if (typeof boundingBox === "object" && Object.keys(boundingBox).length > 0) {
+			context.map?.fitBounds(context.featureGroups.markers.getBounds());
+		}
+	}
 }
 
 onMounted(async () => {
@@ -101,6 +112,7 @@ watch(() => {
 const resize = debounce(() => {
 	void nextTick(() => {
 		context.map?.invalidateSize();
+		fitAllMarkersOnViewport();
 	});
 }, 150);
 
