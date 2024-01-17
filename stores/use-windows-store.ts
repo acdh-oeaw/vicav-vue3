@@ -262,6 +262,19 @@ export const useWindowsStore = defineStore("windows", () => {
 		return windowStates;
 	}
 
+	function escapeUnicode(s: string) {
+		return [...s]
+			.map((c) =>
+				/^[\x20-\x7f]$/.test(c)
+					? c
+					: c
+							.split("")
+							.map((a) => "\\u" + a.charCodeAt().toString(16).padStart(4, "0"))
+							.join(""),
+			)
+			.join("");
+	}
+
 	function updateUrl() {
 		if (route.path === "/imprint") return;
 		const windowStates = serializeWindowStates();
@@ -269,7 +282,7 @@ export const useWindowsStore = defineStore("windows", () => {
 		void navigateTo({
 			path: "/",
 			query: {
-				w: btoa(JSON.stringify(windowStates)),
+				w: btoa(escapeUnicode(JSON.stringify(windowStates))),
 				a: arrangement.value,
 			},
 		});
