@@ -19,7 +19,7 @@ export function useGeoMarkers(
 			const response =
 				endpoint === "bibl_markers_tei"
 					? await api.vicav.getMarkers(
-							{ query: queryString, scope: scope ?? [] }, // TODO: fix unmatching parameter object in schema and api
+							{ query: queryString, scope },
 							{ headers: { accept: "application/json" } },
 					  )
 					: await api.vicav.getGeoMarkers(
