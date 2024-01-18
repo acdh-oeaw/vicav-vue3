@@ -110,9 +110,13 @@ watch(() => {
 }, updateMarkers);
 
 const resize = debounce(() => {
+	let boundingBox = context.map?.getBounds();
 	void nextTick(() => {
 		context.map?.invalidateSize();
-		fitAllMarkersOnViewport();
+		if (boundingBox === undefined) {
+			return;
+		}
+		context.map?.fitBounds(boundingBox);
 	});
 }, 150);
 
