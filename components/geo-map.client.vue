@@ -55,7 +55,7 @@ function fitAllMarkersOnViewport() {
 	if (context.featureGroups.markers !== null) {
 		let boundingBox = context.featureGroups.markers.getBounds();
 		if (typeof boundingBox === "object" && Object.keys(boundingBox).length > 0) {
-			context.map?.fitBounds(context.featureGroups.markers.getBounds());
+			context.map?.fitBounds(boundingBox);
 		}
 	}
 }
