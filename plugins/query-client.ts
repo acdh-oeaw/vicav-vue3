@@ -32,7 +32,7 @@ export default defineNuxtPlugin((nuxt) => {
 						: error.message;
 
 				addToast({
-					title: "Error",
+					title: "VueQuery Error",
 					description: message,
 					type: "foreground",
 					variant: "negative",

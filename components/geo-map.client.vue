@@ -47,6 +47,17 @@ function updateMarkers() {
 	props.markers.forEach((marker) => {
 		featureGroup.addData(marker);
 	});
+
+	fitAllMarkersOnViewport();
+}
+
+function fitAllMarkersOnViewport() {
+	if (context.featureGroups.markers !== null) {
+		let boundingBox = context.featureGroups.markers.getBounds();
+		if (typeof boundingBox === "object" && Object.keys(boundingBox).length > 0) {
+			context.map?.fitBounds(boundingBox, { animate: false });
+		}
+	}
 }
 
 onMounted(async () => {
@@ -99,8 +110,22 @@ watch(() => {
 }, updateMarkers);
 
 const resize = debounce(() => {
+	if (context.map === null) {
+		return;
+	}
+	let previousBoundingBox = context.map.getBounds();
 	void nextTick(() => {
 		context.map?.invalidateSize();
+		let featureMarkerBounds = context.featureGroups.markers?.getBounds();
+		let isAllMarkersInView =
+			featureMarkerBounds === undefined || Object.keys(featureMarkerBounds).length === 0
+				? false
+				: previousBoundingBox.contains(featureMarkerBounds);
+		if (isAllMarkersInView) {
+			fitAllMarkersOnViewport();
+		} else {
+			context.map?.fitBounds(previousBoundingBox, { animate: false });
+		}
 	});
 }, 150);
 

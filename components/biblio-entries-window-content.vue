@@ -2,6 +2,8 @@
 import { nanoid } from "nanoid";
 import { Collapse, initTE } from "tw-elements";
 
+import type { BibliographyEntriesWindowItem } from "@/types/global.d";
+
 interface Props {
 	params: BibliographyEntriesWindowItem["params"];
 }
@@ -9,7 +11,7 @@ interface Props {
 const props = defineProps<Props>();
 const { params } = toRefs(props);
 
-const emit = defineEmits(["updateQueryString"]);
+const emit = defineEmits(["updateQueryParam"]);
 
 const formId = "biblioQueryForm-" + nanoid();
 let isFormOpen = ref(false);
@@ -20,15 +22,15 @@ const isLoading = computed(() => {
 	return isPending.value || isPlaceholderData.value;
 });
 
-const queryString: Ref<string> = ref(params.value.query);
+const queryString: Ref<string> = ref(params.value.queryString);
 const isTextQuery: Ref<boolean> = ref(true);
 const isMapQuery: Ref<boolean> = ref(false);
 
 function submitNewQuery(): void {
 	if (!isTextQuery.value && !isMapQuery.value) isTextQuery.value = true;
 	if (isTextQuery.value) {
-		params.value.query = queryString.value;
-		emit("updateQueryString", queryString.value);
+		params.value.queryString = queryString.value;
+		emit("updateQueryParam", queryString.value);
 	}
 	if (isMapQuery.value) {
 		alert("map query not implemented");

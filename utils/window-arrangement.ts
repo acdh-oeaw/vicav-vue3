@@ -1,5 +1,7 @@
 import type WinBox from "winbox";
 
+import type { WindowItem } from "@/types/global.d";
+
 export function cascade(viewport: DOMRect, windows: Array<WindowItem>): void {
 	const windowWidth = Math.floor(viewport.width / 2);
 	const windowHeight = Math.floor(viewport.height / 2);

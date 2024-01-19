@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import type { FeatureWindowItem } from "@/types/global.d";
+
 interface Props {
 	params: FeatureWindowItem["params"];
 }

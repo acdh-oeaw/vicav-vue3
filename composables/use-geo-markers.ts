@@ -1,10 +1,11 @@
 import { useQuery } from "@tanstack/vue-query";
 import type { Feature, Point } from "geojson";
 
-import type { GeoTargetTypeParameters, MarkerProperties, MarkersType } from "@/lib/api-client";
+import type { MarkerProperties, MarkersType } from "@/lib/api-client";
+import type { GeoMapSchema } from "@/types/global.d";
 
 export function useGeoMarkers(
-	params: MaybeRef<Required<GeoTargetTypeParameters>>,
+	params: MaybeRef<Zod.infer<typeof GeoMapSchema>["params"]>,
 	options?: { enabled?: boolean },
 ) {
 	const api = useApiClient();
@@ -18,7 +19,7 @@ export function useGeoMarkers(
 			const response =
 				endpoint === "bibl_markers_tei"
 					? await api.vicav.getMarkers(
-							{ query: queryString, scope },
+							{ query: queryString, scope: scope ?? [] },
 							{ headers: { accept: "application/json" } },
 					  )
 					: await api.vicav.getGeoMarkers(
