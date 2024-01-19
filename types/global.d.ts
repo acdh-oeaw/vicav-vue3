@@ -37,6 +37,7 @@ export const CorpusTextSchema = z.object({
 	params: TextId.merge(
 		z.object({
 			hits: z.string().optional(),
+			u: z.string().optional(), // TODO: give this parameter a telling name
 		}),
 	),
 });

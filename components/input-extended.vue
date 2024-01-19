@@ -1,17 +1,20 @@
 <script setup lang="ts">
-defineProps({
+const props = defineProps({
 	modelValue: String,
 	stringSnippets: Array<string>,
 	placeholder: String,
 });
-const emit = defineEmits(["update:modelValue"]);
+const emit = defineEmits(["update:modelValue", "submit"]);
 
 const inputElement = ref();
 
-const myString = ref("");
+const myString = ref(`${props.modelValue}`);
 watch(myString, (val) => {
 	emit("update:modelValue", val);
 });
+const submit = () => {
+	emit("submit", myString);
+};
 
 const InsertSnippet = async (snippet: string): Promise<void> => {
 	if (typeof inputElement.value.selectionStart !== "undefined") {
@@ -55,7 +58,13 @@ const restoreCursorPosition = (pos: number) => {
 		</div>
 		<div class="ie-textinput">
 			<!-- eslint-disable-next-line vuejs-accessibility/form-control-has-label -->
-			<input ref="inputElement" v-model="myString" type="text" :placeholder="placeholder" />
+			<input
+				ref="inputElement"
+				v-model="myString"
+				type="text"
+				:placeholder="placeholder"
+				@keydown.enter.prevent="submit"
+			/>
 		</div>
 	</div>
 </template>
