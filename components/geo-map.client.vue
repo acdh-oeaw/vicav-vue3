@@ -55,7 +55,7 @@ function fitAllMarkersOnViewport() {
 	if (context.featureGroups.markers !== null) {
 		let boundingBox = context.featureGroups.markers.getBounds();
 		if (typeof boundingBox === "object" && Object.keys(boundingBox).length > 0) {
-			context.map?.fitBounds(boundingBox);
+			context.map?.fitBounds(boundingBox, { animate: false });
 		}
 	}
 }
@@ -110,13 +110,22 @@ watch(() => {
 }, updateMarkers);
 
 const resize = debounce(() => {
-	let boundingBox = context.map?.getBounds();
+	if (context.map === null) {
+		return;
+	}
+	let previousBoundingBox = context.map.getBounds();
 	void nextTick(() => {
 		context.map?.invalidateSize();
-		if (boundingBox === undefined) {
-			return;
+		let featureMarkerBounds = context.featureGroups.markers?.getBounds();
+		let isAllMarkersInView =
+			featureMarkerBounds === undefined || Object.keys(featureMarkerBounds).length === 0
+				? false
+				: previousBoundingBox.contains(featureMarkerBounds);
+		if (isAllMarkersInView) {
+			fitAllMarkersOnViewport();
+		} else {
+			context.map?.fitBounds(previousBoundingBox, { animate: false });
 		}
-		context.map?.fitBounds(boundingBox);
 	});
 }, 150);
 
