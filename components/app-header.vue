@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { isNonEmptyString } from "@acdh-oeaw/lib";
+import { isNonEmptyString, noop } from "@acdh-oeaw/lib";
 
 import type { ItemType } from "@/lib/api-client";
 
@@ -7,7 +7,13 @@ const windowsStore = useWindowsStore();
 const { addWindow } = windowsStore;
 
 const { data, suspense } = useProjectInfo();
-await suspense();
+onServerPrefetch(async () => {
+	/**
+	 * @see https://github.com/TanStack/query/issues/6606
+	 * @see https://github.com/TanStack/query/issues/5976
+	 */
+	await suspense().catch(noop);
+});
 
 const menus = computed(() => {
 	return data.value?.projectConfig?.menu?.main ?? [];

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { isNonEmptyString } from "@acdh-oeaw/lib";
+import { isNonEmptyString, noop } from "@acdh-oeaw/lib";
 import { ColorSpace, getLuminance, HSL, parse, sRGB, to as convert } from "colorjs.io/fn";
 import type { WebSite, WithContext } from "schema-dts";
 
@@ -10,7 +10,13 @@ const env = useRuntimeConfig();
 const route = useRoute();
 
 const { data, suspense } = useProjectInfo();
-await suspense();
+onServerPrefetch(async () => {
+	/**
+	 * @see https://github.com/TanStack/query/issues/6606
+	 * @see https://github.com/TanStack/query/issues/5976
+	 */
+	await suspense().catch(noop);
+});
 
 const siteTitle = computed(() => {
 	return data.value?.projectConfig?.title ?? "VICAV3.0 - Vienna Corpus of Arabic Varieties";
