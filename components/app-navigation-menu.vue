@@ -1,8 +1,8 @@
 <script lang="ts" setup>
-import type { ItemType, MainItemType } from "@/lib/api-client";
+import type { ItemType, MainItemsType } from "@/lib/api-client";
 
 const props = defineProps<{
-	menus: Array<MainItemType>;
+	menus: MainItemsType;
 }>();
 
 const emit = defineEmits<{

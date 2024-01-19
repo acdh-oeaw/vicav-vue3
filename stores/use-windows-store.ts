@@ -2,109 +2,18 @@ import { nanoid } from "nanoid";
 import WinBox from "winbox";
 import { z } from "zod";
 
-import type { QueryDescription } from "@/lib/api-client";
+import {
+	QueryString,
+	Schema,
+	TextId,
+	type WindowItem,
+	type WindowItemTargetType,
+} from "@/types/global.d";
 import * as arrange from "@/utils/window-arrangement";
 
 import { useToastsStore } from "./use-toasts-store";
 
 const narrowScreenBreakpoint = 1024;
-
-export interface CorpusTextParams {
-	id: string;
-	hits: string;
-	u: string;
-}
-
-interface WindowItemBase {
-	id: string;
-	winbox: WinBox;
-}
-
-export interface BibliographyQueryWindowItem extends WindowItemBase {
-	kind: "bibliography-query";
-	params: unknown;
-}
-
-export interface CorpusQueryWindowItem extends WindowItemBase {
-	kind: "corpus-query";
-	params: unknown;
-}
-
-export interface CorpusTextWindowItem extends WindowItemBase {
-	kind: "corpus-text";
-	params: CorpusTextParams;
-}
-
-export interface CrossDictionaryQueryWindowItem extends WindowItemBase {
-	kind: "cross-dictionary-query";
-	params: unknown;
-}
-
-export interface DataListWindowItem extends WindowItemBase {
-	kind: "data-list";
-	params: unknown;
-}
-
-export interface DictionaryEntryWindowItem extends WindowItemBase {
-	kind: "dictionary-entry";
-	params: unknown;
-}
-
-export interface DictionaryQueryWindowItem extends WindowItemBase {
-	kind: "dictionary-query";
-	params: unknown;
-}
-
-export interface GeoMapWindowItem extends WindowItemBase {
-	kind: "geo-map";
-	params: QueryDescription & { id: string };
-}
-
-export interface SampleTextWindowItem extends WindowItemBase {
-	kind: "sample-text";
-	params: unknown;
-}
-
-export interface TextWindowItem extends WindowItemBase {
-	kind: "text";
-	params: {
-		id: string;
-	};
-}
-
-export interface ProfileWindowItem extends WindowItemBase {
-	kind: "profile";
-	params: {
-		id: string;
-	};
-}
-
-export interface FeatureWindowItem extends WindowItemBase {
-	kind: "feature";
-	params: {
-		id: string;
-	};
-}
-
-export type WindowItem =
-	| BibliographyQueryWindowItem
-	| CorpusQueryWindowItem
-	| CorpusTextWindowItem
-	| CrossDictionaryQueryWindowItem
-	| DataListWindowItem
-	| DictionaryEntryWindowItem
-	| DictionaryQueryWindowItem
-	| FeatureWindowItem
-	| GeoMapWindowItem
-	| ProfileWindowItem
-	| SampleTextWindowItem
-	| TextWindowItem;
-
-export type WindowItemKind = WindowItem["kind"];
-
-export type WindowItemMap = {
-	[Kind in WindowItemKind]: Extract<WindowItem, { kind: Kind }>;
-};
 
 export type WindowRegistry = Map<WindowItem["id"], WindowItem>;
 
@@ -117,17 +26,18 @@ export const arrangements = {
 
 export type WindowArrangement = keyof typeof arrangements;
 
-const WindowState = z.object({
-	x: z.number(),
-	y: z.number(),
-	z: z.number(),
-	width: z.number(),
-	height: z.number(),
-	kind: z.string(),
-	title: z.string(),
-	params: z.unknown(),
-});
-type WindowStateInferred = z.infer<typeof WindowState>;
+const WindowState = z.intersection(
+	Schema,
+	z.object({
+		x: z.number().or(z.string()).optional(),
+		y: z.number().or(z.string()).optional(),
+		zIndex: z.number().optional(),
+		width: z.number().or(z.string()).optional(),
+		height: z.number().or(z.string()).optional(),
+		title: z.string(),
+	}),
+);
+export type WindowState = z.infer<typeof WindowState>;
 
 export const useWindowsStore = defineStore("windows", () => {
 	const registry = ref<WindowRegistry>(new Map());
@@ -151,14 +61,16 @@ export const useWindowsStore = defineStore("windows", () => {
 			return;
 		}
 
-		let windowStates: Array<WindowStateInferred>;
+		let windowStates: Array<WindowState>;
 		try {
 			const w = atob(route.query.w as string);
-			windowStates = JSON.parse(w) as Array<WindowStateInferred>;
+			windowStates = JSON.parse(w) as Array<WindowState>;
 		} catch (e) {
 			toasts.addToast({
 				title: "RestoreState Error: JSON parse failed",
 				description: e instanceof Error ? e.message : "Unknown error, check console",
+				type: "foreground",
+				variant: "negative",
 			});
 			console.error(e);
 			await initializeScreen();
@@ -169,6 +81,8 @@ export const useWindowsStore = defineStore("windows", () => {
 			toasts.addToast({
 				title: "RestoreState Error: Window list is not array",
 				description: "Window list parameter must be an array",
+				type: "foreground",
+				variant: "negative",
 			});
 			await initializeScreen();
 			return;
@@ -176,40 +90,12 @@ export const useWindowsStore = defineStore("windows", () => {
 
 		await nextTick();
 		windowStates.forEach((w) => {
-			try {
-				WindowState.parse(w);
-				addWindow({
-					title: w.title,
-					kind: w.kind as WindowItemKind,
-					params: w.params,
-					x: String(w.x) + "%",
-					y: String(w.y) + "%",
-					zIndex: w.z,
-					height: String(w.height) + "%",
-					width: String(w.width) + "%",
-				});
-			} catch (e) {
-				toasts.addToast({
-					title: "RestoreState Error: WindowState parse failed",
-					description: e instanceof Error ? e.message : "Unknown error, check console",
-				});
-				console.error(e);
-			}
+			addWindow(w);
 		});
 		setWindowArrangement(route.query.a as WindowArrangement);
 	};
 
-	function addWindow<Kind extends WindowItemKind>(params: {
-		id?: string | null;
-		title: string;
-		kind: Kind;
-		params: WindowItemMap[Kind]["params"];
-		x?: number | string; // string support added for "px" and "%" typed values
-		y?: number | string;
-		width?: number | string;
-		height?: number | string;
-		zIndex?: number;
-	}) {
+	function addWindow(stateParams: WindowState) {
 		const rootElement = document.getElementById(windowRootId);
 		if (rootElement == null) return;
 
@@ -218,27 +104,44 @@ export const useWindowsStore = defineStore("windows", () => {
 			void router.push("/");
 		}
 
-		const id = params.id ?? `window-${nanoid()}`;
-		const { title, kind } = params;
-
-		const w = windowWithContentId(params.kind, params.params);
-		if (w != null) {
-			w.winbox.focus();
-			w.winbox.addClass("highlighted");
-			setTimeout(() => {
-				w.winbox.removeClass("highlighted");
-			}, 1000);
+		let windowState: WindowState;
+		try {
+			windowState = WindowState.parse(stateParams);
+		} catch (e) {
+			toasts.addToast({
+				title: "AddWindow Error: parameter parse failed",
+				description: "Check the console for details.",
+				type: "foreground",
+				variant: "negative",
+			});
+			console.error(e);
 			return;
+		}
+
+		const id = `window-${nanoid()}`;
+		const { title, targetType, params } = windowState;
+
+		const ci = TextId.safeParse(params);
+		if (ci.success) {
+			const w = findWindowByTextId(targetType, String(ci.data.textId));
+			if (w !== null) {
+				w.winbox.focus();
+				w.winbox.addClass("highlighted");
+				setTimeout(() => {
+					w.winbox.removeClass("highlighted");
+				}, 1000);
+				return;
+			}
 		}
 
 		const winbox = new WinBox({
 			id,
 			title,
-			index: params.zIndex ? params.zIndex : undefined,
-			x: params.x ? params.x : "center",
-			y: params.y ? params.y : "center",
-			width: params.width,
-			height: params.height,
+			index: windowState.zIndex ? windowState.zIndex : undefined,
+			x: windowState.x ? windowState.x : "center",
+			y: windowState.y ? windowState.y : "center",
+			width: windowState.width,
+			height: windowState.height,
 			onfocus() {
 				updateUrl();
 			},
@@ -258,30 +161,24 @@ export const useWindowsStore = defineStore("windows", () => {
 		registry.value.set(id, {
 			id,
 			winbox,
-			kind,
-			params: params.params,
+			targetType,
+			params,
 		} as WindowItem);
 	}
 
-	function windowWithContentId(
-		kind: WindowItemKind,
-		params: WindowItemMap[WindowItemKind]["params"],
-	): WindowItem | null {
+	function findWindowByTextId(targetType: WindowItemTargetType, textId: string): WindowItem | null {
 		let foundWindow: WindowItem | null = null;
-		if (typeof params === "object" && params !== null && "id" in params) {
-			registry.value.forEach((w) => {
-				if (
-					foundWindow === null &&
-					w.kind === kind &&
-					typeof w.params === "object" &&
-					w.params !== null &&
-					"id" in w.params &&
-					w.params.id === params.id
-				) {
-					foundWindow = w;
-				}
-			});
-		}
+		registry.value.forEach((w) => {
+			const ci = TextId.safeParse(w.params);
+			if (
+				foundWindow === null &&
+				w.targetType === targetType &&
+				ci.success &&
+				ci.data.textId === textId
+			) {
+				foundWindow = w;
+			}
+		});
 		return foundWindow;
 	}
 
@@ -336,14 +233,14 @@ export const useWindowsStore = defineStore("windows", () => {
 	});
 
 	function serializeWindowStates() {
-		const windowStates: Array<WindowStateInferred> = [];
+		const windowStates: Array<WindowState> = [];
 
 		const rootElement = document.getElementById(windowRootId);
 		if (rootElement == null) return;
 		const viewport = rootElement.getBoundingClientRect();
 
 		function viewportPercentageWith2DigitPrecision(x: number, dir: "height" | "width") {
-			return Math.floor((10000 * x) / viewport[dir]) / 100;
+			return String(Math.floor((10000 * x) / viewport[dir]) / 100) + "%";
 		}
 
 		registry.value.forEach((w) => {
@@ -357,12 +254,25 @@ export const useWindowsStore = defineStore("windows", () => {
 				width: viewportPercentageWith2DigitPrecision(w.winbox.width as number, "width"),
 				// @ts-expect-error Property missing in upstream types.
 				height: viewportPercentageWith2DigitPrecision(w.winbox.height as number, "height"),
-				kind: w.kind,
+				targetType: w.targetType,
 				title: w.winbox.title,
 				params: w.params,
-			} as WindowStateInferred);
+			} as WindowState);
 		});
 		return windowStates;
+	}
+
+	function escapeUnicode(s: string) {
+		return [...s]
+			.map((c) =>
+				/^[\x20-\x7f]$/.test(c)
+					? c
+					: c
+							.split("")
+							.map((a) => "\\u" + a.charCodeAt(0).toString(16).padStart(4, "0"))
+							.join(""),
+			)
+			.join("");
 	}
 
 	function updateUrl() {
@@ -372,16 +282,29 @@ export const useWindowsStore = defineStore("windows", () => {
 		void navigateTo({
 			path: "/",
 			query: {
-				w: btoa(JSON.stringify(windowStates)),
+				w: btoa(escapeUnicode(JSON.stringify(windowStates))),
 				a: arrangement.value,
 			},
 		});
+	}
+
+	function updateQueryParam(id: WindowItem["id"], query: string) {
+		const w = registry.value.get(id);
+		if (w) {
+			const wi = QueryString.safeParse(w.params);
+			if (wi.success) {
+				wi.data.queryString = query;
+				w.winbox.setTitle(query);
+				updateUrl();
+			}
+		}
 	}
 
 	return {
 		restoreState,
 		addWindow,
 		removeWindow,
+		updateQueryParam,
 		registry,
 		arrangement,
 		setWindowArrangement,

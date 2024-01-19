@@ -5,9 +5,10 @@ import InfiniteLoading from "v3-infinite-loading";
 import type { StateHandler } from "v3-infinite-loading/lib/types";
 
 import type { CorpusText, CorpusTextUtterances, HttpResponse } from "@/lib/api-client";
+import type { CorpusTextSchema } from "@/types/global";
 
 const props = defineProps<{
-	params: CorpusTextParams;
+	params: Zod.infer<typeof CorpusTextSchema>["params"];
 }>();
 
 const utterances = ref<Array<CorpusTextUtterances>>([]);
@@ -19,7 +20,7 @@ const loadNextPage = async function () {
 	let text: HttpResponse<CorpusText, string>;
 	text = await api.vicav.getCorpusText(
 		{
-			id: props.params.id,
+			id: props.params.textId,
 			hits: props.params.hits,
 			page: currentPage.value,
 		},
@@ -62,8 +63,9 @@ onMounted(async () => {
 </script>
 
 <template>
-	<div :id="params.id" class="corpus-text">
-		<h2>{{ params.id }}</h2>
+	<!-- eslint-disable tailwindcss/no-custom-classname, vue/no-v-html -->
+	<div :id="params.textId" class="corpus-text">
+		<h2>{{ params.textId }}</h2>
 		<div
 			v-for="u in utterances"
 			:id="u.id"

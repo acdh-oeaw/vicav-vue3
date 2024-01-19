@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import type { TextWindowItem } from "@/types/global.d";
+
 interface Props {
 	params: TextWindowItem["params"];
 }

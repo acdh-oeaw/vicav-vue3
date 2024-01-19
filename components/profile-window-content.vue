@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import type { ProfileWindowItem } from "@/types/global.d";
+
 interface Props {
 	params: ProfileWindowItem["params"];
 }

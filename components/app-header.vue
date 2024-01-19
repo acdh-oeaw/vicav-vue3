@@ -1,7 +1,14 @@
 <script lang="ts" setup>
-import { isNonEmptyString } from "@acdh-oeaw/lib";
-
 import type { ItemType } from "@/lib/api-client";
+import type {
+	BibliographyEntriesWindowItem,
+	CorpusQueryWindowItem,
+	CorpusTextWindowItem,
+	FeatureWindowItem,
+	GeoMapWindowItem,
+	ProfileWindowItem,
+	TextWindowItem,
+} from "@/types/global.d";
 
 const windowsStore = useWindowsStore();
 const { addWindow } = windowsStore;
@@ -21,123 +28,63 @@ const titlestring = computed(() => {
 	return data.value?.projectConfig?.logo?.string;
 });
 
-function createWindowId(_item: ItemType) {
-	/**
-	 * We intentionally do *not* use `item.target` for window id, because we don't want to
-	 * deduplicate windows. It should be possible to open multiple instances of the same
-	 * window, so we rely on the store to assign a unique id.
-	 */
-	return null;
-}
-
-function createWindowTitle(item: ItemType) {
-	if (isNonEmptyString(item.label)) return item.label;
-	// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-	return item.title!;
-}
-
 function onSelectMenuItem(item: ItemType) {
+	let newWindowState: WindowState;
+	// TODO: move zod-based typing to the api definition, so this switch can be deleted
 	switch (item.targetType) {
-		case "BiblioQuery": {
-			addWindow({
-				id: createWindowId(item),
-				title: createWindowTitle(item),
-				kind: "bibliography-query",
-				params: {},
-			});
+		case "BiblioEntries":
+			newWindowState = {
+				targetType: "BiblioEntries",
+				params: item.params as BibliographyEntriesWindowItem["params"],
+				title: item.label ?? "",
+			};
 			break;
-		}
-
-		case "CorpusQuery": {
-			addWindow({
-				id: createWindowId(item),
-				title: createWindowTitle(item),
-				kind: "corpus-query",
-				params: {},
-			});
+		case "CorpusQuery":
+			newWindowState = {
+				targetType: "CorpusQuery",
+				params: item.params as CorpusQueryWindowItem["params"],
+				title: item.label ?? "",
+			};
 			break;
-		}
-
-		case "CorpusText": {
-			addWindow({
-				id: createWindowId(item),
-				title: createWindowTitle(item),
-				kind: "corpus-text",
-				params: {},
-			});
+		case "CorpusText":
+			newWindowState = {
+				targetType: "CorpusText",
+				params: item.params as CorpusTextWindowItem["params"],
+				title: item.label ?? "",
+			};
 			break;
-		}
-
-		case "CrossDictQuery": {
-			addWindow({
-				id: createWindowId(item),
-				title: createWindowTitle(item),
-				kind: "cross-dictionary-query",
-				params: {},
-			});
+		case "Feature":
+			newWindowState = {
+				targetType: "Feature",
+				params: item.params as FeatureWindowItem["params"],
+				title: item.label ?? "",
+			};
 			break;
-		}
-
-		case "DataList": {
-			addWindow({
-				id: createWindowId(item),
-				title: createWindowTitle(item),
-				kind: "data-list",
-				params: {},
-			});
+		case "WMap":
+			newWindowState = {
+				targetType: "WMap",
+				params: item.params as GeoMapWindowItem["params"],
+				title: item.label ?? "",
+			};
 			break;
-		}
-
-		case "DictQuery": {
-			addWindow({
-				id: createWindowId(item),
-				title: createWindowTitle(item),
-				kind: "dictionary-query",
-				params: {},
-			});
+		case "Profile":
+			newWindowState = {
+				targetType: "Profile",
+				params: item.params as ProfileWindowItem["params"],
+				title: item.label ?? "",
+			};
 			break;
-		}
-
-		case "SampleText": {
-			addWindow({
-				id: createWindowId(item),
-				title: createWindowTitle(item),
-				kind: "sample-text",
-				params: {},
-			});
+		case "Text":
+			newWindowState = {
+				targetType: "Text",
+				params: item.params as TextWindowItem["params"],
+				title: item.label ?? "",
+			};
 			break;
-		}
-
-		case "Text": {
-			addWindow({
-				id: createWindowId(item),
-				title: createWindowTitle(item),
-				kind: "text",
-				params: {
-					// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-					id: item.target!,
-				},
-			});
-			break;
-		}
-
-		case "WMap": {
-			addWindow({
-				id: createWindowId(item),
-				title: createWindowTitle(item),
-				kind: "geo-map",
-				params: {
-					// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-					...item.query!,
-					// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-					id: item.target!,
-				},
-			});
-			break;
-		}
-
 		default:
+			throw new Error(`Window targetType not implemented on front-end: ${item.targetType}`);
 	}
+	addWindow(newWindowState);
 }
 </script>
 
@@ -145,6 +92,7 @@ function onSelectMenuItem(item: ItemType) {
 	<header class="border-b border-border bg-header text-on-header">
 		<div class="flex items-center justify-between gap-4 px-8 py-4">
 			<NuxtLink class="flex shrink-0" href="/">
+				<!-- eslint-disable-next-line tailwindcss/no-custom-classname -->
 				<span v-if="titlestring" class="titlestring">{{ titlestring }}</span>
 				<img v-if="logo" alt="" class="h-10" :src="logo" />
 			</NuxtLink>
