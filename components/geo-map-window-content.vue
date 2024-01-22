@@ -1,12 +1,13 @@
 <script lang="ts" setup>
 import { keyByToMap } from "@acdh-oeaw/lib";
 
-import type { ItemType, QueryDescription } from "@/lib/api-client";
+import type { GeoTargetTypeParameters } from "@/lib/api-client";
+import { type GeoMapSchema, GeoMapSubnavItemSchema } from "@/types/global.d";
 
-type ItemId = NonNullable<ItemType["target"]>;
+type ItemId = string;
 
 interface Props {
-	params: GeoMapWindowItem["params"];
+	params: Zod.infer<typeof GeoMapSchema>["params"];
 }
 
 const props = defineProps<Props>();
@@ -14,16 +15,39 @@ const { params } = toRefs(props);
 
 const { data: projectData } = useProjectInfo();
 
+const createId = function (params: Zod.infer<typeof GeoMapSchema>["params"]): ItemId {
+	let endpoint = params.endpoint,
+		queryString = params.queryString,
+		scope = params.scope?.join(",") ?? "";
+	return `${endpoint}:${queryString}:${scope}`;
+};
+
 const itemsById = computed(() => {
-	const items = projectData.value?.projectConfig?.menu?.subnav;
+	const items = projectData.value?.projectConfig?.menu?.subnav?.reduce(
+		(filtered: Array<Zod.infer<typeof GeoMapSubnavItemSchema>>, item) => {
+			let safeParse = GeoMapSubnavItemSchema.safeParse(item);
+			if (safeParse.success) {
+				safeParse.data.id = createId(safeParse.data.params);
+				filtered.push(safeParse.data);
+			}
+			return filtered;
+		},
+		[] as Array<Zod.infer<typeof GeoMapSubnavItemSchema>>,
+	);
 
-	if (items == null) return new Map<ItemId, ItemType>();
+	if (items == null) return new Map<ItemId, Zod.infer<typeof GeoMapSubnavItemSchema>>();
 
-	// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-	return keyByToMap(items, (item) => item.target!);
+	return keyByToMap(items, (item) => item.id);
 });
 
-const selected = ref<Set<ItemId>>(new Set([params.value.id]));
+const id = createId(params.value);
+if (!itemsById.value.has(id)) {
+	itemsById.value.set(id, {
+		title: id,
+		params: params.value,
+	} as Zod.infer<typeof GeoMapSubnavItemSchema>);
+}
+const selected = ref<Set<ItemId>>(new Set([id]));
 
 function onSelect(id: ItemId) {
 	if (selected.value.has(id)) {
@@ -37,7 +61,7 @@ const queries = useGeoMarkerLayers(
 	computed(() => {
 		return Array.from(selected.value).map((id) => {
 			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-			return itemsById.value.get(id)!.query! as Required<QueryDescription>;
+			return itemsById.value.get(id)!.params as Required<GeoTargetTypeParameters>;
 		});
 	}),
 );

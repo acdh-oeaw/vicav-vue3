@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-import type { ItemType } from "@/lib/api-client";
+import type { GeoMapSubnavItemSchema } from "@/types/global.d";
 
-type ItemId = NonNullable<ItemType["target"]>;
+type ItemId = string;
 
 const props = defineProps<{
-	options: Map<ItemId, ItemType>;
+	options: Map<ItemId, Zod.infer<typeof GeoMapSubnavItemSchema>>;
 	selected: Set<ItemId>;
 }>();
 
