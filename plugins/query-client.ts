@@ -31,12 +31,16 @@ export default defineNuxtPlugin((nuxt) => {
 						  (error.error?.title as string | undefined) ?? error.statusText
 						: error.message;
 
-				addToast({
-					title: "VueQuery Error",
-					description: message,
-					type: "foreground",
-					variant: "negative",
-				});
+				if (process.client) {
+					addToast({
+						title: "Error",
+						description: message,
+						type: "foreground",
+						variant: "negative",
+					});
+				} else {
+					console.error(error);
+				}
 			},
 		}),
 	});
