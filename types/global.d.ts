@@ -29,6 +29,14 @@ export const BibliographyEntriesSchema = z.object({
 export type BibliographyEntriesWindowItem = WindowItemBase &
 	z.infer<typeof BibliographyEntriesSchema>;
 
+export const DictQuerySchema = z.object({
+	targetType: z.literal("DictQuery"),
+	params: z.object({
+		textId: z.string(),
+	}),
+});
+export type DictQueryWindowItem = WindowItemBase & z.infer<typeof DictQuerySchema>;
+
 export const FeatureSchema = z.object({
 	targetType: z.literal("Feature"),
 	params: TextId.merge(TeiSource),
@@ -65,6 +73,7 @@ export type TextWindowItem = WindowItemBase & z.infer<typeof TextSchema>;
 
 export const Schema = z.discriminatedUnion("targetType", [
 	BibliographyEntriesSchema,
+	DictQuerySchema,
 	FeatureSchema,
 	GeoMapSchema,
 	ProfileSchema,

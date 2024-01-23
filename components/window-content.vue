@@ -30,5 +30,10 @@ function updateQueryParam(queryString: string) {
 		:params="props.item.params"
 		@update-query-param="updateQueryParam"
 	/>
+	<DictQueryWindowContent
+		v-else-if="props.item.targetType === 'DictQuery'"
+		:params="props.item.params"
+		@update-query-param="updateQueryParam"
+	/>
 	<pre v-else>{{ props }}</pre>
 </template>

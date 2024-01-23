@@ -4,6 +4,7 @@ import { noop } from "@acdh-oeaw/lib";
 import type { ItemType } from "@/lib/api-client";
 import type {
 	BibliographyEntriesWindowItem,
+	DictQueryWindowItem,
 	FeatureWindowItem,
 	GeoMapWindowItem,
 	ProfileWindowItem,
@@ -43,6 +44,13 @@ function onSelectMenuItem(item: ItemType) {
 				targetType: "BiblioEntries",
 				params: item.params as BibliographyEntriesWindowItem["params"],
 				title: item.label ?? "",
+			};
+			break;
+		case "DictQuery":
+			newWindowState = {
+				targetType: "DictQuery",
+				params: item.params as DictQueryWindowItem["params"],
+				title: item.label ?? "Dictionary Query",
 			};
 			break;
 		case "Feature":
