@@ -29,10 +29,14 @@ export const BibliographyEntriesSchema = z.object({
 export type BibliographyEntriesWindowItem = WindowItemBase &
 	z.infer<typeof BibliographyEntriesSchema>;
 
+export const Dict = z.object({
+	id: z.string(),
+});
+export type DictType = Zod.infer<typeof Dict>;
 export const DictQuerySchema = z.object({
 	targetType: z.literal("DictQuery"),
 	params: z.object({
-		textId: z.string(),
+		textId: Dict.shape.id,
 	}),
 });
 export type DictQueryWindowItem = WindowItemBase & z.infer<typeof DictQuerySchema>;
