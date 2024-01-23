@@ -171,8 +171,7 @@ export const useWindowsStore = defineStore("windows", () => {
 				index: 0,
 				class: "wb-tei",
 				click: function () {
-					const env = useRuntimeConfig();
-					if (env.public.NUXT_PUBLIC_TEI_BASEURL) {
+					if (teiSourceParse.data.teiSource) {
 						window.open(teiSourceParse.data.teiSource, "_blank");
 					}
 				},
