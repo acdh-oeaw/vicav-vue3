@@ -48,11 +48,17 @@ export const useWindowsStore = defineStore("windows", () => {
 
 	const toasts = useToastsStore();
 
+	const { data, suspense } = useProjectInfo();
+	const initialScreenSetup = computed(() => {
+		return data.value?.projectConfig?.panel ?? [];
+	});
 	async function initializeScreen() {
+		await suspense();
 		await navigateTo({
 			path: "/",
-			query: { w: btoa("[]"), a: arrangement.value },
+			query: { w: btoa(JSON.stringify(initialScreenSetup.value)), a: arrangement.value },
 		});
+		await restoreState();
 	}
 
 	const restoreState = async () => {
