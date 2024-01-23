@@ -5,6 +5,7 @@ import { z } from "zod";
 import {
 	QueryString,
 	Schema,
+	TeiSource,
 	TextId,
 	type WindowItem,
 	type WindowItemTargetType,
@@ -48,11 +49,17 @@ export const useWindowsStore = defineStore("windows", () => {
 
 	const toasts = useToastsStore();
 
+	const { data, suspense } = useProjectInfo();
+	const initialScreenSetup = computed(() => {
+		return data.value?.projectConfig?.panel ?? [];
+	});
 	async function initializeScreen() {
+		await suspense();
 		await navigateTo({
 			path: "/",
-			query: { w: btoa("[]"), a: arrangement.value },
+			query: { w: btoa(JSON.stringify(initialScreenSetup.value)), a: arrangement.value },
 		});
+		await restoreState();
 	}
 
 	const restoreState = async () => {
@@ -157,6 +164,20 @@ export const useWindowsStore = defineStore("windows", () => {
 			},
 			root: rootElement,
 		});
+
+		const teiSourceParse = TeiSource.safeParse(params);
+		if (teiSourceParse.success) {
+			winbox.addControl({
+				index: 0,
+				class: "wb-tei",
+				click: function () {
+					const env = useRuntimeConfig();
+					if (env.public.NUXT_PUBLIC_TEI_BASEURL) {
+						window.open(teiSourceParse.data.teiSource, "_blank");
+					}
+				},
+			});
+		}
 
 		registry.value.set(id, {
 			id,

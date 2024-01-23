@@ -11,6 +11,9 @@ interface WindowItemBase {
 export const TextId = z.object({
 	textId: z.string(),
 });
+export const TeiSource = z.object({
+	teiSource: z.string(),
+});
 export const QueryString = z.object({
 	queryString: z.string(),
 });
@@ -45,7 +48,7 @@ export type CorpusTextWindowItem = WindowItemBase & z.infer<typeof CorpusTextSch
 
 export const FeatureSchema = z.object({
 	targetType: z.literal("Feature"),
-	params: TextId,
+	params: TextId.merge(TeiSource),
 });
 export type FeatureWindowItem = WindowItemBase & z.infer<typeof FeatureSchema>;
 
@@ -67,13 +70,13 @@ export const GeoMapSubnavItemSchema = z.intersection(
 
 export const ProfileSchema = z.object({
 	targetType: z.literal("Profile"),
-	params: TextId,
+	params: TextId.merge(TeiSource),
 });
 export type ProfileWindowItem = WindowItemBase & z.infer<typeof ProfileSchema>;
 
 export const TextSchema = z.object({
 	targetType: z.literal("Text"),
-	params: TextId,
+	params: TextId.merge(TeiSource),
 });
 export type TextWindowItem = WindowItemBase & z.infer<typeof TextSchema>;
 
