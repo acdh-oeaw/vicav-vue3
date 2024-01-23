@@ -5,6 +5,7 @@ import { z } from "zod";
 import {
 	QueryString,
 	Schema,
+	TeiSource,
 	TextId,
 	type WindowItem,
 	type WindowItemTargetType,
@@ -157,6 +158,20 @@ export const useWindowsStore = defineStore("windows", () => {
 			},
 			root: rootElement,
 		});
+
+		const teiSourceParse = TeiSource.safeParse(params);
+		if (teiSourceParse.success) {
+			winbox.addControl({
+				index: 0,
+				class: "wb-tei",
+				click: function () {
+					const env = useRuntimeConfig();
+					if (env.public.NUXT_PUBLIC_TEI_BASEURL) {
+						window.open(teiSourceParse.data.teiSource, "_blank");
+					}
+				},
+			});
+		}
 
 		registry.value.set(id, {
 			id,
