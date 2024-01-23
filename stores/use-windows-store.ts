@@ -161,7 +161,6 @@ export const useWindowsStore = defineStore("windows", () => {
 
 		const teiSourceParse = TeiSource.safeParse(params);
 		if (teiSourceParse.success) {
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 			winbox.addControl({
 				index: 0,
 				class: "wb-tei",
