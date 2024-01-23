@@ -5,6 +5,7 @@ import { z } from "zod";
 import {
 	QueryString,
 	Schema,
+	TeiSource,
 	TextId,
 	type WindowItem,
 	type WindowItemTargetType,
@@ -158,7 +159,8 @@ export const useWindowsStore = defineStore("windows", () => {
 			root: rootElement,
 		});
 
-		if (ci.success) {
+		const teiSourceParse = TeiSource.safeParse(params);
+		if (teiSourceParse.success) {
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 			winbox.addControl({
 				index: 0,
@@ -166,7 +168,7 @@ export const useWindowsStore = defineStore("windows", () => {
 				click: function () {
 					const env = useRuntimeConfig();
 					if (env.public.NUXT_PUBLIC_TEI_BASEURL) {
-						window.open(`${env.public.NUXT_PUBLIC_TEI_BASEURL}&id=${ci.data.textId}`, "_blank");
+						window.open(teiSourceParse.data.teiSource, "_blank");
 					}
 				},
 			});
