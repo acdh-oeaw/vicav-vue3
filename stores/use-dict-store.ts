@@ -1,31 +1,52 @@
-import { Dict, type DictType } from "@/types/global.d";
+import { Dict, type DictId, type DictType } from "@/types/global.d";
 
-export type DictRegistry = Map<DictType["id"], DictType>;
+type DictIndex = Set<DictId>;
 
 export const useDictStore = defineStore("dict", () => {
-	const { data, suspense } = useDicts();
-	const registry = computed(() => {
-		const newRegistry: DictRegistry = new Map();
-		const dicts: Array<object> | undefined = data.value?._embedded.dicts;
+	const { data: dictData, suspense } = useDicts();
+
+	const initialize = async () => {
+		await suspense();
+	};
+
+	const dictIndex = computed(() => {
+		const newDictIndex: DictIndex = new Set();
+		const dicts: Array<object> | undefined = dictData.value?._embedded.dicts;
 		if (dicts !== undefined) {
 			dicts.forEach((d) => {
 				const dictParse = Dict.safeParse({
 					id: d.name as string,
 				});
 				if (dictParse.success) {
-					newRegistry.set(dictParse.data.id, dictParse.data);
+					newDictIndex.add(dictParse.data.id);
 				}
 			});
 		}
-		return newRegistry;
+		return newDictIndex;
 	});
 
-	const getDictById = (id: DictType["id"]) => {
-		return registry.value.get(id);
+	const getDictById = async (id: DictId) => {
+		if (!dictIndex.value.has(id)) {
+			return;
+		}
+		const { data, suspense: suspense } = useDictsDict({ id });
+		await suspense();
+		const dataObject = data.value?._embedded._.find((obj) => obj.note === "all entries");
+		if (dataObject === undefined) {
+			return;
+		}
+		const dict: DictType = {
+			id,
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+			queryTemplates: dataObject.queryTemplates,
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+			dbNames: dataObject.dbNames,
+		};
+		return dict;
 	};
 
 	return {
+		initialize,
 		getDictById,
-		suspense,
 	};
 });
