@@ -44,7 +44,7 @@ export type DictQueryWindowItem = WindowItemBase & z.infer<typeof DictQuerySchem
 
 export const FeatureSchema = z.object({
 	targetType: z.literal("Feature"),
-	params: TextId.merge(TeiSource),
+	params: TextId.merge(TeiSource.partial()),
 });
 export type FeatureWindowItem = WindowItemBase & z.infer<typeof FeatureSchema>;
 
@@ -66,13 +66,13 @@ export const GeoMapSubnavItemSchema = z.intersection(
 
 export const ProfileSchema = z.object({
 	targetType: z.literal("Profile"),
-	params: TextId.merge(TeiSource),
+	params: TextId.merge(TeiSource.partial()),
 });
 export type ProfileWindowItem = WindowItemBase & z.infer<typeof ProfileSchema>;
 
 export const TextSchema = z.object({
 	targetType: z.literal("Text"),
-	params: TextId.merge(TeiSource),
+	params: TextId.merge(TeiSource.partial()),
 });
 export type TextWindowItem = WindowItemBase & z.infer<typeof TextSchema>;
 
