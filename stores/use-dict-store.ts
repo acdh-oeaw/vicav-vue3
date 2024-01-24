@@ -20,8 +20,12 @@ export const useDictStore = defineStore("dict", () => {
 		return newRegistry;
 	});
 
+	const getDictById = (id: DictType["id"]) => {
+		return registry.value.get(id);
+	};
+
 	return {
-		registry,
+		getDictById,
 		suspense,
 	};
 });

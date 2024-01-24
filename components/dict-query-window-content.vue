@@ -9,11 +9,17 @@ const { params } = toRefs(props);
 defineEmits(["updateQueryParam"]);
 
 const dictStore = useDictStore();
-const { registry } = storeToRefs(dictStore);
 await dictStore.suspense();
+const myDict = dictStore.getDictById(params.value.textId);
 </script>
 
 <template>
-	<pre>params: {{ params }}</pre>
-	<pre>dictionaries: {{ registry }}</pre>
+	<div
+		v-if="!!myDict"
+		class="relative isolate h-full w-full overflow-auto"
+		:class="{ 'opacity-50 grayscale': !!myDict }"
+	>
+		dbName: {{ myDict?.id }}
+	</div>
+	<div v-else>Error: Dictionary {{ params.textId }} could not be loaded.</div>
 </template>
