@@ -4,6 +4,9 @@ import { Collapse, initTE } from "tw-elements";
 
 import type { BibliographyEntriesWindowItem } from "@/types/global.d";
 
+const windowsStore = useWindowsStore();
+const { addWindow } = windowsStore;
+
 interface Props {
 	params: BibliographyEntriesWindowItem["params"];
 }
@@ -28,12 +31,19 @@ const isMapQuery: Ref<boolean> = ref(false);
 
 function submitNewQuery(): void {
 	if (!isTextQuery.value && !isMapQuery.value) isTextQuery.value = true;
+	params.value.queryString = queryString.value;
 	if (isTextQuery.value) {
-		params.value.queryString = queryString.value;
 		emit("updateQueryParam", queryString.value);
 	}
 	if (isMapQuery.value) {
-		alert("map query not implemented");
+		addWindow({
+			targetType: "WMap",
+			params: {
+				queryString: queryString.value,
+				endpoint: "bibl_markers_tei",
+			},
+			title: `Bibl. Locations for "${queryString.value}"`,
+		});
 	}
 }
 
