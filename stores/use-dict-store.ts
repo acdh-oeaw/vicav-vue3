@@ -1,6 +1,6 @@
-import { Dict, type DictId, type DictType } from "@/types/global.d";
+import { Dict } from "@/types/global.d";
 
-type DictIndex = Set<DictId>;
+type DictIndex = Set<Zod.infer<typeof Dict>["id"]>;
 
 export const useDictStore = defineStore("dict", () => {
 	const { data: dictData, suspense } = useDicts();
@@ -14,18 +14,16 @@ export const useDictStore = defineStore("dict", () => {
 		const dicts: Array<object> | undefined = dictData.value?._embedded.dicts;
 		if (dicts !== undefined) {
 			dicts.forEach((d) => {
-				const dictParse = Dict.safeParse({
-					id: d.name as string,
-				});
+				const dictParse = Dict.shape.id.safeParse(d.name);
 				if (dictParse.success) {
-					newDictIndex.add(dictParse.data.id);
+					newDictIndex.add(dictParse.data);
 				}
 			});
 		}
 		return newDictIndex;
 	});
 
-	const getDictById = async (id: DictId) => {
+	const getDictById = async (id: Zod.infer<typeof Dict>["id"]) => {
 		if (!dictIndex.value.has(id)) {
 			return;
 		}
@@ -35,7 +33,7 @@ export const useDictStore = defineStore("dict", () => {
 		if (dataObject === undefined) {
 			return;
 		}
-		const dict: DictType = {
+		const dict: Zod.infer<typeof Dict> = {
 			id,
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 			queryTemplates: dataObject.queryTemplates,
