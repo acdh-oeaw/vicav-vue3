@@ -5,7 +5,7 @@ export type DictRegistry = Map<DictType["id"], DictType>;
 export const useDictStore = defineStore("dict", () => {
 	const { data, suspense } = useDicts();
 	const registry = computed(() => {
-		const newRegistry = ref<DictRegistry>(new Map());
+		const newRegistry: DictRegistry = new Map();
 		const dicts: Array<object> | undefined = data.value?._embedded.dicts;
 		if (dicts !== undefined) {
 			dicts.forEach((d) => {
@@ -13,7 +13,7 @@ export const useDictStore = defineStore("dict", () => {
 					id: d.name as string,
 				});
 				if (dictParse.success) {
-					newRegistry.value.set(dictParse.data.id, dictParse.data);
+					newRegistry.set(dictParse.data.id, dictParse.data);
 				}
 			});
 		}
