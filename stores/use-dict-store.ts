@@ -6,7 +6,7 @@ export const useDictStore = defineStore("dict", () => {
 	const { data, suspense } = useDicts();
 	const registry = computed(() => {
 		const newRegistry = ref<DictRegistry>(new Map());
-		const dicts: Array<object> | undefined = data.value?._embeded?.dicts;
+		const dicts: Array<object> | undefined = data.value?._embedded.dicts;
 		if (dicts !== undefined) {
 			dicts.forEach((d) => {
 				const dictParse = Dict.safeParse({
