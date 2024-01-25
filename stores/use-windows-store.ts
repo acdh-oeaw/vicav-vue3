@@ -23,6 +23,7 @@ export const arrangements = {
 	cascade: { id: "cascade", label: "Cascade" },
 	tile: { id: "tile", label: "Tile" },
 	"smart-tile": { id: "smart-tile", label: "Smart tile" },
+	"column-five-flex": { id: "column-five-flex", label: "Column 5 Flex" },
 };
 
 export type WindowArrangement = keyof typeof arrangements;
@@ -242,6 +243,11 @@ export const useWindowsStore = defineStore("windows", () => {
 
 			case "tile": {
 				arrange.tile(viewport, windows);
+				break;
+			}
+
+			case "column-five-flex": {
+				arrange.columnFiveFlex(viewport, windows);
 				break;
 			}
 		}

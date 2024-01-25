@@ -74,6 +74,23 @@ export function tile(viewport: DOMRect, windows: Array<WindowItem>): void {
 	});
 }
 
+export function columnFiveFlex(viewport: DOMRect, windows: Array<WindowItem>): void {
+	const N = windows.length;
+	const cols = 5;
+	const rows = Math.ceil(N / cols);
+	const windowHeight = Math.floor(viewport.height / rows);
+
+	windows.forEach((item, index) => {
+		const isLastRow = index >= N - (N % cols);
+		const windowWidth = Math.floor(viewport.width / (isLastRow ? N % cols : cols));
+		const x = windowWidth * (index % cols);
+		const y = windowHeight * Math.floor(index / cols);
+
+		item.winbox.resize(windowWidth, windowHeight).move(x, y);
+		removeWindowControls(item.winbox);
+	});
+}
+
 function removeWindowControls(winbox: WinBox) {
 	winbox
 		.addClass("no-min")
