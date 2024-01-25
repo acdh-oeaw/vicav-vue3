@@ -18,14 +18,14 @@ const submit = () => {
 
 const InsertSnippet = async (snippet: string): Promise<void> => {
 	if (typeof inputElement.value.selectionStart !== "undefined") {
-		let cursorPosition = Number(inputElement.value.selectionStart);
+		let selectionStart = Number(inputElement.value.selectionStart),
+			selectionEnd = Number(inputElement.value.selectionEnd);
 		myString.value =
-			myString.value.substring(0, cursorPosition) +
+			myString.value.substring(0, selectionStart) +
 			snippet +
-			myString.value.substring(cursorPosition, myString.value.length);
-		cursorPosition += snippet.length;
+			myString.value.substring(selectionEnd, myString.value.length);
 		await nextTick();
-		restoreCursorPosition(cursorPosition);
+		restoreCursorPosition(selectionStart + snippet.length);
 	}
 };
 
