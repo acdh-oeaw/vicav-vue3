@@ -1,8 +1,11 @@
 import { useQuery } from "@tanstack/vue-query";
 
-import type { DictId } from "@/types/global.d";
+import type { Dict } from "@/types/global.d";
 
-export function useDictsDict(params: { id: DictId }, options?: { enabled?: boolean }) {
+export function useDictsDict(
+	params: { id: Zod.infer<typeof Dict>["id"] },
+	options?: { enabled?: boolean },
+) {
 	const api = useApiClient();
 
 	return useQuery({
