@@ -33,6 +33,8 @@ export const Dict = z.object({
 	id: z.string(),
 	queryTemplates: z.array(z.string()),
 	dbNames: z.array(z.string()),
+	fieldSelect: z.map(z.string(), z.string()),
+	specChars: z.array(z.string()),
 });
 export const DictQuerySchema = z.object({
 	targetType: z.literal("DictQuery"),
