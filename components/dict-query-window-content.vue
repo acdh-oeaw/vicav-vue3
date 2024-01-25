@@ -12,13 +12,38 @@ const dictStore = useDictStore();
 await dictStore.initialize();
 const myDict = await dictStore.getDictById(params.value.textId);
 
-const isLoading = ref(false);
 const formId = `biblioQueryForm-${params.value.textId}`;
 const queryString = ref("");
+const page = ref<number | undefined>();
+const pageSize = ref<number | undefined>();
+const id = ref<string | null | undefined>();
+const ids = ref<string | null | undefined>();
+const q = ref<string | null | undefined>();
+const sort = ref<"asc" | "desc" | "none" | null | undefined>();
+const altLemma = ref<string | null | undefined>();
+const format = ref<string | null | undefined>();
+
+const queryParams: Parameters<typeof useDictsEntries>["0"]["queryParams"] = {};
+const { data, isPending, isPlaceholderData } = useDictsEntries({
+	dictId: String(myDict?.id),
+	queryParams,
+});
+
+const isLoading = computed(() => {
+	return isPending.value || isPlaceholderData.value;
+});
+
 const submitNewQuery = () => {
-	console.warn("submitNewQuery says: hello");
+	// TODO: empty queryParams?
+	if (page.value) queryParams.page = page.value;
+	if (pageSize.value) queryParams.pageSize = pageSize.value;
+	if (id.value) queryParams.id = id.value;
+	if (ids.value) queryParams.ids = ids.value;
+	if (q.value) queryParams.q = q.value;
+	if (sort.value) queryParams.sort = sort.value;
+	if (altLemma.value) queryParams.altLemma = altLemma.value;
+	if (format.value) queryParams.format = format.value;
 };
-const data = ref("");
 </script>
 
 <template>
@@ -52,7 +77,11 @@ const data = ref("");
 		</div>
 
 		<!-- eslint-disable-next-line vue/no-v-html, vuejs-accessibility/click-events-have-key-events, vuejs-accessibility/no-static-element-interactions -->
-		<div v-if="queryString && data" class="prose mb-auto max-w-3xl p-8" v-html="data" />
+		<div
+			v-if="queryString && data"
+			class="prose mb-auto max-w-3xl p-8"
+			v-html="JSON.stringify(data)"
+		/>
 
 		<Centered v-if="isLoading">
 			<LoadingIndicator />
