@@ -35,12 +35,12 @@ const data = ref("");
 			</div>
 			<div :id="formId" class="max-w-3xl bg-gray-200 p-4">
 				<div>
-					<input
+					<InputExtended
 						v-model="queryString"
-						type="text"
-						class="block w-full rounded border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
+						:string-snippets="myDict.specChars"
 						placeholder="Search in dictionary&hellip;"
-						@keyup.enter="submitNewQuery"
+						aria-label="Search"
+						@submit="submitNewQuery"
 					/>
 				</div>
 				<div class="mt-3">
@@ -73,5 +73,14 @@ const data = ref("");
 
 .biblQueryBtn {
 	@apply w-full h-10 text-primary border-2 border-solid border-primary font-bold bg-on-primary inline-block text-center whitespace-nowrap align-middle rounded disabled:border-gray-400 disabled:text-gray-400 hover:disabled:bg-on-primary hover:disabled:text-gray-400 hover:bg-primary hover:text-on-primary;
+}
+
+/* InputExtended stylesheet */
+.ie button {
+	@apply border-0 bg-primary px-[5px] text-on-primary hover:bg-opacity-50 rounded-[3px] m-0.5;
+}
+
+.ie input {
+	@apply mt-0.5 block w-full rounded border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500;
 }
 </style>
