@@ -1,7 +1,7 @@
 <script setup lang="ts">
 const props = defineProps({
 	modelValue: String,
-	stringSnippets: Array<string>,
+	buttonLabels: Array<string>,
 	placeholder: String,
 });
 const emit = defineEmits(["update:modelValue", "submit"]);
@@ -50,7 +50,7 @@ const restoreCursorPosition = (pos: number) => {
 	<div class="ie">
 		<div class="ie-buttons">
 			<button
-				v-for="(c, i) in stringSnippets"
+				v-for="(c, i) in buttonLabels"
 				:key="i"
 				@click.prevent="InsertSnippet(c)"
 				v-text="c"
