@@ -58,7 +58,9 @@ const data = ref("");
 			<LoadingIndicator />
 		</Centered>
 	</div>
-	<div v-else>Error: Dictionary {{ params.textId }} could not be loaded.</div>
+	<div v-else class="prose relative isolate h-full w-full max-w-3xl overflow-auto px-8 pb-4 pt-8">
+		Error: Dictionary "{{ params.textId }}" could not be loaded.
+	</div>
 </template>
 
 <style>
