@@ -13,7 +13,8 @@ await dictStore.initialize();
 const myDict = await dictStore.getDictById(params.value.textId);
 
 const formId = `biblioQueryForm-${params.value.textId}`;
-const queryString = ref("");
+const textInput = ref("");
+
 const page = ref<number | undefined>();
 const pageSize = ref<number | undefined>();
 const id = ref<string | null | undefined>();
@@ -34,15 +35,22 @@ const isLoading = computed(() => {
 });
 
 const submitNewQuery = () => {
-	// TODO: empty queryParams?
 	if (page.value) queryParams.page = page.value;
+	else delete queryParams.page;
 	if (pageSize.value) queryParams.pageSize = pageSize.value;
+	else delete queryParams.pageSize;
 	if (id.value) queryParams.id = id.value;
+	else delete queryParams.id;
 	if (ids.value) queryParams.ids = ids.value;
+	else delete queryParams.ids;
 	if (q.value) queryParams.q = q.value;
+	else delete queryParams.q;
 	if (sort.value) queryParams.sort = sort.value;
+	else delete queryParams.sort;
 	if (altLemma.value) queryParams.altLemma = altLemma.value;
+	else delete queryParams.altLemma;
 	if (format.value) queryParams.format = format.value;
+	else delete queryParams.format;
 };
 </script>
 
@@ -56,31 +64,29 @@ const submitNewQuery = () => {
 		<div class="prose max-w-3xl px-8 pb-4 pt-8">
 			<div class="dvStats flex w-full items-baseline">
 				Query {{ params.textId }}:&nbsp;&nbsp;
-				<span class="spQueryText">{{ queryString }}</span>
+				<span class="spQueryText">{{ textInput }}</span>
 			</div>
 			<div :id="formId" class="max-w-3xl bg-gray-200 p-4">
 				<div>
 					<InputExtended
-						v-model="queryString"
-						:string-snippets="myDict.specChars"
+						v-model="textInput"
+						:button-labels="myDict.specChars"
 						placeholder="Search in dictionary&hellip;"
 						aria-label="Search"
 						@submit="submitNewQuery"
 					/>
 				</div>
 				<div class="mt-3">
-					<button class="biblQueryBtn" :disabled="!queryString" @click="submitNewQuery">
-						Query
-					</button>
+					<button class="biblQueryBtn" :disabled="!textInput" @click="submitNewQuery">Query</button>
 				</div>
 			</div>
 		</div>
 
 		<!-- eslint-disable-next-line vue/no-v-html, vuejs-accessibility/click-events-have-key-events, vuejs-accessibility/no-static-element-interactions -->
 		<div
-			v-if="queryString && data"
+			v-if="data"
 			class="prose mb-auto max-w-3xl p-8"
-			v-html="JSON.stringify(data)"
+			v-html="JSON.stringify(data._embedded.entries)"
 		/>
 
 		<Centered v-if="isLoading">
