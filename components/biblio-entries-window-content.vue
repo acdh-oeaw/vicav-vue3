@@ -30,6 +30,7 @@ const isTextQuery: Ref<boolean> = ref(true);
 const isMapQuery: Ref<boolean> = ref(false);
 
 function submitNewQuery(): void {
+	if (queryString.value === "") return;
 	if (!isTextQuery.value && !isMapQuery.value) isTextQuery.value = true;
 	params.value.queryString = queryString.value;
 	if (isTextQuery.value) {
@@ -190,7 +191,7 @@ onMounted(() => {
 		</div>
 
 		<!-- eslint-disable-next-line vue/no-v-html, vuejs-accessibility/click-events-have-key-events, vuejs-accessibility/no-static-element-interactions -->
-		<div v-if="queryString && data" class="prose mb-auto max-w-3xl p-8" v-html="data" />
+		<div v-if="data" class="prose mb-auto max-w-3xl p-8" v-html="data" />
 
 		<Centered v-if="isLoading">
 			<LoadingIndicator />
