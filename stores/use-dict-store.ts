@@ -3,81 +3,6 @@ import { Dict } from "@/types/global.d";
 type DictIndex = Set<Zod.infer<typeof Dict>["id"]>;
 
 const dictDataExtra = {
-	fieldSelect: new Map<Zod.infer<typeof Dict>["id"], Zod.infer<typeof Dict>["fieldSelect"]>([
-		[
-			"dc_tunico",
-			new Map([
-				["any", "Any field"],
-				["lem", "Arabic lemma"],
-				["infl", "Arabic (infl.)"],
-				["en", "Trans. (English)"],
-				["de", "Trans. (German)"],
-				["fr", "Trans. (French)"],
-				["pos", "POS"],
-				["root", "Roots"],
-				["subc", "subc"],
-				["etymLang", "Lang. in etymologies"],
-				["etymSrc", "Words in etymologies"],
-			]),
-		],
-		[
-			"dc_apc_eng_publ",
-			new Map([
-				["any", "Any field"],
-				["lem", "Arabic lemma"],
-				["infl", "Arabic (infl.)"],
-				["en", "Trans. (English)"],
-				["de", "Trans. (German)"],
-				["fr", "Trans. (French)"],
-				["pos", "POS"],
-				["root", "Roots"],
-				["subc", "subc"],
-				["etymLang", "Lang. in etymologies"],
-				["etymSrc", "Words in etymologies"],
-			]),
-		],
-		[
-			"dc_arz_eng_publ",
-			new Map([
-				["any", "Any field"],
-				["lem", "Arabic lemma"],
-				["infl", "Arabic (infl.)"],
-				["en", "Trans. (English)"],
-				["de", "Trans. (German)"],
-				["fr", "Trans. (French)"],
-				["pos", "POS"],
-				["root", "Roots"],
-				["subc", "subc"],
-				["etymLang", "Lang. in etymologies"],
-				["etymSrc", "Words in etymologies"],
-			]),
-		],
-		[
-			"dc_acm_baghdad_eng_publ",
-			new Map([
-				["any", "Any field"],
-				["lem", "Arabic lemma"],
-				["infl", "Arabic (infl.)"],
-				["en", "Trans. (English)"],
-				["de", "Trans. (German)"],
-				["es", "Trans. (Spanish)"],
-				["pos", "POS"],
-				["root", "Roots"],
-			]),
-		],
-		[
-			"dc_ar_en_publ",
-			new Map([
-				["any", "Any field"],
-				["lem", "Arabic lemma"],
-				["infl", "Arabic (infl.)"],
-				["en", "Trans. (English)"],
-				["de", "Trans. (German)"],
-				["pos", "POS"],
-				["root", "Roots"],
-			]),
-		],
-	]),
 	specChars: new Map<Zod.infer<typeof Dict>["id"], Zod.infer<typeof Dict>["specChars"]>([
 		[
 			"dc_tunico",
@@ -258,10 +183,6 @@ export const useDictStore = defineStore("dict", () => {
 		if (dataObject === undefined) {
 			return;
 		}
-		const fieldSelect = dictDataExtra.fieldSelect.get(id); // TODO: this is obsolete, and is inserted here temporarily
-		if (fieldSelect === undefined) {
-			return;
-		}
 		const specChars = dictDataExtra.specChars.get(id); // TODO: this is obsolete, and is inserted here temporarily
 		if (specChars === undefined) {
 			return;
@@ -272,7 +193,6 @@ export const useDictStore = defineStore("dict", () => {
 			queryTemplates: dataObject.queryTemplates,
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 			dbNames: dataObject.dbNames,
-			fieldSelect,
 			specChars,
 		};
 		return dict;
