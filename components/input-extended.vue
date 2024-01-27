@@ -1,14 +1,23 @@
 <script setup lang="ts">
 const props = defineProps({
-	modelValue: String,
-	buttonLabels: Array<string>,
-	placeholder: String,
+	modelValue: { type: String, default: "" },
+	selectValue: { type: String },
+	buttonLabels: { type: Array<string>, default: [] },
+	selectOptions: { type: Map<string, string>, default: new Map([]) },
+	placeholder: { type: String, default: "" },
+	submitButtonLabel: { type: String },
 });
-const emit = defineEmits(["update:modelValue", "submit"]);
+const emit = defineEmits(["update:modelValue", "update:selectValue", "submit"]);
 
 const inputElement = ref();
 
 const myString = ref(`${props.modelValue}`);
+watch(
+	() => props.modelValue,
+	(val) => {
+		myString.value = val;
+	},
+);
 watch(myString, (val) => {
 	emit("update:modelValue", val);
 });
@@ -43,6 +52,21 @@ const restoreCursorPosition = (pos: number) => {
 		inputElement.value.selectionEnd = pos;
 	}
 };
+
+const mySelectOption = ref(
+	props.selectOptions.has(String(props.selectValue))
+		? String(props.selectValue)
+		: props.selectOptions.size > 0
+		? props.selectOptions.keys().next().value
+		: undefined,
+);
+watch(
+	mySelectOption,
+	(val) => {
+		emit("update:selectValue", val);
+	},
+	{ immediate: true },
+);
 </script>
 
 <template>
@@ -56,15 +80,28 @@ const restoreCursorPosition = (pos: number) => {
 				v-text="c"
 			></button>
 		</div>
-		<div class="ie-textinput">
-			<!-- eslint-disable-next-line vuejs-accessibility/form-control-has-label -->
-			<input
-				ref="inputElement"
-				v-model="myString"
-				type="text"
-				:placeholder="placeholder"
-				@keydown.enter.prevent="submit"
-			/>
+		<div class="ie-input-row">
+			<div class="ie-textinput">
+				<!-- eslint-disable-next-line vuejs-accessibility/form-control-has-label -->
+				<input
+					ref="inputElement"
+					v-model="myString"
+					type="text"
+					:placeholder="placeholder"
+					@keydown.enter.prevent="submit"
+				/>
+			</div>
+			<div v-if="selectOptions.size > 0" class="ie-select">
+				<!-- eslint-disable-next-line vuejs-accessibility/form-control-has-label -->
+				<select v-model="mySelectOption">
+					<option v-for="([key, value], i) in props.selectOptions" :key="i" :value="key">
+						{{ value }}
+					</option>
+				</select>
+			</div>
+			<div v-if="!!props.submitButtonLabel" class="ie-submit">
+				<button type="button" @click.prevent="submit">{{ props.submitButtonLabel }}</button>
+			</div>
 		</div>
 	</div>
 </template>
