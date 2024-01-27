@@ -189,8 +189,8 @@ export const useDictStore = defineStore("dict", () => {
 		}
 		const dict: Zod.infer<typeof Dict> = {
 			id,
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-			queryTemplates: dataObject.queryTemplates,
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-member-access
+			queryTemplates: new Map(dataObject.queryTemplates.map((e) => [e, e])),
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 			dbNames: dataObject.dbNames,
 			specChars,

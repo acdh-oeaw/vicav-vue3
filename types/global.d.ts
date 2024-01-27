@@ -31,7 +31,7 @@ export type BibliographyEntriesWindowItem = WindowItemBase &
 
 export const Dict = z.object({
 	id: z.string(),
-	queryTemplates: z.array(z.string()),
+	queryTemplates: z.map(z.string(), z.string()),
 	dbNames: z.array(z.string()),
 	specChars: z.array(z.string()),
 });
@@ -39,6 +39,15 @@ export const DictQuerySchema = z.object({
 	targetType: z.literal("DictQuery"),
 	params: z.object({
 		textId: Dict.shape.id,
+		queryParams: z.object({
+			page: z.number().optional(),
+			pageSize: z.number().optional(),
+			id: z.string().optional(),
+			ids: z.string().optional(),
+			sort: z.enum(["asc", "desc", "none"]).optional(),
+			altLemma: z.string().optional(),
+			format: z.string().optional(),
+		}),
 	}),
 });
 export type DictQueryWindowItem = WindowItemBase & z.infer<typeof DictQuerySchema>;

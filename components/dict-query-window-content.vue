@@ -13,13 +13,30 @@ await dictStore.initialize();
 const myDict = await dictStore.getDictById(params.value.textId);
 
 const formId = `biblioQueryForm-${params.value.textId}`;
+
 const textInput = ref("");
+const queryTemplate = ref("");
+const filterCriteria = ref<Map<string, string>>(new Map([]));
+const addFilter = () => {
+	if (textInput.value !== "") {
+		filterCriteria.value.set(queryTemplate.value, textInput.value);
+	}
+};
+const removeFilter = (key: string) => {
+	filterCriteria.value.delete(key);
+};
+const q = computed(() =>
+	[...filterCriteria.value.entries()]
+		.map(function ([key, value]) {
+			return `${key}=${value}`;
+		})
+		.join(" & "),
+);
 
 const page = ref<number | undefined>();
 const pageSize = ref<number | undefined>();
 const id = ref<string | null | undefined>();
 const ids = ref<string | null | undefined>();
-const q = ref<string | null | undefined>();
 const sort = ref<"asc" | "desc" | "none" | null | undefined>();
 const altLemma = ref<string | null | undefined>();
 const format = ref<string | null | undefined>();
@@ -27,7 +44,7 @@ const format = ref<string | null | undefined>();
 const queryParams: Parameters<typeof useDictsEntries>["0"]["queryParams"] = {};
 const { data, isPending, isPlaceholderData } = useDictsEntries({
 	dictId: String(myDict?.id),
-	queryParams,
+	queryParams: {},
 });
 
 const isLoading = computed(() => {
@@ -51,6 +68,7 @@ const submitNewQuery = () => {
 	else delete queryParams.altLemma;
 	if (format.value) queryParams.format = format.value;
 	else delete queryParams.format;
+	console.log(queryParams);
 };
 </script>
 
@@ -62,22 +80,47 @@ const submitNewQuery = () => {
 	>
 		<!-- eslint-disable vuejs-accessibility/form-control-has-label, tailwindcss/no-custom-classname -->
 		<div class="prose max-w-3xl px-8 pb-4 pt-8">
-			<div class="dvStats flex w-full items-baseline">
-				Query {{ params.textId }}:&nbsp;&nbsp;
-				<span class="spQueryText">{{ textInput }}</span>
-			</div>
+			<div class="dvStats flex w-full items-baseline">Query {{ params.textId }}:</div>
 			<div :id="formId" class="max-w-3xl bg-gray-200 p-4">
 				<div>
 					<InputExtended
 						v-model="textInput"
+						v-model:selectValue="queryTemplate"
 						:button-labels="myDict.specChars"
-						placeholder="Search in dictionary&hellip;"
+						:select-options="myDict.queryTemplates"
+						submit-button-label="+"
+						placeholder="Filter by&hellip;"
 						aria-label="Search"
-						@submit="submitNewQuery"
+						class="mb-3"
+						@submit="addFilter"
 					/>
 				</div>
+				<div v-if="filterCriteria.size > 0" class="mt-0.5 flex flex-row flex-wrap gap-1">
+					<div
+						v-for="([k, v], i) in filterCriteria"
+						:key="i"
+						class="my-0.5 flex flex-col items-center rounded-md border-2 border-primary p-0.5"
+						style="overflow-wrap: anywhere"
+					>
+						<span class="flex grow flex-row flex-nowrap">
+							<span class="text-center text-xs">{{ k }}</span>
+							<button
+								type="button"
+								class="ml-0.5 h-3.5 shrink-0 basis-3.5 content-center self-start rounded-full bg-on-primary/50 p-1 text-[84%] leading-[66%] text-primary hover:bg-on-primary dark:bg-gray-700 dark:text-white"
+								@click.prevent="removeFilter(k)"
+							>
+								×
+							</button>
+						</span>
+						<span class="text-center text-sm">{{ v }}</span>
+					</div>
+				</div>
+				<div v-else class="my-2 text-xs">
+					Add one or more filters by entering criteria in the form above and pressing the "+"
+					button.
+				</div>
 				<div class="mt-3">
-					<button class="biblQueryBtn" :disabled="!textInput" @click="submitNewQuery">Query</button>
+					<button class="biblQueryBtn" :disabled="!q" @click="submitNewQuery">Query</button>
 				</div>
 			</div>
 		</div>
@@ -113,11 +156,35 @@ const submitNewQuery = () => {
 }
 
 /* InputExtended stylesheet */
-.ie button {
+.ie-buttons button {
 	@apply border-0 bg-primary px-[5px] text-on-primary hover:bg-opacity-50 rounded-[3px] m-0.5;
 }
 
-.ie input {
+.ie-input-row {
+	@apply flex flex-row flex-wrap w-full gap-0.5  align-baseline justify-stretch;
+}
+
+.ie-textinput {
+	@apply flex-grow flex-shrink basis-20;
+}
+
+.ie-textinput input {
 	@apply mt-0.5 block w-full rounded border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500;
+}
+
+.ie-select {
+	@apply flex-grow flex-shrink basis-20;
+}
+
+.ie-select select {
+	@apply w-full h-full bg-gray-300 rounded;
+}
+
+.ie-submit {
+	@apply flex-grow flex-shrink basis-4;
+}
+
+.ie-submit button {
+	@apply h-full border-2 border-gray-300 w-full px-[5px] text-gray-900 hover:bg-opacity-50 hover:bg-primary hover:text-on-primary rounded-[3px];
 }
 </style>
