@@ -217,25 +217,35 @@ const isLoading = computed(() => {
 
 .spTrans {
 	@apply italic border-0 text-indigo-400;
+
+	overflow-wrap: anywhere;
 }
 
 .spTransDe,
 .opWordList_de {
 	@apply text-violet-500  border-0 italic;
+
+	overflow-wrap: anywhere;
 }
 
 .spTransEn,
 .opWordList_en {
 	@apply border-0 italic text-indigo-400;
+
+	overflow-wrap: anywhere;
 }
 
 .spTransFr,
 .opWordList_fr {
 	@apply border-0 italic text-pink-600;
+
+	overflow-wrap: anywhere;
 }
 
 .opWordList_ar {
 	@apply border-0 italic text-violet-500;
+
+	overflow-wrap: anywhere;
 }
 
 .tbEntry {
@@ -265,7 +275,7 @@ const isLoading = computed(() => {
 }
 
 .tdHead {
-	@apply text-on-primary text-right pr-[5px] break-words align-top bg-primary border-b-primary/50;
+	@apply text-on-primary text-right px-[5px] break-words align-top bg-primary border-b-primary/50 w-1;
 }
 
 .tdKWICMain {
