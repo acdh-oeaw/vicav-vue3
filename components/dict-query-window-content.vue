@@ -28,6 +28,12 @@ const addFilter = () => {
 const removeFilter = (key: string) => {
 	filterCriteria.value.delete(key);
 };
+const editFilter = (k: string, v: string): void => {
+	if (myDict?.queryTemplates.has(k)) {
+		queryTemplate.value = k;
+		textInput.value = v;
+	}
+};
 watch(
 	filterCriteria,
 	() => {
@@ -141,11 +147,12 @@ const isLoading = computed(() => {
 						/>
 					</div>
 					<div v-if="filterCriteria.size > 0" class="mt-0.5 flex flex-row flex-wrap gap-1">
-						<div
+						<button
 							v-for="([k, v], i) in filterCriteria"
 							:key="i"
-							class="my-0.5 flex flex-col items-center rounded-md border-2 border-primary p-0.5"
+							class="my-0.5 flex flex-col items-center rounded-md border-2 border-primary p-0.5 hover:bg-gray-50"
 							style="overflow-wrap: anywhere"
+							@click="editFilter(k, v)"
 						>
 							<span class="flex grow flex-row flex-nowrap">
 								<span class="text-center text-xs">{{ k }}</span>
@@ -158,7 +165,7 @@ const isLoading = computed(() => {
 								</button>
 							</span>
 							<span class="text-center text-sm">{{ v }}</span>
-						</div>
+						</button>
 					</div>
 					<div v-else class="my-2 text-xs">
 						Add one or more filters by entering criteria in the form above and pressing the "+"
