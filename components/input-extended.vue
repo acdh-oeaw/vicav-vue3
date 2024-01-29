@@ -67,6 +67,14 @@ watch(
 	},
 	{ immediate: true },
 );
+watch(
+	() => props.selectValue,
+	(val) => {
+		if (props.selectOptions.has(String(val))) {
+			mySelectOption.value = val;
+		}
+	},
+);
 </script>
 
 <template>
