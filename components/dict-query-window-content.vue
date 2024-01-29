@@ -41,10 +41,10 @@ const sort = ref<"asc" | "desc" | "none" | null | undefined>();
 const altLemma = ref<string | null | undefined>();
 const format = ref<string | null | undefined>();
 
-const queryParams: Parameters<typeof useDictsEntries>["0"]["queryParams"] = {};
+const queryParams = ref<Parameters<typeof useDictsEntries>[0]["queryParams"]>({});
 const { data, isPending, isPlaceholderData } = useDictsEntries({
 	dictId: String(myDict?.id),
-	queryParams: {},
+	queryParams: queryParams.value,
 });
 
 const isLoading = computed(() => {
@@ -52,23 +52,23 @@ const isLoading = computed(() => {
 });
 
 const submitNewQuery = () => {
-	if (page.value) queryParams.page = page.value;
-	else delete queryParams.page;
-	if (pageSize.value) queryParams.pageSize = pageSize.value;
-	else delete queryParams.pageSize;
-	if (id.value) queryParams.id = id.value;
-	else delete queryParams.id;
-	if (ids.value) queryParams.ids = ids.value;
-	else delete queryParams.ids;
-	if (q.value) queryParams.q = q.value;
-	else delete queryParams.q;
-	if (sort.value) queryParams.sort = sort.value;
-	else delete queryParams.sort;
-	if (altLemma.value) queryParams.altLemma = altLemma.value;
-	else delete queryParams.altLemma;
-	if (format.value) queryParams.format = format.value;
-	else delete queryParams.format;
-	console.log(queryParams);
+	if (queryParams.value === undefined) return;
+	if (page.value) queryParams.value.page = page.value;
+	else delete queryParams.value.page;
+	if (pageSize.value) queryParams.value.pageSize = pageSize.value;
+	else delete queryParams.value.pageSize;
+	if (id.value) queryParams.value.id = id.value;
+	else delete queryParams.value.id;
+	if (ids.value) queryParams.value.ids = ids.value;
+	else delete queryParams.value.ids;
+	if (q.value) queryParams.value.q = q.value;
+	else delete queryParams.value.q;
+	if (sort.value) queryParams.value.sort = sort.value;
+	else delete queryParams.value.sort;
+	if (altLemma.value) queryParams.value.altLemma = altLemma.value;
+	else delete queryParams.value.altLemma;
+	if (format.value) queryParams.value.format = format.value;
+	else delete queryParams.value.format;
 };
 </script>
 
