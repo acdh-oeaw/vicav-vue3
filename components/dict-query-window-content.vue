@@ -39,19 +39,10 @@ const id = ref<string | null | undefined>();
 const ids = ref<string | null | undefined>();
 const sort = ref<"asc" | "desc" | "none" | null | undefined>();
 const altLemma = ref<string | null | undefined>();
-const format = ref<string | null | undefined>();
+const format = ref<string | null | undefined>("html");
 
 const queryParams = ref<Parameters<typeof useDictsEntries>[0]["queryParams"]>({});
-const { data, isPending, isPlaceholderData } = useDictsEntries({
-	dictId: String(myDict?.id),
-	queryParams: queryParams.value,
-});
-
-const isLoading = computed(() => {
-	return isPending.value || isPlaceholderData.value;
-});
-
-const submitNewQuery = () => {
+const updateQueryParams = () => {
 	if (queryParams.value === undefined) return;
 	if (page.value) queryParams.value.page = page.value;
 	else delete queryParams.value.page;
@@ -70,6 +61,15 @@ const submitNewQuery = () => {
 	if (format.value) queryParams.value.format = format.value;
 	else delete queryParams.value.format;
 };
+updateQueryParams();
+const { data, isPending, isPlaceholderData } = useDictsEntries({
+	dictId: String(myDict?.id),
+	queryParams: queryParams.value,
+});
+
+const isLoading = computed(() => {
+	return isPending.value || isPlaceholderData.value;
+});
 </script>
 
 <template>
@@ -120,17 +120,21 @@ const submitNewQuery = () => {
 					button.
 				</div>
 				<div class="mt-3">
-					<button class="biblQueryBtn" :disabled="!q" @click="submitNewQuery">Query</button>
+					<button class="biblQueryBtn" :disabled="!q" @click="updateQueryParams">Query</button>
 				</div>
 			</div>
 		</div>
 
 		<!-- eslint-disable-next-line vue/no-v-html, vuejs-accessibility/click-events-have-key-events, vuejs-accessibility/no-static-element-interactions -->
-		<div
-			v-if="data"
-			class="prose mb-auto max-w-3xl p-8"
-			v-html="JSON.stringify(data._embedded.entries)"
-		/>
+		<div v-if="data" class="prose mb-auto max-w-3xl p-8">
+			<div v-if="data._embedded && data._embedded.entries">
+				<div v-for="(e, i) in data._embedded.entries" :key="i" class="my-2">
+					<!-- eslint-disable-next-line vue/no-v-html -->
+					<div v-if="typeof e.entry === 'string'" v-html="e.entry" />
+				</div>
+			</div>
+			<div v-else-if="data.total_items">Total items: {{ data.total_items }}</div>
+		</div>
 
 		<Centered v-if="isLoading">
 			<LoadingIndicator />
@@ -144,7 +148,7 @@ const submitNewQuery = () => {
 <style>
 /* stylelint-disable selector-class-pattern */
 .dvStats {
-	@apply mb-[5px] pb-[5px] pl-[5px] border border-solid border-primary bg-primary text-on-primary font-bold;
+	@apply m-0 mb-[5px] pb-[5px] pl-[5px] border border-solid border-primary bg-primary text-on-primary font-bold;
 }
 
 .spQueryText {
@@ -153,6 +157,129 @@ const submitNewQuery = () => {
 
 .biblQueryBtn {
 	@apply w-full h-10 text-primary border-2 border-solid border-primary font-bold bg-on-primary inline-block text-center whitespace-nowrap align-middle rounded disabled:border-gray-400 disabled:text-gray-400 hover:disabled:bg-on-primary hover:disabled:text-gray-400 hover:bg-primary hover:text-on-primary;
+}
+
+.aInternal {
+	@apply no-underline text-inherit;
+}
+
+.dvDef {
+	@apply pl-[5px] italic ml-0 text-base;
+}
+
+.dvExamples {
+	@apply border border-black bg-on-primary text-sm px-[5px]  m-[3px];
+}
+
+.dvLangSep {
+	@apply border-t-[0.5px] border-dotted border-t-sky-500 bg-on-primary;
+}
+
+.dvMWUExamples {
+	@apply border border-black bg-on-primary;
+}
+
+.dvRoundLemmaBox {
+	@apply text-right pt-[3px] pr-[5px] pb-0.5 relative top-[3px] left-[-15px] w-[100px] rounded-[5px] bg-gray-200 font-bold text-lg text-primary border border-primary align-baseline;
+
+	direction: ltr;
+}
+
+.dvRoundLemmaBox_ltr {
+	@apply text-left pt-[3px] pl-[5px] pb-0.5 relative top-[3px] left-[-15px] max-w-[420px] rounded-[5px] bg-gray-200 font-bold text-lg text-primary border border-primary align-baseline;
+
+	direction: ltr;
+}
+
+.dvUsg {
+	@apply italic ml-[5px] text-sm;
+}
+
+.spBibl {
+	@apply italic text-sm text-left text-yellow-900;
+}
+
+.spEditors {
+	@apply italic text-yellow-900 text-sm;
+}
+
+.spEtym {
+	@apply italic text-gray-500 text-sm;
+}
+
+.spGramGrp {
+	@apply text-green-600 italic text-sm align-baseline;
+}
+
+.spRoot {
+	@apply text-sm text-yellow-600 align-baseline;
+}
+
+.spTrans {
+	@apply italic border-0 text-indigo-400;
+}
+
+.spTransDe,
+.opWordList_de {
+	@apply text-violet-500  border-0 italic;
+}
+
+.spTransEn,
+.opWordList_en {
+	@apply border-0 italic text-indigo-400;
+}
+
+.spTransFr,
+.opWordList_fr {
+	@apply border-0 italic text-pink-600;
+}
+
+.opWordList_ar {
+	@apply border-0 italic text-violet-500;
+}
+
+.tbEntry {
+	@apply m-0 mb-2.5 mr-2.5;
+}
+
+.tdMain {
+	@apply bg-on-primary min-w-[300px] break-words;
+}
+
+.dvDictResults {
+	@apply border border-black text-yellow-900 bg-on-primary mt-5;
+}
+
+.tdExpl {
+	@apply border border-black bg-on-primary;
+}
+
+.tdNoBorderRTL {
+	@apply border-0 pl-0 align-top break-words;
+
+	direction: rtl;
+}
+
+.tdNoBorder {
+	@apply align-top pl-0 border-0 break-words;
+}
+
+.tdHead {
+	@apply text-on-primary text-right pr-[5px] break-words align-top bg-primary border-b-primary/50;
+}
+
+.tdKWICMain {
+	@apply border-b border-dotted border-indigo-600 pl-[5px];
+}
+
+.tdSense {
+	@apply bg-on-primary;
+
+	overflow-wrap: break-word;
+}
+
+[data-toggle="tooltip"] {
+	@apply cursor-pointer;
 }
 
 /* InputExtended stylesheet */
@@ -181,7 +308,7 @@ const submitNewQuery = () => {
 }
 
 .ie-submit {
-	@apply flex-grow flex-shrink basis-4;
+	@apply flex-shrink basis-6;
 }
 
 .ie-submit button {
