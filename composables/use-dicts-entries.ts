@@ -41,7 +41,7 @@ export function useDictsEntries(
 					}
 				}
 				console.error(e);
-				return null;
+				throw e;
 			}
 		},
 	});
