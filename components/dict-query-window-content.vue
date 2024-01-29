@@ -14,6 +14,9 @@ const myDict = await dictStore.getDictById(params.value.textId);
 
 const formId = `biblioQueryForm-${params.value.textId}`;
 
+const q = ref<string | undefined>("");
+const isTextInputManual = ref(false);
+
 const textInput = ref("");
 const queryTemplate = ref("");
 const filterCriteria = ref<Map<string, string>>(new Map([]));
@@ -25,12 +28,16 @@ const addFilter = () => {
 const removeFilter = (key: string) => {
 	filterCriteria.value.delete(key);
 };
-const q = computed(() =>
-	[...filterCriteria.value.entries()]
-		.map(function ([key, value]) {
-			return `${key}=${value}`;
-		})
-		.join(" & "),
+watch(
+	filterCriteria,
+	() => {
+		q.value = [...filterCriteria.value.entries()]
+			.map(function ([key, value]) {
+				return `${key}=${value}`;
+			})
+			.join(" & ");
+	},
+	{ deep: true },
 );
 
 const page = ref<number | undefined>();
@@ -41,9 +48,30 @@ const sort = ref<"asc" | "desc" | "none" | null | undefined>();
 const altLemma = ref<string | null | undefined>();
 const format = ref<string | null | undefined>("html");
 
+const updateFilterCriteria = () => {
+	textInput.value = "";
+	filterCriteria.value =
+		q.value === undefined || q.value === ""
+			? new Map([])
+			: new Map(
+					q.value
+						.trim()
+						.split(" & ")
+						.map((kv: string): [string, string] =>
+							kv.includes("=")
+								? [kv.substring(0, kv.indexOf("=")), kv.substring(kv.indexOf("=") + 1)]
+								: [kv, ""],
+						),
+			  );
+};
 const queryParams = ref<Parameters<typeof useDictsEntries>[0]["queryParams"]>({});
 const updateQueryParams = () => {
 	if (queryParams.value === undefined) return;
+	if (q.value) queryParams.value.q = q.value;
+	else delete queryParams.value.q;
+	if (isTextInputManual.value) {
+		updateFilterCriteria();
+	}
 	if (page.value) queryParams.value.page = page.value;
 	else delete queryParams.value.page;
 	if (pageSize.value) queryParams.value.pageSize = pageSize.value;
@@ -52,8 +80,6 @@ const updateQueryParams = () => {
 	else delete queryParams.value.id;
 	if (ids.value) queryParams.value.ids = ids.value;
 	else delete queryParams.value.ids;
-	if (q.value) queryParams.value.q = q.value;
-	else delete queryParams.value.q;
 	if (sort.value) queryParams.value.sort = sort.value;
 	else delete queryParams.value.sort;
 	if (altLemma.value) queryParams.value.altLemma = altLemma.value;
@@ -83,41 +109,61 @@ const isLoading = computed(() => {
 			<div class="dvStats flex w-full items-baseline">Query {{ params.textId }}:</div>
 			<div :id="formId" class="max-w-3xl bg-gray-200 p-4">
 				<div>
+					<label class="relative inline-flex cursor-pointer items-center">
+						<input v-model="isTextInputManual" type="checkbox" class="peer sr-only" />
+						<div
+							class="peer relative h-4 w-10 flex-auto shrink-0 rounded-[5px] bg-gray-500 after:absolute after:start-[2px] after:top-[1px] after:m-0.5 after:h-3 after:w-4 after:rounded-[3px] after:border after:border-gray-500/50 after:bg-on-primary after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-primary/50 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/50 rtl:peer-checked:after:-translate-x-full dark:border-gray-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800"
+						></div>
+						<span class="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300">
+							Manual edit
+						</span>
+					</label>
+				</div>
+				<div v-if="isTextInputManual">
 					<InputExtended
-						v-model="textInput"
-						v-model:selectValue="queryTemplate"
+						v-model="q"
 						:button-labels="myDict.specChars"
-						:select-options="myDict.queryTemplates"
-						submit-button-label="+"
-						placeholder="Filter by&hellip;"
-						aria-label="Search"
-						class="mb-3"
-						@submit="addFilter"
+						@submit="updateQueryParams"
 					/>
 				</div>
-				<div v-if="filterCriteria.size > 0" class="mt-0.5 flex flex-row flex-wrap gap-1">
-					<div
-						v-for="([k, v], i) in filterCriteria"
-						:key="i"
-						class="my-0.5 flex flex-col items-center rounded-md border-2 border-primary p-0.5"
-						style="overflow-wrap: anywhere"
-					>
-						<span class="flex grow flex-row flex-nowrap">
-							<span class="text-center text-xs">{{ k }}</span>
-							<button
-								type="button"
-								class="ml-0.5 h-3.5 shrink-0 basis-3.5 content-center self-start rounded-full bg-on-primary/50 p-1 text-[84%] leading-[66%] text-primary hover:bg-on-primary dark:bg-gray-700 dark:text-white"
-								@click.prevent="removeFilter(k)"
-							>
-								×
-							</button>
-						</span>
-						<span class="text-center text-sm">{{ v }}</span>
+				<div v-else>
+					<div>
+						<InputExtended
+							v-model="textInput"
+							v-model:selectValue="queryTemplate"
+							:button-labels="myDict.specChars"
+							:select-options="myDict.queryTemplates"
+							submit-button-label="+"
+							placeholder="Filter by&hellip;"
+							aria-label="Search"
+							class="mb-3"
+							@submit="addFilter"
+						/>
 					</div>
-				</div>
-				<div v-else class="my-2 text-xs">
-					Add one or more filters by entering criteria in the form above and pressing the "+"
-					button.
+					<div v-if="filterCriteria.size > 0" class="mt-0.5 flex flex-row flex-wrap gap-1">
+						<div
+							v-for="([k, v], i) in filterCriteria"
+							:key="i"
+							class="my-0.5 flex flex-col items-center rounded-md border-2 border-primary p-0.5"
+							style="overflow-wrap: anywhere"
+						>
+							<span class="flex grow flex-row flex-nowrap">
+								<span class="text-center text-xs">{{ k }}</span>
+								<button
+									type="button"
+									class="ml-0.5 h-3.5 shrink-0 basis-3.5 content-center self-start rounded-full bg-on-primary/50 p-1 text-[84%] leading-[66%] text-primary hover:bg-on-primary dark:bg-gray-700 dark:text-white"
+									@click.prevent="removeFilter(k)"
+								>
+									×
+								</button>
+							</span>
+							<span class="text-center text-sm">{{ v }}</span>
+						</div>
+					</div>
+					<div v-else class="my-2 text-xs">
+						Add one or more filters by entering criteria in the form above and pressing the "+"
+						button.
+					</div>
 				</div>
 				<div class="mt-3">
 					<button class="biblQueryBtn" :disabled="!q" @click="updateQueryParams">Query</button>
