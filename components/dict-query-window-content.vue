@@ -14,26 +14,39 @@ const myDict = await dictStore.getDictById(params.value.textId);
 
 const formId = `biblioQueryForm-${params.value.textId}`;
 
-const q = ref<string | undefined>("");
-const isTextInputManual = ref(false);
+/* data fetch parameters editing copies */
+const q = ref<string | undefined>(params.value.queryParams?.q ?? "");
+const page = ref<number | undefined>(params.value.queryParams?.page);
+const pageSize = ref<number | undefined>(params.value.queryParams?.pageSize);
+const id = ref<string | null | undefined>(params.value.queryParams?.id);
+const ids = ref<string | null | undefined>(params.value.queryParams?.ids);
+const sort = ref<"asc" | "desc" | "none" | null | undefined>(params.value.queryParams?.sort);
+const altLemma = ref<string | null | undefined>(params.value.queryParams?.altLemma);
+const format = ref<string | null | undefined>(params.value.queryParams?.format ?? "html");
 
+/* filter criteria editor */
+const isTextInputManual = ref(false);
 const textInput = ref("");
 const queryTemplate = ref("");
 const filterCriteria = ref<Map<string, string>>(new Map([]));
+
 const addFilter = () => {
 	if (textInput.value !== "") {
 		filterCriteria.value.set(queryTemplate.value, textInput.value);
 	}
 };
+
 const removeFilter = (key: string) => {
 	filterCriteria.value.delete(key);
 };
+
 const editFilter = (k: string, v: string): void => {
 	if (myDict?.queryTemplates.has(k)) {
 		queryTemplate.value = k;
 		textInput.value = v;
 	}
 };
+
 watch(
 	filterCriteria,
 	() => {
@@ -45,14 +58,6 @@ watch(
 	},
 	{ deep: true },
 );
-
-const page = ref<number | undefined>();
-const pageSize = ref<number | undefined>();
-const id = ref<string | null | undefined>();
-const ids = ref<string | null | undefined>();
-const sort = ref<"asc" | "desc" | "none" | null | undefined>();
-const altLemma = ref<string | null | undefined>();
-const format = ref<string | null | undefined>("html");
 
 const updateFilterCriteria = () => {
 	textInput.value = "";
@@ -70,6 +75,8 @@ const updateFilterCriteria = () => {
 						),
 			  );
 };
+
+/* data fetch parameters */
 const queryParams = ref<Parameters<typeof useDictsEntries>[0]["queryParams"]>({});
 const updateQueryParams = () => {
 	if (queryParams.value === undefined) return;
@@ -99,6 +106,7 @@ const { data, isPending, isPlaceholderData } = useDictsEntries({
 	queryParams: queryParams.value,
 });
 
+/* window behaviour */
 const isLoading = computed(() => {
 	return isPending.value || isPlaceholderData.value;
 });

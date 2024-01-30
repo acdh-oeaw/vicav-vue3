@@ -39,15 +39,18 @@ export const DictQuerySchema = z.object({
 	targetType: z.literal("DictQuery"),
 	params: z.object({
 		textId: Dict.shape.id,
-		queryParams: z.object({
-			page: z.number().optional(),
-			pageSize: z.number().optional(),
-			id: z.string().optional(),
-			ids: z.string().optional(),
-			sort: z.enum(["asc", "desc", "none"]).optional(),
-			altLemma: z.string().optional(),
-			format: z.string().optional(),
-		}),
+		queryParams: z
+			.object({
+				q: z.string().optional(),
+				page: z.number().optional(),
+				pageSize: z.number().optional(),
+				id: z.string().optional(),
+				ids: z.string().optional(),
+				sort: z.enum(["asc", "desc", "none"]).optional(),
+				altLemma: z.string().optional(),
+				format: z.string().optional(),
+			})
+			.optional(),
 	}),
 });
 export type DictQueryWindowItem = WindowItemBase & z.infer<typeof DictQuerySchema>;
