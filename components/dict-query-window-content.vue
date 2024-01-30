@@ -108,6 +108,10 @@ const { data, isPending, isPlaceholderData } = useDictsEntries({
 	queryParams: queryParams.value,
 });
 watch(data, (newData) => {
+	// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+	if (newData === null) {
+		return;
+	}
 	if (newData.page) {
 		page.value = newData.page;
 	}
