@@ -20,7 +20,7 @@ export default defineNuxtConfig({
 		enabled: process.env.NODE_ENV === "development",
 	},
 	imports: { dirs: ["./config/"] },
-	modules: ["@pinia/nuxt", "@vueuse/nuxt"],
+	modules: ["@pinia/nuxt", "@vueuse/nuxt", "@nuxt/ui"],
 	nitro: { compressPublicAssets: true },
 	postcss: {
 		plugins: {

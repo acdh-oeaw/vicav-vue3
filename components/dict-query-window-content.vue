@@ -18,7 +18,7 @@ const formId = `biblioQueryForm-${params.value.textId}`;
 
 /* data fetch parameters editing copies */
 const q = ref<string | undefined>(params.value.queryParams?.q ?? "");
-const page = ref<number | undefined>(params.value.queryParams?.page);
+const page = ref<number>(params.value.queryParams?.page ?? 1);
 const pageSize = ref<number | undefined>(params.value.queryParams?.pageSize);
 const id = ref<string | null | undefined>(params.value.queryParams?.id);
 const ids = ref<string | null | undefined>(params.value.queryParams?.ids);
@@ -108,10 +108,10 @@ const { data, isPending, isPlaceholderData } = useDictsEntries({
 	queryParams: queryParams.value,
 });
 watch(data, (newData) => {
-	if (newData?.page) {
+	if (newData.page) {
 		page.value = newData.page;
 	}
-	if (newData?.page_size) {
+	if (newData.page_size) {
 		pageSize.value = newData.page_size;
 	}
 });
@@ -135,6 +135,12 @@ onMounted(() => {
 		toggle: isExtendedFormOpen.value,
 	});
 });
+
+/* pagination */
+const goToPage = (newPage: number) => {
+	page.value = newPage;
+	updateQueryParams();
+};
 
 /* TODO: only for testing; not intended for production */
 const api = useApiClient();
@@ -333,7 +339,14 @@ const api = useApiClient();
 		<!-- eslint-disable-next-line vue/no-v-html, vuejs-accessibility/click-events-have-key-events, vuejs-accessibility/no-static-element-interactions -->
 		<div v-if="data" class="prose mb-auto max-w-3xl p-8">
 			<div v-if="data.total_items">Total items: {{ data.total_items }}</div>
-			<div v-if="data.page_count">This is page {{ page }} of {{ data.page_count }}</div>
+			<div v-if="data.page_count">
+				<UPagination
+					:model-value="parseInt(data.page)"
+					:page-count="parseInt(data.page_size)"
+					:total="parseInt(data.total_items)"
+					@update:model-value="goToPage"
+				/>
+			</div>
 			<div v-if="data.took">Search duration: {{ data.took }} ms</div>
 			<div v-if="data._embedded && data._embedded.entries">
 				<div v-for="(e, i) in data._embedded.entries" :key="i" class="mt-6">

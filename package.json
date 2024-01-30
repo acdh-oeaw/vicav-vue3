@@ -39,6 +39,7 @@
 	"dependencies": {
 		"@acdh-oeaw/lib": "^0.1.6",
 		"@fontsource-variable/roboto-flex": "^5.0.8",
+		"@nuxt/ui": "^2.13.0",
 		"@pinia/nuxt": "^0.5.1",
 		"@tanstack/vue-query": "^5.4.1",
 		"@vueuse/core": "^10.5.0",
@@ -51,7 +52,7 @@
 		"lucide-vue-next": "^0.289.0",
 		"nanoid": "^5.0.3",
 		"npm-run-all2": "^6.1.1",
-		"nuxt": "^3.7.4",
+		"nuxt": "^3.9.0",
 		"pinia": "^2.1.7",
 		"radix-vue": "^1.0.1",
 		"swagger-typescript-api": "^13.0.3",
