@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Collapse, initTE } from "tw-elements";
+
 import type { DictQuerySchema } from "@/types/global";
 
 const props = defineProps<{
@@ -76,7 +78,7 @@ const updateFilterCriteria = () => {
 			  );
 };
 
-/* data fetch parameters */
+/* data fetch initialization */
 const queryParams = ref<Parameters<typeof useDictsEntries>[0]["queryParams"]>({});
 const updateQueryParams = () => {
 	if (queryParams.value === undefined) return;
@@ -105,11 +107,37 @@ const { data, isPending, isPlaceholderData } = useDictsEntries({
 	dictId: String(myDict?.id),
 	queryParams: queryParams.value,
 });
+watch(data, (newData) => {
+	if (newData?.page) {
+		page.value = newData.page;
+	}
+	if (newData?.page_size) {
+		pageSize.value = newData.page_size;
+	}
+});
 
 /* window behaviour */
 const isLoading = computed(() => {
 	return isPending.value || isPlaceholderData.value;
 });
+
+const isExtendedFormOpen = ref(false);
+onMounted(() => {
+	initTE({ Collapse });
+	let formElement = document.getElementById(`${formId}_ext`);
+	formElement?.addEventListener("show.te.collapse", () => {
+		isExtendedFormOpen.value = true;
+	});
+	formElement?.addEventListener("hidden.te.collapse", () => {
+		isExtendedFormOpen.value = false;
+	});
+	new Collapse(formElement, {
+		toggle: isExtendedFormOpen.value,
+	});
+});
+
+/* TODO: only for testing; not intended for production */
+const api = useApiClient();
 </script>
 
 <template>
@@ -180,21 +208,169 @@ const isLoading = computed(() => {
 						button.
 					</div>
 				</div>
+				<div class="mt-4">
+					<button
+						class="dvStats flex w-full items-baseline"
+						type="button"
+						tabindex="0"
+						data-te-collapse-init
+						:data-te-target="`#${formId}_ext`"
+						aria-expanded="false"
+						:aria-controls="`${formId}_ext`"
+					>
+						Extended options:
+						<div class="relative top-1 ml-auto mr-4">
+							<div v-if="!isExtendedFormOpen">
+								<svg
+									class="svg-icon"
+									style="
+										vertical-align: middle;
+										overflow: hidden;
+										width: 1em;
+										height: 1em;
+										fill: currentColor;
+									"
+									viewBox="0 0 1024 1024"
+									version="1.1"
+									xmlns="http://www.w3.org/2000/svg"
+								>
+									<path
+										d="M511.5 789.9 80.6 359c-22.8-22.8-22.8-59.8 0-82.6 22.8-22.8 59.8-22.8 82.6 0l348.3 348.3 348.3-348.3c22.8-22.8 59.8-22.8 82.6 0 22.8 22.8 22.8 59.8 0 82.6L511.5 789.9 511.5 789.9zM511.5 789.9"
+									/>
+								</svg>
+							</div>
+							<div v-if="isExtendedFormOpen">
+								<svg
+									class="svg-icon"
+									style="
+										vertical-align: middle;
+										overflow: hidden;
+										width: 1em;
+										height: 1em;
+										fill: currentColor;
+									"
+									viewBox="0 0 1024 1024"
+									version="1.1"
+									xmlns="http://www.w3.org/2000/svg"
+								>
+									<path
+										d="M511.5 259.3 942.4 690.1c22.8 22.8 22.8 59.8 0 82.6-22.8 22.8-59.8 22.8-82.6 0L511.5 424.5 163.2 772.8c-22.8 22.8-59.8 22.8-82.6 0-22.8-22.8-22.8-59.8 0-82.6L511.5 259.3 511.5 259.3zM511.5 259.3"
+									/>
+								</svg>
+							</div>
+						</div>
+					</button>
+					<div
+						:id="`${formId}_ext`"
+						class="!visible hidden max-w-3xl bg-gray-200 px-4"
+						data-te-collapse-item
+					>
+						<table class="w-full max-w-full table-fixed">
+							<tbody>
+								<tr>
+									<th>page</th>
+									<td>
+										<input v-model="page" type="number" class="w-full" />
+									</td>
+								</tr>
+								<tr>
+									<th>pageSize</th>
+									<td>
+										<input v-model="pageSize" type="number" class="w-full" />
+									</td>
+								</tr>
+								<tr>
+									<th>id</th>
+									<td>
+										<input v-model="id" type="text" class="w-full" />
+									</td>
+								</tr>
+								<tr>
+									<th>ids</th>
+									<td>
+										<input v-model="ids" type="text" class="w-full" />
+									</td>
+								</tr>
+								<tr>
+									<th>sort</th>
+									<td>
+										<select v-model="sort" class="w-full">
+											<option :value="null"></option>
+											<option value="none">none</option>
+											<option value="asc">asc</option>
+											<option value="desc">desc</option>
+										</select>
+									</td>
+								</tr>
+								<tr>
+									<th>altLemma</th>
+									<td>
+										<input v-model="altLemma" type="text" class="w-full" />
+									</td>
+								</tr>
+								<tr>
+									<th>format</th>
+									<td>
+										<input v-model="format" type="text" class="w-full" />
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
 				<div class="mt-3">
-					<button class="biblQueryBtn" :disabled="!q" @click="updateQueryParams">Query</button>
+					<button
+						class="biblQueryBtn"
+						:disabled="!(q || id || ids) || format === ''"
+						@click="updateQueryParams"
+					>
+						Query
+					</button>
 				</div>
 			</div>
 		</div>
 
 		<!-- eslint-disable-next-line vue/no-v-html, vuejs-accessibility/click-events-have-key-events, vuejs-accessibility/no-static-element-interactions -->
 		<div v-if="data" class="prose mb-auto max-w-3xl p-8">
+			<div v-if="data.total_items">Total items: {{ data.total_items }}</div>
+			<div v-if="data.page_count">This is page {{ page }} of {{ data.page_count }}</div>
+			<div v-if="data.took">Search duration: {{ data.took }} ms</div>
 			<div v-if="data._embedded && data._embedded.entries">
-				<div v-for="(e, i) in data._embedded.entries" :key="i" class="my-2">
+				<div v-for="(e, i) in data._embedded.entries" :key="i" class="mt-6">
+					<div v-if="typeof e.id === 'string'" class="text-sm">
+						<span class="font-bold">id:&nbsp;</span>
+						<span>
+							<a :href="`${api.baseUrl}${e._links.self.href}`">{{ e.id }}</a>
+						</span>
+					</div>
+					<div v-if="typeof e.sid === 'string'" class="text-sm">
+						<span class="font-bold">sid:&nbsp;</span>
+						<span>
+							{{ e.sid }}
+						</span>
+					</div>
+					<div v-if="typeof e.lemma === 'string'" class="text-sm">
+						<span class="font-bold">lemma:&nbsp;</span>
+						<span>
+							{{ e.lemma }}
+						</span>
+					</div>
+					<div v-if="typeof e.status === 'string'" class="text-sm">
+						<span class="font-bold">status:&nbsp;</span>
+						<span>
+							{{ e.status }}
+						</span>
+					</div>
+					<div v-if="typeof e.type === 'string'" class="text-sm">
+						<span class="font-bold">type:&nbsp;</span>
+						<span>
+							{{ e.type }}
+						</span>
+					</div>
 					<!-- eslint-disable-next-line vue/no-v-html -->
 					<div v-if="typeof e.entry === 'string'" v-html="e.entry" />
 				</div>
 			</div>
-			<div v-else-if="data.total_items">Total items: {{ data.total_items }}</div>
 		</div>
 
 		<Centered v-if="isLoading">

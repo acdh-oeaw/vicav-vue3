@@ -14,7 +14,8 @@ export function useDictsEntries(
 		enabled: options?.enabled,
 		queryKey: ["get-dicts-entries", params] as const,
 		async queryFn({ queryKey: [, params] }) {
-			if (!params.queryParams?.q) return null;
+			if (!params.queryParams?.q && !params.queryParams?.id && !params.queryParams?.ids)
+				return null;
 			try {
 				const response = await api.restvle.getDictDictNameEntries(
 					params.dictId,
@@ -34,7 +35,6 @@ export function useDictsEntries(
 						return {
 							total_items: "0",
 						};
-						break;
 					}
 					default: {
 						break;
