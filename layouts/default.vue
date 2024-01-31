@@ -42,7 +42,10 @@ const style = computed(() => {
 
 	if (colors?.subNav != null) {
 		const [color, contrast] = convertColor(colors.subNav);
-		style.push(`--color-primary: ${color}`);
+		const primaryCoords = convert(parse(`hsl(${color})`), "srgb")
+			.coords.map((x) => Math.floor(256 * x))
+			.join(" ");
+		style.push(`--color-primary-500: ${primaryCoords}`);
 		style.push(`--color-on-primary: ${contrast}`);
 	}
 
