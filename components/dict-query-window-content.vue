@@ -108,6 +108,7 @@ const { data, isPending, isPlaceholderData } = useDictsEntries({
 	queryParams: queryParams.value,
 });
 watch(data, (newData) => {
+	//TODO refactor this once response types are properly defined
 	// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
 	if (newData === null) {
 		return;
