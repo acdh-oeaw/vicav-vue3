@@ -108,6 +108,9 @@ devDependencies:
   '@axe-core/playwright':
     specifier: ^4.8.1
     version: 4.8.1(playwright-core@1.39.0)
+  '@iconify-json/heroicons':
+    specifier: ^1.1.19
+    version: 1.1.19
   '@nuxt/devtools':
     specifier: ^1.0.0
     version: 1.0.0(nuxt@3.9.3)(vite@4.5.0)
@@ -1534,7 +1537,6 @@ packages:
     resolution: {integrity: sha512-uW2F9vdGll59W21ocBl+wR4Ve+/1CsmzBqPTuOaR3CbKzqnJKwzGASvC4Op0uTieFVWfBaevnzcRxwNo73J29g==}
     dependencies:
       '@iconify/types': 2.0.0
-    dev: false
 
   /@iconify/collections@1.0.388:
     resolution: {integrity: sha512-Pe9k62l0R94V/T/DuUOnRuKdjDI9JqWxKA96D2ZwXzjsebqU7fdXBvLHar1FztqRGavKKiTnJBIxKKFqWa65lg==}
@@ -1544,7 +1546,6 @@ packages:
 
   /@iconify/types@2.0.0:
     resolution: {integrity: sha512-+wluvCrRhXrhyOmRDJ3q8mux9JkKy5SJ/v8ol2tu4FVjyYvtEzkc/3pK15ET6RKg4b4w4BmTk1+gsCUhf21Ykg==}
-    dev: false
 
   /@iconify/utils@2.1.20:
     resolution: {integrity: sha512-t8TeKlYK/5i9yTY9VAGAE4P0qQHd/0vH+VSRO+bdpxlt8wqB6f2I0/IrciRsdeFZPMoL8IICgP7lgl2ZtbG8Tw==}
