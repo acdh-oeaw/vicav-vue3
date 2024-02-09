@@ -37,6 +37,10 @@ jobs:
             echo "environment=production"
             echo "environment=production" >> $GITHUB_OUTPUT
             echo "environment_short=prod" >> $GITHUB_OUTPUT
+          elif [ "${{ github.ref_name }}" = "tunocent" ]; then
+            echo "environment=tuncoent"
+            echo "environment=tunocent" >> $GITHUB_OUTPUT
+            echo "environment_short=tunocent" >> $GITHUB_OUTPUT
           else
             echo "environment=review/${{ github.ref_name }}"
             echo "environment=review/${{ github.ref_name }}" >> $GITHUB_OUTPUT
