@@ -41,6 +41,7 @@
 		"@fontsource-variable/roboto-flex": "^5.0.8",
 		"@pinia/nuxt": "^0.5.1",
 		"@tanstack/vue-query": "^5.4.1",
+		"@tanstack/vue-table": "8.11.8",
 		"@vueuse/core": "^10.5.0",
 		"@vueuse/nuxt": "^10.5.0",
 		"autoprefixer": "^10.4.16",
