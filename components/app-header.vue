@@ -73,6 +73,12 @@ function onSelectMenuItem(item: ItemType) {
 				title: item.label ?? "",
 			};
 			break;
+		case "ListMap":
+			newWindowState = {
+				targetType: "ListMap",
+				title: item.label ?? "",
+			};
+			break;
 		default:
 			throw new Error(`Window targetType not implemented on front-end: ${item.targetType}`);
 	}

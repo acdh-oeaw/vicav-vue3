@@ -90,6 +90,9 @@
 		"typescript": "^5.2.2",
 		"vue-tsc": "^1.8.22"
 	},
+	"resolutions": {
+		"vue": "3.3.13"
+	},
 	"pnpm": {
 		"patchedDependencies": {
 			"winbox@0.2.82": "patches/winbox@0.2.82.patch",

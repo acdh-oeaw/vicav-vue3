@@ -30,5 +30,6 @@ function updateQueryParam(queryString: string) {
 		:params="props.item.params"
 		@update-query-param="updateQueryParam"
 	/>
+	<MapTableWindowContent v-else-if="props.item.targetType === 'ListMap'" />
 	<pre v-else>{{ props }}</pre>
 </template>
