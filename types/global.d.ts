@@ -65,6 +65,7 @@ export type TextWindowItem = WindowItemBase & z.infer<typeof TextSchema>;
 
 export const ListMapSchema = z.object({
 	targetType: z.literal("ListMap"),
+	params: z.object({}),
 });
 export type ListMapWindowItem = WindowItemBase & z.infer<typeof ListMapSchema>;
 export const Schema = z.discriminatedUnion("targetType", [
@@ -82,3 +83,24 @@ export type WindowItemTargetType = WindowItem["targetType"];
 export type WindowItemMap = {
 	[TargetType in WindowItemTargetType]: Extract<WindowItem, { targetType: TargetType }>;
 };
+
+export const GeoFeatureSchema = z.object({
+	type: z.literal("Feature"),
+	id: z.string(),
+	geometry: z.object({
+		type: z.literal("Point"),
+		coordinates: z.array(z.number()),
+	}),
+	properties: z.any(),
+});
+export type FeatureType = z.infer<typeof GeoFeatureSchema>;
+
+export const FeatureCollectionSchema = z.object({
+	type: z.literal("FeatureCollection"),
+	properties: z.object({
+		name: z.string(),
+		column_headings: z.array(z.any()),
+	}),
+	features: z.array(GeoFeatureSchema),
+});
+export type FeatureCollectionType = z.infer<typeof FeatureCollectionSchema>;
