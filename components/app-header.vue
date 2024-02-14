@@ -6,6 +6,7 @@ import type {
 	BibliographyEntriesWindowItem,
 	FeatureWindowItem,
 	GeoMapWindowItem,
+	ListMapWindowItem,
 	ProfileWindowItem,
 	TextWindowItem,
 } from "@/types/global.d";
@@ -77,6 +78,7 @@ function onSelectMenuItem(item: ItemType) {
 			newWindowState = {
 				targetType: "ListMap",
 				title: item.label ?? "",
+				params: item.params as ListMapWindowItem["params"],
 			};
 			break;
 		default:
