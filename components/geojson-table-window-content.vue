@@ -5,6 +5,7 @@ import { useGeojsonStore } from "@/stores/use-geojson-store.ts";
 import type { FeatureType } from "@/types/global";
 
 const GeojsonStore = useGeojsonStore();
+const WindowStore = useWindowsStore();
 const url = "https://raw.githubusercontent.com/wibarab/wibarab-data/main/wibarab_varieties.geojson";
 
 const { isPending } = GeojsonStore.fetchGeojson(url);
@@ -21,6 +22,13 @@ const columns = computed(() => {
 
 function registerTable(table: Table<FeatureType>) {
 	tables.value.set(url, table);
+	WindowStore.addWindow({
+		targetType: "GeojsonMap",
+		params: {
+			url,
+		},
+		title: "Variety Data - Map View",
+	});
 }
 </script>
 

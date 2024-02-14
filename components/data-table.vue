@@ -1,5 +1,10 @@
 <script lang="ts" setup>
-import { type ColumnDef, getCoreRowModel, useVueTable } from "@tanstack/vue-table";
+import {
+	type ColumnDef,
+	getCoreRowModel,
+	getPaginationRowModel,
+	useVueTable,
+} from "@tanstack/vue-table";
 import { defineEmits, defineProps } from "vue";
 
 const emit = defineEmits(["table-ready"]);
@@ -20,6 +25,7 @@ const table = useVueTable({
 		return columns.value;
 	},
 	getCoreRowModel: getCoreRowModel(),
+	getPaginationRowModel: getPaginationRowModel(),
 });
 
 onMounted(() => {
