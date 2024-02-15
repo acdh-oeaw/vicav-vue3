@@ -10,9 +10,6 @@ const props = defineProps<Props>();
 const { params } = toRefs(props);
 
 const GeojsonStore = useGeojsonStore();
-
-const { isPending } = GeojsonStore.fetchGeojson(params.value.url);
-
 const { tables } = storeToRefs(GeojsonStore);
 
 const filteredMarkers = computed(() => {
@@ -26,9 +23,12 @@ const filteredMarkers = computed(() => {
 </script>
 
 <template>
-	<VisualisationContainer v-slot="{ width, height }" :class="{ 'opacity-50 grayscale': isPending }">
-		<GeoMap v-if="!isPending" :height="height" :markers="filteredMarkers" :width="width" />
-		<Centered v-if="isPending">
+	<VisualisationContainer
+		v-slot="{ width, height }"
+		:class="{ 'opacity-50 grayscale': !filteredMarkers }"
+	>
+		<GeoMap v-if="filteredMarkers" :height="height" :markers="filteredMarkers" :width="width" />
+		<Centered v-if="!filteredMarkers">
 			<LoadingIndicator />
 		</Centered>
 	</VisualisationContainer>
