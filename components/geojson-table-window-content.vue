@@ -33,13 +33,15 @@ function registerTable(table: Table<FeatureType>) {
 </script>
 
 <template>
-	<Centered v-if="isPending">
-		<LoadingIndicator />
-	</Centered>
-	<DataTable
-		v-if="!isPending"
-		:items="fetchedData.get(url)?.features"
-		:columns="columns"
-		@table-ready="registerTable"
-	></DataTable>
+	<div>
+		<Centered v-if="isPending">
+			<LoadingIndicator />
+		</Centered>
+		<DataTable
+			v-if="!isPending"
+			:items="fetchedData.get(url)?.features"
+			:columns="columns"
+			@table-ready="registerTable"
+		></DataTable>
+	</div>
 </template>
