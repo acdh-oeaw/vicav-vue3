@@ -40,6 +40,9 @@ dependencies:
   autoprefixer:
     specifier: ^10.4.16
     version: 10.4.17(postcss@8.4.35)
+  class-variance-authority:
+    specifier: ^0.7.0
+    version: 0.7.0
   colorjs.io:
     specifier: ^0.4.5
     version: 0.4.5
@@ -2992,6 +2995,12 @@ packages:
     resolution: {integrity: sha512-AS7n5NSc0OQVMV9v6wt3ByujNIrne0/cTjiC2MYqhvao57VNfiuVksTSr2p17nVOhEr2KtqiAkGwHcgMC/qUuQ==}
     dependencies:
       consola: 3.2.3
+
+  /class-variance-authority@0.7.0:
+    resolution: {integrity: sha512-jFI8IQw4hczaL4ALINxqLEXQbWcNjoSkloa4IaufXCJr6QawJyw7tuRysRsrE8w2p/4gGaxKIt/hX3qz/IbD1A==}
+    dependencies:
+      clsx: 2.0.0
+    dev: false
 
   /clean-stack@2.2.0:
     resolution: {integrity: sha512-4diC9HaTE+KRAMWhDhrGOECgWZxoevMc5TlkObMqNSsVU62PYzXZ/SMTjzyGAFF1YusgxGcSWTEXBhp0CPwQ1A==}
