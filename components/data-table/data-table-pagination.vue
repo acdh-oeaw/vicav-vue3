@@ -28,10 +28,10 @@ defineProps<DataTablePaginationProps>();
 					<SelectTrigger class="h-8 w-[70px]">
 						<SelectValue :placeholder="`${table.getState().pagination.pageSize}`" />
 					</SelectTrigger>
-					<SelectContent side="top">
+					<SelectContent>
 						<SelectItem
-							v-for="pageSize in [10, 20, 30, 40, 50]"
-							:key="pageSize"
+							v-for="(pageSize, index) in [10, 20, 30, 40, 50]"
+							:key="index"
 							:value="`${pageSize}`"
 						>
 							{{ pageSize }}
