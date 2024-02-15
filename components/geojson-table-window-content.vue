@@ -5,7 +5,7 @@ import { useGeojsonStore } from "@/stores/use-geojson-store.ts";
 import type { FeatureType } from "@/types/global";
 
 const GeojsonStore = useGeojsonStore();
-const WindowStore = useWindowsStore();
+const { addWindow, findWindowByTypeAndParam } = useWindowsStore();
 const url = "https://raw.githubusercontent.com/wibarab/wibarab-data/main/wibarab_varieties.geojson";
 
 const { isPending } = GeojsonStore.fetchGeojson(url);
@@ -22,13 +22,23 @@ const columns = computed(() => {
 
 function registerTable(table: Table<FeatureType>) {
 	tables.value.set(url, table);
-	WindowStore.addWindow({
-		targetType: "GeojsonMap",
-		params: {
-			url,
-		},
-		title: "Variety Data - Map View",
-	});
+	const mw = findWindowByTypeAndParam("GeojsonMap", "url", url);
+	console.log(mw);
+	if (mw) {
+		mw.winbox.focus();
+		mw.winbox.addClass("highlighted");
+		setTimeout(() => {
+			mw.winbox.removeClass("highlighted");
+		}, 1000);
+	} else {
+		addWindow({
+			targetType: "GeojsonMap",
+			params: {
+				url,
+			},
+			title: "Variety Data - Map View",
+		});
+	}
 }
 </script>
 

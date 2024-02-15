@@ -130,7 +130,7 @@ export const useWindowsStore = defineStore("windows", () => {
 
 		const ci = TextId.safeParse(params);
 		if (ci.success) {
-			const w = findWindowByTextId(targetType, String(ci.data.textId));
+			const w = findWindowByTypeAndParam(targetType, "textId", String(ci.data.textId));
 			if (w !== null) {
 				w.winbox.focus();
 				w.winbox.addClass("highlighted");
@@ -186,15 +186,21 @@ export const useWindowsStore = defineStore("windows", () => {
 		} as WindowItem);
 	}
 
-	function findWindowByTextId(targetType: WindowItemTargetType, textId: string): WindowItem | null {
+	function findWindowByTypeAndParam(
+		targetType: WindowItemTargetType,
+		paramName: string,
+		value: string,
+	): WindowItem | null {
 		let foundWindow: WindowItem | null = null;
 		registry.value.forEach((w) => {
-			const ci = TextId.safeParse(w.params);
+			const ci = Schema.safeParse(w);
+
 			if (
 				foundWindow === null &&
 				w.targetType === targetType &&
 				ci.success &&
-				ci.data.textId === textId
+				// @ts-expect-error ListMapSchema Params are not yet typed.
+				ci.data.params[paramName] === value
 			) {
 				foundWindow = w;
 			}
@@ -329,5 +335,6 @@ export const useWindowsStore = defineStore("windows", () => {
 		arrangement,
 		setWindowArrangement,
 		arrangeWindows,
+		findWindowByTypeAndParam,
 	};
 });
