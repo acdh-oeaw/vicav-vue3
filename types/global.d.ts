@@ -65,7 +65,7 @@ export type TextWindowItem = WindowItemBase & z.infer<typeof TextSchema>;
 
 export const ListMapSchema = z.object({
 	targetType: z.literal("ListMap"),
-	params: z.any(),
+	params: z.unknown(),
 });
 export type ListMapWindowItem = WindowItemBase & z.infer<typeof ListMapSchema>;
 
