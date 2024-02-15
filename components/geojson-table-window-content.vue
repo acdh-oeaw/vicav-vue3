@@ -23,7 +23,6 @@ const columns = computed(() => {
 function registerTable(table: Table<FeatureType>) {
 	tables.value.set(url, table);
 	const mw = findWindowByTypeAndParam("GeojsonMap", "url", url);
-	console.log(mw);
 	if (mw) {
 		mw.winbox.focus();
 		mw.winbox.addClass("highlighted");
@@ -47,11 +46,13 @@ function registerTable(table: Table<FeatureType>) {
 		<Centered v-if="isPending">
 			<LoadingIndicator />
 		</Centered>
+		<DataTablePagination v-if="tables.get(url)" :table="tables.get(url)" />
 		<DataTable
 			v-if="!isPending"
 			:items="fetchedData.get(url)?.features"
 			:columns="columns"
 			@table-ready="registerTable"
 		></DataTable>
+		<DataTablePagination v-if="tables.get(url)" :table="tables.get(url)" />
 	</div>
 </template>
