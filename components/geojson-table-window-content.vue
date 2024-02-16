@@ -13,10 +13,41 @@ const { fetchedData, tables } = storeToRefs(GeojsonStore);
 
 const columns = computed(() => {
 	return fetchedData.value.get(url)?.properties.column_headings.map((heading: string) => {
-		return {
-			id: Object.keys(heading)[0],
-			header: Object.values(heading)[0],
-		};
+		switch (true) {
+			case /ft_*/.test(Object.keys(heading)[0]):
+				return {
+					id: Object.keys(heading)[0],
+					header: Object.values(heading)[0],
+					cell: ({ cell }) => {
+						const comp = resolveComponent("GeojsonTablePropertyCell");
+						return h(comp, { value: cell.row.original.properties[cell.column.columnDef.id] });
+					},
+				};
+			case /name/.test(Object.keys(heading)[0]):
+				return {
+					id: Object.keys(heading)[0],
+					header: Object.values(heading)[0],
+					cell: ({ cell }) => {
+						return h(
+							"span",
+							{ class: "max-w-[500px] truncate font-medium" },
+							cell.row.original.properties[cell.column.columnDef.id],
+						);
+					},
+				};
+			default:
+				return {
+					id: Object.keys(heading)[0],
+					header: Object.values(heading)[0],
+					cell: ({ cell }) => {
+						return h(
+							"span",
+							{ class: "max-w-[500px] truncate font-medium" },
+							cell.row.original.properties[cell.column.columnDef.id],
+						);
+					},
+				};
+		}
 	});
 });
 

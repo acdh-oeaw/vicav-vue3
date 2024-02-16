@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import {
 	type ColumnDef,
+	FlexRender,
 	getCoreRowModel,
 	getPaginationRowModel,
 	useVueTable,
@@ -35,7 +36,7 @@ onMounted(() => {
 
 <template>
 	<Table>
-		<TableHeader>
+		<TableHeader class="bg-primary font-bold text-on-primary">
 			<TableRow v-for="headerGroup in table.getHeaderGroups()" :key="headerGroup.id">
 				<TableHead v-for="header in headerGroup.headers" :key="header.id">
 					{{ header.column.columnDef.header }}
@@ -44,13 +45,9 @@ onMounted(() => {
 		</TableHeader>
 		<TableBody>
 			<template v-if="table.getRowModel().rows?.length">
-				<TableRow
-					v-for="row in table.getRowModel().rows"
-					:key="row.id"
-					:data-state="row.getIsSelected() ? 'selected' : undefined"
-				>
+				<TableRow v-for="row in table.getRowModel().rows" :key="row.id">
 					<TableCell v-for="cell in row.getVisibleCells()" :key="cell.id">
-						{{ cell.row.original.properties[cell.column.columnDef.id] }}
+						<FlexRender :render="cell.column.columnDef.cell" :props="cell.getContext()" />
 					</TableCell>
 				</TableRow>
 			</template>
