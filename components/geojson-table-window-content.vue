@@ -19,8 +19,9 @@ const columns = computed(() => {
 					id: Object.keys(heading)[0],
 					header: Object.values(heading)[0],
 					cell: ({ cell }) => {
-						const comp = resolveComponent("GeojsonTablePropertyCell");
-						return h(comp, { value: cell.row.original.properties[cell.column.columnDef.id] });
+						return h(resolveComponent("GeojsonTablePropertyCell"), {
+							value: cell.row.original.properties[cell.column.columnDef.id],
+						});
 					},
 				};
 			case /name/.test(Object.keys(heading)[0]):
