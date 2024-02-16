@@ -63,12 +63,19 @@ export const TextSchema = z.object({
 });
 export type TextWindowItem = WindowItemBase & z.infer<typeof TextSchema>;
 
+export const SampleTextSchema = z.object({
+	targetType: z.literal("SampleText"),
+	params: TextId.merge(TeiSource.partial()),
+});
+export type SampleTextWindowItem = WindowItemBase & z.infer<typeof SampleTextSchema>;
+
 export const Schema = z.discriminatedUnion("targetType", [
 	BibliographyEntriesSchema,
 	FeatureSchema,
 	GeoMapSchema,
 	ProfileSchema,
 	TextSchema,
+	SampleTextSchema,
 ]);
 export type WindowItem = WindowItemBase & z.infer<typeof Schema>;
 
