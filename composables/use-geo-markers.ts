@@ -21,11 +21,11 @@ export function useGeoMarkers(
 					? await api.vicav.getMarkers(
 							{ query: queryString, scope: scope ?? [] },
 							{ headers: { accept: "application/json" } },
-					  )
+						)
 					: await api.vicav.getGeoMarkers(
 							endpoint.slice(0, "_markers".length * -1) as MarkersType,
 							{ headers: { accept: "application/json" } },
-					  );
+						);
 
 			return response.data as Array<Feature<Point, MarkerProperties>>;
 		},
