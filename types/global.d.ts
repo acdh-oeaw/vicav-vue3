@@ -69,6 +69,20 @@ export const SampleTextSchema = z.object({
 });
 export type SampleTextWindowItem = WindowItemBase & z.infer<typeof SampleTextSchema>;
 
+export const ListMapSchema = z.object({
+	targetType: z.literal("ListMap"),
+	params: z.unknown(),
+});
+export type ListMapWindowItem = WindowItemBase & z.infer<typeof ListMapSchema>;
+
+export const GeojsonMapSchema = z.object({
+	targetType: z.literal("GeojsonMap"),
+	params: z.object({
+		url: z.string(),
+	}),
+});
+export type GeojsonMapWindowItem = WindowItemBase & z.infer<typeof GeojsonMapSchema>;
+
 export const Schema = z.discriminatedUnion("targetType", [
 	BibliographyEntriesSchema,
 	FeatureSchema,
@@ -76,6 +90,8 @@ export const Schema = z.discriminatedUnion("targetType", [
 	ProfileSchema,
 	TextSchema,
 	SampleTextSchema,
+	ListMapSchema,
+	GeojsonMapSchema,
 ]);
 export type WindowItem = WindowItemBase & z.infer<typeof Schema>;
 
@@ -84,3 +100,24 @@ export type WindowItemTargetType = WindowItem["targetType"];
 export type WindowItemMap = {
 	[TargetType in WindowItemTargetType]: Extract<WindowItem, { targetType: TargetType }>;
 };
+
+export const GeoFeatureSchema = z.object({
+	type: z.literal("Feature"),
+	id: z.string(),
+	geometry: z.object({
+		type: z.literal("Point"),
+		coordinates: z.array(z.number()),
+	}),
+	properties: z.any(),
+});
+export type FeatureType = z.infer<typeof GeoFeatureSchema>;
+
+export const FeatureCollectionSchema = z.object({
+	type: z.literal("FeatureCollection"),
+	properties: z.object({
+		name: z.string(),
+		column_headings: z.array(z.any()),
+	}),
+	features: z.array(GeoFeatureSchema),
+});
+export type FeatureCollectionType = z.infer<typeof FeatureCollectionSchema>;

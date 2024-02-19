@@ -6,6 +6,7 @@ import type {
 	BibliographyEntriesWindowItem,
 	FeatureWindowItem,
 	GeoMapWindowItem,
+	ListMapWindowItem,
 	ProfileWindowItem,
 	SampleTextWindowItem,
 	TextWindowItem,
@@ -79,6 +80,13 @@ function onSelectMenuItem(item: ItemType) {
 				targetType: "Text",
 				params: item.params as TextWindowItem["params"],
 				title: item.label ?? "",
+			};
+			break;
+		case "ListMap":
+			newWindowState = {
+				targetType: "ListMap",
+				title: item.label ?? "",
+				params: item.params as ListMapWindowItem["params"],
 			};
 			break;
 		default:
