@@ -63,6 +63,12 @@ export const TextSchema = z.object({
 });
 export type TextWindowItem = WindowItemBase & z.infer<typeof TextSchema>;
 
+export const SampleTextSchema = z.object({
+	targetType: z.literal("SampleText"),
+	params: TextId.merge(TeiSource.partial()),
+});
+export type SampleTextWindowItem = WindowItemBase & z.infer<typeof SampleTextSchema>;
+
 export const ListMapSchema = z.object({
 	targetType: z.literal("ListMap"),
 	params: z.unknown(),
@@ -76,12 +82,14 @@ export const GeojsonMapSchema = z.object({
 	}),
 });
 export type GeojsonMapWindowItem = WindowItemBase & z.infer<typeof GeojsonMapSchema>;
+
 export const Schema = z.discriminatedUnion("targetType", [
 	BibliographyEntriesSchema,
 	FeatureSchema,
 	GeoMapSchema,
 	ProfileSchema,
 	TextSchema,
+	SampleTextSchema,
 	ListMapSchema,
 	GeojsonMapSchema,
 ]);

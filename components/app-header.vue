@@ -8,6 +8,7 @@ import type {
 	GeoMapWindowItem,
 	ListMapWindowItem,
 	ProfileWindowItem,
+	SampleTextWindowItem,
 	TextWindowItem,
 } from "@/types/global.d";
 
@@ -64,6 +65,13 @@ function onSelectMenuItem(item: ItemType) {
 			newWindowState = {
 				targetType: "Profile",
 				params: item.params as ProfileWindowItem["params"],
+				title: item.label ?? "",
+			};
+			break;
+		case "SampleText":
+			newWindowState = {
+				targetType: "SampleText",
+				params: item.params as SampleTextWindowItem["params"],
 				title: item.label ?? "",
 			};
 			break;
