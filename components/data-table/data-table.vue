@@ -6,7 +6,6 @@ import {
 	getPaginationRowModel,
 	useVueTable,
 } from "@tanstack/vue-table";
-import { defineEmits, defineProps } from "vue";
 
 const emit = defineEmits(["table-ready"]);
 
