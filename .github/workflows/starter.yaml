@@ -65,7 +65,7 @@ jobs:
   generate_workflow_vars_wibarab:
     needs: [setup_workflow_env]
     environment:
-      name: ${{ needs.setup_workflow_env.outputs.environment }}
+      name: ${{ needs.setup_workflow_env.outputs.environment }}-wibarab
     runs-on: ubuntu-latest
     steps:
       - name: Generate PUBLIC_URL if not set
