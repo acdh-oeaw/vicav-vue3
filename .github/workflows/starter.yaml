@@ -74,13 +74,13 @@ jobs:
           kube_ingress_base_domain="${{ vars.KUBE_INGRESS_BASE_DOMAIN }}"
           public_url="${{ needs.setup_workflow_env.outputs.PUBLIC_URL || vars.PUBLIC_URL }}"
           if [ "${public_url}x" == 'x' ]
-          then public_url=https://${{ needs.setup_workflow_env.outputs.environment_short }}.${kube_ingress_base_domain}
+          then public_url=https://wibarab-${{ needs.setup_workflow_env.outputs.environment_short }}.${kube_ingress_base_domain}
           fi
           echo "public_url=$public_url" >> $GITHUB_OUTPUT
     outputs:
       environment: ${{ needs.setup_workflow_env.outputs.environment }}-wibarab
       environment_short: wibarab-${{ needs.setup_workflow_env.outputs.environment_short }}
-      PUBLIC_URL: wibarab-${{ steps.generate_public_url.outputs.public_url }}
+      PUBLIC_URL: ${{ steps.generate_public_url.outputs.public_url }}
       APP_NAME: ${{ needs.setup_workflow_env.outputs.APP_NAME }}
   _1:
     needs: [setup_workflow_env, generate_workflow_vars, generate_workflow_vars_wibarab]
