@@ -83,6 +83,14 @@ export const GeojsonMapSchema = z.object({
 });
 export type GeojsonMapWindowItem = WindowItemBase & z.infer<typeof GeojsonMapSchema>;
 
+export const GeojsonFilterSchema = z.object({
+	targetType: z.literal("GeojsonFilter"),
+	params: z.object({
+		url: z.string(),
+	}),
+});
+export type GeojsonFilterWindowItem = WindowItemBase & z.infer<typeof GeojsonFilterSchema>;
+
 export const Schema = z.discriminatedUnion("targetType", [
 	BibliographyEntriesSchema,
 	FeatureSchema,
@@ -92,6 +100,7 @@ export const Schema = z.discriminatedUnion("targetType", [
 	SampleTextSchema,
 	ListMapSchema,
 	GeojsonMapSchema,
+	GeojsonFilterSchema,
 ]);
 export type WindowItem = WindowItemBase & z.infer<typeof Schema>;
 

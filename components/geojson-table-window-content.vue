@@ -54,6 +54,22 @@ const columns = computed(() => {
 
 function registerTable(table: Table<FeatureType>) {
 	tables.value.set(url, table);
+	const fw = findWindowByTypeAndParam("GeojsonFilter", "url", url);
+	if (fw) {
+		fw.winbox.focus();
+		fw.winbox.addClass("highlighted");
+		setTimeout(() => {
+			fw.winbox.removeClass("highlighted");
+		}, 1000);
+	} else {
+		addWindow({
+			targetType: "GeojsonFilter",
+			params: {
+				url,
+			},
+			title: "Variety Data - Filter Data",
+		});
+	}
 	const mw = findWindowByTypeAndParam("GeojsonMap", "url", url);
 	if (mw) {
 		mw.winbox.focus();

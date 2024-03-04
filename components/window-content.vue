@@ -42,5 +42,9 @@ function updateQueryParam(queryString: string) {
 		v-else-if="props.item.targetType === 'GeojsonMap'"
 		:params="props.item.params"
 	/>
+	<GeojsonFilterWindowContent
+		v-else-if="props.item.targetType === 'GeojsonFilter'"
+		:params="props.item.params"
+	/>
 	<pre v-else>{{ props }}</pre>
 </template>
