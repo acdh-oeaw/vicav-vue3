@@ -1,17 +1,43 @@
 <script lang="ts" setup>
 import type { Feature, Point } from "geojson";
-import { ref, useAttrs } from "vue";
+import { computed, ref, useAttrs } from "vue";
 
 import type { MarkerProperties } from "@/components/geo-map.context";
 
-const openNewWindowFromAnchor = useAnchorClickHandler();
-
 const props = defineProps<{
 	markers: Array<Feature<MarkerProperties, Point>>;
+	groupMarkers: boolean;
 }>();
 const attrs = useAttrs();
+const contentTypeHeadings = {
+	Profile: "Profiles",
+	Feature: "Feature lists",
+	SampleText: "Sample texts",
+	CorpusText: "Corpus texts",
+};
 
 const $el = ref<HTMLElement>();
+
+interface LocationDataPoints {
+	Feature: Array<Feature<Point, MarkerProperties>>;
+	Profile: Array<Feature<Point, MarkerProperties>>;
+	SampleText: Array<Feature<Point, MarkerProperties>>;
+	CorpusText: Array<Feature<Point, MarkerProperties>>;
+}
+
+const groupedMarkers = computed<Record<string, LocationDataPoints> | null>(() => {
+	if (props.groupMarkers) {
+		let grouped = {};
+		props.markers.forEach((marker) => {
+			if (grouped[marker.properties.label] === undefined)
+				grouped[marker.properties.label] = { Profile: [], Feature: [], Sample: [] };
+			grouped[marker.properties.label][marker.properties.targetType].push(marker);
+		});
+		return grouped;
+	} else {
+		return null;
+	}
+});
 
 defineExpose({
 	$el,
@@ -21,23 +47,25 @@ defineExpose({
 
 <template>
 	<div ref="$el">
-		<ul class="list-none">
-			<li
-				v-for="marker in props.markers"
-				:key="marker.properties.targetType + '_' + marker.properties.textId"
-			>
-				<a
-					href="/"
-					:data-text-id="marker.properties.textId"
-					:data-target-type="marker.properties.targetType"
-					:data-label="marker.properties.label"
-					@click="openNewWindowFromAnchor"
-					@keyup="openNewWindowFromAnchor"
+		<template v-if="groupedMarkers">
+			<div v-for="(markersGroupedByType, location) in groupedMarkers" :key="location" class="pb-2">
+				<h2 class="text-base font-bold">
+					{{ location }}
+				</h2>
+				<div
+					v-for="(markersOfType, contentType) in markersGroupedByType"
+					:key="contentType"
+					class="text-xs"
 				>
-					{{ marker.properties.label }}
-				</a>
-			</li>
-		</ul>
+					<h3 v-if="markersOfType.length > 0" class="italic">
+						{{ contentTypeHeadings[contentType] }}
+					</h3>
+
+					<GeoMapPopupLinks :markers="markersOfType" />
+				</div>
+			</div>
+		</template>
+		<GeoMapPopupLinks v-if="!groupedMarkers" :markers="markers" />
 	</div>
 </template>
 

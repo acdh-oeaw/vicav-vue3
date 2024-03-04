@@ -31,6 +31,7 @@ interface ComponentPopupInfo {
 	id: string;
 	props: {
 		markers: Array<Feature<Point, MarkerProperties>>;
+		groupMarkers: boolean;
 	};
 }
 
@@ -45,7 +46,7 @@ watchEffect(() => {
 		const leafletMarker = context.featureGroups.markers._layers[popup.id];
 		if (leafletMarker == null || element == null) return;
 
-		leafletMarker.bindPopup(element.$el);
+		leafletMarker.bindPopup(element.$el, { minWidth: 150 });
 	});
 });
 
@@ -84,12 +85,24 @@ const addNearbyDataPopup = function (marker) {
 	});
 
 	if (nearbyMarkerData.length > 1) {
+		const markers = nearbyMarkerData.sort((a, b) => {
+			return a.properties.label.localeCompare(b.properties.label);
+		});
+
+		// @todo determine whether grouping is needed based on the number of
+		// feature groups once separate feature groups for queries are supported.
+		let contentTypes = [];
+		markers.forEach((marker) => {
+			if (!contentTypes.includes(marker.properties.targetType)) {
+				contentTypes.push(marker.properties.targetType);
+			}
+		});
+
 		componentPopups.value.push({
 			id: id,
 			props: {
-				markers: nearbyMarkerData.sort((a, b) => {
-					return a.properties.label.localeCompare(b.properties.label);
-				}),
+				markers: markers,
+				groupMarkers: contentTypes.length > 1,
 			},
 		});
 	} else if (marker._popup) {
@@ -108,9 +121,11 @@ function updateMarkers(updateViewport = true) {
 		featureGroup.addData(marker);
 	});
 
-	Object.values(featureGroup._layers).forEach((marker) => {
-		addNearbyDataPopup(marker);
-	});
+	if (config.nearbyMarkersPopup) {
+		Object.values(featureGroup._layers).forEach((marker) => {
+			addNearbyDataPopup(marker);
+		});
+	}
 
 	if (updateViewport) fitAllMarkersOnViewport();
 }
@@ -157,7 +172,7 @@ onMounted(async () => {
 					if (layer._popup) {
 						openedPopupId.value = id;
 					} else {
-						emit("marker-click", feature, layer, context.map);
+						emit("marker-click", feature);
 					}
 				},
 			});
