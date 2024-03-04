@@ -74,11 +74,11 @@ function registerTable(table: Table<FeatureType>) {
 </script>
 
 <template>
-	<div>
+	<div class="absolute">
 		<Centered v-if="isPending">
 			<LoadingIndicator />
 		</Centered>
-		<div class="grid justify-items-end py-2">
+		<div class="sticky left-1 top-0 z-10 grid justify-items-start bg-accent py-2">
 			<DataTablePagination v-if="tables.get(url)" :table="tables.get(url)" />
 		</div>
 		<DataTable
@@ -87,8 +87,5 @@ function registerTable(table: Table<FeatureType>) {
 			:columns="columns"
 			@table-ready="registerTable"
 		></DataTable>
-		<div class="grid justify-items-end py-2">
-			<DataTablePagination v-if="tables.get(url)" :table="tables.get(url)" />
-		</div>
 	</div>
 </template>
