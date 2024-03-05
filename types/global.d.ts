@@ -130,3 +130,11 @@ export const FeatureCollectionSchema = z.object({
 	features: z.array(GeoFeatureSchema),
 });
 export type FeatureCollectionType = z.infer<typeof FeatureCollectionSchema>;
+
+export const FeatureDefinitionSchema = z.record(
+	z.object({
+		title: z.string(),
+		values: z.array(z.record(z.string())),
+	}),
+);
+export type FeatureDefinitionType = z.infer<typeof FeatureDefinitionSchema>;

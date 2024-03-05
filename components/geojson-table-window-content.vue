@@ -7,9 +7,12 @@ import type { FeatureType } from "@/types/global";
 const GeojsonStore = useGeojsonStore();
 const { addWindow, findWindowByTypeAndParam } = useWindowsStore();
 const url = "https://raw.githubusercontent.com/wibarab/wibarab-data/main/wibarab_varieties.geojson";
+const featureDefUrl = "https://wibarab-api.acdh-ch-dev.oeaw.ac.at/vicav/featurelist.json";
 
+const { isFeatureDefPending } = GeojsonStore.fetchFeatureDefinitions(featureDefUrl);
 const { isPending } = GeojsonStore.fetchGeojson(url);
-const { fetchedData, tables } = storeToRefs(GeojsonStore);
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const { fetchedData, tables, fetchedFeatureDefinitions } = storeToRefs(GeojsonStore);
 
 const columns = computed(() => {
 	return fetchedData.value.get(url)?.properties.column_headings.map((heading: string) => {
@@ -91,14 +94,14 @@ function registerTable(table: Table<FeatureType>) {
 
 <template>
 	<div class="absolute">
-		<Centered v-if="isPending">
+		<Centered v-if="isPending && isFeatureDefPending">
 			<LoadingIndicator />
 		</Centered>
 		<div class="sticky left-1 top-0 z-10 grid justify-items-start bg-accent py-2">
 			<DataTablePagination v-if="tables.get(url)" :table="tables.get(url)" />
 		</div>
 		<DataTable
-			v-if="!isPending"
+			v-if="!isPending && !isFeatureDefPending"
 			:items="fetchedData.get(url)?.features"
 			:columns="columns"
 			@table-ready="registerTable"
