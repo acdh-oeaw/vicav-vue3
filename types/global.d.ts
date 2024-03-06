@@ -127,7 +127,7 @@ export const ColumnDefinitionSchema = z.record(
 		values: z.array(z.record(z.string())),
 	}),
 );
-export type ColumnDefinitionType = z.infer<typeof FeatureDefinitionSchema>;
+export type ColumnDefinitionType = z.infer<typeof ColumnDefinitionSchema>;
 
 export const FeatureCollectionSchema = z.object({
 	type: z.literal("FeatureCollection"),

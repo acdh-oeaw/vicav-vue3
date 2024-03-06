@@ -61,10 +61,17 @@ export const useGeojsonStore = defineStore("geojson", () => {
 				});
 				columnDefs.value.set(
 					key,
-					columnDefinitions.filter((f) => f),
+					columnDefinitions.filter((f) => f) as Array<ColumnDefinitionType>,
 				);
 			},
 		});
+	};
+
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	const getFacetList = (key: string) => {
+		columnDefs.value.get(key)?.reduce((facetList: Array<Record<string, string>>, col) => {
+			return facetList.concat(Object.values(col)[0].values);
+		}, []);
 	};
 
 	return {
