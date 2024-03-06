@@ -5,7 +5,7 @@ import { computed, ref, useAttrs } from "vue";
 import type { MarkerProperties } from "@/components/geo-map.context";
 
 const props = defineProps<{
-	markers: Array<Feature<MarkerProperties, Point>>;
+	markers: Array<Feature<Point, MarkerProperties>>;
 	groupMarkers: boolean;
 }>();
 const attrs = useAttrs();

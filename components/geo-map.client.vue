@@ -33,7 +33,7 @@ const { data: config } = useGeoMapConfig();
 interface ComponentPopupInfo {
 	id: string;
 	props: {
-		markers: Array<Feature<Point, MarkerProperties>>;
+		markers: Array<Feature<MarkerProperties, Point>>;
 		groupMarkers: boolean;
 	};
 }
@@ -111,7 +111,6 @@ const addNearbyDataPopup = function (marker) {
 			},
 		});
 	} else if (marker.getPopup()) {
-		console.log(marker);
 		marker.removePopup();
 	}
 };
