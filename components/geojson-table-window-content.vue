@@ -9,10 +9,10 @@ const { addWindow, findWindowByTypeAndParam } = useWindowsStore();
 const url = "https://raw.githubusercontent.com/wibarab/wibarab-data/main/wibarab_varieties.geojson";
 const featureDefUrl = "https://wibarab-api.acdh-ch-dev.oeaw.ac.at/vicav/featurelist.json";
 
-const { isFeatureDefPending } = GeojsonStore.fetchFeatureDefinitions(featureDefUrl);
+const { isFeatureDefPending } = GeojsonStore.fetchColumnDefinitions(url, featureDefUrl);
 const { isPending } = GeojsonStore.fetchGeojson(url);
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const { fetchedData, tables, fetchedFeatureDefinitions } = storeToRefs(GeojsonStore);
+const { fetchedData, tables, columnDefs } = storeToRefs(GeojsonStore);
 
 const columns = computed(() => {
 	return fetchedData.value.get(url)?.properties.column_headings.map((heading: string) => {

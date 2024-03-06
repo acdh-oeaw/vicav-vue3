@@ -2,16 +2,16 @@ import { useQuery } from "@tanstack/vue-query";
 import type { Table } from "@tanstack/vue-table";
 
 import {
+	ColumnDefinitionSchema,
+	type ColumnDefinitionType,
 	type FeatureCollectionType,
-	FeatureDefinitionSchema,
-	type FeatureDefinitionType,
 	type FeatureType,
 	GeoFeatureSchema,
 } from "@/types/global.d";
 
 export const useGeojsonStore = defineStore("geojson", () => {
 	const fetchedData = ref<Map<string, FeatureCollectionType>>(new Map());
-	const fetchedFeatureDefinitions = ref<Map<string, Array<FeatureDefinitionType>>>(new Map());
+	const columnDefs = ref<Map<string, Array<ColumnDefinitionType>>>(new Map());
 	const tables = ref<Map<string, Table<FeatureType>>>(new Map());
 
 	const fetchGeojson = (url: string) => {
@@ -30,39 +30,38 @@ export const useGeojsonStore = defineStore("geojson", () => {
 						return result.data;
 					} else {
 						console.error(result.error);
-						return null;
+						return false;
 					}
 				});
 				fetchedData.value.set(url, {
 					...data,
-					features,
+					features: features.filter((f) => f),
 				} as FeatureCollectionType);
 			},
 		});
 	};
 
-	const fetchFeatureDefinitions = (url: string) => {
+	const fetchColumnDefinitions = (key: string, url: string) => {
 		return useQuery({
 			enabled: true,
 			queryKey: [url],
 			async queryFn() {
 				const response = await fetch(url);
-				return response.json() as Promise<Array<FeatureDefinitionType>>;
+				return response.json() as Promise<Array<ColumnDefinitionType>>;
 			},
-			select: (data) => {
-				const featureDefinitions = data.map((featureDefinition) => {
-					const result = FeatureDefinitionSchema.safeParse(featureDefinition);
+			select: (data: Array<ColumnDefinitionType>) => {
+				const columnDefinitions = data.map((columnDefinition) => {
+					const result = ColumnDefinitionSchema.safeParse(columnDefinition);
 					if (result.success) {
-						console.log(result.data);
 						return result.data;
 					} else {
 						console.error(result.error);
-						return null;
+						return false;
 					}
 				});
-				fetchedFeatureDefinitions.value.set(
-					url,
-					featureDefinitions as Array<FeatureDefinitionType>,
+				columnDefs.value.set(
+					key,
+					columnDefinitions.filter((f) => f),
 				);
 			},
 		});
@@ -70,9 +69,9 @@ export const useGeojsonStore = defineStore("geojson", () => {
 
 	return {
 		fetchedData,
-		fetchedFeatureDefinitions,
+		columnDefs,
+		fetchColumnDefinitions,
 		fetchGeojson,
-		fetchFeatureDefinitions,
 		tables,
 	};
 });

@@ -121,20 +121,21 @@ export const GeoFeatureSchema = z.object({
 });
 export type FeatureType = z.infer<typeof GeoFeatureSchema>;
 
-export const FeatureCollectionSchema = z.object({
-	type: z.literal("FeatureCollection"),
-	properties: z.object({
-		name: z.string(),
-		column_headings: z.array(z.any()),
-	}),
-	features: z.array(GeoFeatureSchema),
-});
-export type FeatureCollectionType = z.infer<typeof FeatureCollectionSchema>;
-
-export const FeatureDefinitionSchema = z.record(
+export const ColumnDefinitionSchema = z.record(
 	z.object({
 		title: z.string(),
 		values: z.array(z.record(z.string())),
 	}),
 );
-export type FeatureDefinitionType = z.infer<typeof FeatureDefinitionSchema>;
+export type ColumnDefinitionType = z.infer<typeof FeatureDefinitionSchema>;
+
+export const FeatureCollectionSchema = z.object({
+	type: z.literal("FeatureCollection"),
+	properties: z.object({
+		name: z.string(),
+		column_headings: z.array(z.any()),
+		column_definitions: z.array(ColumnDefinitionSchema).optional(),
+	}),
+	features: z.array(GeoFeatureSchema),
+});
+export type FeatureCollectionType = z.infer<typeof FeatureCollectionSchema>;
