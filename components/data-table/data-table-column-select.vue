@@ -8,11 +8,7 @@ interface DataTableColumnSelectProps {
 }
 const props = defineProps<DataTableColumnSelectProps>();
 
-const columns = computed(() =>
-	props.table
-		.getAllColumns()
-		.filter((column) => typeof column.accessorFn !== "undefined" && column.getCanHide()),
-);
+const columns = computed(() => props.table.getAllColumns().filter((column) => column.getCanHide()));
 </script>
 
 <template>
@@ -23,7 +19,7 @@ const columns = computed(() =>
 				View
 			</Button>
 		</DropdownMenuTrigger>
-		<DropdownMenuContent align="end" class="w-[150px]">
+		<DropdownMenuContent align="end" class="w-[150px] bg-white">
 			<DropdownMenuLabel>Toggle columns</DropdownMenuLabel>
 			<DropdownMenuSeparator />
 
