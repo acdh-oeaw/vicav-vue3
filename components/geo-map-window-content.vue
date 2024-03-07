@@ -57,6 +57,8 @@ function onSelect(id: ItemId) {
 	}
 }
 
+const onMarkerClick = useMarkerClickHandler();
+
 const queries = useGeoMarkerLayers(
 	computed(() => {
 		return Array.from(selected.value).map((id) => {
@@ -89,7 +91,7 @@ const markers = computed(() => {
 			v-slot="{ width, height }"
 			:class="{ 'opacity-50 grayscale': isLoading }"
 		>
-			<GeoMap :height="height" :markers="markers" :width="width" />
+			<GeoMap :height="height" :markers="markers" :width="width" @marker-click="onMarkerClick" />
 
 			<Centered v-if="isLoading">
 				<LoadingIndicator />

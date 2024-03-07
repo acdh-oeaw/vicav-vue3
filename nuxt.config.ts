@@ -36,7 +36,7 @@ export default defineNuxtConfig({
 	runtimeConfig: {
 		BOTS: process.env.BOTS,
 		public: {
-			NUXT_PUBLIC_API_BASE_URL: process.env.NUXT_PUBLIC_API_BASE_URL,
+			apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL,
 			NUXT_PUBLIC_APP_BASE_URL: process.env.PUBLIC_URL ?? process.env.NUXT_PUBLIC_APP_BASE_URL,
 			NUXT_PUBLIC_MAP_TILE_LAYER_ATTRIBUTION: process.env.NUXT_PUBLIC_MAP_TILE_LAYER_ATTRIBUTION,
 			NUXT_PUBLIC_MAP_TILE_LAYER_URL: process.env.NUXT_PUBLIC_MAP_TILE_LAYER_URL,

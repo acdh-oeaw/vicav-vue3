@@ -35,7 +35,7 @@ export function useGeoMapConfig() {
 				place: {
 					autoPanOnFocus: false,
 					icon: icon({
-						iconAnchor: [2, 35],
+						iconAnchor: [7, 34],
 						iconSize: [13, 35],
 						iconUrl: iconUrl.value,
 					}),

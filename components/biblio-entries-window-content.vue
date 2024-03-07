@@ -1,7 +1,4 @@
 <script lang="ts" setup>
-import { nanoid } from "nanoid";
-import { Collapse, initTE } from "tw-elements";
-
 import type { BibliographyEntriesWindowItem } from "@/types/global.d";
 
 const windowsStore = useWindowsStore();
@@ -16,8 +13,6 @@ const { params } = toRefs(props);
 
 const emit = defineEmits(["updateQueryParam"]);
 
-const formId = "biblioQueryForm-" + nanoid();
-let isFormOpen = ref(false);
 const { data, isPending, isPlaceholderData } = useBiblioTeiQuery(params);
 const openNewWindowFromAnchor = useAnchorClickHandler();
 
@@ -29,7 +24,9 @@ const queryString: Ref<string> = ref(params.value.queryString);
 const isTextQuery: Ref<boolean> = ref(true);
 const isMapQuery: Ref<boolean> = ref(false);
 
+let isFormOpen = ref(queryString.value === "");
 function submitNewQuery(): void {
+	if (queryString.value === "") return;
 	if (!isTextQuery.value && !isMapQuery.value) isTextQuery.value = true;
 	params.value.queryString = queryString.value;
 	if (isTextQuery.value) {
@@ -46,20 +43,6 @@ function submitNewQuery(): void {
 		});
 	}
 }
-
-onMounted(() => {
-	initTE({ Collapse });
-	let formElement = document.getElementById(formId);
-	formElement?.addEventListener("show.te.collapse", () => {
-		isFormOpen.value = true;
-	});
-	formElement?.addEventListener("hidden.te.collapse", () => {
-		isFormOpen.value = false;
-	});
-	new Collapse(formElement, {
-		toggle: queryString.value === "",
-	});
-});
 </script>
 
 <template>
@@ -68,16 +51,8 @@ onMounted(() => {
 		:class="{ 'opacity-50 grayscale': isLoading }"
 	>
 		<!-- eslint-disable vuejs-accessibility/form-control-has-label, tailwindcss/no-custom-classname -->
-		<div class="prose max-w-3xl px-8 pb-4 pt-8">
-			<button
-				class="dvStats flex w-full items-baseline"
-				type="button"
-				tabindex="0"
-				data-te-collapse-init
-				:data-te-target="`#${formId}`"
-				aria-expanded="false"
-				aria-controls="queryForm"
-			>
+		<Collapsible v-model:open="isFormOpen" class="prose max-w-3xl px-8 pb-4 pt-8">
+			<CollapsibleTrigger class="dvStats flex w-full items-baseline">
 				Query:&nbsp;&nbsp;
 				<span class="spQueryText">{{ queryString }}</span>
 				<div class="relative top-1 ml-auto mr-4">
@@ -120,77 +95,79 @@ onMounted(() => {
 						</svg>
 					</div>
 				</div>
-			</button>
-			<div :id="formId" class="!visible hidden max-w-3xl bg-gray-200 px-4" data-te-collapse-item>
-				<div class="pt-3">
-					<input
-						v-model="queryString"
-						type="text"
-						class="block w-full rounded border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
-						placeholder="Search in bibliographies&hellip;"
-						@keyup.enter="submitNewQuery"
-					/>
-				</div>
-				<div class="my-3">
-					<button class="biblQueryBtn" :disabled="!queryString" @click="submitNewQuery">
-						Query
-					</button>
-				</div>
-				<div class="mb-5 mt-2 flex">
-					<div class="flex flex-1 items-start">
-						<div class="flex h-5 items-center">
-							<input
-								id="isTextQuery"
-								v-model="isTextQuery"
-								type="checkbox"
-								class="focus:ring-3 h-4 w-4 rounded border border-gray-300 bg-gray-50 focus:ring-blue-300 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-blue-600 dark:focus:ring-offset-gray-800"
-							/>
-						</div>
-						<label
-							for="isTextQuery"
-							class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300"
-						>
-							Display as text
-						</label>
+			</CollapsibleTrigger>
+			<CollapsibleContent>
+				<div class="max-w-3xl bg-gray-200 px-4">
+					<div class="pt-3">
+						<input
+							v-model="queryString"
+							type="text"
+							class="block w-full rounded border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
+							placeholder="Search in bibliographies&hellip;"
+							@keyup.enter="submitNewQuery"
+						/>
 					</div>
-					<div class="flex flex-1 items-start">
-						<div class="flex h-5 items-center">
-							<input
-								id="isMapQuery"
-								v-model="isMapQuery"
-								type="checkbox"
-								class="focus:ring-3 h-4 w-4 rounded border border-gray-300 bg-gray-50 focus:ring-blue-300 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary dark:focus:ring-offset-gray-800"
-							/>
+					<div class="my-3">
+						<button class="biblQueryBtn" :disabled="!queryString" @click="submitNewQuery">
+							Query
+						</button>
+					</div>
+					<div class="mb-5 mt-2 flex">
+						<div class="flex flex-1 items-start">
+							<div class="flex h-5 items-center">
+								<input
+									id="isTextQuery"
+									v-model="isTextQuery"
+									type="checkbox"
+									class="focus:ring-3 h-4 w-4 rounded border border-gray-300 bg-gray-50 focus:ring-blue-300 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-blue-600 dark:focus:ring-offset-gray-800"
+								/>
+							</div>
+							<label
+								for="isTextQuery"
+								class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300"
+							>
+								Display as text
+							</label>
 						</div>
-						<label
-							for="isMapQuery"
-							class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300"
-						>
-							Display on map
-						</label>
+						<div class="flex flex-1 items-start">
+							<div class="flex h-5 items-center">
+								<input
+									id="isMapQuery"
+									v-model="isMapQuery"
+									type="checkbox"
+									class="focus:ring-3 h-4 w-4 rounded border border-gray-300 bg-gray-50 focus:ring-blue-300 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary dark:focus:ring-offset-gray-800"
+								/>
+							</div>
+							<label
+								for="isMapQuery"
+								class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300"
+							>
+								Display on map
+							</label>
+						</div>
+					</div>
+					<div class="pb-4">
+						<p>
+							For details as to how to formulate meaningful queries in the bibliography
+							<a
+								class="aVicText"
+								href="/"
+								data-target-type="Text"
+								data-text-id="li_vicavExplanationBibliography"
+								@click="openNewWindowFromAnchor"
+							>
+								click here
+							</a>
+							<!-- TODO: remove the linebreak before the punctuation so that it sticks to the html end tag and find the linting rule to ignore -->
+							.
+						</p>
 					</div>
 				</div>
-				<div class="pb-4">
-					<p>
-						For details as to how to formulate meaningful queries in the bibliography
-						<a
-							class="aVicText"
-							href="/"
-							data-target-type="Text"
-							data-text-id="li_vicavExplanationBibliography"
-							@click="openNewWindowFromAnchor"
-						>
-							click here
-						</a>
-						<!-- TODO: remove the linebreak before the punctuation so that it sticks to the html end tag and find the linting rule to ignore -->
-						.
-					</p>
-				</div>
-			</div>
-		</div>
+			</CollapsibleContent>
+		</Collapsible>
 
 		<!-- eslint-disable-next-line vue/no-v-html, vuejs-accessibility/click-events-have-key-events, vuejs-accessibility/no-static-element-interactions -->
-		<div v-if="queryString && data" class="prose mb-auto max-w-3xl p-8" v-html="data" />
+		<div v-if="data" class="prose mb-auto max-w-3xl p-8" v-html="data" />
 
 		<Centered v-if="isLoading">
 			<LoadingIndicator />

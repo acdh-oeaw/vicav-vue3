@@ -8,7 +8,9 @@ import type {
 	CorpusTextWindowItem,
 	FeatureWindowItem,
 	GeoMapWindowItem,
+	ListMapWindowItem,
 	ProfileWindowItem,
+	SampleTextWindowItem,
 	TextWindowItem,
 } from "@/types/global.d";
 
@@ -84,11 +86,25 @@ function onSelectMenuItem(item: ItemType) {
 				title: item.label ?? "",
 			};
 			break;
+		case "SampleText":
+			newWindowState = {
+				targetType: "SampleText",
+				params: item.params as SampleTextWindowItem["params"],
+				title: item.label ?? "",
+			};
+			break;
 		case "Text":
 			newWindowState = {
 				targetType: "Text",
 				params: item.params as TextWindowItem["params"],
 				title: item.label ?? "",
+			};
+			break;
+		case "ListMap":
+			newWindowState = {
+				targetType: "ListMap",
+				title: item.label ?? "",
+				params: item.params as ListMapWindowItem["params"],
 			};
 			break;
 		default:
