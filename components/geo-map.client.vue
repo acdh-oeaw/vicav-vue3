@@ -33,7 +33,7 @@ const { data: config } = useGeoMapConfig();
 interface ComponentPopupInfo {
 	id: string;
 	props: {
-		markers: Array<Feature<MarkerProperties, Point>>;
+		markers: Array<Feature<Point, MarkerProperties>>;
 		groupMarkers: boolean;
 	};
 }
