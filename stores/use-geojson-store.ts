@@ -70,6 +70,7 @@ export const useGeojsonStore = defineStore("geojson", () => {
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	const getFacetList = (key: string) => {
 		columnDefs.value.get(key)?.reduce((facetList: Array<Record<string, string>>, col) => {
+			// @ts-expect-error - col.values is always available as it is parsed and filtered by zod
 			return facetList.concat(Object.values(col)[0].values);
 		}, []);
 	};
