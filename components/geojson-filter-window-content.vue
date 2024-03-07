@@ -12,8 +12,12 @@ const { params } = toRefs(props);
 const GeojsonStore = useGeojsonStore();
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const { tables } = storeToRefs(GeojsonStore);
+
+const facets = computed(() => {
+	return GeojsonStore.getFacetList(params.value.url);
+});
 </script>
 
 <template>
-	<div>{{ params.url }}</div>
+	<div v-for="(facet, index) in facets" :key="index">{{ facet }}</div>
 </template>

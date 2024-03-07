@@ -35,7 +35,7 @@ onMounted(() => {
 
 <template>
 	<Table>
-		<TableHeader class="sticky left-0 top-0 bg-accent font-bold text-on-accent">
+		<TableHeader class="sticky left-0 top-12 bg-accent font-bold text-on-accent">
 			<TableRow v-for="headerGroup in table.getHeaderGroups()" :key="headerGroup.id">
 				<TableHead v-for="header in headerGroup.headers" :key="header.id">
 					{{ header.column.columnDef.header }}

@@ -93,15 +93,16 @@ function registerTable(table: Table<FeatureType>) {
 </script>
 
 <template>
-	<div class="absolute">
+	<div class="absolute bg-accent">
 		<Centered v-if="isPending && isFeatureDefPending">
 			<LoadingIndicator />
 		</Centered>
-		<div class="sticky left-1 top-0 z-10 grid justify-items-start bg-accent py-2">
-			<DataTablePagination v-if="tables.get(url)" :table="tables.get(url)" />
+		<div class="sticky left-1 top-0 z-10 grid w-fit justify-items-start bg-accent">
+			<DataTablePagination v-if="tables.get(url)" class="py-2" :table="tables.get(url)" />
 		</div>
 		<DataTable
 			v-if="!isPending && !isFeatureDefPending"
+			class="bg-white"
 			:items="fetchedData.get(url)?.features"
 			:columns="columns"
 			@table-ready="registerTable"
