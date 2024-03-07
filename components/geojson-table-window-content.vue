@@ -99,6 +99,7 @@ function registerTable(table: Table<FeatureType>) {
 		</Centered>
 		<div class="sticky left-1 top-0 z-10 grid w-fit justify-items-start bg-accent">
 			<DataTablePagination v-if="tables.get(url)" class="py-2" :table="tables.get(url)" />
+			<DataTableColumnSelect v-if="tables.get(url)" class="py-2" :table="tables.get(url)" />
 		</div>
 		<DataTable
 			v-if="!isPending && !isFeatureDefPending"
