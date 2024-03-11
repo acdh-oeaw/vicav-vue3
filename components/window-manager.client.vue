@@ -5,13 +5,17 @@ const windowsStore = useWindowsStore();
 const { arrangeWindows } = windowsStore;
 const { registry } = storeToRefs(windowsStore);
 
+const route = useRoute();
+
 const rootElement = ref<HTMLElement | null>(null);
 
 const debouncedArrangeWindows = debounce(arrangeWindows, 150);
 
 useResizeObserver(rootElement, debouncedArrangeWindows);
 
-onMounted(windowsStore.restoreState);
+onMounted(() => {
+	if (route.path !== "/imprint") windowsStore.restoreState;
+});
 </script>
 
 <template>
