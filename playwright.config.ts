@@ -50,6 +50,6 @@ export default defineConfig({
 	webServer: {
 		command: "pnpm run start",
 		url: baseUrl,
-		reuseExistingServer: true,
+		reuseExistingServer: !isCI,
 	},
 });
