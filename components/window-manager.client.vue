@@ -14,7 +14,7 @@ const debouncedArrangeWindows = debounce(arrangeWindows, 150);
 useResizeObserver(rootElement, debouncedArrangeWindows);
 
 onMounted(() => {
-	if (route.path !== "/imprint") windowsStore.restoreState;
+	if (route.path === "/") void windowsStore.restoreState();
 });
 </script>
 
