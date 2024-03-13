@@ -28,7 +28,7 @@
 		"setup": "is-ci || simple-git-hooks",
 		"start:preview": "nuxt preview --dotenv ./.env.local",
 		"start": "node .output/server/index.mjs",
-		"test": "exit 0",
+		"test": "playwright test",
 		"test:e2e": "playwright test",
 		"test:e2e:codegen": "playwright codegen",
 		"test:e2e:debug": "playwright test --debug",
