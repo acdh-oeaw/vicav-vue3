@@ -6,7 +6,7 @@ const api = useApiClient();
 
 const props = defineProps<{ params: Zod.infer<typeof CorpusQuerySchema>["params"] }>();
 
-const queryString = ref(`${props.params.queryString}`);
+const queryString = ref(props.params.queryString);
 const hits = ref<Array<CorpusSearchHits> | undefined>([]);
 
 async function searchCorpus() {
@@ -98,7 +98,7 @@ const specialCharacters: Array<string> = [
 	</div>
 </template>
 
-<style lang="scss">
+<style>
 /* InputExtended stylesheet */
 .ie button {
 	@apply border-gray-300 bg-gray-200 border px-2 py-px font-bold text-gray-800 hover:bg-gray-300 rounded-sm m-px;

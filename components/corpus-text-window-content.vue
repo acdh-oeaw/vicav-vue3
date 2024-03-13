@@ -64,7 +64,7 @@ onMounted(async () => {
 
 <template>
 	<!-- eslint-disable tailwindcss/no-custom-classname, vue/no-v-html -->
-	<div :id="params.textId" class="corpus-text">
+	<div :id="params.textId" class="p-4">
 		<h2>{{ params.textId }}</h2>
 		<div
 			v-for="u in utterances"
@@ -79,9 +79,6 @@ onMounted(async () => {
 </template>
 
 <style lang="scss">
-.corpus-text {
-	padding: 1rem;
-}
 .u {
 	display: flex;
 	.xmlId {
