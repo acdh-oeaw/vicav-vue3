@@ -208,6 +208,21 @@ export const useWindowsStore = defineStore("windows", () => {
 		return foundWindow;
 	}
 
+	function addWindowIfNotPresent(stateParams: WindowState, paramName: string) {
+		const { targetType, params } = stateParams;
+		// @ts-expect-error params is unknown but reliably typed through WindowState
+		const fw = findWindowByTypeAndParam(targetType, paramName, params[paramName]);
+		if (fw) {
+			fw.winbox.focus();
+			fw.winbox.addClass("highlighted");
+			setTimeout(() => {
+				fw.winbox.removeClass("highlighted");
+			}, 1000);
+		} else {
+			addWindow(stateParams);
+		}
+	}
+
 	function removeWindow(id: WindowItem["id"]) {
 		registry.value.get(id)?.winbox.close();
 	}
@@ -336,5 +351,6 @@ export const useWindowsStore = defineStore("windows", () => {
 		setWindowArrangement,
 		arrangeWindows,
 		findWindowByTypeAndParam,
+		addWindowIfNotPresent
 	};
 });
