@@ -110,8 +110,6 @@ const addNearbyDataPopup = function (marker) {
 				groupMarkers: contentTypes.length > 1,
 			},
 		});
-	} else if (marker.getPopup()) {
-		marker.removePopup();
 	}
 };
 
