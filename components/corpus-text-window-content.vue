@@ -78,21 +78,24 @@ onMounted(async () => {
 	</div>
 </template>
 
-<style lang="scss">
+<style>
 .u {
 	display: flex;
-	.xmlId {
-		font-weight: bold;
-		padding: 0 20px;
+
+	.xml-id {
 		min-width: fit-content;
+		padding: 0 20px;
+		font-weight: 700;
 	}
+
 	.speaker {
-		font-weight: bold;
-		padding: § 20px;
+		padding: 20px;
+		font-weight: 700;
 	}
+
 	.content {
 		.hit {
-			font-weight: bold;
+			font-weight: 700;
 		}
 	}
 }

@@ -89,9 +89,9 @@ const specialCharacters: Array<string> = [
 							<strong>{{ hit.u }}</strong>
 						</a>
 					</td>
-					<td class="p-0 text-right" v-html="'TODO: hit.content.left'"></td>
-					<td class="bg-[beige] p-0 text-center" v-html="'TODO: hit.content.kwic'"></td>
-					<td class="p-0" v-html="'TODO: hit.content.right'"></td>
+					<td class="p-0 text-right" v-html="hit.content?.left"></td>
+					<td class="bg-[beige] p-0 text-center" v-html="hit.content?.kwic"></td>
+					<td class="p-0" v-html="hit.content?.right"></td>
 				</tr>
 			</table>
 		</div>
