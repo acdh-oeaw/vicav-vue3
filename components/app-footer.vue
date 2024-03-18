@@ -3,10 +3,13 @@
 <template>
 	<footer
 		class="inset-x-0 bottom-0 h-7 bg-surface text-on-surface transition duration-500"
-		onclick="document.querySelector('footer').classList.add('-translate-y-80')"
 		onmouseleave="document.querySelector('footer').classList.remove('-translate-y-80')"
 	>
-		<div class="flex items-center justify-center gap-2 border px-8 py-1.5 text-xs">
+		<div class="flex items-center gap-2 border px-8 py-1.5 text-xs">
+			<div
+				class="h-4 flex-1"
+				onmouseover="document.querySelector('footer').classList.add('-translate-y-80')"
+			></div>
 			<span class="flex gap-1">
 				<span>&copy; {{ new Date().getUTCFullYear() }}</span>
 				<a class="hover:underline hover:underline-offset-2" href="https://www.oeaw.ac.at/acdh">
@@ -15,6 +18,10 @@
 			</span>
 			<span>|</span>
 			<NuxtLink class="hover:underline hover:underline-offset-2" href="/imprint">Imprint</NuxtLink>
+			<div
+				class="h-4 flex-1"
+				onmouseover="document.querySelector('footer').classList.add('-translate-y-80')"
+			></div>
 		</div>
 		<div class="mb-0 w-full bg-neutral-50 px-0 text-gray-900">
 			<div id="footer-full-content" class="mx-auto w-full px-4" tabindex="-1">
