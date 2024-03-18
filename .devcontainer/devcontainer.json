@@ -1,0 +1,11 @@
+{
+	"name": "vicav-vue3 development environment",
+	"forwardPorts": [3000],
+	"containerEnv": {
+		"NUXT_PUBLIC_API_BASE_URL": "https://wibarab-api.acdh-ch-dev.oeaw.ac.at/",
+		"NUXT_PUBLIC_MAP_TILE_LAYER_URL": "https://api.mapbox.com/styles/v1/acdh-ch-tech/cllp2n7aj004a01r7fl637bq1/tiles/256/{z}/{x}/{y}?access_token\\=pk.eyJ1IjoiYWNkaC1jaC10ZWNoIiwiYSI6ImNsZXpnMDdpODBlc2Q0MGwzOGZmaWNveDgifQ.yYx8e9PdsDl-NzOpGXAL7g",
+		"NUXT_PUBLIC_MATOMO_BASE_URL": "https://matomo.acdh.oeaw.ac.at/",
+		"NUXT_PUBLIC_REDMINE_ID": "22038"
+	},
+	"image": "gplane/pnpm:node20-bullseye"
+}

@@ -42,6 +42,14 @@ function updateQueryParam(queryString: string) {
 		v-else-if="props.item.targetType === 'GeojsonMap'"
 		:params="props.item.params"
 	/>
+	<CorpusQueryWindowContent
+		v-else-if="props.item.targetType === 'CorpusQuery'"
+		:params="props.item.params"
+	/>
+	<CorpusTextWindowContent
+		v-else-if="props.item.targetType === 'CorpusText'"
+		:params="props.item.params"
+	/>
 	<GeojsonFilterWindowContent
 		v-else-if="props.item.targetType === 'GeojsonFilter'"
 		:params="props.item.params"

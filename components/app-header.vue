@@ -4,6 +4,8 @@ import { noop } from "@acdh-oeaw/lib";
 import type { ItemType } from "@/lib/api-client";
 import type {
 	BibliographyEntriesWindowItem,
+	CorpusQueryWindowItem,
+	CorpusTextWindowItem,
 	FeatureWindowItem,
 	GeoMapWindowItem,
 	ListMapWindowItem,
@@ -44,6 +46,22 @@ function onSelectMenuItem(item: ItemType) {
 			newWindowState = {
 				targetType: "BiblioEntries",
 				params: item.params as BibliographyEntriesWindowItem["params"],
+				title: item.label ?? "",
+			};
+			break;
+		case "CorpusQuery":
+			newWindowState = {
+				targetType: "CorpusQuery",
+				params: {
+					queryString: "Two wrongs don't make a right, but three lefts do.", // TODO: pass this value from the backend and replace the string with item.params
+				} as CorpusQueryWindowItem["params"],
+				title: item.label ?? "",
+			};
+			break;
+		case "CorpusText":
+			newWindowState = {
+				targetType: "CorpusText",
+				params: item.params as CorpusTextWindowItem["params"],
 				title: item.label ?? "",
 			};
 			break;

@@ -6,11 +6,14 @@ import {
 	geoJSON,
 	type Map as LeafletMap,
 	map as createMap,
+	type Marker as LeafletMarker,
 	marker,
+	type Point as LeafletPoint,
 	tileLayer,
 } from "leaflet";
 
 import { type GeoMapContext, key, type MarkerProperties } from "@/components/geo-map.context";
+import GeoMapPopupContent from "@/components/geo-map-popup-content.vue";
 
 interface Props {
 	height: number;
@@ -27,7 +30,28 @@ const emit = defineEmits<{
 
 const { data: config } = useGeoMapConfig();
 
-const elementRef = ref<HTMLDivElement | null>(null);
+interface ComponentPopupInfo {
+	id: string;
+	props: {
+		markers: Array<Feature<Point, MarkerProperties>>;
+		groupMarkers: boolean;
+	};
+}
+
+const popupElements = ref<Array<GeoMapPopupContent>>([]);
+const componentPopups = ref<Array<ComponentPopupInfo>>([]);
+const openedPopupId = ref<number | null>(null);
+const elementRef = ref<HTMLElement | null>(null);
+
+watchEffect(() => {
+	componentPopups.value.forEach((popup) => {
+		const element = popupElements.value.find((popupElement) => popup.id === popupElement.id);
+		const leafletMarker = context.featureGroups.markers?.getLayer(popup.id as number);
+		if (leafletMarker == null || element == null) return;
+
+		leafletMarker.bindPopup(element.$el, { minWidth: 150 });
+	});
+});
 
 const context: GeoMapContext = {
 	map: null,
@@ -37,7 +61,59 @@ const context: GeoMapContext = {
 	},
 };
 
-function updateMarkers() {
+const ptDistanceSq = function (pt1: LeafletPoint, pt2: LeafletPoint): number {
+	let dx = pt1.x - pt2.x;
+	let dy = pt1.y - pt2.y;
+	return dx * dx + dy * dy;
+};
+
+// Bind a popup listing nearby data to markers close to each other.
+// Remove existing if there are no nearby markers on the map any more.
+const addNearbyDataPopup = function (marker) {
+	const featureGroup = context.featureGroups.markers;
+	const map = context.map;
+	if (featureGroup === null || map === null) return;
+
+	let distance = Math.floor(2 * map.getZoom());
+	let nearbyMarkerData = [];
+	const pxSq = distance * distance;
+	const markerPt = map.latLngToLayerPoint(marker.getLatLng());
+
+	const id = featureGroup.getLayerId(marker);
+	Object.values(featureGroup.getLayers()).forEach((m: LeafletMarker) => {
+		if (map.hasLayer(m)) {
+			const mPt = map.latLngToLayerPoint(m.getLatLng());
+			if (ptDistanceSq(mPt, markerPt) < pxSq) {
+				nearbyMarkerData.push(m.feature);
+			}
+		}
+	});
+
+	if (nearbyMarkerData.length > 1) {
+		const markers = nearbyMarkerData.sort((a, b) => {
+			return a.properties.label.localeCompare(b.properties.label);
+		});
+
+		// @todo determine whether grouping is needed based on the number of
+		// feature groups once separate feature groups for queries are supported.
+		let contentTypes = [];
+		markers.forEach((marker) => {
+			if (!contentTypes.includes(marker.properties.targetType)) {
+				contentTypes.push(marker.properties.targetType);
+			}
+		});
+
+		componentPopups.value.push({
+			id: id as string,
+			props: {
+				markers: markers,
+				groupMarkers: contentTypes.length > 1,
+			},
+		});
+	}
+};
+
+function updateMarkers(updateViewport = true) {
 	const featureGroup = context.featureGroups.markers;
 
 	if (featureGroup == null) return;
@@ -48,7 +124,13 @@ function updateMarkers() {
 		featureGroup.addData(marker);
 	});
 
-	fitAllMarkersOnViewport();
+	if (config.nearbyMarkersPopup) {
+		Object.values(featureGroup.getLayers()).forEach((marker) => {
+			addNearbyDataPopup(marker);
+		});
+	}
+
+	if (updateViewport) fitAllMarkersOnViewport();
 }
 
 function fitAllMarkersOnViewport() {
@@ -89,7 +171,12 @@ onMounted(async () => {
 
 			layer.on({
 				click() {
-					emit("marker-click", feature);
+					const id = context.featureGroups.markers?.getLayerId(layer);
+					if (layer.getPopup()) {
+						openedPopupId.value = id ? id : null;
+					} else {
+						emit("marker-click", feature);
+					}
 				},
 			});
 		},
@@ -103,11 +190,13 @@ onMounted(async () => {
 	}).addTo(context.map);
 
 	updateMarkers();
+	context.map.on("zoomend", function () {
+		updateMarkers(false);
+	});
 });
 
-watch(() => {
-	return props.markers;
-}, updateMarkers);
+// noinspection TypeScriptValidateTypes
+watch(() => props.markers, updateMarkers);
 
 const resize = debounce(() => {
 	if (context.map === null) {
@@ -153,6 +242,14 @@ provide(key, context);
 <template>
 	<div ref="elementRef" class="absolute inset-0 grid" data-geo-map />
 	<slot :context="context" />
+	<GeoMapPopupContent
+		v-for="popupInfo in componentPopups"
+		v-show="popupInfo.id == openedPopupId"
+		v-bind="popupInfo.props"
+		:id="popupInfo.id"
+		:key="popupInfo.id"
+		ref="popupElements"
+	/>
 </template>
 
 <style>

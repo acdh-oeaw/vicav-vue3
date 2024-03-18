@@ -29,6 +29,23 @@ export const BibliographyEntriesSchema = z.object({
 export type BibliographyEntriesWindowItem = WindowItemBase &
 	z.infer<typeof BibliographyEntriesSchema>;
 
+export const CorpusQuerySchema = z.object({
+	targetType: z.literal("CorpusQuery"),
+	params: QueryString,
+});
+export type CorpusQueryWindowItem = WindowItemBase & z.infer<typeof CorpusQuerySchema>;
+
+export const CorpusTextSchema = z.object({
+	targetType: z.literal("CorpusText"),
+	params: TextId.merge(
+		z.object({
+			hits: z.string().optional(),
+			u: z.string().optional(), // TODO: give this parameter a telling name
+		}),
+	),
+});
+export type CorpusTextWindowItem = WindowItemBase & z.infer<typeof CorpusTextSchema>;
+
 export const FeatureSchema = z.object({
 	targetType: z.literal("Feature"),
 	params: TextId.merge(TeiSource.partial()),
@@ -93,6 +110,8 @@ export type GeojsonFilterWindowItem = WindowItemBase & z.infer<typeof GeojsonFil
 
 export const Schema = z.discriminatedUnion("targetType", [
 	BibliographyEntriesSchema,
+	CorpusQuerySchema,
+	CorpusTextSchema,
 	FeatureSchema,
 	GeoMapSchema,
 	ProfileSchema,
