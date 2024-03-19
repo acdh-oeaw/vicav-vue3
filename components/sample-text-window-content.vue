@@ -29,3 +29,14 @@ const isLoading = computed(() => {
 		</Centered>
 	</div>
 </template>
+
+<style scoped>
+.w,
+.pc {
+	@apply text-inherit not-italic no-underline;
+}
+
+.w.sample-text-tooltip {
+	@apply bg-yellow-200;
+}
+</style>

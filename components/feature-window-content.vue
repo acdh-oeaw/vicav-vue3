@@ -30,7 +30,7 @@ const isLoading = computed(() => {
 	</div>
 </template>
 
-<style>
+<style scoped>
 /* stylelint-disable selector-class-pattern */
 
 .tbFeatures {
@@ -58,7 +58,7 @@ const isLoading = computed(() => {
 }
 
 .tdFeaturesRightSource {
-	@apply align-top w-4/5 pl-[3px] border border-solid border-primary bg-[#a85d8f] text-[#7f960a];
+	@apply align-top w-4/5 pl-[3px] border border-solid border-primary bg-primary bg-opacity-30 text-[#7f960a];
 }
 
 .tdFeaturesRightTarget {
@@ -66,11 +66,16 @@ const isLoading = computed(() => {
 }
 
 a.word-search {
-	@apply text-inherit;
+	@apply text-inherit no-underline;
 }
 
-.w {
-	@apply text-inherit not-italic;
+.w,
+.pc {
+	@apply text-inherit not-italic no-underline;
+}
+
+.w.sample-text-tooltip {
+	@apply bg-yellow-200;
 }
 
 .w.highlight {
