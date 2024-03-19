@@ -9,8 +9,8 @@
 			"skipFiles": ["<node_internals>/**"],
 			"type": "node",
 			"env": {
-				"NUXT_PUBLIC_APP_BASE_USER": "tunocent",
-				"NUXT_PUBLIC_APP_BASE_PASS": "imaala"
+				"NUXT_PUBLIC_API_USER": "tunocent",
+				"NUXT_PUBLIC_API_PASS": "imaala"
 			}
 		},
 		{
