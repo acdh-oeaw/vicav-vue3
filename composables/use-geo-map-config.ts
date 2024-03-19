@@ -14,6 +14,8 @@ export function useGeoMapConfig() {
 		zoom: data.value?.projectConfig?.map?.zoom,
 	};
 
+	const nearbyMarkersPopup = true; //data.value?.projectConfig?.map?.nearbyMarkersPopup as Boolean;
+
 	const iconUrl = computed(() => {
 		const url = data.value?.projectConfig?.icon;
 
@@ -25,6 +27,7 @@ export function useGeoMapConfig() {
 		data: {
 			baseLayer,
 			initialViewState,
+			nearbyMarkersPopup,
 			options: {
 				minZoom: 2,
 				maxZoom: 20,
@@ -35,7 +38,7 @@ export function useGeoMapConfig() {
 				place: {
 					autoPanOnFocus: false,
 					icon: icon({
-						iconAnchor: [2, 35],
+						iconAnchor: [7, 34],
 						iconSize: [13, 35],
 						iconUrl: iconUrl.value,
 					}),

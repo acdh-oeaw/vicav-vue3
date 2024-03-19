@@ -1,7 +1,6 @@
 import typographyPlugin from "@tailwindcss/typography";
 import type { Config } from "tailwindcss";
 import animatePlugin from "tailwindcss-animate";
-import twElement from "tw-elements/dist/plugin.cjs";
 
 const config = {
 	content: [
@@ -11,10 +10,9 @@ const config = {
 		"./layouts/**/*.@(ts|tsx|vue)",
 		"./pages/**/*.@(ts|tsx|vue)",
 		"./styles/**/*.css",
-		"./node_modules/tw-elements/dist/js/**/*.js",
 	],
 	darkMode: ["class", 'data-ui-color-scheme="dark"'],
-	plugins: [animatePlugin, typographyPlugin, twElement],
+	plugins: [animatePlugin, typographyPlugin],
 	theme: {
 		extend: {
 			borderRadius: {

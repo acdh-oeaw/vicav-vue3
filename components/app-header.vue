@@ -4,9 +4,13 @@ import { noop } from "@acdh-oeaw/lib";
 import type { ItemType } from "@/lib/api-client";
 import type {
 	BibliographyEntriesWindowItem,
+	CorpusQueryWindowItem,
+	CorpusTextWindowItem,
 	FeatureWindowItem,
 	GeoMapWindowItem,
+	ListMapWindowItem,
 	ProfileWindowItem,
+	SampleTextWindowItem,
 	TextWindowItem,
 } from "@/types/global.d";
 
@@ -45,6 +49,22 @@ function onSelectMenuItem(item: ItemType) {
 				title: item.label ?? "",
 			};
 			break;
+		case "CorpusQuery":
+			newWindowState = {
+				targetType: "CorpusQuery",
+				params: {
+					queryString: "Two wrongs don't make a right, but three lefts do.", // TODO: pass this value from the backend and replace the string with item.params
+				} as CorpusQueryWindowItem["params"],
+				title: item.label ?? "",
+			};
+			break;
+		case "CorpusText":
+			newWindowState = {
+				targetType: "CorpusText",
+				params: item.params as CorpusTextWindowItem["params"],
+				title: item.label ?? "",
+			};
+			break;
 		case "Feature":
 			newWindowState = {
 				targetType: "Feature",
@@ -66,11 +86,25 @@ function onSelectMenuItem(item: ItemType) {
 				title: item.label ?? "",
 			};
 			break;
+		case "SampleText":
+			newWindowState = {
+				targetType: "SampleText",
+				params: item.params as SampleTextWindowItem["params"],
+				title: item.label ?? "",
+			};
+			break;
 		case "Text":
 			newWindowState = {
 				targetType: "Text",
 				params: item.params as TextWindowItem["params"],
 				title: item.label ?? "",
+			};
+			break;
+		case "ListMap":
+			newWindowState = {
+				targetType: "ListMap",
+				title: item.label ?? "",
+				params: item.params as ListMapWindowItem["params"],
 			};
 			break;
 		default:
