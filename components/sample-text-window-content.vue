@@ -7,9 +7,12 @@ interface Props {
 
 const props = defineProps<Props>();
 const { params } = toRefs(props);
+const tooltip = ref(null);
 
 const { data, isPending, isPlaceholderData } = useSampleTextById(params);
 const openNewWindowFromAnchor = useAnchorClickHandler();
+const { showTooltip, tooltipContent, tooltipX, tooltipY, handleHoverTooltip } =
+	useHoverTooltipHandler(tooltip);
 
 const isLoading = computed(() => {
 	return isPending.value || isPlaceholderData.value;
@@ -21,8 +24,24 @@ const isLoading = computed(() => {
 		class="relative isolate grid h-full w-full overflow-auto"
 		:class="{ 'opacity-50 grayscale': isLoading }"
 	>
-		<!-- eslint-disable-next-line vue/no-v-html, vuejs-accessibility/click-events-have-key-events, vuejs-accessibility/no-static-element-interactions -->
-		<div v-if="data" class="prose max-w-3xl p-8" @click="openNewWindowFromAnchor" v-html="data" />
+		<!-- eslint-disable vue/no-v-html,
+			vuejs-accessibility/mouse-events-have-key-events,
+			vuejs-accessibility/click-events-have-key-events, vuejs-accessibility/no-static-element-interactions -->
+
+		<div
+			v-if="showTooltip"
+			ref="tooltip"
+			class="tooltip"
+			:style="{ top: tooltipY + 'px', left: tooltipX + 'px' }"
+			v-html="tooltipContent"
+		></div>
+		<div
+			v-if="data"
+			class="prose max-w-3xl p-8"
+			@click="openNewWindowFromAnchor"
+			@mouseover="handleHoverTooltip"
+			v-html="data"
+		/>
 
 		<Centered v-if="isLoading">
 			<LoadingIndicator />
@@ -30,13 +49,26 @@ const isLoading = computed(() => {
 	</div>
 </template>
 
-<style scoped>
+<style>
+/* stylelint-disable selector-class-pattern */
+a.word-search {
+	@apply text-inherit no-underline;
+}
+
 .w,
 .pc {
-	@apply text-inherit not-italic no-underline;
+	@apply text-inherit not-italic;
 }
 
 .w.sample-text-tooltip {
 	@apply bg-yellow-200;
+}
+
+.spSentence {
+	@apply block;
+}
+
+.tooltip {
+	@apply text-center z-50 bg-white absolute p-2 shadow-md;
 }
 </style>

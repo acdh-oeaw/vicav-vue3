@@ -39,6 +39,7 @@
 	"dependencies": {
 		"@acdh-oeaw/lib": "^0.1.6",
 		"@fontsource-variable/roboto-flex": "^5.0.8",
+		"@fortawesome/fontawesome-free": "^6.5.1",
 		"@pinia/nuxt": "^0.5.1",
 		"@tanstack/vue-query": "^5.4.1",
 		"@tanstack/vue-table": "8.11.8",
@@ -60,8 +61,7 @@
 		"vue": "^3.3.7",
 		"vue-router": "^4.2.5",
 		"winbox": "^0.2.82",
-		"zod": "^3.22.4",
-		"class-variance-authority": "^0.7.0"
+		"zod": "^3.22.4"
 	},
 	"devDependencies": {
 		"@acdh-oeaw/eslint-config": "^1.0.5",
