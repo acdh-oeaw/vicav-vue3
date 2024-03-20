@@ -11,8 +11,7 @@ const tooltip = ref(null);
 
 const { data, isPending, isPlaceholderData } = useSampleTextById(params);
 const openNewWindowFromAnchor = useAnchorClickHandler();
-const { showTooltip, tooltipContent, tooltipX, tooltipY, handleHoverTooltip } =
-	useHoverTooltipHandler(tooltip);
+const { showTooltip, tooltipContent, handleHoverTooltip } = useHoverTooltipHandler(tooltip);
 
 const isLoading = computed(() => {
 	return isPending.value || isPlaceholderData.value;
@@ -29,10 +28,9 @@ const isLoading = computed(() => {
 			vuejs-accessibility/click-events-have-key-events, vuejs-accessibility/no-static-element-interactions -->
 
 		<div
-			v-if="showTooltip"
+			v-show="showTooltip"
 			ref="tooltip"
-			class="tooltip"
-			:style="{ top: tooltipY + 'px', left: tooltipX + 'px' }"
+			class="absolute left-0 top-5 z-50 w-[200px] bg-white p-2 shadow-md"
 			v-html="tooltipContent"
 		></div>
 		<div
@@ -66,9 +64,5 @@ a.word-search {
 
 .spSentence {
 	@apply block;
-}
-
-.tooltip {
-	@apply text-center z-50 bg-white absolute p-2 shadow-md;
 }
 </style>
