@@ -49,7 +49,7 @@ const isLoading = computed(() => {
 	</div>
 </template>
 
-<style scoped>
+<style>
 /* stylelint-disable selector-class-pattern */
 
 .tbFeatures {
@@ -89,6 +89,7 @@ a.word-search {
 }
 
 .w,
+.phr,
 .pc {
 	@apply text-inherit not-italic no-underline;
 }
