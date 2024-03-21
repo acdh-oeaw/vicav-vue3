@@ -7,9 +7,11 @@ interface Props {
 
 const props = defineProps<Props>();
 const { params } = toRefs(props);
+const tooltip = ref(null);
 
 const { data, isPending, isPlaceholderData } = useFeatureById(params);
 const openNewWindowFromAnchor = useAnchorClickHandler();
+const { showTooltip, tooltipContent, handleHoverTooltip } = useHoverTooltipHandler(tooltip);
 
 const isLoading = computed(() => {
 	return isPending.value || isPlaceholderData.value;
@@ -17,16 +19,34 @@ const isLoading = computed(() => {
 </script>
 
 <template>
-	<div
-		class="relative isolate grid h-full w-full overflow-auto"
-		:class="{ 'opacity-50 grayscale': isLoading }"
-	>
-		<!-- eslint-disable-next-line vue/no-v-html, vuejs-accessibility/click-events-have-key-events, vuejs-accessibility/no-static-element-interactions -->
-		<div v-if="data" class="prose max-w-3xl p-8" @click="openNewWindowFromAnchor" v-html="data" />
+	<div>
+		<div
+			class="relative isolate grid h-full w-full overflow-auto"
+			:class="{ 'opacity-50 grayscale': isLoading }"
+		>
+			<!-- eslint-disable vue/no-v-html,
+			vuejs-accessibility/mouse-events-have-key-events,
+			vuejs-accessibility/click-events-have-key-events, vuejs-accessibility/no-static-element-interactions -->
 
-		<Centered v-if="isLoading">
-			<LoadingIndicator />
-		</Centered>
+			<div
+				v-if="data"
+				class="prose max-w-3xl p-8"
+				@click="openNewWindowFromAnchor"
+				@mouseover="handleHoverTooltip"
+				v-html="data"
+			/>
+
+			<Centered v-if="isLoading">
+				<LoadingIndicator />
+			</Centered>
+		</div>
+
+		<div
+			v-show="showTooltip"
+			ref="tooltip"
+			class="absolute left-0 top-5 z-50 w-[200px] bg-white p-2 shadow-md"
+			v-html="tooltipContent"
+		></div>
 	</div>
 </template>
 
@@ -58,7 +78,7 @@ const isLoading = computed(() => {
 }
 
 .tdFeaturesRightSource {
-	@apply align-top w-4/5 pl-[3px] border border-solid border-primary bg-[#a85d8f] text-[#7f960a];
+	@apply align-top w-4/5 pl-[3px] border border-solid border-primary bg-primary bg-opacity-30 text-[#7f960a];
 }
 
 .tdFeaturesRightTarget {
@@ -66,11 +86,17 @@ const isLoading = computed(() => {
 }
 
 a.word-search {
-	@apply text-inherit;
+	@apply relative text-inherit no-underline;
 }
 
-.w {
-	@apply text-inherit not-italic;
+.w,
+.phr,
+.pc {
+	@apply text-inherit not-italic no-underline;
+}
+
+.w.sample-text-tooltip {
+	@apply bg-yellow-200;
 }
 
 .w.highlight {
