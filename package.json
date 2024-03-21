@@ -51,6 +51,7 @@
 		"cva": "^1.0.0-beta.1",
 		"is-ci": "^3.0.1",
 		"leaflet": "^1.9.4",
+		"lightgallery": "^2.7.2",
 		"lucide-vue-next": "^0.289.0",
 		"nanoid": "^5.0.3",
 		"npm-run-all2": "^6.1.1",
