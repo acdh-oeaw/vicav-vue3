@@ -1,9 +1,9 @@
 import { ref } from "vue";
 
-const tooltipContent = ref(null);
-const showTooltip = ref(null);
-
 export function useHoverTooltipHandler(tooltip: MaybeRef<HTMLDivElement>) {
+	const tooltipContent = ref(null);
+	const showTooltip = ref(null);
+
 	return {
 		tooltipContent,
 		showTooltip,
