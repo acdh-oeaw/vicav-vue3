@@ -19,27 +19,25 @@ const isLoading = computed(() => {
 </script>
 
 <template>
-	<div>
-		<div
-			class="relative isolate grid h-full w-full overflow-auto"
-			:class="{ 'opacity-50 grayscale': isLoading }"
-		>
-			<!-- eslint-disable vue/no-v-html,
+	<div
+		class="relative isolate grid h-full w-full overflow-auto"
+		:class="{ 'opacity-50 grayscale': isLoading }"
+	>
+		<!-- eslint-disable vue/no-v-html,
 			vuejs-accessibility/mouse-events-have-key-events,
 			vuejs-accessibility/click-events-have-key-events, vuejs-accessibility/no-static-element-interactions -->
 
-			<div
-				v-if="data"
-				class="prose max-w-3xl p-8"
-				@click="openNewWindowFromAnchor"
-				@mouseover="handleHoverTooltip"
-				v-html="data"
-			/>
+		<div
+			v-if="data"
+			class="prose max-w-3xl p-8"
+			@click="openNewWindowFromAnchor"
+			@mouseover="handleHoverTooltip"
+			v-html="data"
+		/>
 
-			<Centered v-if="isLoading">
-				<LoadingIndicator />
-			</Centered>
-		</div>
+		<Centered v-if="isLoading">
+			<LoadingIndicator />
+		</Centered>
 
 		<div
 			v-show="showTooltip"
