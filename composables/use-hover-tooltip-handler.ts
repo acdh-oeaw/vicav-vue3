@@ -17,6 +17,8 @@ export function useHoverTooltipHandler(tooltip: MaybeRef<HTMLDivElement>) {
 					tooltipContent.value = element.dataset.tooltip;
 					showTooltip.value = true;
 					element.parentNode?.appendChild(tooltip.value);
+				} else {
+					showTooltip.value = false;
 				}
 			}
 		},
