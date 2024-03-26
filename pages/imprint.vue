@@ -5,7 +5,7 @@ definePageMeta({
 
 const env = useRuntimeConfig();
 
-const redmineId = env.public.NUXT_PUBLIC_REDMINE_ID;
+const redmineId = env.public.redmineId;
 
 const imprint = await useFetch(String(createImprintUrl(defaultLocale, redmineId)), {
 	responseType: "text",

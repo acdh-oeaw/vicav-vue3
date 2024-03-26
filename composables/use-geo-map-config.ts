@@ -5,8 +5,8 @@ export function useGeoMapConfig() {
 	const { data, ...rest } = useProjectInfo();
 
 	const baseLayer = {
-		url: env.public.NUXT_PUBLIC_MAP_TILE_LAYER_URL,
-		attribution: env.public.NUXT_PUBLIC_MAP_TILE_LAYER_ATTRIBUTION,
+		url: env.public.mapTileLayerUrl,
+		attribution: env.public.mapTileLayerAttribution,
 	};
 
 	const initialViewState = {
