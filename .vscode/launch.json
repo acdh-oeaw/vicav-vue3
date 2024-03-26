@@ -7,7 +7,11 @@
 			"runtimeArgs": ["run", "dev"],
 			"runtimeExecutable": "pnpm",
 			"skipFiles": ["<node_internals>/**"],
-			"type": "node"
+			"type": "node",
+			"env": {
+				"NUXT_PUBLIC_API_USER": "tunocent",
+				"NUXT_PUBLIC_API_PASS": "imaala"
+			}
 		},
 		{
 			"name": "App: Web (client-side)",

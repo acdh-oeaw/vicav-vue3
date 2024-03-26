@@ -13,7 +13,7 @@ test.describe("home page", () => {
 		) {
 			await expect(page).toHaveTitle("Home | WIBARAB");
 		} else {
-			await expect(page).toHaveTitle("Home | VICAV3.0 - Vienna Corpus of Arabic Varieties");
+			await expect(page).toHaveTitle("Home | TUNOCENT");
 		}
 	});
 });

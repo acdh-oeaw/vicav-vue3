@@ -13,7 +13,7 @@ test.describe("imprint page", () => {
 		) {
 			await expect(page).toHaveTitle("Imprint | WIBARAB");
 		} else {
-			await expect(page).toHaveTitle("Imprint | VICAV3.0 - Vienna Corpus of Arabic Varieties");
+			await expect(page).toHaveTitle("Imprint | TUNOCENT");
 		}
 	});
 
