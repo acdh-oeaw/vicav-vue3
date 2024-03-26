@@ -19,14 +19,14 @@ function basicSecurityWorker(securityData: userPass | null): RequestParams | und
 export function useApiClient() {
 	const env = useRuntimeConfig();
 
-	if (env.public.NUXT_PUBLIC_API_USER) {
+	if (env.public.apiUser) {
 		api = new Api<userPass>({
 			baseApiParams: { secure: true },
 			securityWorker: basicSecurityWorker,
 		});
 		api.setSecurityData({
-			user: env.public.NUXT_PUBLIC_API_USER,
-			pass: env.public.NUXT_PUBLIC_API_PASS,
+			user: env.public.apiUser,
+			pass: env.public.apiPass,
 		});
 	}
 
