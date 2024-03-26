@@ -90,16 +90,10 @@ useHead({
 			{ type: "application/ld+json", innerHTML: JSON.stringify(jsonLd, safeJsonLdReplacer) },
 		];
 
-		if (
-			isNonEmptyString(env.public.NUXT_PUBLIC_MATOMO_BASE_URL) &&
-			isNonEmptyString(env.public.NUXT_PUBLIC_MATOMO_ID)
-		) {
+		if (isNonEmptyString(env.public.matomoBaseUrl) && isNonEmptyString(env.public.matomoId)) {
 			scripts.push({
 				type: "",
-				innerHTML: createAnalyticsScript(
-					env.public.NUXT_PUBLIC_MATOMO_BASE_URL,
-					env.public.NUXT_PUBLIC_MATOMO_ID,
-				),
+				innerHTML: createAnalyticsScript(env.public.matomoBaseUrl, env.public.matomoId),
 			});
 		}
 
