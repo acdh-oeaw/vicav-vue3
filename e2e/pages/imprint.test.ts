@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("imprint page", () => {
+	console.log(process.env.NUXT_PUBLIC_API_BASE_URL);
 	test("should have document title", async ({ page }) => {
 		await page.goto("/imprint");
 		if (process.env.NUXT_PUBLIC_API_BASE_URL === "https://vicav.acdh-ch-dev.oeaw.ac.at") {
