@@ -44,6 +44,8 @@ export default defineNuxtConfig({
 			matomoId: process.env.NUXT_PUBLIC_MATOMO_ID,
 			redmineId: process.env.NUXT_PUBLIC_REDMINE_ID,
 			teiBaseurl: process.env.NUXT_PUBLIC_TEI_BASEURL,
+			apiUser: process.env.NUXT_PUBLIC_API_USER,
+			apiPass: process.env.NUXT_PUBLIC_API_PASS,
 		},
 	},
 	typescript: {
