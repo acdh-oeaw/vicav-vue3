@@ -6,6 +6,7 @@ import type {
 	BibliographyEntriesWindowItem,
 	CorpusQueryWindowItem,
 	CorpusTextWindowItem,
+	DataListWindowItem,
 	FeatureWindowItem,
 	GeoMapWindowItem,
 	ListMapWindowItem,
@@ -105,6 +106,13 @@ function onSelectMenuItem(item: ItemType) {
 				targetType: "ListMap",
 				title: item.label ?? "",
 				params: item.params as ListMapWindowItem["params"],
+			};
+			break;
+		case "DataList":
+			newWindowState = {
+				targetType: "DataList",
+				title: item.label ?? "",
+				params: item.params as DataListWindowItem["params"],
 			};
 			break;
 		default:

@@ -100,6 +100,18 @@ export const GeojsonMapSchema = z.object({
 });
 export type GeojsonMapWindowItem = WindowItemBase & z.infer<typeof GeojsonMapSchema>;
 
+export const DataListSchema = z.object({
+	targetType: z.literal("DataList"),
+	params: z
+		.object({
+			targetType: z.enum("Profile", "Text", "SampleText", "Feature", "CorpusText"),
+		})
+		.merge(TextId)
+		.merge(TeiSource.partial()),
+});
+
+export type DataListWindowItem = WindowItemBase & z.infer<typeof DataListSchema>;
+
 export const Schema = z.discriminatedUnion("targetType", [
 	BibliographyEntriesSchema,
 	CorpusQuerySchema,
@@ -111,6 +123,7 @@ export const Schema = z.discriminatedUnion("targetType", [
 	SampleTextSchema,
 	ListMapSchema,
 	GeojsonMapSchema,
+	DataListSchema,
 ]);
 export type WindowItem = WindowItemBase & z.infer<typeof Schema>;
 
