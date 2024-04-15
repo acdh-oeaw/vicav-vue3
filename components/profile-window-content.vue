@@ -11,7 +11,7 @@ const content = ref(null);
 
 const { data, isPending, isPlaceholderData } = useProfileById(params);
 const openNewWindowFromAnchor = useAnchorClickHandler();
-const processImageGalleries = useImageGalleryProcessor(content);
+const processImageGalleries = useImageGalleryProcessor(content as unknown as Ref<HTMLDivElement>);
 
 const isLoading = computed(() => {
 	return isPending.value || isPlaceholderData.value;

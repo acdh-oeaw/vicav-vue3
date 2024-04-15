@@ -6,19 +6,21 @@ export function useImageGalleryProcessor(element: Ref<HTMLDivElement>) {
 	 */
 	function processImageGalleries() {
 		[...element.value.querySelectorAll("gallery")].forEach((galleryElement) => {
-			const data = [...galleryElement.children].map((galleryImage: HTMLAnchorElement, index) => {
-				return {
-					src: galleryImage.href,
-					thumb: galleryImage.querySelector("img")?.src.toString(),
-					subHtml: `<div class="text-white">
+			const data = [...(galleryElement.children as unknown as Array<HTMLAnchorElement>)].map(
+				(galleryImage: HTMLAnchorElement, index) => {
+					return {
+						src: galleryImage.href,
+						thumb: galleryImage.querySelector("img")?.src.toString(),
+						subHtml: `<div class="text-white">
 										<p>${galleryImage.querySelector("img")?.alt.toString()}</p>
 										<p>${index + 1} / ${galleryElement.children.length}</p>
 								</div>`,
-				};
-			});
-			galleryElement.replaceChildren([]);
-			const gallery = lightGallery(galleryElement, {
-				container: galleryElement,
+					};
+				},
+			);
+			galleryElement.replaceChildren("");
+			const gallery = lightGallery(galleryElement as HTMLElement, {
+				container: galleryElement as HTMLElement,
 				height: "300px",
 				licenseKey: "0000-0000-000-0000",
 				dynamic: true,
