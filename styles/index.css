@@ -1,5 +1,7 @@
 @import url("@/node_modules/@fortawesome/fontawesome-free/css/regular.css");
 @import url("@/node_modules/@fortawesome/fontawesome-free/css/fontawesome.css");
+@import url("@/node_modules/lightgallery/css/lightgallery.css");
+@import url("@/node_modules/lightgallery/css/lg-thumbnail.css");
 
 :root {
 	--color-background: 0 0% 100%;

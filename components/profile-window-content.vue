@@ -7,12 +7,17 @@ interface Props {
 
 const props = defineProps<Props>();
 const { params } = toRefs(props);
+const content = ref(null);
 
 const { data, isPending, isPlaceholderData } = useProfileById(params);
 const openNewWindowFromAnchor = useAnchorClickHandler();
+const processImageGalleries = useImageGalleryProcessor(content as unknown as Ref<HTMLDivElement>);
 
 const isLoading = computed(() => {
 	return isPending.value || isPlaceholderData.value;
+});
+watch(content, () => {
+	processImageGalleries();
 });
 </script>
 
@@ -22,7 +27,13 @@ const isLoading = computed(() => {
 		:class="{ 'opacity-50 grayscale': isLoading }"
 	>
 		<!-- eslint-disable-next-line vue/no-v-html, vuejs-accessibility/click-events-have-key-events, vuejs-accessibility/no-static-element-interactions -->
-		<div v-if="data" class="prose max-w-3xl p-8" @click="openNewWindowFromAnchor" v-html="data" />
+		<div
+			v-if="data"
+			ref="content"
+			class="prose max-w-3xl p-8"
+			@click="openNewWindowFromAnchor"
+			v-html="data"
+		/>
 
 		<Centered v-if="isLoading">
 			<LoadingIndicator />
@@ -103,5 +114,11 @@ a:hover {
 
 .dvImgProfile {
 	@apply order-1;
+}
+
+.lg-container {
+	@apply text-white;
+
+	height: 450px;
 }
 </style>
