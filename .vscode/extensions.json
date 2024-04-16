@@ -7,7 +7,6 @@
 		"mikestead.dotenv",
 		"ms-playwright.playwright",
 		"stylelint.vscode-stylelint",
-		"vue.volar",
 		"vue.vscode-typescript-vue-plugin"
 	]
 }
