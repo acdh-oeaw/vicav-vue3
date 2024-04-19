@@ -104,9 +104,9 @@ export const DataListSchema = z.object({
 	targetType: z.literal("DataList"),
 	params: z
 		.object({
-			targetType: z.enum(["Profile", "Text", "SampleText", "Feature", "CorpusText"]),
+			dataTypes: z.array(z.enum(["Profile", "Text", "SampleText", "Feature", "CorpusText"])),
 		})
-		.merge(TextId)
+		.merge(TextId.partial())
 		.merge(TeiSource.partial()),
 });
 

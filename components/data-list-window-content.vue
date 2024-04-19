@@ -1,6 +1,8 @@
 <script lang="ts" setup>
 import type { DataListWindowItem } from "@/types/global.d";
 
+import contentTypes from "../config/contentTypes";
+
 interface Props {
 	params: DataListWindowItem["params"];
 }
@@ -44,14 +46,17 @@ const props = defineProps<Props>();
 const { data: projectData } = useProjectInfo();
 
 const rawItems: ComputedRef<Array<TEIs>> = computed(() => {
-	return projectData.value?.projectConfig?.staticData?.table?.filter(
-		(v) => v["@id"] === props.params.textId,
-	) as Array<TEIs>;
+	return projectData.value?.projectConfig?.staticData?.table?.filter((v) => {
+		const contentType = Object.values(contentTypes).find((c) => c.collection === v["@id"]);
+		return props.params.dataTypes.includes(contentType.targetType);
+	}) as Array<TEIs>;
 });
 
 const groupedItems: ComputedRef<Record<string, Array<TEIs>>> = computed(() => {
 	// Group by country
-	let groupedByCountry = Object.groupBy(rawItems.value[0]?.TEIs, (item) => {
+	const collectedItems = [].concat(...rawItems.value.map((el) => el.TEIs));
+	console.log(collectedItems.length);
+	let groupedByCountry = Object.groupBy(collectedItems, (item) => {
 		return item.teiHeader.profileDesc.settingDesc.place.country.$;
 	});
 	// Group by region
@@ -82,23 +87,23 @@ const groupedItems: ComputedRef<Record<string, Array<TEIs>>> = computed(() => {
 					groupedByCountry[country][region][place][contentType] = groupedByCountry[country][region][
 						place
 					][contentType].sort((a, b) => {
-						a.teiHeader.profileDesc.particDesc.person.$.localeCompare(
-							b.teiHeader.profileDesc.particDesc.person.$,
-						);
+						if (a.teiHeader.profileDesc.particDesc?.person) {
+							return a.teiHeader.profileDesc.particDesc.person.$.localeCompare(
+								b.teiHeader.profileDesc.particDesc.person.$,
+							);
+						} else {
+							return a.teiHeader.profileDesc.settingDesc.place.settlement.name.$.localeCompare(
+								b.teiHeader.profileDesc.settingDesc.place.settlement.name.$,
+							);
+						}
 					});
 				}
 			}
 		}
 	}
+
 	return groupedByCountry;
 });
-
-const contentTypes = {
-	featurelist: {
-		name: "linguistic feature list",
-		targetType: "Feature",
-	},
-};
 
 const openNewWindowFromAnchor = useAnchorClickHandler();
 </script>
@@ -109,10 +114,12 @@ const openNewWindowFromAnchor = useAnchorClickHandler();
 			<h2 v-if="groupedItems.values?.length > 1" class="text-lg">{{ country }}</h2>
 			<div v-for="(itemsByPlace, region) in itemsByRegion" :key="region" class="p-2 text-base">
 				<h4 class="text-lg italic">{{ region }}</h4>
-				<div v-for="(itemsByContentType, place) in itemsByPlace" :key="place" class="p-2 text-base">
-					<h5 class="text-base font-bold">{{ place }}</h5>
-					<div v-for="(items, contentType) in itemsByContentType" :key="contentType" class="p-2">
-						<em v-if="itemsByContentType.values?.length > 1" class="text-sm italic">
+				<div v-for="(itemsByContentType, place) in itemsByPlace" :key="place" class="p-2">
+					<h5 class="text-base font-bold">
+						{{ place }}
+					</h5>
+					<div v-for="(items, contentType) in itemsByContentType" :key="contentType">
+						<em v-if="params.dataTypes.length > 1" class="text-sm italic">
 							{{ contentType }}
 						</em>
 						<ul v-for="item in items" :key="item['@id']">
@@ -124,7 +131,12 @@ const openNewWindowFromAnchor = useAnchorClickHandler();
 									:data-text-id="item['@id']"
 									@click="openNewWindowFromAnchor"
 								>
-									{{ item.teiHeader.profileDesc.particDesc.person.$ }}
+									<span v-if="item.teiHeader.profileDesc.particDesc?.person">
+										{{ item.teiHeader.profileDesc.particDesc.person.$ }}
+									</span>
+									<span v-else>
+										{{ item.teiHeader.profileDesc.settingDesc.place.settlement.name.$ }}
+									</span>
 								</a>
 							</li>
 						</ul>
