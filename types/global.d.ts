@@ -18,6 +18,18 @@ export const QueryString = z.object({
 	queryString: z.string(),
 });
 
+export const ExploreSamplesQueryParams = z.object({
+	word: z.string().optional(),
+	person: z.string().optional(),
+});
+
+export const ExploreSamplesQuerySchema = z.object({
+	targetType: z.literal("ExploreSamples"),
+	params: ExploreSamplesQueryParams,
+});
+
+export type ExploreSamplesWindowItem = WindowItemBase & z.infer<typeof ExploreSamplesQuerySchema>;
+
 export const BibliographyEntriesSchema = z.object({
 	targetType: z.literal("BiblioEntries"),
 	params: QueryString.merge(
