@@ -117,6 +117,15 @@ const extractMetadata = function (item: teiHeader) {
 	return template;
 };
 
+const orderByGroup = function (unordered: object) {
+	return Object.keys(unordered)
+		.sort()
+		.reduce((obj, key) => {
+			obj[key] = unordered[key];
+			return obj;
+		}, {});
+};
+
 // Four grouping levels: country, region, place, dataType
 type groupedItemType = Record<
 	string,
@@ -129,22 +138,25 @@ const groupedItems: ComputedRef<groupedItemType> = computed(() => {
 		.concat(...rawItems.value.map((el) => el.TEIs))
 		.map(extractMetadata) as Array<simpleTEIMetadata>;
 
-	let groupedByCountry = Object.groupBy(collectedItems, (item) => {
-		return item.place.country;
-	});
+	let groupedByCountry = orderByGroup(
+		Object.groupBy(collectedItems, (item) => {
+			return item.place.country;
+		}),
+	);
 	// Group by region
 	for (const country in groupedByCountry) {
-		groupedByCountry[country] = Object.groupBy(groupedByCountry[country], (item) => {
-			return item.place.region;
-		});
+		groupedByCountry[country] = orderByGroup(
+			Object.groupBy(groupedByCountry[country], (item) => {
+				return item.place.region;
+			}),
+		);
 
 		// Group by place
 		for (const region in groupedByCountry[country]) {
-			groupedByCountry[country][region] = Object.groupBy(
-				groupedByCountry[country][region],
-				(item) => {
+			groupedByCountry[country][region] = orderByGroup(
+				Object.groupBy(groupedByCountry[country][region], (item) => {
 					return item.place.name;
-				},
+				}),
 			);
 
 			// Group by content type
