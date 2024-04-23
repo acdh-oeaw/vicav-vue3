@@ -31,6 +31,8 @@ export const ExploreSamplesQueryParams = z.object({
 	dataType: z.string(),
 	word: z.string().optional(),
 	person: z.string().optional(),
+	region: z.string().optional(),
+	place: z.string().optional(),
 });
 
 export const ExploreSamplesFormParams = z.object({

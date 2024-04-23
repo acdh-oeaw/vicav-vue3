@@ -10,7 +10,29 @@ const { params } = toRefs(props);
 const content = ref(null);
 const tooltip = ref(null);
 
-const { data, isPending, isPlaceholderData } = useExploreSamplesResult(params);
+const { simpleItems } = useTEIHeaders();
+
+const filters = ["region", "place"];
+
+const persons = params.value.person
+	? params.value.person
+	: simpleItems.value
+			.filter((item) => {
+				const filter_results = filters.map((key) => {
+					if (params.value[key]) return params.value[key] === item.place[key];
+				});
+				return filter_results.includes(true);
+			})
+			.map((item) => item.person.name)
+			.join(",");
+
+const extractedParams = {
+	dataType: params.value.dataType,
+	person: persons,
+	word: params.value.word,
+};
+
+const { data, isPending, isPlaceholderData } = useExploreSamplesResult(extractedParams);
 const openNewWindowFromAnchor = useAnchorClickHandler();
 const { showTooltip, tooltipContent, handleHoverTooltip } = useHoverTooltipHandler(tooltip);
 

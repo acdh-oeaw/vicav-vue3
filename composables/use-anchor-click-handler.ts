@@ -21,7 +21,6 @@ export function useAnchorClickHandler() {
 		if (item.targetType) {
 			if (item.targetType === "External-link") return;
 			event.preventDefault();
-
 			addWindow({
 				targetType: item.targetType,
 				params: item,
