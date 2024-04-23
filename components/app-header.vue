@@ -7,6 +7,8 @@ import type {
 	CorpusQueryWindowItem,
 	CorpusTextWindowItem,
 	DataListWindowItem,
+	ExploreSamplesFormWindowItem,
+	ExploreSamplesWindowItem,
 	FeatureWindowItem,
 	GeoMapWindowItem,
 	ListMapWindowItem,
@@ -113,6 +115,20 @@ function onSelectMenuItem(item: ItemType) {
 				targetType: "DataList",
 				title: item.label ?? "",
 				params: item.params as DataListWindowItem["params"],
+			};
+			break;
+		case "ExploreSamplesForm":
+			newWindowState = {
+				targetType: "ExploreSamplesForm",
+				title: item.label ?? "",
+				params: item.params as ExploreSamplesFormWindowItem["params"],
+			};
+			break;
+		case "ExploreSamples":
+			newWindowState = {
+				targetType: "ExploreSamples",
+				title: item.label ?? "",
+				params: item.params as ExploreSamplesWindowItem["params"],
 			};
 			break;
 		default:

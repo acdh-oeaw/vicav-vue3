@@ -54,5 +54,15 @@ function updateQueryParam(queryString: string) {
 		v-else-if="props.item.targetType === 'DataList'"
 		:params="props.item.params"
 	/>
+
+	<ExploreSamplesFormWindowContent
+		v-else-if="props.item.targetType === 'ExploreSamplesForm'"
+		:params="props.item.params"
+	/>
+
+	<ExploreSamplesWindowContent
+		v-else-if="props.item.targetType === 'ExploreSamples'"
+		:params="props.item.params"
+	/>
 	<pre v-else>{{ props }}</pre>
 </template>
