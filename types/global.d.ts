@@ -3,6 +3,15 @@ import { z } from "zod";
 
 type MaybeRef<T> = Ref<T> | T;
 
+export interface DataType {
+	name: string;
+	targetType: string;
+	categoryId: string;
+	collection: string;
+	explore_xslt: string;
+}
+export type DataTypes = Record<string, DataType>;
+
 interface WindowItemBase {
 	id: string;
 	winbox: WinBox;
@@ -19,16 +28,34 @@ export const QueryString = z.object({
 });
 
 export const ExploreSamplesQueryParams = z.object({
+	dataType: z.string(),
 	word: z.string().optional(),
 	person: z.string().optional(),
 });
 
-export const ExploreSamplesQuerySchema = z.object({
-	targetType: z.literal("ExploreSamples"),
-	params: ExploreSamplesQueryParams,
+export const ExploreSamplesFormParams = z.object({
+	dataTypes: z.array(z.enum(["Profile", "Text", "SampleText", "Feature", "CorpusText"])),
 });
 
-export type ExploreSamplesWindowItem = WindowItemBase & z.infer<typeof ExploreSamplesQuerySchema>;
+export const ExploreSamplesSchema = z.object({
+	targetType: z.literal("ExploreSamples"),
+	params: ExploreSamplesQueryParams.merge(TextId.partial()).merge(TeiSource.partial()),
+});
+
+export type ExploreSamplesWindowItem = WindowItemBase & z.infer<typeof ExploreSamplesSchema>;
+
+export const ExploreSamplesFormSchema = z.object({
+	targetType: z.literal("ExploreSamplesForm"),
+	params: z
+		.object({
+			dataTypes: z.array(z.enum(["Profile", "Text", "SampleText", "Feature", "CorpusText"])),
+		})
+		.merge(TextId.partial())
+		.merge(TeiSource.partial()),
+});
+
+export type ExploreSamplesFormWindowItem = WindowItemBase &
+	z.infer<typeof ExploreSamplesFormSchema>;
 
 export const BibliographyEntriesSchema = z.object({
 	targetType: z.literal("BiblioEntries"),
@@ -136,6 +163,8 @@ export const Schema = z.discriminatedUnion("targetType", [
 	ListMapSchema,
 	GeojsonMapSchema,
 	DataListSchema,
+	ExploreSamplesSchema,
+	ExploreSamplesFormSchema,
 ]);
 export type WindowItem = WindowItemBase & z.infer<typeof Schema>;
 
@@ -165,3 +194,19 @@ export const FeatureCollectionSchema = z.object({
 	features: z.array(GeoFeatureSchema),
 });
 export type FeatureCollectionType = z.infer<typeof FeatureCollectionSchema>;
+
+export interface simpleTEIMetadata {
+	id: string;
+	label: string;
+	dataType: string;
+	place: {
+		settlement: string;
+		country: string;
+		region: string;
+	};
+	person: {
+		name: string;
+		sex: string;
+		age: string;
+	};
+}
