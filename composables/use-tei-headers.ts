@@ -18,8 +18,8 @@ interface teiHeader {
 	teiHeader: {
 		fileDesc: { titleStmt: { title: teiStringNode } };
 		profileDesc: {
-			taxonomy: { category: { "@id": string; $: string } };
-			particDesc: {
+			taxonomy?: { category: { "@id": string; $: string } };
+			particDesc?: {
 				person?: {
 					"@sex": string;
 					"@age": string;
@@ -84,7 +84,7 @@ const extractMetadata: simpleTEIMetadata = function (item: teiHeader, dataType: 
 		template.place.country = place.country.$;
 	}
 
-	const person = item.teiHeader.profileDesc.particDesc.person;
+	const person = item.teiHeader.profileDesc.particDesc?.person;
 
 	if (person) {
 		template.person.name = person.$;
