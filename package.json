@@ -40,6 +40,7 @@
 		"@acdh-oeaw/lib": "^0.1.6",
 		"@fontsource-variable/roboto-flex": "^5.0.8",
 		"@fortawesome/fontawesome-free": "^6.5.1",
+		"@iconify/vue": "^4.1.2",
 		"@pinia/nuxt": "^0.5.1",
 		"@tanstack/vue-query": "^5.4.1",
 		"@tanstack/vue-table": "8.11.8",
