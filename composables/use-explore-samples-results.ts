@@ -18,6 +18,9 @@ export function useExploreSamplesResult(
 				{
 					type: dataTypes[params.dataType]?.collection.replace("vicav_", ""),
 					word: params.word,
+					feature: params.feature,
+					comment: params.comment,
+					translation: params.translation,
 					person: params.person,
 					xslt: dataTypes[params.dataType]?.explore_xslt,
 				},

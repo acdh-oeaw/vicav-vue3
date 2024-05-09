@@ -68,7 +68,7 @@ const { addWindow } = windowsStore;
 const place = ref("");
 const word = ref("");
 const feature = ref("");
-const age = ref([0, 100]);
+const age: Ref<Array<number>> = ref([0, 100]);
 const male = ref(true);
 const female = ref(true);
 const comment = ref("");
@@ -94,15 +94,13 @@ const openSearchResultsWindow = function () {
 			if (!params.value.dataTypes.includes(item.dataType)) return false;
 			if (persons.value && persons.value.split(",").includes(item.person.name)) return true;
 
-			let filters = [];
-			if (place.value) {
-				filters.push(item.place.name === place.value);
-			}
-			filters.push(item.person.age > age.value[0] && item.person.age < age.value[1]);
-			if (sex.value.length > 0) {
-				filters.push(sex.value.includes(item.person.sex));
-			}
-			return filters.includes(true);
+			if (place.value && !(item.place.name === place.value)) return false;
+
+			if (sex.value.length > 0 && !sex.value.includes(item.person.sex)) return false;
+			if (age.value[0] > parseInt(item.person.age) || age.value[1] < parseInt(item.person.age))
+				return false;
+
+			return true;
 		})
 		.map((item) => item.person.name);
 
@@ -112,6 +110,7 @@ const openSearchResultsWindow = function () {
 			dataType: params.value.dataTypes[0],
 			word: word.value,
 			comment: comment.value,
+			feature: feature.value,
 			translation: translation.value,
 			person: personsFilter.join(","),
 		},
@@ -261,10 +260,10 @@ const openSearchResultsWindow = function () {
 
 <style>
 input {
-	@apply my-2 border px-3 py-2 w-full shadow;
+	@apply my-2 px-3 py-2 w-full shadow;
 }
 
 label {
-	@apply border px-3 py-2 my-2 w-28 align-baseline;
+	@apply px-3 py-2 my-2 w-28 align-baseline;
 }
 </style>

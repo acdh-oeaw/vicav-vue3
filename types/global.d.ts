@@ -33,6 +33,9 @@ export const ExploreSamplesQueryParams = z.object({
 	person: z.string().optional(),
 	region: z.string().optional(),
 	place: z.string().optional(),
+	translation: z.string().optional(),
+	comment: z.string().optional(),
+	feature: z.string().optional(),
 });
 
 export const ExploreSamplesFormParams = z.object({
