@@ -25,10 +25,11 @@ interface Tag {
 
 interface Props {
 	options: Array<Tag>;
+	placeholder: string;
 }
 
 const props = defineProps<Props>();
-const { options } = toRefs(props);
+const { options, placeholder } = toRefs(props);
 
 const model = defineModel<Array<string>>();
 </script>
@@ -60,7 +61,7 @@ const model = defineModel<Array<string>>();
 
 				<ComboboxInput as-child>
 					<TagsInputInput
-						placeholder="Search places..."
+						:placeholder="placeholder"
 						class="flex-1 rounded !bg-transparent px-1 focus:outline-none"
 						@keydown.enter.prevent
 					/>
