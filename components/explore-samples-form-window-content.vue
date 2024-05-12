@@ -65,7 +65,13 @@ const { simpleItems } = useTEIHeaders();
 const windowsStore = useWindowsStore();
 const { addWindow } = windowsStore;
 
+interface Tag {
+	label: string;
+	value: string;
+}
+
 const place = ref("");
+const places = ref([]);
 const word = ref("");
 const feature = ref("");
 const age: Ref<Array<number>> = ref([0, 100]);
@@ -74,6 +80,38 @@ const female = ref(true);
 const comment = ref("");
 const translation = ref("");
 const persons = ref("");
+
+const dataset = simpleItems.value.filter((item) => params.value.dataTypes.includes(item.dataType));
+const countries = Array.from(new Set(dataset.map((item) => item.place.country)));
+let options: Array<Tag> = [];
+
+countries.forEach((country) => {
+	options.push({ label: country + " (country)", value: "country:" + country });
+	const countryItems = dataset.filter((item) => item.place.country === country);
+	const regions = Array.from(new Set(countryItems.map((item) => item.place.region)));
+	regions.forEach((region) => {
+		options.push({
+			label: region + " (region)",
+			value: "region:" + region,
+		});
+
+		const settlements = Array.from(
+			new Set(
+				countryItems.filter((item) => item.place.region === region).map((item) => item.place.name),
+			),
+		).sort();
+
+		options = options.concat(
+			settlements.map((item: string) => {
+				return { label: item, value: item };
+			}),
+		);
+	});
+});
+
+const placeOptions = options;
+
+// const placeOptions = [{ label: "Tunisia", value: "country:Tunisia" }];
 
 const featureLabel = computed(() => {
 	return props.params.dataTypes[0] === "SampleText" ? "sentence" : "feature";
@@ -134,6 +172,8 @@ const openSearchResultsWindow = function () {
 					placeholder="Search for place..."
 				/>
 			</div>
+
+			<TagsSelect v-model="places" :options="placeOptions"></TagsSelect>
 
 			<div class="flex flex-row gap-2.5">
 				<label class="" for="age">Age</label>

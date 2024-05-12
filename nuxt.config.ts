@@ -48,6 +48,13 @@ export default defineNuxtConfig({
 			apiPass: process.env.NUXT_PUBLIC_API_PASS,
 		},
 	},
+	vite: {
+		vue: {
+			script: {
+				defineModel: true,
+			},
+		},
+	},
 	typescript: {
 		shim: false,
 		strict: true,
