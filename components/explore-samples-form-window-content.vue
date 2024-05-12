@@ -132,7 +132,15 @@ const openSearchResultsWindow = function () {
 			if (!params.value.dataTypes.includes(item.dataType)) return false;
 			if (persons.value && persons.value.split(",").includes(item.person.name)) return true;
 
-			if (place.value && !(item.place.name === place.value)) return false;
+			if (places.value.length > 0) {
+				const found = places.value.map((place) => {
+					const p = place.split(":");
+					if (p[0] === "region" && item.place.region === p[1]) return true;
+					if (p[0] === "country" && item.place.country === p[1]) return true;
+					if (p[0] === item.place.name) return true;
+				});
+				if (!found.includes(true)) return false;
+			}
 
 			if (sex.value.length > 0 && !sex.value.includes(item.person.sex)) return false;
 			if (age.value[0] > parseInt(item.person.age) || age.value[1] < parseInt(item.person.age))
@@ -162,8 +170,7 @@ const openSearchResultsWindow = function () {
 		<form
 			class="block w-full rounded border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
 		>
-			<div class="flex flex-row gap-2.5">
-				<label for="place">Place</label>
+			<!-- <div class="flex flex-row gap-2.5">
 				<input
 					id="place"
 					v-model="place"
@@ -171,9 +178,13 @@ const openSearchResultsWindow = function () {
 					aria-label="Place name"
 					placeholder="Search for place..."
 				/>
-			</div>
-
-			<TagsSelect v-model="places" :options="placeOptions"></TagsSelect>
+			</div> -->
+			<label for="place">Place</label>
+			<TagsSelect
+				v-model="places"
+				:options="placeOptions"
+				placeholder="Search for places..."
+			></TagsSelect>
 
 			<div class="flex flex-row gap-2.5">
 				<label class="" for="age">Age</label>
