@@ -37,29 +37,29 @@ interface Props {
 const props = defineProps<Props>();
 const { params } = toRefs(props);
 
-const specialCharacters: Array<string> = [
-	"ē",
-	"ṛ",
-	"ṯ",
-	"ẓ",
-	"ū",
-	"ī",
-	"ō",
-	"ā",
-	"š",
-	"ḏ",
-	"ṭ",
-	"ǧ",
-	"ḥ",
-	"ž",
-	"ṣ",
-	"ḏ̣",
-	"ʕ",
-	"ʔ",
-	"ġ",
-	"ḅ",
-	"ṃ",
-];
+// const specialCharacters: Array<string> = [
+// 	"ē",
+// 	"ṛ",
+// 	"ṯ",
+// 	"ẓ",
+// 	"ū",
+// 	"ī",
+// 	"ō",
+// 	"ā",
+// 	"š",
+// 	"ḏ",
+// 	"ṭ",
+// 	"ǧ",
+// 	"ḥ",
+// 	"ž",
+// 	"ṣ",
+// 	"ḏ̣",
+// 	"ʕ",
+// 	"ʔ",
+// 	"ġ",
+// 	"ḅ",
+// 	"ṃ",
+// ];
 
 const { simpleItems } = useTEIHeaders();
 const windowsStore = useWindowsStore();
@@ -70,10 +70,9 @@ interface Tag {
 	value: string;
 }
 
-const place = ref("");
 const places = ref([]);
-const word = ref("");
-const feature = ref("");
+const words = ref([]);
+const features = ref([]);
 const age: Ref<Array<number>> = ref([0, 100]);
 const male = ref(true);
 const female = ref(true);
@@ -111,7 +110,13 @@ countries.forEach((country) => {
 
 const placeOptions = options;
 
-// const placeOptions = [{ label: "Tunisia", value: "country:Tunisia" }];
+const featureLabelsQuery = useFeatureLabels();
+const dataWordsQuery = useDataWords({ dataType: props.params.dataTypes[0] });
+const wordOptions = computed(() => {
+	return (dataWordsQuery.data.value ?? []).map((item) => {
+		return { label: item, value: item };
+	});
+});
 
 const featureLabel = computed(() => {
 	return props.params.dataTypes[0] === "SampleText" ? "sentence" : "feature";
@@ -154,13 +159,13 @@ const openSearchResultsWindow = function () {
 		targetType: "ExploreSamples",
 		params: {
 			dataType: params.value.dataTypes[0],
-			word: word.value,
+			word: words.value.join(","),
 			comment: comment.value,
-			feature: feature.value,
+			features: features.value.join(","),
 			translation: translation.value,
 			person: personsFilter.join(","),
 		},
-		title: `Search results for ${[word.value, place.value].join(", ")}`,
+		title: `Search results for ${[words.value.join(","), places.value.join(",")].join(", ")}`,
 	} as WindowState);
 };
 </script>
@@ -170,15 +175,6 @@ const openSearchResultsWindow = function () {
 		<form
 			class="block w-full rounded border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
 		>
-			<!-- <div class="flex flex-row gap-2.5">
-				<input
-					id="place"
-					v-model="place"
-					:string-snippets="specialCharacters"
-					aria-label="Place name"
-					placeholder="Search for place..."
-				/>
-			</div> -->
 			<label for="place">Place</label>
 			<TagsSelect
 				v-model="places"
@@ -254,24 +250,32 @@ const openSearchResultsWindow = function () {
 
 			<div class="flex flex-row gap-2.5">
 				<label for="word">Word</label>
-				<InputExtended
+
+				<TagsSelect
+					v-if="wordOptions"
+					v-model="words"
+					:placeholder="`Search for words...`"
+					:options="wordOptions"
+				/>
+
+				<!-- <InputExtended
 					id="word"
 					v-model="word"
 					:string-snippets="specialCharacters"
 					placeholder="Search for word..."
 					aria-label="Word"
-				/>
+				/> -->
 			</div>
 
 			<div class="flex flex-row gap-2.5">
 				<label for="feature">
 					{{ featureLabel.charAt(0).toUpperCase() + featureLabel.slice(1) }}
 				</label>
-				<input
-					id="feature"
-					v-model="feature"
+				<TagsSelect
+					v-if="featureLabelsQuery.data"
+					v-model="features"
 					:placeholder="`Search for ${featureLabel}s...`"
-					:aria-label="featureLabel"
+					:options="featureLabelsQuery.data"
 				/>
 			</div>
 
@@ -280,7 +284,7 @@ const openSearchResultsWindow = function () {
 				<input
 					id="translation"
 					v-model="translation"
-					class="flex"
+					class="my-2 flex w-full px-3 py-2 shadow"
 					placeholder="Search for translation..."
 					aria-label="Translation"
 				/>
@@ -291,6 +295,7 @@ const openSearchResultsWindow = function () {
 				<input
 					id="comment"
 					v-model="comment"
+					class="my-2 w-full px-3 py-2 shadow"
 					placeholder="Search for comment..."
 					aria-label="Comment"
 				/>
@@ -298,7 +303,7 @@ const openSearchResultsWindow = function () {
 
 			<button
 				class="inline-block h-10 w-full whitespace-nowrap rounded border-2 border-solid border-primary bg-on-primary text-center align-middle font-bold text-primary hover:bg-primary hover:text-on-primary disabled:border-gray-400 disabled:text-gray-400 hover:disabled:bg-on-primary hover:disabled:text-gray-400"
-				:disabled="word.value === '' && place.value === ''"
+				:disabled="words.value === [] && places.value === []"
 				@click.prevent.stop="openSearchResultsWindow"
 			>
 				Query
@@ -310,10 +315,6 @@ const openSearchResultsWindow = function () {
 </template>
 
 <style>
-input {
-	@apply my-2 px-3 py-2 w-full shadow;
-}
-
 label {
 	@apply px-3 py-2 my-2 w-28 align-baseline;
 }
