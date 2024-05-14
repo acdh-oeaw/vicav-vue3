@@ -13,7 +13,6 @@ const tooltip = ref(null);
 const { simpleItems } = useTEIHeaders();
 
 const filters = ["region", "place"];
-
 const persons = params.value.person
 	? params.value.person
 	: simpleItems.value
@@ -29,7 +28,10 @@ const persons = params.value.person
 const extractedParams = {
 	dataType: params.value.dataType,
 	person: persons,
+	features: params.value.features,
 	word: params.value.word,
+	translation: params.value.translation,
+	comment: params.value.comment,
 };
 
 const { data, isPending, isPlaceholderData } = useExploreSamplesResult(extractedParams);
