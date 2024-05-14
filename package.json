@@ -15,7 +15,7 @@
 		"dev": "nuxt dev --dotenv ./.env.local",
 		"format:check": "prettier . --cache --check --ignore-path ./.gitignore",
 		"format:fix": "pnpm run format:check --write",
-		"generate:api-client": "swagger-typescript-api --path \"https://raw.githubusercontent.com/acdh-oeaw/vicav-app-api/explore-samples-endpoint/openapi.json\" --clean-output --name index.ts --output ./lib/api-client/",
+		"generate:api-client": "swagger-typescript-api --path \"https://raw.githubusercontent.com/acdh-oeaw/vicav-app-api/master/openapi.json\" --clean-output --name index.ts --output ./lib/api-client/",
 		"lint:check": "run-p --continue-on-error \"lint:*:check\"",
 		"lint:fix": "run-p --continue-on-error \"lint:*:fix\"",
 		"lint:code:check": "eslint . --cache --ext .js,.ts,.vue --ignore-path ./.gitignore",

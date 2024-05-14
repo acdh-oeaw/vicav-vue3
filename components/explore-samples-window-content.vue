@@ -13,7 +13,6 @@ const tooltip = ref(null);
 const { simpleItems } = useTEIHeaders();
 
 const filters = ["region", "place"];
-console.log(params.value);
 const persons = params.value.person
 	? params.value.person
 	: simpleItems.value
@@ -29,13 +28,11 @@ const persons = params.value.person
 const extractedParams = {
 	dataType: params.value.dataType,
 	person: persons,
-	feature: params.value.feature,
+	features: params.value.features,
 	word: params.value.word,
 	translation: params.value.translation,
 	comment: params.value.comment,
 };
-
-console.log(extractedParams);
 
 const { data, isPending, isPlaceholderData } = useExploreSamplesResult(extractedParams);
 const openNewWindowFromAnchor = useAnchorClickHandler();
