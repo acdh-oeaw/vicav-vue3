@@ -35,15 +35,13 @@ const model = defineModel<Array<string>>();
 </script>
 
 <template>
-	<ComboboxRoot v-model="model" multiple class="relative mx-auto my-4">
-		<ComboboxAnchor
-			class="inline-flex w-[400px] items-center justify-between gap-[5px] rounded-lg bg-white p-2 text-[13px] leading-none shadow-[0_2px_10px] shadow-black/10 outline-none focus:shadow-[0_0_0_2px] focus:shadow-black"
-		>
+	<ComboboxRoot v-model="model" multiple class="mx-auto my-4 w-full">
+		<ComboboxAnchor class="w-full">
 			<TagsInputRoot
 				v-slot="{ modelValue: tags }"
 				:model-value="model"
 				delimiter=""
-				class="flex flex-wrap items-center gap-2 rounded-lg"
+				class="my-2 flex w-full flex-wrap items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 shadow"
 			>
 				<TagsInputItem
 					v-for="item in tags"
@@ -62,7 +60,7 @@ const model = defineModel<Array<string>>();
 				<ComboboxInput as-child>
 					<TagsInputInput
 						:placeholder="placeholder"
-						class="flex-1 rounded !bg-transparent px-1 focus:outline-none"
+						class="flex flex-wrap items-center gap-2 rounded !bg-transparent px-1 focus:outline-none"
 						@keydown.enter.prevent
 					/>
 				</ComboboxInput>
