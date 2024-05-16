@@ -26,6 +26,11 @@ import {
 	SliderRoot,
 	SliderThumb,
 	SliderTrack,
+	TagsInputInput,
+	TagsInputItem,
+	TagsInputItemDelete,
+	TagsInputItemText,
+	TagsInputRoot,
 } from "radix-vue";
 
 import type { ExploreSamplesFormWindowItem } from "@/types/global.d";
@@ -73,6 +78,7 @@ interface Tag {
 const places = ref([]);
 const words = ref([]);
 const features = ref([]);
+const sentences = ref([]);
 const age: Ref<Array<number>> = ref([0, 100]);
 const male = ref(true);
 const female = ref(true);
@@ -118,10 +124,6 @@ const wordOptions = computed(() => {
 	});
 });
 
-const featureLabel = computed(() => {
-	return props.params.dataTypes[0] === "SampleText" ? "sentence" : "feature";
-});
-
 const sex = computed(() => {
 	let result = [];
 	if (male.value) result.push("m");
@@ -161,7 +163,10 @@ const openSearchResultsWindow = function () {
 			dataType: params.value.dataTypes[0],
 			word: words.value.join(","),
 			comment: comment.value,
-			features: features.value.join(","),
+			features:
+				params.value.dataTypes[0] === "Feature"
+					? features.value.join(",")
+					: sentences.value.join(","),
 			translation: translation.value,
 			person: personsFilter.join(","),
 		},
@@ -175,12 +180,14 @@ const openSearchResultsWindow = function () {
 		<form
 			class="block w-full rounded border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
 		>
-			<label for="place">Place</label>
-			<TagsSelect
-				v-model="places"
-				:options="placeOptions"
-				placeholder="Search for places..."
-			></TagsSelect>
+			<div class="flex flex-row gap-2.5">
+				<label for="place">Place</label>
+				<TagsSelect
+					v-model="places"
+					:options="placeOptions"
+					placeholder="Search for places..."
+				></TagsSelect>
+			</div>
 
 			<div class="flex flex-row gap-2.5">
 				<label class="" for="age">Age</label>
@@ -267,7 +274,7 @@ const openSearchResultsWindow = function () {
 				/> -->
 			</div>
 
-			<div class="flex flex-row gap-2.5">
+			<div v-if="params.dataTypes.includes('Feature')" class="flex flex-row gap-2.5">
 				<label for="feature">
 					{{ featureLabel.charAt(0).toUpperCase() + featureLabel.slice(1) }}
 				</label>
@@ -279,12 +286,38 @@ const openSearchResultsWindow = function () {
 				/>
 			</div>
 
+			<div v-if="params.dataTypes.includes('SampleText')" class="flex flex-row gap-2.5">
+				<label for="sentence">Sentences</label>
+				<TagsInputRoot
+					v-model="sentences"
+					delimiter=""
+					class="my-2 flex w-full flex-wrap items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 shadow"
+				>
+					<TagsInputItem
+						v-for="item in sentences"
+						:key="item"
+						:value="item"
+						class="flex items-center justify-center gap-2 rounded bg-primary px-2 py-1 text-white aria-[current=true]:bg-primary"
+					>
+						<TagsInputItemText class="text-sm">{{ item }}</TagsInputItemText>
+						<TagsInputItemDelete>
+							<Icon icon="lucide:x" />
+						</TagsInputItemDelete>
+					</TagsInputItem>
+
+					<TagsInputInput
+						placeholder="Filter sentences..."
+						class="flex flex-wrap items-center gap-2 rounded !bg-transparent px-1 focus:outline-none"
+					/>
+				</TagsInputRoot>
+			</div>
+
 			<div class="flex flex-row gap-2.5">
 				<label for="translation">Translation</label>
 				<input
 					id="translation"
 					v-model="translation"
-					class="my-2 flex w-full px-3 py-2 shadow"
+					class="my-2 flex w-full border-gray-300 px-3 py-2 shadow"
 					placeholder="Search for translation..."
 					aria-label="Translation"
 				/>
@@ -295,7 +328,7 @@ const openSearchResultsWindow = function () {
 				<input
 					id="comment"
 					v-model="comment"
-					class="my-2 w-full px-3 py-2 shadow"
+					class="my-2 w-full border-gray-300 px-3 py-2 shadow"
 					placeholder="Search for comment..."
 					aria-label="Comment"
 				/>
