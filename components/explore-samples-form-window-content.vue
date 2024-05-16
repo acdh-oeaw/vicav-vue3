@@ -275,13 +275,11 @@ const openSearchResultsWindow = function () {
 			</div>
 
 			<div v-if="params.dataTypes.includes('Feature')" class="flex flex-row gap-2.5">
-				<label for="feature">
-					{{ featureLabel.charAt(0).toUpperCase() + featureLabel.slice(1) }}
-				</label>
+				<label for="features">Features</label>
 				<TagsSelect
 					v-if="featureLabelsQuery.data"
 					v-model="features"
-					:placeholder="`Search for ${featureLabel}s...`"
+					:placeholder="`Search for features...`"
 					:options="featureLabelsQuery.data"
 				/>
 			</div>
