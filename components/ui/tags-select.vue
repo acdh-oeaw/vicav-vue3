@@ -41,7 +41,7 @@ const model = defineModel<Array<string>>();
 				v-slot="{ modelValue: tags }"
 				:model-value="model"
 				delimiter=""
-				class="my-2 flex w-full flex-wrap items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 shadow"
+				class="my-2 flex w-full flex-wrap items-center gap-2 rounded-lg border px-3 py-2 shadow"
 			>
 				<TagsInputItem
 					v-for="item in tags"

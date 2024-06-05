@@ -25,17 +25,24 @@ const persons = params.value.person
 			.map((item) => item.person.name)
 			.join(",");
 
-const extractedParams = {
-	dataType: params.value.dataType,
-	person: persons,
-	features: params.value.features,
-	word: params.value.word,
-	translation: params.value.translation,
-	comment: params.value.comment,
-};
+const features = ref([]);
+if (params.value.features) features.value = params.value.features.split(",");
+
+const extractedParams = computed(() => {
+	return {
+		dataType: params.value.dataType,
+		person: persons,
+		features: features.value,
+		word: params.value.word,
+		translation: params.value.translation,
+		comment: params.value.comment,
+	};
+});
 
 const { data, isPending, isPlaceholderData } = useExploreSamplesResult(extractedParams);
-const openNewWindowFromAnchor = useAnchorClickHandler();
+
+const anchorRouter = useExploreSamplesClickHandler(features);
+
 const { showTooltip, tooltipContent, handleHoverTooltip } = useHoverTooltipHandler(tooltip);
 
 const isLoading = computed(() => {
@@ -56,7 +63,8 @@ const isLoading = computed(() => {
 			v-if="data"
 			ref="content"
 			class="prose max-w-3xl p-8"
-			@click="openNewWindowFromAnchor"
+			@click="anchorRouter"
+			@change="anchorRouter"
 			@mouseover="handleHoverTooltip"
 			v-html="data"
 		/>
