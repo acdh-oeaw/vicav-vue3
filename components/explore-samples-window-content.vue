@@ -135,4 +135,12 @@ a.word-search {
 .w.highlight {
 	@apply p-0 bg-inherit text-red-600;
 }
+
+.sentences-nav input {
+	@apply w-7 border-gray-400 rounded-lg  p-1 m-2 border shadow;
+}
+
+.sentences-nav a {
+	@apply p-2 leading-9 align-middle;
+}
 </style>
