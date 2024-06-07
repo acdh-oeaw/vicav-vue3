@@ -84,7 +84,7 @@ const male = ref(true);
 const female = ref(true);
 const comment = ref("");
 const translation = ref("");
-const persons = ref("");
+const persons = ref([]);
 
 const dataset = simpleItems.value.filter((item) => params.value.dataTypes.includes(item.dataType));
 const countries = Array.from(new Set(dataset.map((item) => item.place.country)));
@@ -116,6 +116,16 @@ countries.forEach((country) => {
 
 const placeOptions = options;
 
+const uniqueFilter = function (value, index, array) {
+	return array.indexOf(value) === index;
+};
+const personOptions = dataset
+	.map((item) => item.person.name)
+	.filter(uniqueFilter)
+	.map((item: string) => {
+		return { label: item, value: item };
+	});
+
 const featureLabelsQuery = useFeatureLabels();
 const dataWordsQuery = useDataWords({ dataType: props.params.dataTypes[0] });
 const wordOptions = computed(() => {
@@ -137,7 +147,7 @@ const openSearchResultsWindow = function () {
 	const personsFilter = simpleItems.value
 		.filter((item) => {
 			if (!params.value.dataTypes.includes(item.dataType)) return false;
-			if (persons.value && persons.value.split(",").includes(item.person.name)) return true;
+			if (persons.value.length > 0 && persons.value.includes(item.person.name)) return true;
 
 			if (places.value.length > 0) {
 				const found = places.value.map((place) => {
@@ -185,7 +195,16 @@ const openSearchResultsWindow = function () {
 				<TagsSelect
 					v-model="places"
 					:options="placeOptions"
-					placeholder="Search for places..."
+					placeholder="Search for counries, regions or settlements..."
+				></TagsSelect>
+			</div>
+
+			<div class="flex flex-row gap-2.5">
+				<label for="place">Speaker identifier</label>
+				<TagsSelect
+					v-model="persons"
+					:options="personOptions"
+					placeholder="Search for speaker identifiers eg. Beja1..."
 				></TagsSelect>
 			</div>
 
@@ -264,14 +283,6 @@ const openSearchResultsWindow = function () {
 					:placeholder="`Search for words...`"
 					:options="wordOptions"
 				/>
-
-				<!-- <InputExtended
-					id="word"
-					v-model="word"
-					:string-snippets="specialCharacters"
-					placeholder="Search for word..."
-					aria-label="Word"
-				/> -->
 			</div>
 
 			<div v-if="params.dataTypes.includes('Feature')" class="flex flex-row gap-2.5">
