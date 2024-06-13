@@ -22,6 +22,7 @@ async function fetchWithETag(
 	input: globalThis.Request | URL | string,
 	init?: RequestInit,
 ): Promise<Response> {
+	console.time("fetchWithETag");
 	const url = input instanceof Request ? input.url : input instanceof URL ? input.href : input;
 	const cachedETag = cache.get(url);
 	const ifNoneMatchHeader = cachedETag
@@ -43,6 +44,7 @@ async function fetchWithETag(
 		console.log("Data has not changed.");
 		if (cachedETag && Object.keys(cachedETag).length === 1) {
 			const response = Object.values(cachedETag)[0];
+			console.timeEnd("fetchWithETag");
 			if (response) return response.clone();
 		}
 		throw new Error(`Cache error!`);
@@ -51,6 +53,7 @@ async function fetchWithETag(
 		if (currentETag) {
 			cache.set(url, { [currentETag]: response.clone() });
 		}
+		console.timeEnd("fetchWithETag");
 		return response;
 	} else {
 		throw new Error(`HTTP error! Status: ${response.status}`);
