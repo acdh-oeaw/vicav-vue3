@@ -1,18 +1,8 @@
-import pino from "pino-http";
+import { ecsFormat } from "@elastic/ecs-pino-format";
+import { type LoggerOptions, pino } from "pino";
 
-const logger = pino({
-	quietReqLogger: true,
-	transport: {
-		target: "pino-http-print",
-		options: {
-			destination: 1,
-			all: true,
-			colorize: false,
-			translateTime: true,
-		},
-	},
-});
+const logger = pino(ecsFormat({ convertReqRes: true }) as LoggerOptions);
 
 export default defineEventHandler((event) => {
-	logger(event.node.req, event.node.res);
+	logger.info({ req: event.node.req, res: event.node.res }, `Handled request`);
 });
