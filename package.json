@@ -63,8 +63,7 @@
 		"vue": "^3.3.7",
 		"vue-router": "^4.2.5",
 		"winbox": "^0.2.82",
-		"zod": "^3.22.4",
-		"h3-compression": "^0.3.2"
+		"zod": "^3.22.4"
 	},
 	"devDependencies": {
 		"@acdh-oeaw/eslint-config": "^1.0.5",
@@ -125,10 +124,7 @@
 			"@acdh-oeaw/eslint-config-nuxt",
 			"plugin:@tanstack/eslint-plugin-query/recommended",
 			"plugin:eslint-plugin-tailwindcss/recommended"
-		],
-		"rules": {
-			"tailwindcss/no-custom-classname": "off"
-		}
+		]
 	},
 	"lint-staged": {
 		"*.vue": [
