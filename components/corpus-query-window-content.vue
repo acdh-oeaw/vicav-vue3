@@ -97,14 +97,3 @@ const specialCharacters: Array<string> = [
 		</div>
 	</div>
 </template>
-
-<style>
-/* InputExtended stylesheet */
-.ie button {
-	@apply border-gray-300 bg-gray-200 border px-2 py-px font-bold text-gray-800 hover:bg-gray-300 rounded-sm m-px;
-}
-
-.ie input {
-	@apply my-2 border px-3 py-2 w-full shadow;
-}
-</style>
