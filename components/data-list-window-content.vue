@@ -55,7 +55,7 @@ const getGroupedItems: ComputedRef<groupedItemType> = function (dataTypesFilter:
 		for (const region in groupedByCountry[country]) {
 			groupedByCountry[country][region] = orderByGroup(
 				Object.groupBy(groupedByCountry[country][region], (item: simpleTEIMetadata) => {
-					return item.place.name;
+					return item.place.settlement;
 				}),
 			);
 
