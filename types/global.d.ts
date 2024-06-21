@@ -214,4 +214,5 @@ export interface simpleTEIMetadata {
 		sex: string;
 		age: string;
 	};
+	hasTEIw: boolean;
 }

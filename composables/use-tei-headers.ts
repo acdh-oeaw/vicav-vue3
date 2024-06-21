@@ -40,6 +40,7 @@ interface teiHeader {
 			};
 		};
 	};
+	"@hasTEIw": string;
 }
 
 interface TEIs {
@@ -65,6 +66,7 @@ const extractMetadata = function (item: teiHeader, dataType: string) {
 		},
 		dataType: "",
 		label: "",
+		hasTEIw: false,
 	} as simpleTEIMetadata;
 	template.id = item["@id"]
 		? item["@id"]
@@ -108,6 +110,7 @@ const extractMetadata = function (item: teiHeader, dataType: string) {
 			? item.teiHeader.fileDesc.titleStmt.titles[0]?.$
 			: template.place.settlement;
 
+	template.hasTEIw = item["@hasTEIw"] === "true";
 	return template;
 };
 
