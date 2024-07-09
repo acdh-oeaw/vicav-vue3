@@ -48,7 +48,7 @@ interface TEIs {
 	TEIs: Array<teiHeader>;
 }
 
-type RawTEIItems = ComputedRef<Array<TEIs>>;
+type RawTEIItems = ComputedRef<Array<TEIs | object>>;
 
 const extractMetadata = function (item: teiHeader, dataType: string) {
 	const place = item.teiHeader.profileDesc?.settingDesc?.place;
@@ -114,6 +114,11 @@ const extractMetadata = function (item: teiHeader, dataType: string) {
 	return template;
 };
 
+// Google Gemini Cloude Code suggestion
+function isTEIs(item: TEIs | object): item is TEIs {
+	return Object.prototype.hasOwnProperty.call(item, "TEIs");
+}
+
 export function useTEIHeaders() {
 	const { data: projectData } = useProjectInfo();
 
@@ -126,9 +131,14 @@ export function useTEIHeaders() {
 	});
 
 	const simpleItems: ComputedRef<Array<simpleTEIMetadata>> = computed(() => {
-		const data = rawItems.value.map((dataTypeTEIs: TEIs) => {
-			return dataTypeTEIs.TEIs.map((item: teiHeader) => extractMetadata(item, dataTypeTEIs["@id"]));
-		});
+		const data = rawItems.value
+			// Google Gemini Cloude Code suggestion
+			.filter(isTEIs)
+			.map((dataTypeTEIs: TEIs) => {
+				return dataTypeTEIs.TEIs.map((item: teiHeader) =>
+					extractMetadata(item, dataTypeTEIs["@id"]),
+				);
+			});
 		return ([] as Array<simpleTEIMetadata>).concat(...data);
 	});
 
