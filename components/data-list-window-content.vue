@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { useTEIHeaders } from "@/composables/use-tei-headers";
-import type { DataListWindowItem } from "@/types/global.d";
+import type { DataListWindowItem, simpleTEIMetadata } from "@/types/global.d";
 
 import dataTypes from "../config/dataTypes";
 
@@ -55,7 +55,7 @@ const getGroupedItems: ComputedRef<groupedItemType> = function (dataTypesFilter:
 		for (const region in groupedByCountry[country]) {
 			groupedByCountry[country][region] = orderByGroup(
 				Object.groupBy(groupedByCountry[country][region], (item: simpleTEIMetadata) => {
-					return item.place.name;
+					return item.place.settlement;
 				}),
 			);
 
@@ -102,6 +102,7 @@ const openNewWindowFromAnchor = useAnchorClickHandler();
 						<ul v-for="item in items" :key="item.id">
 							<li class="text-base">
 								<a
+									v-if="dataType !== 'CorpusText' || item.hasTEIw"
 									class="text-primary underline"
 									href="#"
 									:data-target-type="dataTypes[dataType].targetType"
@@ -110,6 +111,7 @@ const openNewWindowFromAnchor = useAnchorClickHandler();
 								>
 									{{ item.label }}
 								</a>
+								<span v-else>{{ item.label }}</span>
 							</li>
 						</ul>
 					</div>

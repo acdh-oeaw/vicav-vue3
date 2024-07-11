@@ -16,8 +16,11 @@ interface teiStringNode {
 interface teiHeader {
 	"@id": string;
 	teiHeader: {
-		fileDesc: { titleStmt: { title: teiStringNode } };
-		profileDesc: {
+		fileDesc: {
+			titleStmt: { titles: Array<teiStringNode> };
+			publicationStmt: { idno?: teiStringNode };
+		};
+		profileDesc?: {
 			taxonomy?: { category: { "@id": string; $: string } };
 			particDesc?: {
 				person?: {
@@ -26,7 +29,7 @@ interface teiHeader {
 					$: string;
 				};
 			};
-			settingDesc: {
+			settingDesc?: {
 				place: {
 					placeName?: teiStringNode;
 					settlement?: { name: Array<teiSettlement> };
@@ -37,6 +40,7 @@ interface teiHeader {
 			};
 		};
 	};
+	"@hasTEIw": string;
 }
 
 interface TEIs {
@@ -44,14 +48,14 @@ interface TEIs {
 	TEIs: Array<teiHeader>;
 }
 
-type RawTEIItems = ComputedRef<Array<TEIs>>;
+type RawTEIItems = ComputedRef<Array<TEIs | object>>;
 
-const extractMetadata: simpleTEIMetadata = function (item: teiHeader, dataType: string) {
-	const place = item.teiHeader.profileDesc.settingDesc.place;
+const extractMetadata = function (item: teiHeader, dataType: string) {
+	const place = item.teiHeader.profileDesc?.settingDesc?.place;
 	const template = {
 		id: "",
 		place: {
-			name: "",
+			settlement: "",
 			region: "",
 			country: "",
 		},
@@ -62,29 +66,34 @@ const extractMetadata: simpleTEIMetadata = function (item: teiHeader, dataType: 
 		},
 		dataType: "",
 		label: "",
-	};
-	template.id = item["@id"];
+		hasTEIw: false,
+	} as simpleTEIMetadata;
+	template.id = item["@id"]
+		? item["@id"]
+		: item.teiHeader.fileDesc.publicationStmt.idno?.$
+			? item.teiHeader.fileDesc.publicationStmt.idno.$
+			: "no_id";
 	const dataTypeObject = Object.values(dataTypes).find(
 		(dataTypeObject) => dataTypeObject.collection === dataType,
 	);
 	if (dataTypeObject) template.dataType = dataTypeObject.targetType;
 
-	if (place.placeName) {
-		template.place.name = place.placeName.$;
-	} else if (place.settlement?.name) {
+	if (place?.placeName) {
+		template.place.settlement = place.placeName.$;
+	} else if (place?.settlement?.name) {
 		const placeName = place.settlement.name.find((n) => n["@lang"] === "en");
-		if (placeName) template.place.name = placeName.$;
+		if (placeName) template.place.settlement = placeName.$;
 	}
 
-	if (place.region) {
+	if (place?.region) {
 		template.place.region = place.region.$;
 	}
 
-	if (place.country) {
+	if (place?.country) {
 		template.place.country = place.country.$;
 	}
 
-	const person = item.teiHeader.profileDesc.particDesc?.person;
+	const person = item.teiHeader.profileDesc?.particDesc?.person;
 
 	if (person) {
 		template.person.name = person.$;
@@ -95,10 +104,20 @@ const extractMetadata: simpleTEIMetadata = function (item: teiHeader, dataType: 
 			template.person.age = person["@age"];
 		}
 	}
-	template.label = template.person.name ? template.person.name : template.place.name;
+	template.label = template.person.name
+		? template.person.name
+		: item.teiHeader.fileDesc.titleStmt.titles[0]?.$
+			? item.teiHeader.fileDesc.titleStmt.titles[0]?.$
+			: template.place.settlement;
 
+	template.hasTEIw = item["@hasTEIw"] === "true";
 	return template;
 };
+
+// Google Gemini Cloude Code suggestion
+function isTEIs(item: TEIs | object): item is TEIs {
+	return Object.prototype.hasOwnProperty.call(item, "TEIs");
+}
 
 export function useTEIHeaders() {
 	const { data: projectData } = useProjectInfo();
@@ -112,13 +131,15 @@ export function useTEIHeaders() {
 	});
 
 	const simpleItems: ComputedRef<Array<simpleTEIMetadata>> = computed(() => {
-		return [].concat(
-			...(rawItems.value.map((dataTypeTEIs: TEIs) => {
-				return dataTypeTEIs.TEIs.map(
-					(item: teiHeader) => extractMetadata(item, dataTypeTEIs["@id"]) as simpleTEIMetadata,
+		const data = rawItems.value
+			// Google Gemini Cloude Code suggestion
+			.filter(isTEIs)
+			.map((dataTypeTEIs: TEIs) => {
+				return dataTypeTEIs.TEIs.map((item: teiHeader) =>
+					extractMetadata(item, dataTypeTEIs["@id"]),
 				);
-			}) as Array<simpleTEIMetadata>),
-		) as Array<simpleTEIMetadata>;
+			});
+		return ([] as Array<simpleTEIMetadata>).concat(...data);
 	});
 
 	return {
