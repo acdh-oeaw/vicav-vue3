@@ -17,8 +17,8 @@ patchedDependencies:
 
 dependencies:
   '@acdh-oeaw/lib':
-    specifier: ^0.1.6
-    version: 0.1.7
+    specifier: 0.1.11
+    version: 0.1.11
   '@elastic/ecs-pino-format':
     specifier: ^1.5.0
     version: 1.5.0
@@ -255,9 +255,9 @@ packages:
       - supports-color
     dev: true
 
-  /@acdh-oeaw/lib@0.1.7:
-    resolution: {integrity: sha512-EvamM8dMqxJuUha8F5IY1wiHo5zO+/GLe5aYT2V4hcMIaRdu+z3dQgJ/NhdNngXJVGHUkcanEaNQWqPGeq7g4A==}
-    engines: {node: '>=18', pnpm: '>=8'}
+  /@acdh-oeaw/lib@0.1.11:
+    resolution: {integrity: sha512-jkzEfAF0ZOAfMpPl5hc0tqD17Be+wRIhe1gePUM03korWaBvBhfgBi4sPhuQ1GUOV45kYHgfFEnfcDKIx9EqXg==}
+    engines: {node: '>=20', pnpm: '>=8'}
     dev: false
 
   /@acdh-oeaw/prettier-config@1.0.1(prettier@3.2.5):
