@@ -12,44 +12,46 @@ const { isPending } = GeojsonStore.fetchGeojson(url);
 const { fetchedData, tables } = storeToRefs(GeojsonStore);
 
 const columns = computed(() => {
-	return fetchedData.value.get(url)?.properties.column_headings.map((heading: string) => {
-		switch (true) {
-			case /ft_*/.test(Object.keys(heading)[0]):
-				return {
-					id: Object.keys(heading)[0],
-					header: Object.values(heading)[0],
-					cell: ({ cell }) => {
-						return h(resolveComponent("GeojsonTablePropertyCell"), {
-							value: cell.row.original.properties[cell.column.columnDef.id],
-						});
-					},
-				};
-			case /name/.test(Object.keys(heading)[0]):
-				return {
-					id: Object.keys(heading)[0],
-					header: Object.values(heading)[0],
-					cell: ({ cell }) => {
-						return h(
-							"span",
-							{ class: "max-w-[500px] truncate font-medium" },
-							cell.row.original.properties[cell.column.columnDef.id],
-						);
-					},
-				};
-			default:
-				return {
-					id: Object.keys(heading)[0],
-					header: Object.values(heading)[0],
-					cell: ({ cell }) => {
-						return h(
-							"span",
-							{ class: "max-w-[500px] truncate font-medium" },
-							cell.row.original.properties[cell.column.columnDef.id],
-						);
-					},
-				};
-		}
-	});
+	return fetchedData.value
+		.get(url)
+		?.properties.column_headings.map((heading: Record<string, never>) => {
+			switch (true) {
+				case Object.keys(heading).some((key) => /ft_*/.test(key)):
+					return {
+						id: Object.keys(heading).find((key) => /ft_*/.test(key)) ?? "",
+						header: heading[Object.keys(heading).find((key) => /ft_*/.test(key)) ?? ""],
+						cell: ({ cell }) => {
+							return h(resolveComponent("GeojsonTablePropertyCell"), {
+								value: cell.row.original.properties[cell.column.columnDef.id],
+							});
+						},
+					};
+				case /name/.test(Object.keys(heading)[0]):
+					return {
+						id: Object.keys(heading)[0],
+						header: Object.values(heading)[0],
+						cell: ({ cell }) => {
+							return h(
+								"span",
+								{ class: "max-w-[500px] truncate font-medium" },
+								cell.row.original.properties[cell.column.columnDef.id],
+							);
+						},
+					};
+				default:
+					return {
+						id: Object.keys(heading)[0],
+						header: Object.values(heading)[0],
+						cell: ({ cell }) => {
+							return h(
+								"span",
+								{ class: "max-w-[500px] truncate font-medium" },
+								cell.row.original.properties[cell.column.columnDef.id],
+							);
+						},
+					};
+			}
+		});
 });
 
 function registerTable(table: Table<FeatureType>) {
