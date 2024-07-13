@@ -17,7 +17,7 @@ interface teiHeader {
 	"@id": string;
 	teiHeader: {
 		fileDesc: {
-			titleStmt: { titles: Array<teiStringNode> };
+			titleStmt: { titles?: Array<teiStringNode> };
 			publicationStmt: { idno?: teiStringNode };
 		};
 		profileDesc?: {
@@ -106,8 +106,8 @@ const extractMetadata = function (item: teiHeader, dataType: string) {
 	}
 	template.label = template.person.name
 		? template.person.name
-		: item.teiHeader.fileDesc.titleStmt.titles[0]?.$
-			? item.teiHeader.fileDesc.titleStmt.titles[0]?.$
+		: item.teiHeader.fileDesc.titleStmt.titles
+			? item.teiHeader.fileDesc.titleStmt.titles[0].$
 			: template.place.settlement;
 
 	template.hasTEIw = item["@hasTEIw"] === "true";
