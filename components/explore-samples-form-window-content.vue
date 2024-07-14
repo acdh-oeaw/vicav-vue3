@@ -22,31 +22,6 @@ interface Props {
 
 const props = defineProps<Props>();
 const { params } = toRefs(props);
-
-// const specialCharacters: Array<string> = [
-// 	"ē",
-// 	"ṛ",
-// 	"ṯ",
-// 	"ẓ",
-// 	"ū",
-// 	"ī",
-// 	"ō",
-// 	"ā",
-// 	"š",
-// 	"ḏ",
-// 	"ṭ",
-// 	"ǧ",
-// 	"ḥ",
-// 	"ž",
-// 	"ṣ",
-// 	"ḏ̣",
-// 	"ʕ",
-// 	"ʔ",
-// 	"ġ",
-// 	"ḅ",
-// 	"ṃ",
-// ];
-
 const { simpleItems } = useTEIHeaders();
 const windowsStore = useWindowsStore();
 const { addWindow } = windowsStore;

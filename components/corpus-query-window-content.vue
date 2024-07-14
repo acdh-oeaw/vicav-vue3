@@ -24,29 +24,8 @@ async function searchCorpus() {
 
 const openNewWindowFromAnchor = useAnchorClickHandler();
 
-const specialCharacters: Array<string> = [
-	"ē",
-	"ṛ",
-	"ṯ",
-	"ẓ",
-	"ū",
-	"ī",
-	"ō",
-	"ā",
-	"š",
-	"ḏ",
-	"ṭ",
-	"ǧ",
-	"ḥ",
-	"ž",
-	"ṣ",
-	"ḏ̣",
-	"ʕ",
-	"ʔ",
-	"ġ",
-	"ḅ",
-	"ṃ",
-];
+const { data: config } = useProjectInfo();
+const specialCharacters = config.value?.projectConfig?.specialCharacters as Array<string>;
 </script>
 
 <template>
