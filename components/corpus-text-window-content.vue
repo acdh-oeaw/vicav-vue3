@@ -80,22 +80,19 @@ onMounted(async () => {
 
 <style>
 .u {
-	display: flex;
+	@apply flex gap-2;
 
 	.xml-id {
-		min-width: fit-content;
-		padding: 0 20px;
-		font-weight: 700;
+		@apply min-w-fit px-4 font-bold;
 	}
 
 	.speaker {
-		padding: 20px;
-		font-weight: 700;
+		@apply font-bold;
 	}
 
 	.content {
 		.hit {
-			font-weight: 700;
+			@apply font-bold;
 		}
 	}
 }

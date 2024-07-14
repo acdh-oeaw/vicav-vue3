@@ -82,9 +82,9 @@ const specialCharacters: Array<string> = [
 							href="#"
 							data-target-type="CorpusText"
 							:data-hits="hit.docHits"
-							:data-doc="hit.doc"
-							:data-uid="hit.u"
-							@click.self="openNewWindowFromAnchor"
+							:data-text-id="hit.doc"
+							:data-u="hit.u"
+							@click="openNewWindowFromAnchor"
 						>
 							<strong>{{ hit.u }}</strong>
 						</a>
