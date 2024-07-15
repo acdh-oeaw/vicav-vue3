@@ -15,6 +15,7 @@ const utterances = ref<Array<CorpusTextUtterances>>([]);
 const utteranceElements = ref<Array<Element>>([]);
 const currentPage = ref(1);
 const api = useApiClient();
+const scrollComplete = ref<boolean>(false);
 
 const loadNextPage = async function () {
 	let text: HttpResponse<CorpusText, string>;
@@ -23,6 +24,7 @@ const loadNextPage = async function () {
 			id: props.params.textId,
 			hits: props.params.hits,
 			page: currentPage.value,
+			size: 10,
 		},
 		{ headers: { Accept: "application/json" } },
 	);
@@ -36,10 +38,18 @@ const loadNextPage = async function () {
 const handleInfiniteScroll = async function ($state: StateHandler) {
 	try {
 		const text = await loadNextPage();
-		currentPage.value = currentPage.value + 1;
 		$state.loaded();
-		if (text.data.utterances !== undefined && text.data.utterances.length < 10) $state.complete();
+		if (text.data.utterances !== undefined && text.data.utterances.length < 10) {
+			scrollComplete.value = true;
+			$state.complete();
+		}
 	} catch (e) {
+		if (e.status === 404 && e.error.detail.indexOf("does not have page") !== -1) {
+			scrollComplete.value = true;
+			$state.complete();
+			return;
+		}
+
 		$state.error();
 	}
 };
@@ -65,7 +75,7 @@ onMounted(async () => {
 <template>
 	<!-- eslint-disable tailwindcss/no-custom-classname, vue/no-v-html -->
 	<div :id="params.textId" class="p-4">
-		<h2>{{ params.textId }}</h2>
+		<h2>{{ params.title }}</h2>
 		<div
 			v-for="u in utterances"
 			:id="u.id"
@@ -74,7 +84,10 @@ onMounted(async () => {
 			class="corpus-utterance"
 			v-html="u.content"
 		/>
-		<InfiniteLoading @infinite="handleInfiniteScroll" />
+		<InfiniteLoading
+			v-if="utterances.length > 0 && !scrollComplete"
+			@infinite="handleInfiniteScroll"
+		/>
 	</div>
 </template>
 
