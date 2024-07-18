@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { useTEIHeaders } from "@/composables/use-tei-headers";
-import type { DataListWindowItem } from "@/types/global.d";
+import type { DataListWindowItem, simpleTEIMetadata } from "@/types/global.d";
 
 import dataTypes from "../config/dataTypes";
 
