@@ -12,6 +12,7 @@ const props = defineProps<{
 }>();
 
 const utterances = ref<Array<CorpusTextUtterances>>([]);
+const utterancesWrapper = ref<HTMLDivElement>(null);
 const utteranceElements = ref<Array<Element>>([]);
 const currentPage = ref(1);
 const api = useApiClient();
@@ -65,16 +66,48 @@ const getText = async function () {
 	);
 };
 
+const scrollParentToChild = function (parent, child) {
+	// Where is the parent on page
+	var parentRect = parent.getBoundingClientRect();
+	// What can you see?
+	var parentViewableArea = {
+		height: parent.clientHeight,
+		width: parent.clientWidth,
+	};
+
+	// Where is the child
+	var childRect = child.getBoundingClientRect();
+	// Is the child viewable?
+	var isViewable =
+		childRect.top >= parentRect.top &&
+		childRect.bottom <= parentRect.top + parentViewableArea.height;
+	// if you can't see the child try to scroll parent
+	if (!isViewable) {
+		// Should we scroll using top or bottom? Find the smaller ABS adjustment
+		const scrollTop = childRect.top - parentRect.top;
+		const scrollBot = childRect.bottom - parentRect.bottom;
+		if (Math.abs(scrollTop) < Math.abs(scrollBot)) {
+			// we're near the top of the list
+			parent.scrollTop += scrollTop;
+		} else {
+			// we're near the bottom of the list
+			parent.scrollTop += scrollBot;
+		}
+	}
+};
+
 onMounted(async () => {
 	await getText();
 	const u = utteranceElements.value.find((u) => u.id === props.params.u);
-	if (u !== undefined) u.scrollIntoView({ behavior: "smooth" });
+	const window = utterancesWrapper.value.parentElement;
+	console.log(utterancesWrapper.value.parentElement);
+	if (u !== undefined) scrollParentToChild(window, u);
 });
 </script>
 
 <template>
 	<!-- eslint-disable tailwindcss/no-custom-classname, vue/no-v-html -->
-	<div :id="params.textId" class="p-4">
+	<div :id="params.textId" ref="utterancesWrapper" class="p-4">
 		<h2>{{ params.title }}</h2>
 		<div
 			v-for="u in utterances"

@@ -51,12 +51,12 @@ const specialCharacters = config.value?.projectConfig?.specialCharacters as Arra
 			<br />
 		</form>
 		<div>
-			<div v-if="hits === undefined || hits.length > 0">
-				TODO write the CQL here: "{{ queryString }}"
+			<div v-if="hits === undefined || hits.length > 0" class="my-2">
+				Query: "{{ queryString }}"
 			</div>
-			<table>
+			<table class="w-full">
 				<tr v-for="hit in hits" :key="hit.u">
-					<td class="p-0 pe-3">
+					<td class="p-0">
 						<a
 							href="#"
 							data-target-type="CorpusText"
@@ -68,8 +68,8 @@ const specialCharacters = config.value?.projectConfig?.specialCharacters as Arra
 							<strong>{{ hit.u }}</strong>
 						</a>
 					</td>
-					<td class="p-0 text-right" v-html="hit.content?.left"></td>
-					<td class="bg-[beige] p-0 text-center" v-html="hit.content?.kwic"></td>
+					<td class="pl-5 text-right" v-html="hit.content?.left"></td>
+					<td class="bg-[beige] px-[2px] text-center" v-html="hit.content?.kwic"></td>
 					<td class="p-0" v-html="hit.content?.right"></td>
 				</tr>
 			</table>
