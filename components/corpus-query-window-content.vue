@@ -3,9 +3,8 @@ import type { CorpusSearchHits } from "@/lib/api-client";
 import type { CorpusQuerySchema } from "@/types/global";
 
 const api = useApiClient();
-
+const { simpleItems } = useTEIHeaders();
 const props = defineProps<{ params: Zod.infer<typeof CorpusQuerySchema>["params"] }>();
-
 const queryString = ref(props.params.queryString);
 const hits = ref<Array<CorpusSearchHits> | undefined>([]);
 
@@ -20,6 +19,10 @@ async function searchCorpus() {
 		return;
 	}
 	hits.value = result.data.hits;
+	hits.value.forEach((hit) => {
+		const teiHeader = simpleItems.value.find((header) => header.id === hit.doc);
+		hit.label = teiHeader.label;
+	});
 }
 
 const openNewWindowFromAnchor = useAnchorClickHandler();
@@ -63,13 +66,14 @@ const specialCharacters = config.value?.projectConfig?.specialCharacters as Arra
 							:data-hits="hit.docHits"
 							:data-text-id="hit.doc"
 							:data-u="hit.u"
+							:data-label="hit.label"
 							@click="openNewWindowFromAnchor"
 						>
 							<strong>{{ hit.u }}</strong>
 						</a>
 					</td>
 					<td class="pl-5 text-right" v-html="hit.content?.left"></td>
-					<td class="bg-[beige] px-[2px] text-center" v-html="hit.content?.kwic"></td>
+					<td class="max-w-fit bg-[beige] px-[2px] text-center" v-html="hit.content?.kwic"></td>
 					<td class="p-0" v-html="hit.content?.right"></td>
 				</tr>
 			</table>
