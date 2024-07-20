@@ -19,7 +19,6 @@ const currentPage = ref(1);
 const api = useApiClient();
 const scrollComplete = ref<boolean>(false);
 const teiHeader = simpleItems.value.find((header) => header.id === props.params.textId);
-console.log(teiHeader);
 const loadNextPage = async function () {
 	let text: HttpResponse<CorpusText, string>;
 	text = await api.vicav.getCorpusText(
@@ -102,7 +101,6 @@ onMounted(async () => {
 	await getText();
 	const u = utteranceElements.value.find((u) => u.id === props.params.u);
 	const window = utterancesWrapper.value.parentElement;
-	console.log(utterancesWrapper.value.parentElement);
 	if (u !== undefined) scrollParentToChild(window, u);
 });
 </script>
@@ -110,24 +108,19 @@ onMounted(async () => {
 <template>
 	<!-- eslint-disable tailwindcss/no-custom-classname, vue/no-v-html -->
 	<div :id="params.textId" ref="utterancesWrapper" class="p-4">
-		<h2>{{ params.label }}</h2>
+		<h2 class="m-3 text-lg">{{ props.params.label }}</h2>
 
-		<table class="border border-gray-300">
+		<table class="m-3 border border-gray-300">
 			<tr>
 				<th>Contributed by:</th>
 				<td>{{ teiHeader.resp }}</td>
 			</tr>
 			<tr>
-				<th>Speaker ID:</th>
-				<td>{{ teiHeader.person.name }}</td>
-			</tr>
-			<tr>
-				<th>Age:</th>
-				<td>{{ teiHeader.person.age }}</td>
-			</tr>
-			<tr>
-				<th>Sex:</th>
-				<td>{{ teiHeader.person.sex }}</td>
+				<th>Speaker:</th>
+				<td>
+					{{ teiHeader.person.name }} (age: {{ teiHeader.person.age }}, sex:
+					{{ teiHeader.person.sex }})
+				</td>
 			</tr>
 		</table>
 		<div
@@ -135,7 +128,7 @@ onMounted(async () => {
 			:id="u.id"
 			:key="u.id"
 			ref="utteranceElements"
-			class="corpus-utterance"
+			class="corpus-utterance table-row"
 			v-html="u.content"
 		/>
 		<InfiniteLoading
@@ -150,7 +143,7 @@ onMounted(async () => {
 	@apply flex gap-2;
 
 	.xml-id {
-		@apply min-w-fit px-4 font-bold;
+		@apply min-w-fit px-3 font-bold;
 	}
 
 	.speaker {
