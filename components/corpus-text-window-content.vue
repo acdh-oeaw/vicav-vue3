@@ -11,13 +11,15 @@ const props = defineProps<{
 	params: Zod.infer<typeof CorpusTextSchema>["params"];
 }>();
 
+const { simpleItems } = useTEIHeaders();
 const utterances = ref<Array<CorpusTextUtterances>>([]);
 const utterancesWrapper = ref<HTMLDivElement>(null);
 const utteranceElements = ref<Array<Element>>([]);
 const currentPage = ref(1);
 const api = useApiClient();
 const scrollComplete = ref<boolean>(false);
-
+const teiHeader = simpleItems.value.find((header) => header.id === props.params.textId);
+console.log(teiHeader);
 const loadNextPage = async function () {
 	let text: HttpResponse<CorpusText, string>;
 	text = await api.vicav.getCorpusText(
@@ -108,7 +110,26 @@ onMounted(async () => {
 <template>
 	<!-- eslint-disable tailwindcss/no-custom-classname, vue/no-v-html -->
 	<div :id="params.textId" ref="utterancesWrapper" class="p-4">
-		<h2>{{ params.title }}</h2>
+		<h2>{{ params.label }}</h2>
+
+		<table class="border border-gray-300">
+			<tr>
+				<th>Contributed by:</th>
+				<td>{{ teiHeader.resp }}</td>
+			</tr>
+			<tr>
+				<th>Speaker ID:</th>
+				<td>{{ teiHeader.person.name }}</td>
+			</tr>
+			<tr>
+				<th>Age:</th>
+				<td>{{ teiHeader.person.age }}</td>
+			</tr>
+			<tr>
+				<th>Sex:</th>
+				<td>{{ teiHeader.person.sex }}</td>
+			</tr>
+		</table>
 		<div
 			v-for="u in utterances"
 			:id="u.id"

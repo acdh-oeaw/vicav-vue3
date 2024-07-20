@@ -204,6 +204,7 @@ export interface simpleTEIMetadata {
 	id: string;
 	label: string;
 	dataType: string;
+	resp: string;
 	place: {
 		settlement: string;
 		country: string;

@@ -57,7 +57,7 @@ const specialCharacters = config.value?.projectConfig?.specialCharacters as Arra
 			<div v-if="hits === undefined || hits.length > 0" class="my-2">
 				Query: "{{ queryString }}"
 			</div>
-			<table class="w-full">
+			<table>
 				<tr v-for="hit in hits" :key="hit.u">
 					<td class="p-0">
 						<a
