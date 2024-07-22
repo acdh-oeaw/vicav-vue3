@@ -34,6 +34,11 @@ function updateQueryParam(queryString: string) {
 		:params="props.item.params"
 		@update-query-param="updateQueryParam"
 	/>
+	<DictQueryWindowContent
+		v-else-if="props.item.targetType === 'DictQuery'"
+		:params="props.item.params"
+		@update-query-param="updateQueryParam"
+	/>
 	<GeojsonTableWindowContent
 		v-else-if="props.item.targetType === 'ListMap'"
 		:params="props.item.params"

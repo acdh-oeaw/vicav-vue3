@@ -73,6 +73,32 @@ export const BibliographyEntriesSchema = z.object({
 export type BibliographyEntriesWindowItem = WindowItemBase &
 	z.infer<typeof BibliographyEntriesSchema>;
 
+export const Dict = z.object({
+	id: z.string(),
+	queryTemplates: z.map(z.string(), z.string()),
+	dbNames: z.array(z.string()),
+	specChars: z.array(z.string()),
+});
+export const DictQuerySchema = z.object({
+	targetType: z.literal("DictQuery"),
+	params: z.object({
+		textId: Dict.shape.id,
+		queryParams: z
+			.object({
+				q: z.string().optional(),
+				page: z.number().optional(),
+				pageSize: z.number().optional(),
+				id: z.string().optional(),
+				ids: z.string().optional(),
+				sort: z.enum(["asc", "desc", "none"]).optional(),
+				altLemma: z.string().optional(),
+				format: z.string().optional(),
+			})
+			.optional(),
+	}),
+});
+export type DictQueryWindowItem = WindowItemBase & z.infer<typeof DictQuerySchema>;
+
 export const CorpusQuerySchema = z.object({
 	targetType: z.literal("CorpusQuery"),
 	params: QueryString,
@@ -158,6 +184,7 @@ export type DataListWindowItem = WindowItemBase & z.infer<typeof DataListSchema>
 
 export const Schema = z.discriminatedUnion("targetType", [
 	BibliographyEntriesSchema,
+	DictQuerySchema,
 	CorpusQuerySchema,
 	CorpusTextSchema,
 	FeatureSchema,

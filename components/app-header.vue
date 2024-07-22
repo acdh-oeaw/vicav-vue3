@@ -7,6 +7,7 @@ import type {
 	CorpusQueryWindowItem,
 	CorpusTextWindowItem,
 	DataListWindowItem,
+	DictQueryWindowItem,
 	ExploreSamplesFormWindowItem,
 	ExploreSamplesWindowItem,
 	FeatureWindowItem,
@@ -50,6 +51,13 @@ function onSelectMenuItem(item: ItemType) {
 				targetType: "BiblioEntries",
 				params: item.params as BibliographyEntriesWindowItem["params"],
 				title: item.label ?? "",
+			};
+			break;
+		case "DictQuery":
+			newWindowState = {
+				targetType: "DictQuery",
+				params: item.params as DictQueryWindowItem["params"],
+				title: item.label ?? "Dictionary Query",
 			};
 			break;
 		case "CorpusQuery":
