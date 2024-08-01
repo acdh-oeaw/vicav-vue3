@@ -140,6 +140,14 @@ a:hover {
 }
 
 .pFigure .figure {
-	@apply content-end flex flex-col flex-wrap gap-3 justify-center;
+	@apply content-end flex flex-col flex-wrap gap-3 justify-start;
+}
+
+.grid .figure img {
+	@apply aspect-square object-cover;
+}
+
+.lg-item .lg-sub-html {
+	@apply bg-opacity-40 bg-black;
 }
 </style>
