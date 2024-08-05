@@ -1,23 +1,4 @@
 <script lang="ts" setup>
-// import {
-// 	ComboboxAnchor,
-// 	ComboboxContent,
-// 	ComboboxEmpty,
-// 	ComboboxGroup,
-// 	ComboboxInput,
-// 	ComboboxItem,
-// 	ComboboxItemIndicator,
-// 	ComboboxLabel,
-// 	ComboboxRoot,
-// 	ComboboxTrigger,
-// 	ComboboxViewport,
-// 	TagsInputInput,
-// 	TagsInputItem,
-// 	TagsInputItemDelete,
-// 	TagsInputItemText,
-// 	TagsInputRoot,
-// } from "radix-vue";
-
 import { Icon } from "@iconify/vue";
 import {
 	CheckboxIndicator,
@@ -41,31 +22,6 @@ interface Props {
 
 const props = defineProps<Props>();
 const { params } = toRefs(props);
-
-// const specialCharacters: Array<string> = [
-// 	"ē",
-// 	"ṛ",
-// 	"ṯ",
-// 	"ẓ",
-// 	"ū",
-// 	"ī",
-// 	"ō",
-// 	"ā",
-// 	"š",
-// 	"ḏ",
-// 	"ṭ",
-// 	"ǧ",
-// 	"ḥ",
-// 	"ž",
-// 	"ṣ",
-// 	"ḏ̣",
-// 	"ʕ",
-// 	"ʔ",
-// 	"ġ",
-// 	"ḅ",
-// 	"ṃ",
-// ];
-
 const { simpleItems } = useTEIHeaders();
 const windowsStore = useWindowsStore();
 const { addWindow } = windowsStore;

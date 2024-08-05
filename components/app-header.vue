@@ -64,7 +64,7 @@ function onSelectMenuItem(item: ItemType) {
 			newWindowState = {
 				targetType: "CorpusQuery",
 				params: {
-					queryString: "Two wrongs don't make a right, but three lefts do.", // TODO: pass this value from the backend and replace the string with item.params
+					queryString: "", // TODO: pass this value from the backend and replace the string with item.params
 				} as CorpusQueryWindowItem["params"],
 				title: item.label ?? "",
 			};

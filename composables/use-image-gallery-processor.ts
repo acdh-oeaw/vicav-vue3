@@ -18,6 +18,7 @@ export function useImageGalleryProcessor(element: Ref<HTMLDivElement>) {
 					};
 				},
 			);
+			console.log(data, galleryElement);
 			galleryElement.replaceChildren("");
 			const gallery = lightGallery(galleryElement as HTMLElement, {
 				container: galleryElement as HTMLElement,

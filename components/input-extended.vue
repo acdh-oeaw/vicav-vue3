@@ -52,8 +52,8 @@ const restoreCursorPosition = (pos: number) => {
 			<button
 				v-for="(c, i) in stringSnippets"
 				:key="i"
-				@click.prevent="InsertSnippet(c)"
-				v-text="c"
+				@click.prevent="InsertSnippet(c.value)"
+				v-html="c.text ? c.text : c.value"
 			></button>
 		</div>
 		<div class="ie-textinput">
