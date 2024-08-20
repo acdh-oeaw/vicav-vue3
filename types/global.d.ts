@@ -244,3 +244,148 @@ export interface simpleTEIMetadata {
 	};
 	hasTEIw: boolean;
 }
+
+export interface TeiCorpus {
+	"@id": string;
+	teiHeader?: TeiHeader;
+	TEIs: Array<TEI>;
+}
+export interface TEI {
+	"@id": string;
+	"@hasTEIw": string;
+	teiHeader: TeiHeader;
+}
+export interface TeiHeader {
+	fileDesc: FileDesc;
+	encodingDesc: EncodingDesc;
+	profileDesc?: ProfileDesc;
+	revisionDesc: RevisionDesc;
+}
+export interface FileDesc {
+	titleStmt: TitleStmt;
+	publicationStmt: PublicationStmt;
+	sourceDesc: SourceDesc;
+}
+export interface TitleStmt {
+	titles?: Array<XmlTextNode>;
+	author: XmlTextNode;
+	respStmts?: Array<RespStmt>;
+}
+export interface XmlTextNode {
+	$: string;
+}
+export interface RespStmt {
+	resp: XmlTextNode;
+	name: Name;
+	persName?: TeiPersName | TeiRef;
+}
+export interface Name {
+	"@id": string;
+}
+export interface TeiPersName {
+	"@id": string;
+	"@full"?: string;
+	$?: string;
+	"@forename"?: string;
+	"@surname"?: string;
+}
+export interface TeiRef {
+	"@ref": string;
+}
+export interface PublicationStmt {
+	pubPlace: XmlTextNode;
+	date: XmlTextNode;
+	availability: Availability;
+	publishers?: Array<XmlTextNode>;
+	idno?: XmlTextNode;
+}
+export interface Availability {
+	"@status": string;
+	p: P;
+}
+export interface P {
+	ref: TeiTypeAndTarget;
+}
+export interface TeiTypeAndTarget {
+	"@type": string;
+	"@target": string;
+}
+export interface SourceDesc {
+	p: XmlTextNode;
+}
+export interface EncodingDesc {
+	listPrefixDef?: Array<ListPrefixDefEntity>;
+	tagsDecl?: TagsDecl;
+}
+export interface ListPrefixDefEntity {
+	"@matchPattern": string;
+	"@replacementPattern": string;
+	"@ident": string;
+}
+export interface TagsDecl {
+	"@partial": string;
+	renditions?: Array<RenditionsEntity>;
+}
+export interface RenditionsEntity {
+	"@id": string;
+	"@scheme": string;
+	$: string;
+}
+export interface ProfileDesc {
+	taxonomy: Taxonomy;
+	particDesc?: ParticDesc;
+	settingDesc?: SettingDesc;
+}
+export interface Taxonomy {
+	categories?: Array<CategoriesEntity>;
+}
+export interface CategoriesEntity {
+	"@id": string;
+	catDesc: XmlTextNode;
+}
+export interface ParticDesc {
+	person?: Person;
+	listPerson?: Array<TeiPerson>;
+}
+export interface TeiPerson {
+	"@sameAs"?: string;
+	"@id"?: string;
+	"@sex": string;
+	"@age": string;
+	$: string;
+}
+export interface Person {
+	"@sex": string;
+	"@age": string;
+	$: string;
+}
+export interface SettingDesc {
+	place: Place;
+}
+export interface Place {
+	settlement: Settlement;
+	region?: XmlTextNode;
+	country?: XmlTextNode;
+	location: Location;
+	placeName?: XmlTextNode;
+}
+export interface Settlement {
+	name?: Array<NameEntity>;
+}
+export interface NameEntity {
+	"@lang": string;
+	$: string;
+}
+export interface Location {
+	geo: XmlTextNode;
+}
+export interface RevisionDesc {
+	changes?: Array<ChangesEntity>;
+}
+export interface ChangesEntity {
+	"@status"?: string;
+	"@when": string;
+	"@who": string;
+	$: string;
+	"@n"?: string;
+}

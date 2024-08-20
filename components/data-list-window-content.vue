@@ -10,7 +10,7 @@ interface Props {
 
 const props = defineProps<Props>();
 
-const { simpleItems } = useTEIHeaders();
+const { simpleItems /*, rawItems */ } = useTEIHeaders();
 // Four grouping levels: country, region, place, dataType
 type groupedItemType = Record<string, groupedByRegion>;
 type groupedByDataType = Record<string, Array<simpleTEIMetadata>>;
@@ -83,10 +83,13 @@ const getGroupedItems: ComputedRef<groupedItemType> = function (dataTypesFilter:
 };
 const groupedItems = getGroupedItems(props.params.dataTypes);
 const openNewWindowFromAnchor = useAnchorClickHandler();
+//const debugString = JSON.stringify(rawItems.value, null, 2);
 </script>
 
 <template>
 	<div v-if="groupedItems" class="relative isolate grid h-full w-full overflow-auto">
+		<!-- <label for="debug">Debug</label>
+		<textarea id="debug" :value="debugString"></textarea> -->
 		<div v-for="(itemsByRegion, country) in groupedItems" :key="country" class="p-2">
 			<h2 v-if="groupedItems.values?.length > 1" class="text-lg">{{ country }}</h2>
 			<div v-for="(itemsByPlace, region) in itemsByRegion" :key="region" class="p-2 text-base">
