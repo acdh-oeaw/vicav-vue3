@@ -3,12 +3,15 @@ import { z } from "zod";
 
 type MaybeRef<T> = Ref<T> | T;
 
+export const DataTypesEnum = z.enum(["Profile", "Text", "SampleText", "Feature", "CorpusText"]);
+export type DataTypesEnum = z.infer<typeof DataTypesEnum>;
+
 export interface DataType {
 	name: string;
-	targetType: string;
+	targetType: DataTypesEnum;
 	categoryId: string;
 	collection: string;
-	explore_xslt: string;
+	explore_xslt?: string;
 }
 export type DataTypes = Record<string, DataType>;
 
@@ -39,7 +42,7 @@ export const ExploreSamplesQueryParams = z.object({
 });
 
 export const ExploreSamplesFormParams = z.object({
-	dataTypes: z.array(z.enum(["Profile", "Text", "SampleText", "Feature", "CorpusText"])),
+	dataTypes: z.array(DataTypesEnum),
 });
 
 export const ExploreSamplesSchema = z.object({
@@ -53,7 +56,7 @@ export const ExploreSamplesFormSchema = z.object({
 	targetType: z.literal("ExploreSamplesForm"),
 	params: z
 		.object({
-			dataTypes: z.array(z.enum(["Profile", "Text", "SampleText", "Feature", "CorpusText"])),
+			dataTypes: z.array(DataTypesEnum),
 		})
 		.merge(TextId.partial())
 		.merge(TeiSource.partial()),
@@ -174,7 +177,7 @@ export const DataListSchema = z.object({
 	targetType: z.literal("DataList"),
 	params: z
 		.object({
-			dataTypes: z.array(z.enum(["Profile", "Text", "SampleText", "Feature", "CorpusText"])),
+			dataTypes: z.array(DataTypesEnum),
 		})
 		.merge(TextId.partial())
 		.merge(TeiSource.partial()),
@@ -230,7 +233,7 @@ export type FeatureCollectionType = z.infer<typeof FeatureCollectionSchema>;
 export interface simpleTEIMetadata {
 	id: string;
 	label: string;
-	dataType: string;
+	dataType: DataTypesEnum;
 	resp: string;
 	place: {
 		settlement: string;
@@ -244,6 +247,8 @@ export interface simpleTEIMetadata {
 	};
 	hasTEIw: boolean;
 }
+
+// TeiCropus metadata definition
 
 export interface TeiCorpus {
 	"@id": string;

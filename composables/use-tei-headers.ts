@@ -34,7 +34,7 @@ const extractMetadata = function (
 			sex: "",
 		},
 		resp: "",
-		dataType: "",
+		dataType: "Text",
 		label: "",
 		hasTEIw: false,
 	} as simpleTEIMetadata;

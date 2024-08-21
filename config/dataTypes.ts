@@ -27,5 +27,5 @@ const types: DataTypes = {
 		categoryId: "corpustext",
 		collection: "vicav_corpus",
 	},
-};
+} as const;
 export default types;
