@@ -4,13 +4,17 @@
 	teiHeader?: TeiHeader;
 	standOff?: StandOff;
 }
+
 export interface TEI {
 	"@space"?: string;
 	"@id"?: string;
 	teiHeader: TeiHeader;
 	"@type"?: string;
 	"@hasTEIw"?: string;
+	"@next"?: string;
+	"@prev"?: string;
 }
+
 export interface TeiHeader {
 	fileDesc: FileDesc;
 	encodingDesc: EncodingDesc;
@@ -18,6 +22,7 @@ export interface TeiHeader {
 	revisionDesc?: RevisionDesc;
 	"@id"?: string;
 }
+
 export interface FileDesc {
 	titleStmt: TitleStmt;
 	publicationStmt: PublicationStmt;
@@ -26,106 +31,108 @@ export interface FileDesc {
 	editionStmt?: EditionStmt;
 	extent?: unknown;
 }
+
 export interface TitleStmt {
-	titles?: Array<TitlesEntity>;
+	titles?: Array<Title>;
 	author?: Author;
 	editor?: Editor;
-	respStmts?: Array<RespStmtsEntity>;
+	respStmts: Array<RespStmt>;
 	funder?: Funder;
 }
-export interface TitlesEntity {
+
+export interface Title {
 	$: string;
 	"@type"?: string;
 	"@level"?: string;
 }
+
 export interface Author {
 	"@id"?: string;
 	$: string;
 }
+
 export interface Editor {
 	"@id": string;
 	"@role": string;
 	$: string;
 }
-export interface RespStmtsEntity {
-	persName: PersName;
+
+export interface RespStmt {
+	persName: PersName | TeiTypedTarget;
 	resp: XmlTextNode;
+	name?: Author;
+	author?: Author;
 }
+
 export interface PersName {
 	"@ref"?: string;
 	forename: XmlTextNode;
 	surname: XmlTextNode;
 }
+
 export interface XmlTextNode {
 	$: string;
 }
-export interface TeiTeiTypedTarget {
-	"@ref": string;
-	$: string;
-}
-export interface IdnoOrNationalityOrNameOrTitlesEntity {
-	"@type": string;
-	$: string;
-}
+
 export interface PublicationStmt {
 	pubPlace?: XmlTextNode;
-	date: Date;
+	date: TeiDate;
 	availability: Availability;
-	publishers?: Array<PublishersEntity>;
+	publishers?: Array<TeiTypedTarget>;
 	distributor?: TeiTypedTarget;
 	address?: Address;
-	idno?: IdnoOrNationalityOrNameOrTitlesEntity;
+	idno?: TeiTypedTarget;
 }
-export interface Date {
+
+export interface TeiDate {
 	$?: string;
-	"@when"?: string;
+	"@when"?: Date | string;
 	"@type"?: string;
-	"@from"?: string;
-	"@to"?: string;
+	"@from"?: Date | string;
+	"@to"?: Date | string;
 	note: XmlTextNode;
 }
+
 export interface Availability {
 	"@status": string;
 	p?: P;
 	licence?: TeiTypedTarget;
 }
+
 export interface TeiTypedTarget {
+	"@ref"?: string;
 	"@type"?: string;
-	"@target": string;
+	"@subtype"?: string;
+	"@target"?: string;
 	$?: string;
 }
-export interface PublishersEntity {
-	$: string;
-	"@ref"?: string;
-}
+
 export interface Address {
 	addrLine: XmlTextNode;
 }
+
 export interface SourceDesc {
-	p?: XmlTextNode2;
+	p?: P;
 	listBibl?: ListBibl;
 	recordingStmt?: RecordingStmt;
 }
-export interface XmlTextNode2 {
-	$: string;
-}
+
 export interface ListBibl {
 	"@type": string;
 }
 export interface RecordingStmt {
 	recording: Recording;
 }
+
 export interface Recording {
 	"@dur-iso": string;
 	"@type": string;
-	date: Date;
+	date?: TeiDate;
 	respStmt: RespStmt;
-	media: Media;
+	media?: Media;
+	p?: P;
 }
-export interface RespStmt {
-	resp: XmlTextNode;
-	persName: TeiTeiTypedTarget;
-}
+
 export interface Media {
 	"@url": string;
 	"@mimeType": string;
@@ -143,21 +150,24 @@ export interface EditionStmt {
 	edition: XmlTextNode;
 }
 export interface EncodingDesc {
+	listPrefixDef?: Array<ListPrefixDef>;
 	tagsDecl?: TagsDecl;
 	projectDesc?: SourceDescOrProjectDescOrEditorialDecl;
 	editorialDecl?: SourceDescOrProjectDescOrEditorialDecl;
-	listPrefixDef?: Array<ListPrefixDefEntity>;
 }
+
 export interface TagsDecl {
 	"@partial"?: string;
-	renditions?: Array<RenditionsEntity>;
+	renditions?: Array<Rendition>;
 	namespace?: Namespace;
 }
-export interface RenditionsEntity {
+
+export interface Rendition {
 	"@id": string;
 	"@scheme": string;
 	$: string;
 }
+
 export interface Namespace {
 	"@name": string;
 	tagUsage: TagUsage;
@@ -168,41 +178,40 @@ export interface TagUsage {
 export interface SourceDescOrProjectDescOrEditorialDecl {
 	p: XmlTextNode;
 }
-export interface ListPrefixDefEntity {
+export interface ListPrefixDef {
 	"@ident": string;
 	"@matchPattern": string;
 	"@replacementPattern": string;
-	p: P;
+	p?: P;
 }
+
 export interface P {
-	code: XmlTextNode;
+	ptr?: TeiTypedTarget;
+	code?: XmlTextNode;
 	ref?: TeiTypedTarget;
 	$: string;
 	att?: XmlTextNode;
 	gi?: XmlTextNode;
 }
-export interface XmlTextNode3 {
-	$: string;
-}
-export interface XmlTextNode4 {
-	$: string;
-}
+
 export interface ProfileDesc {
 	langUsage?: LangUsage;
 	textDesc?: TextDesc;
 	particDesc?: ParticDesc;
-	settingDesc?: SettingDesc;
 	textClass?: TextClass;
+	settingDesc?: SettingDesc;
 }
+
 export interface LangUsage {
 	language: Language;
 }
+
 export interface Language {
 	"@ident": string;
 	"@type": string;
-	name: IdnoOrNationalityOrNameOrTitlesEntity;
+	name: TeiTypedTarget;
 	place: Place;
-	date: Date;
+	TeiDate: TeiDate;
 	personGrp: PersonGrp;
 	channel: Channel;
 	domain: unknown;
@@ -211,15 +220,17 @@ export interface Language {
 	purpose: unknown;
 	ptr?: RelatedItemOrPtr;
 }
+
 export interface Place {
 	"@type"?: string;
 	"@id"?: string;
 	"@sameAs"?: string;
 	placeName: XmlTextNode;
 	location?: Location;
-	idno?: IdnoOrNationalityOrNameOrTitlesEntity;
+	idno?: TeiTypedTarget;
 	note?: XmlTextNode;
 }
+
 export interface Location {
 	"@type"?: string;
 	geo: Geo;
@@ -238,7 +249,7 @@ export interface PersonGrp {
 	gender: XmlTextNode;
 	faith: XmlTextNode;
 	education: unknown;
-	nationality: IdnoOrNationalityOrNameOrTitlesEntity;
+	nationality: TeiTypedTarget;
 	residence: unknown;
 	occupation: unknown;
 	socecStatus: XmlTextNode;
@@ -266,57 +277,71 @@ export interface TextDesc {
 export interface ParticDesc {
 	listPerson?: Array<Person>;
 }
+
 export interface Person {
 	"@sameAs"?: string;
 	"@id"?: string;
-	name?: IdnoOrNationalityOrNameOrTitlesEntity;
+	name?: TeiTypedTarget;
 	persName?: PersName;
 	sex?: XmlTextNode;
-	birth?: XmlTextNode;
+	birth?: Birth | XmlTextNode;
 	note?: XmlTextNode;
 	state?: State;
 	idno?: Idno;
 	affiliation?: XmlTextNode;
 }
+
 export interface SettingDesc {
-	place: Place;
+	setting?: Setting;
+	place?: Place;
 }
+
+export interface Setting {
+	placeName: PlaceName;
+}
+
+export interface PlaceName {
+	"@sameAs": string;
+	$: string;
+}
+
 export interface TextClass {
 	catRef?: TeiTypedTarget;
 }
+
 export interface RevisionDesc {
-	changes?: Array<ChangesEntity>;
+	changes?: Array<Change>;
 }
-export interface ChangesEntity {
+
+export interface Change {
+	"@status"?: string;
 	"@n"?: string;
-	"@who": string;
-	"@when": string;
-	$: string;
+	"@when": Date;
+	"@who"?: string;
+	persName?: PersName;
+	$?: string;
 }
+
 export interface Funder {
-	orgName: TeiTeiTypedTarget;
-	idno: IdnoOrNationalityOrNameOrTitlesEntity;
+	orgName: TeiTypedTarget;
+	idno: TeiTypedTarget;
 	$: string;
 }
-export interface LicenceOrTeiTypedTarget {
-	"@target": string;
-	$: string;
-}
-export interface P2 {
-	ptr: TeiTypedTarget;
-	$: string;
-}
+
 export interface ClassDecl {
 	taxonomy: Taxonomy;
 }
+
 export interface Taxonomy {
-	categories?: Array<CategoriesEntity>;
+	categories?: Array<Category>;
 }
-export interface CategoriesEntity {
+
+export interface Category {
 	"@id": string;
 	"@n": string;
 	catDesc: XmlTextNode;
 }
+
 export interface StandOff {
 	listPerson?: Array<Person>;
 }
@@ -324,8 +349,15 @@ export interface State {
 	"@type": string;
 	desc: XmlTextNode;
 }
-export interface Idno {
-	"@type": string;
-	"@subtype": string;
-	$: string;
+
+export interface Birth {
+	date?: BirthDate;
+	placeName?: XmlTextNode;
+}
+
+export interface BirthDate {
+	"@notBefore"?: Date | string;
+	"@notAfter"?: Date | string;
+	$?: string;
+	"@when"?: Date | string;
 }
