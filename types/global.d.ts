@@ -246,6 +246,7 @@ export interface simpleTEIMetadata {
 		age: string;
 	};
 	hasTEIw: boolean;
+	teiHeader: TeiHeader;
 }
 
 // TeiCropus metadata definition

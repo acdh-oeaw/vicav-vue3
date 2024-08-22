@@ -37,6 +37,7 @@ const extractMetadata = function (
 		dataType: "Text",
 		label: "",
 		hasTEIw: false,
+		teiHeader: item.teiHeader,
 	} as simpleTEIMetadata;
 	template.id = item["@id"]
 		? item["@id"]
