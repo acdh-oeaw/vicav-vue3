@@ -8,6 +8,8 @@ interface Props {
 	params: DataListWindowItem["params"];
 }
 
+const debug = false;
+
 const props = defineProps<Props>();
 
 const { simpleItems /* rawItems */ } = useTEIHeaders();
@@ -96,19 +98,23 @@ const getGroupedItems = function (dataTypesFilter: Array<string>) {
 };
 const groupedItems = getGroupedItems(props.params.dataTypes);
 const openNewWindowFromAnchor = useAnchorClickHandler();
-// const debugString = JSON.stringify(rawItems.value, null, 2);
+// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+const debugString = debug ? JSON.stringify(groupedItems, null, 2) : "";
 </script>
 
 <template>
 	<div v-if="groupedItems" class="relative isolate grid h-full w-full overflow-auto">
-		<!-- 		<label for="debug">Debug</label>
-		<textarea
-			id="debug"
-			cols="25"
-			rows="80"
-			style="width: 1024px; height: 768px"
-			:value="debugString"
-		></textarea> -->
+		<div v-if="debug">
+			<label for="debug">Debug</label>
+			<br />
+			<textarea
+				id="debug"
+				cols="25"
+				rows="80"
+				style="width: 1024px; height: 100px"
+				:value="debugString"
+			></textarea>
+		</div>
 		<div v-for="(itemsByRegion, country) in groupedItems" :key="country" class="p-2">
 			<h2 v-if="Object.keys(groupedItems).length > 1" class="text-lg">{{ country }}</h2>
 			<div v-for="(itemsByPlace, region) in itemsByRegion" :key="region" class="p-2 text-base">
@@ -134,6 +140,22 @@ const openNewWindowFromAnchor = useAnchorClickHandler();
 									{{ item.label }}
 								</a>
 								<span v-else>{{ item.label }}</span>
+								<span v-if="item.teiHeader.fileDesc.sourceDesc.recordingStmt">
+									&nbsp; {{ item.teiHeader.fileDesc.sourceDesc.recordingStmt.recording["@type"] }}
+									<span v-if="item.teiHeader.fileDesc.sourceDesc.recordingStmt.recording.media">
+										: {{ item.teiHeader.fileDesc.sourceDesc.recordingStmt.recording.media["@url"] }}
+									</span>
+									<span v-if="item.teiHeader.fileDesc.sourceDesc.recordingStmt.recording.p?.ref">
+										:
+										{{
+											item.teiHeader.fileDesc.sourceDesc.recordingStmt.recording.p.ref["@target"]
+										}}
+									</span>
+									<span v-if="item.teiHeader.profileDesc?.settingDesc?.setting?.placeName.$">
+										:
+										{{ item.teiHeader.profileDesc.settingDesc.setting.placeName.$ }}
+									</span>
+								</span>
 							</li>
 						</ul>
 					</div>
