@@ -1,3 +1,4 @@
+<!-- eslint-disable @typescript-eslint/sort-type-constituents -->
 <script lang="ts" setup>
 import { useTEIHeaders } from "@/composables/use-tei-headers";
 import type { DataListWindowItem, DataTypesEnum, simpleTEIMetadata } from "@/types/global.d";
@@ -21,6 +22,38 @@ type groupedByRegion = Record<string, groupedByPlace>;
 type groupedItemType = Record<string, groupedByRegion>;
 type GroupedTypes = groupedByAnyString | groupedByPlace | groupedByRegion | groupedItemType;
 
+// https://gist.github.com/andrewchilds/30a7fb18981d413260c7a36428ed13da?permalink_comment_id=4433741#gistcomment-4433741
+type GetReturnType<T> = T | undefined;
+type ValueType = Record<string | number, unknown>;
+
+function deepGet<T>(
+	value: unknown,
+	query: string | Array<string | number>,
+	defaultVal: GetReturnType<T> = undefined,
+): GetReturnType<T> {
+	const splitQuery = Array.isArray(query)
+		? query
+		: query
+				.replace(/(\[(\d)\])/g, ".$2")
+				.replace(/^\./, "")
+				.split(".");
+
+	if (!splitQuery.length || splitQuery[0] === undefined) return value as T;
+
+	const key = splitQuery[0];
+
+	if (
+		typeof value !== "object" ||
+		value === null ||
+		!(key in value) ||
+		(value as ValueType)[key] === undefined
+	) {
+		return defaultVal;
+	}
+
+	return deepGet((value as ValueType)[key], splitQuery.slice(1), defaultVal);
+}
+
 const orderByGroup = function (unordered: Record<string, Array<simpleTEIMetadata>>) {
 	return Object.keys(unordered)
 		.sort()
@@ -35,14 +68,14 @@ const getGroupedItems = function (dataTypesFilter: Array<string>) {
 	// Group by country
 	const collectedItems = simpleItems.value
 		.filter((item) => {
-			return dataTypesFilter.includes(item.dataType);
+			return dataTypesFilter.includes(deepGet(item, "dataType") ?? "");
 		})
 		.sort((a, b) => {
-			return a.label.localeCompare(b.label);
+			return (deepGet<string>(a, "label") ?? "").localeCompare(deepGet(b, "label") ?? "");
 		});
 
 	const groupedByCountry = Object.groupBy(collectedItems, (item: simpleTEIMetadata) => {
-		return item.place.country;
+		return deepGet(item, "place.country") ?? "";
 	}) as GroupedTypes;
 
 	// Group by region
@@ -52,7 +85,7 @@ const getGroupedItems = function (dataTypesFilter: Array<string>) {
 				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 				(groupedByCountry as Record<string, Array<simpleTEIMetadata>>)[country]!,
 				(item: simpleTEIMetadata) => {
-					return item.place.region;
+					return deepGet(item, "place.region") ?? "";
 				},
 			),
 		);
@@ -65,7 +98,7 @@ const getGroupedItems = function (dataTypesFilter: Array<string>) {
 					// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 					(groupedByCountry as groupedByPlace)[country]![region]!,
 					(item: simpleTEIMetadata) => {
-						return item.place.settlement;
+						return deepGet(item, "place.settlement") ?? "";
 					},
 				),
 			);
@@ -78,7 +111,7 @@ const getGroupedItems = function (dataTypesFilter: Array<string>) {
 					// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 					(groupedByCountry as groupedByRegion)[country]![region]![place]!,
 					(item) => {
-						return item.dataType;
+						return deepGet(item, "dataType") ?? "";
 					},
 				);
 				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -87,7 +120,7 @@ const getGroupedItems = function (dataTypesFilter: Array<string>) {
 					(groupedByCountry as groupedItemType)[country]![region]![place]![dataType] = (
 						groupedByCountry as groupedItemType
 					)[country]![region]![place]![dataType]!.sort((a, b) => {
-						return a.label.localeCompare(b.label);
+						return (deepGet<string>(a, "label") ?? "").localeCompare(deepGet(b, "label") ?? "");
 					});
 				}
 			}
