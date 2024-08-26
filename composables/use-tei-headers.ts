@@ -126,7 +126,8 @@ const extractMetadata = function (
 		}
 	}
 	if (template.person.name) {
-		template.label = template.person.name;
+		// this is true only for SHAWI data, needs to be checked in the future.
+		template.label = template.id;
 	} else if (item.teiHeader.fileDesc.titleStmt.titles?.at(0)?.$) {
 		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 		template.label = item.teiHeader.fileDesc.titleStmt.titles.at(0)!.$!;
