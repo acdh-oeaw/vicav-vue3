@@ -31,7 +31,9 @@ const getGroupedItems: ComputedRef<groupedItemType> = function (dataTypesFilter:
 	// Group by country
 	const collectedItems = simpleItems.value
 		.filter((item) => {
-			return dataTypesFilter.includes(item.dataType);
+			return (
+				dataTypesFilter.includes(item.dataType) && (item.dataType !== "CorpusText" || item.hasTEIw)
+			);
 		})
 		.sort((a, b) => {
 			return a.label.localeCompare(b.label);

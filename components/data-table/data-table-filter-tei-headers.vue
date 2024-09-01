@@ -58,7 +58,7 @@ const setColumnFilter = function (column: string, value: string) {
 					</SelectTrigger>
 					<SelectContent>
 						<SelectItem
-							v-for="(dataType, index) in ['CorpusText', 'Feature', 'Sample', 'Profile']"
+							v-for="(dataType, index) in ['CorpusText', 'Feature', 'SampleText', 'Profile']"
 							:key="index"
 							:value="`${dataType}`"
 						>
