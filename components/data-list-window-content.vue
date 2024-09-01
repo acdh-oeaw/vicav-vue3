@@ -102,7 +102,7 @@ const openNewWindowFromAnchor = useAnchorClickHandler();
 						<ul v-for="item in items" :key="item.id">
 							<li class="text-base">
 								<a
-									v-if="item.hasTEIw"
+									v-if="item.dataType !== 'CorpusText' || item.hasTEIw"
 									class="text-primary underline"
 									href="#"
 									:data-target-type="dataTypes[dataType].targetType"
@@ -111,7 +111,6 @@ const openNewWindowFromAnchor = useAnchorClickHandler();
 								>
 									{{ item.label }}
 								</a>
-								<span v-else>{{ item.label }}</span>
 							</li>
 						</ul>
 					</div>
