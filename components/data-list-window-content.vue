@@ -102,7 +102,7 @@ const openNewWindowFromAnchor = useAnchorClickHandler();
 						<ul v-for="item in items" :key="item.id">
 							<li class="text-base">
 								<a
-									v-if="dataType !== 'CorpusText' || item.hasTEIw"
+									v-if="item.hasTEIw"
 									class="text-primary underline"
 									href="#"
 									:data-target-type="dataTypes[dataType].targetType"

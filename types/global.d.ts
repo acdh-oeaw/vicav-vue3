@@ -182,6 +182,17 @@ export const DataListSchema = z.object({
 
 export type DataListWindowItem = WindowItemBase & z.infer<typeof DataListSchema>;
 
+export const DataTableSchema = z.object({
+	targetType: z.literal("DataTable"),
+	params: z
+		.object({
+			dataTypes: z.array(z.enum(["Profile", "Text", "SampleText", "Feature", "CorpusText"])),
+		})
+		.merge(TextId.partial())
+		.merge(TeiSource.partial()),
+});
+export type DataTableWindowItem = WindowItemBase & z.infer<typeof DataTableSchema>;
+
 export const Schema = z.discriminatedUnion("targetType", [
 	BibliographyEntriesSchema,
 	DictQuerySchema,
@@ -195,6 +206,7 @@ export const Schema = z.discriminatedUnion("targetType", [
 	ListMapSchema,
 	GeojsonMapSchema,
 	DataListSchema,
+	DataTableSchema,
 	ExploreSamplesSchema,
 	ExploreSamplesFormSchema,
 ]);

@@ -175,11 +175,16 @@ const extractMetadata = function (item: teiHeader, dataType: string, corpusRaw: 
 			}
 		}
 	}
-	template.label = template.person.name
-		? template.person.name
-		: item.teiHeader.fileDesc.titleStmt.titles
-			? item.teiHeader.fileDesc.titleStmt.titles[0].$
-			: template.place.settlement;
+
+	if (template.dataType === "CorpusText") {
+		template.label = item.teiHeader.fileDesc.titleStmt.titles[0].$;
+	} else {
+		template.label = template.person.name
+			? template.person.name
+			: item.teiHeader.fileDesc.titleStmt.titles
+				? item.teiHeader.fileDesc.titleStmt.titles[0].$
+				: template.place.settlement;
+	}
 
 	template.hasTEIw = item["@hasTEIw"] === "true";
 	return template;
