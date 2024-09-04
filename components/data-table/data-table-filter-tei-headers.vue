@@ -25,7 +25,7 @@ const setDataTypeFilter = function (value: string) {
 };
 
 const setSettlementFilter = function (event: Event) {
-	setColumnFilter("settlement", event.target.value);
+	setColumnFilter("settlement", event.target?.value);
 };
 
 const setColumnFilter = function (column: string, value: string) {
@@ -58,7 +58,13 @@ const setColumnFilter = function (column: string, value: string) {
 					</SelectTrigger>
 					<SelectContent class="bg-white">
 						<SelectItem
-							v-for="(dataType, index) in ['CorpusText', 'Feature', 'SampleText', 'Profile']"
+							v-for="(dataType, index) in [
+								'Feature List',
+								'Sample Text',
+								'Free Speech',
+								'Tunocent Questionnaire',
+								'WAD Questionnaire',
+							]"
 							:key="index"
 							:value="`${dataType}`"
 						>

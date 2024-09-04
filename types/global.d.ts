@@ -243,6 +243,7 @@ export interface simpleTEIMetadata {
 	id: string;
 	label: string;
 	dataType: string;
+	secondaryDataType: string;
 	resp: string;
 	place: {
 		settlement: string;

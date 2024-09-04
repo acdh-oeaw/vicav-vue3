@@ -9,27 +9,44 @@ interface Props {
 	params: DataTableWindowItem["params"];
 }
 
-defineProps<Props>();
+const props = defineProps<Props>();
 
 const { simpleItems } = useTEIHeaders();
 const openNewWindowFromAnchor = useAnchorClickHandler();
 const columnHelper = createColumnHelper<simpleTEIMetadata>();
 
+const items = computed(() => {
+	return simpleItems.value.filter((i) => props.params.dataTypes.includes(i.dataType));
+});
+
 const columns = ref([
-	columnHelper.accessor((row) => row.label, {
+	columnHelper.accessor((row) => row.person.name, {
 		id: "label",
 		cell: (info) => {
 			const identifier =
 				info.getValue() +
 				(info.row.original.person.sex ? `/${info.row.original.person.sex}` : "") +
 				(info.row.original.person.age ? `/${info.row.original.person.age}` : "");
-			return info.row.original.dataType !== "CorpusText" || info.row.original.hasTEIw
+			let linked_id: string | undefined = undefined;
+			let linked_type: string | undefined = undefined;
+			if (info.row.original.secondaryDataType === "Sample Text") {
+				linked_type = "SampleText";
+			} else if (info.row.original.secondaryDataType === "Feature List") {
+				linked_type = "Feature";
+			}
+
+			if (linked_type) {
+				linked_id = simpleItems.value.find((i) => {
+					return i.dataType === linked_type && i.person.name === info.row.original.person.name;
+				})?.id;
+			}
+			return linked_id
 				? h(
 						"a",
 						{
 							class: "underline color-primary",
-							"data-target-type": info.row.original.dataType,
-							"data-text-id": info.row.original.id,
+							"data-target-type": linked_type,
+							"data-text-id": linked_id,
 						},
 						identifier,
 					)
@@ -38,9 +55,11 @@ const columns = ref([
 		header: "Name",
 		footer: (props) => props.column.id,
 	}),
-	columnHelper.accessor((row) => row.dataType, {
+	columnHelper.accessor((row) => row.secondaryDataType, {
 		id: "dataType",
-		cell: (info) => info.getValue(),
+		cell: (info) => {
+			return info.getValue();
+		},
 		header: "Data type",
 		footer: (props) => props.column.id,
 	}),
@@ -77,7 +96,7 @@ const setFilters = function (value: ColumnFiltersState) {
 			<DataTablePagination v-if="tables" :table="tables" />
 		</div>
 		<DataTable
-			:items="simpleItems"
+			:items="items"
 			:columns="columns"
 			@click="openNewWindowFromAnchor"
 			@table-ready="registerTable"

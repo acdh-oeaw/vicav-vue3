@@ -61,6 +61,11 @@ interface teiHeader {
 					location?: { geo: teiStringNode };
 				};
 			};
+			textClass?: {
+				catRef: {
+					"@target": string;
+				};
+			};
 		};
 	};
 	"@hasTEIw": string;
@@ -91,6 +96,7 @@ const extractMetadata = function (item: teiHeader, dataType: string, corpusRaw: 
 		},
 		resp: "",
 		dataType: "",
+		secondaryDataType: "",
 		label: "",
 		hasTEIw: false,
 	} as simpleTEIMetadata;
@@ -162,6 +168,27 @@ const extractMetadata = function (item: teiHeader, dataType: string, corpusRaw: 
 					template.person.age = person["@age"];
 				}
 			}
+		}
+
+		const subtype = item.teiHeader.profileDesc?.textClass?.catRef
+			? item.teiHeader.profileDesc.textClass.catRef["@target"]
+			: "";
+		switch (subtype) {
+			case "corpus:textClass.ST":
+				template.secondaryDataType = "Sample Text";
+				break;
+			case "corpus:textClass.FL":
+				template.secondaryDataType = "Feature List";
+				break;
+			case "corpus:textClass.FS":
+				template.secondaryDataType = "Free Speech";
+				break;
+			case "corpus:textClass.TUN":
+				template.secondaryDataType = "Tunocent Questionnaire";
+				break;
+			case "corpus:textClass.WAD":
+				template.secondaryDataType = "WAD Questionnaire";
+				break;
 		}
 	} else {
 		const person = item.teiHeader.profileDesc?.particDesc?.person;
