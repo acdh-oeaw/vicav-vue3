@@ -18,8 +18,10 @@ const { data: projectData } = useProjectInfo();
 const createId = function (params: Zod.infer<typeof GeoMapSchema>["params"]): ItemId {
 	let endpoint = params.endpoint,
 		queryString = params.queryString,
-		scope = params.scope?.join(",") ?? "";
-	return `${endpoint}:${queryString}:${scope}`;
+		scope = params.scope?.join(",") ?? "",
+		queryParams = Object.values(params.queryParams ?? {}).join(",");
+
+	return `${endpoint}:${queryString}:${scope}:${queryParams}`;
 };
 
 const itemsById = computed(() => {

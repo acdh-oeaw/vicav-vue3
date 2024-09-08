@@ -9,7 +9,6 @@ import {
 	ComboboxItem,
 	ComboboxItemIndicator,
 	ComboboxRoot,
-	ComboboxTrigger,
 	ComboboxViewport,
 	TagsInputInput,
 	TagsInputItem,
@@ -21,6 +20,7 @@ import {
 interface Tag {
 	label: string;
 	value: string;
+	heading: boolean;
 }
 
 interface Props {
@@ -30,18 +30,34 @@ interface Props {
 
 const props = defineProps<Props>();
 const { options, placeholder } = toRefs(props);
-
+const searchTerm = ref("");
 const model = defineModel<Array<string>>();
+const open = ref(false);
+
+watch(
+	model,
+	() => {
+		searchTerm.value = "";
+		open.value = false;
+	},
+	{ deep: true },
+);
 </script>
 
 <template>
-	<ComboboxRoot v-model="model" multiple class="mx-auto my-4 w-full">
+	<ComboboxRoot
+		v-model="model"
+		v-model:search-term="searchTerm"
+		v-model:open="open"
+		multiple
+		class="mx-auto w-full"
+	>
 		<ComboboxAnchor class="w-full">
 			<TagsInputRoot
 				v-slot="{ modelValue: tags }"
 				:model-value="model"
 				delimiter=""
-				class="my-2 flex w-full flex-wrap items-center gap-2 rounded-lg border px-3 py-2 shadow"
+				class="my-2 flex w-full flex-wrap items-center gap-2 border-gray-300 bg-white px-3 py-2 shadow"
 			>
 				<TagsInputItem
 					v-for="item in tags"
@@ -60,15 +76,11 @@ const model = defineModel<Array<string>>();
 				<ComboboxInput as-child>
 					<TagsInputInput
 						:placeholder="placeholder"
-						class="flex flex-wrap items-center gap-2 rounded !bg-transparent px-1 focus:outline-none"
+						class="flex flex-1 flex-wrap items-center gap-2 rounded !bg-transparent px-1 focus:outline-none"
 						@keydown.enter.prevent
 					/>
 				</ComboboxInput>
 			</TagsInputRoot>
-
-			<ComboboxTrigger>
-				<Icon icon="radix-icons:chevron-down" class="h-4 w-4 text-secondary" />
-			</ComboboxTrigger>
 		</ComboboxAnchor>
 		<ComboboxContent
 			class="z-10 mt-2 w-full overflow-hidden rounded bg-white shadow-[0px_10px_38px_-10px_rgba(22,_23,_24,_0.35),_0px_10px_20px_-15px_rgba(22,_23,_24,_0.2)] will-change-[opacity,transform]"
@@ -88,7 +100,11 @@ const model = defineModel<Array<string>>();
 						>
 							<Icon icon="radix-icons:check" />
 						</ComboboxItemIndicator>
-						<span>
+
+						<strong v-if="option.heading">
+							{{ option.label }}
+						</strong>
+						<span v-else>
 							{{ option.label }}
 						</span>
 					</ComboboxItem>

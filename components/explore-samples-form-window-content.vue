@@ -54,11 +54,14 @@ countries.forEach((country) => {
 		options.push({
 			label: region + " (region)",
 			value: "region:" + region,
+			heading: true,
 		});
 
 		const settlements = Array.from(
 			new Set(
-				countryItems.filter((item) => item.place.region === region).map((item) => item.place.name),
+				countryItems
+					.filter((item) => item.place.region === region)
+					.map((item) => item.place.settlement),
 			),
 		).sort();
 
@@ -103,9 +106,8 @@ const openSearchResultsWindow = function () {
 	const personsFilter = simpleItems.value
 		.filter((item) => {
 			if (!params.value.dataTypes.includes(item.dataType)) return false;
-			if (persons.value.length > 0 && persons.value.includes(item.person.name)) return true;
-
-			if (places.value.length > 0) {
+			if (persons.value.length > 0) return persons.value.includes(item.person.name);
+			else if (places.value.length > 0) {
 				const found = places.value.map((place) => {
 					const p = place.split(":");
 					if (p[0] === "region" && item.place.region === p[1]) return true;
@@ -121,7 +123,7 @@ const openSearchResultsWindow = function () {
 
 			return true;
 		})
-		.map((item) => item.person.name);
+		.map((item) => item.id);
 
 	addWindow({
 		targetType: "ExploreSamples",
@@ -134,9 +136,30 @@ const openSearchResultsWindow = function () {
 					? features.value.join(",")
 					: sentences.value.join(","),
 			translation: translation.value,
-			person: personsFilter.join(","),
+			ids: personsFilter.join(","),
+			page: 1,
 		},
 		title: `Search results for ${[words.value.join(","), places.value.join(",")].join(", ")}`,
+	} as WindowState);
+
+	addWindow({
+		targetType: "WMap",
+		params: {
+			queryString: "",
+			endpoint: "compare_markers",
+			queryParams: {
+				type: dataTypes[params.value.dataTypes[0]].collection.replace("vicav_", ""),
+				word: words.value.join(","),
+				comment: comment.value,
+				features:
+					params.value.dataTypes[0] === "Feature"
+						? features.value.join(",")
+						: sentences.value.join(","),
+				translation: translation.value,
+				ids: personsFilter.join(","),
+			},
+		},
+		title: `#{params.value.dataTypes[0]}s for ${[words.value.join(","), places.value.join(",")].join(", ")}`,
 	} as WindowState);
 };
 </script>
@@ -256,7 +279,7 @@ const openSearchResultsWindow = function () {
 				<TagsInputRoot
 					v-model="sentences"
 					delimiter=""
-					class="my-2 flex w-full flex-wrap items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 shadow"
+					class="my-2 flex w-full flex-wrap items-center gap-2 border border-gray-300 bg-white px-3 py-2 shadow"
 				>
 					<TagsInputItem
 						v-for="item in sentences"
@@ -272,7 +295,7 @@ const openSearchResultsWindow = function () {
 
 					<TagsInputInput
 						placeholder="Filter sentences..."
-						class="flex flex-wrap items-center gap-2 rounded !bg-transparent px-1 focus:outline-none"
+						class="flex flex-wrap items-center gap-2 !bg-transparent px-1 focus:outline-none"
 					/>
 				</TagsInputRoot>
 			</div>

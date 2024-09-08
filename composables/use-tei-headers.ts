@@ -55,7 +55,7 @@ interface teiHeader {
 			settingDesc?: {
 				place: {
 					placeName?: teiStringNode;
-					settlement?: { name: Array<teiSettlement> };
+					settlement?: { name?: Array<teiSettlement>; placeName?: teiStringNode };
 					region?: teiStringNode;
 					country?: teiStringNode;
 					location?: { geo: teiStringNode };
@@ -110,12 +110,15 @@ const extractMetadata = function (item: teiHeader, dataType: string, corpusRaw: 
 	);
 	if (dataTypeObject) template.dataType = dataTypeObject.targetType;
 
+	let placeName;
 	if (place?.placeName) {
-		template.place.settlement = place.placeName.$;
+		placeName = place.placeName;
+	} else if (place?.settlement?.placeName) {
+		placeName = place.settlement.placeName;
 	} else if (place?.settlement?.name) {
-		const placeName = place.settlement.name.find((n) => n["@lang"] === "en");
-		if (placeName) template.place.settlement = placeName.$;
+		placeName = place.settlement.name.find((n) => n["@lang"] === "en");
 	}
+	if (placeName) template.place.settlement = placeName.$;
 
 	if (place?.region) {
 		template.place.region = place.region.$;

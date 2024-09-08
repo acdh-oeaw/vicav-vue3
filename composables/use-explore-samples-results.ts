@@ -12,17 +12,17 @@ export function useExploreSamplesResult(
 
 	return useQuery({
 		enabled: options?.enabled,
-		queryKey: ["get-explore-samples", params] as const,
+		queryKey: ["get-compare", params] as const,
 		async queryFn({ queryKey: [, params] }) {
-			const response = await api.vicav.getExploreSamples(
+			const response = await api.vicav.getCompare(
 				{
 					type: dataTypes[params.dataType]?.collection.replace("vicav_", ""),
 					word: params.word,
 					features: params.features,
 					comment: params.comment,
 					translation: params.translation,
-					person: params.person,
-					xslt: dataTypes[params.dataType]?.explore_xslt,
+					ids: params.ids,
+					page: params.page,
 				},
 				{ headers: { accept: "application/xml" } },
 			);
