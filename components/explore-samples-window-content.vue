@@ -13,30 +13,34 @@ const tooltip: Ref<HTMLElement | undefined> = ref();
 const { simpleItems } = useTEIHeaders();
 
 const filters = ["region", "place"];
-const ids = params.value.ids
-	? params.value.ids
-	: simpleItems.value
-			.filter((item) => params.value.dataType === item.dataType)
-			.filter((item) => {
-				if (!params.value.region && !params.value.place) return true;
-				const filter_results = filters.map((key) => {
-					if (params.value[key]) return params.value[key] === item.place[key];
-				});
-				return filter_results.includes(true);
-			})
-			.filter((item) => {
-				if (params.value.person) {
-					return params.value.person === item.person.name;
-				} else return true;
-			})
-			.map((item) => item.id)
-			.join(",");
+const ids = computed(() => {
+	return params.value.ids
+		? params.value.ids
+		: simpleItems.value
+				.filter((item) => params.value.dataType === item.dataType)
+				.filter((item) => {
+					if (!params.value.region && !params.value.place) return true;
+					const filter_results = filters.map((key) => {
+						if (params.value[key]) return params.value[key] === item.place[key];
+					});
+					return filter_results.includes(true);
+				})
+				.filter((item) => {
+					if (params.value.person) {
+						return params.value.person === item.person.name;
+					} else return true;
+				})
+				.map((item) => item.id)
+				.join(",");
+});
 
 const features: Ref<Array<string>> = ref([]);
-if (params.value.features) features.value = params.value.features.split(",");
-
 const page: Ref<number> = ref(1);
-if (params.value.page) page.value = params.value.page;
+
+watch(params, (value) => {
+	if (value.features) features.value = value.features.split(",");
+	if (value.page) page.value = value.page;
+});
 
 const extractedParams = computed(() => {
 	return {
@@ -62,7 +66,7 @@ const isLoading = computed(() => {
 const { findWindowByTypeAndParam } = useWindowsStore();
 
 watch(page, () => {
-	const window = findWindowByTypeAndParam("ExploreSamples", "ids", ids);
+	const window = findWindowByTypeAndParam("ExploreSamples", "ids", ids.value);
 	window.value.params.page = page.value;
 });
 

@@ -36,9 +36,7 @@ const itemsById = computed(() => {
 		},
 		[] as Array<Zod.infer<typeof GeoMapSubnavItemSchema>>,
 	);
-
 	if (items == null) return new Map<ItemId, Zod.infer<typeof GeoMapSubnavItemSchema>>();
-
 	return keyByToMap(items, (item) => item.id);
 });
 
@@ -64,8 +62,7 @@ const onMarkerClick = useMarkerClickHandler();
 const queries = useGeoMarkerLayers(
 	computed(() => {
 		return Array.from(selected.value).map((id) => {
-			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-			return itemsById.value.get(id)!.params as Required<GeoTargetTypeParameters>;
+			return itemsById.value.get(id)?.params as Required<GeoTargetTypeParameters>;
 		});
 	}),
 );
@@ -83,7 +80,7 @@ const markers = computed(() => {
 <template>
 	<div class="relative isolate grid h-full w-full grid-rows-[auto_1fr]">
 		<GeoMapToolbar
-			v-if="itemsById.size > 0"
+			v-if="itemsById.size > 0 && !params.hideDefaultLayers"
 			:options="itemsById"
 			:selected="selected"
 			@select="onSelect"

@@ -145,6 +145,7 @@ export const GeoMapSchema = z.object({
 			endpoint: z.string(),
 			queryParams: ExploreSamplesQueryDbParams.optional(),
 			scope: z.array(GeoMapScope).optional(),
+			hideDefaultLayers: z.boolean().optional(),
 		}),
 	),
 });

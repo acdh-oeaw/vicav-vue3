@@ -14,7 +14,10 @@ import {
 	TagsInputRoot,
 } from "radix-vue";
 
-import type { ExploreSamplesFormWindowItem } from "@/types/global.d";
+import dataTypes from "@/config/dataTypes";
+import type { ExploreSamplesFormWindowItem, WindowItem } from "@/types/global.d";
+
+const { findWindowByTypeAndParam } = useWindowsStore();
 
 interface Props {
 	params: ExploreSamplesFormWindowItem["params"];
@@ -30,6 +33,9 @@ interface Tag {
 	label: string;
 	value: string;
 }
+
+const mapWindow: Ref<WindowItem | null> = ref(null);
+const resultsWindow: Ref<WindowItem | null> = ref(null);
 
 const places = ref([]);
 const words = ref([]);
@@ -99,11 +105,9 @@ const sex = computed(() => {
 	if (female.value) result.push("f");
 	return result;
 });
-/**
- * Intercept anchor clicks to open window instead of navigating.
- */
-const openSearchResultsWindow = function () {
-	const personsFilter = simpleItems.value
+
+const personsFilter = computed(() =>
+	simpleItems.value
 		.filter((item) => {
 			if (!params.value.dataTypes.includes(item.dataType)) return false;
 			if (persons.value.length > 0) return persons.value.includes(item.person.name);
@@ -112,7 +116,7 @@ const openSearchResultsWindow = function () {
 					const p = place.split(":");
 					if (p[0] === "region" && item.place.region === p[1]) return true;
 					if (p[0] === "country" && item.place.country === p[1]) return true;
-					if (p[0] === item.place.name) return true;
+					if (p[0] === item.place.settlement) return true;
 				});
 				if (!found.includes(true)) return false;
 			}
@@ -123,44 +127,86 @@ const openSearchResultsWindow = function () {
 
 			return true;
 		})
-		.map((item) => item.id);
+		.map((item) => item.id),
+);
 
-	addWindow({
-		targetType: "ExploreSamples",
-		params: {
-			dataType: params.value.dataTypes[0],
-			word: words.value.join(","),
-			comment: comment.value,
-			features:
-				params.value.dataTypes[0] === "Feature"
-					? features.value.join(",")
-					: sentences.value.join(","),
-			translation: translation.value,
-			ids: personsFilter.join(","),
-			page: 1,
-		},
-		title: `Search results for ${[words.value.join(","), places.value.join(",")].join(", ")}`,
-	} as WindowState);
+const resultParams = computed(() => {
+	return {
+		word: words.value.join(","),
+		comment: comment.value,
+		features:
+			params.value.dataTypes[0] === "Feature"
+				? features.value.join(",")
+				: sentences.value.join(","),
+		translation: translation.value,
+		ids: personsFilter.value.join(","),
+	};
+});
 
-	addWindow({
-		targetType: "WMap",
-		params: {
-			queryString: "",
-			endpoint: "compare_markers",
-			queryParams: {
-				type: dataTypes[params.value.dataTypes[0]].collection.replace("vicav_", ""),
-				word: words.value.join(","),
-				comment: comment.value,
-				features:
-					params.value.dataTypes[0] === "Feature"
-						? features.value.join(",")
-						: sentences.value.join(","),
-				translation: translation.value,
-				ids: personsFilter.join(","),
+const resultWindowParams = computed(() => {
+	return Object.assign(resultParams.value, {
+		dataType: params.value.dataTypes[0],
+		page: 1,
+	});
+});
+
+const queryParams = computed(() => {
+	return Object.assign(resultParams.value, {
+		type: dataTypes[params.value.dataTypes[0]].collection.replace("vicav_", ""),
+	});
+});
+
+/**
+ * Intercept anchor clicks to open window instead of navigating.
+ */
+const openSearchResultsWindow = function () {
+	resultsWindow.value = findWindowByTypeAndParam(
+		"ExploreSamples",
+		"dataType",
+		params.value.dataTypes[0],
+	);
+	mapWindow.value = findWindowByTypeAndParam("WMap", "queryParams.type", queryParams.value.type);
+
+	if (!resultsWindow.value)
+		resultsWindow.value = addWindow({
+			targetType: "ExploreSamples",
+			params: resultWindowParams.value,
+			title: `Search results for ${[words.value.join(","), places.value.join(",")].join(", ")}`,
+		} as WindowState);
+	else {
+		resultsWindow.value.params = resultWindowParams.value;
+		resultsWindow.value.winbox.setTitle(
+			`Search results for ${[words.value.join(","), places.value.join(",")].join(", ")}`,
+		);
+		resultsWindow.value.winbox.focus();
+		resultsWindow.value.winbox.addClass("highlighted");
+		setTimeout(() => {
+			resultsWindow.value.winbox.removeClass("highlighted");
+		}, 1000);
+	}
+
+	if (!mapWindow.value)
+		mapWindow.value = addWindow({
+			targetType: "WMap",
+			params: {
+				hideDefaultLayers: true,
+				queryString: "",
+				endpoint: "compare_markers",
+				queryParams: queryParams.value,
 			},
-		},
-		title: `#{params.value.dataTypes[0]}s for ${[words.value.join(","), places.value.join(",")].join(", ")}`,
-	} as WindowState);
+			title: `${params.value.dataTypes[0]}s for ${[words.value.join(","), places.value.join(",")].join(", ")}`,
+		} as WindowState);
+	else {
+		mapWindow.value.params.queryParams = queryParams;
+		mapWindow.value.winbox.setTitle(
+			`Search results for ${[words.value.join(","), places.value.join(",")].join(", ")}`,
+		);
+		mapWindow.value.winbox.focus();
+		mapWindow.value.winbox.addClass("highlighted");
+		setTimeout(() => {
+			mapWindow.value.winbox.removeClass("highlighted");
+		}, 1000);
+	}
 };
 </script>
 

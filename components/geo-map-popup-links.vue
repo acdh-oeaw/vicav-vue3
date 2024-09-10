@@ -20,6 +20,7 @@ const props = defineProps<{
 				href="/"
 				:data-text-id="marker.properties.textId"
 				:data-target-type="marker.properties.targetType"
+				:data-data-type="marker.properties.params.dataType"
 				:data-ids="marker.properties.params.ids"
 				:data-features="marker.properties.params.features"
 				:data-word="marker.properties.params.word"

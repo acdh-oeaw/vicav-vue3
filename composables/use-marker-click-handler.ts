@@ -13,7 +13,7 @@ export function useMarkerClickHandler() {
 		const item = feature.properties;
 		addWindow({
 			targetType: item.targetType,
-			params: item,
+			params: item.params ? item.params : item,
 			title: item.name ? item.name : "",
 		} as WindowState);
 	}
