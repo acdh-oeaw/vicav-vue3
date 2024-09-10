@@ -28,7 +28,6 @@
 	--radius-sm: 4px;
 	--radius-md: 6px;
 	--radius-lg: 8px;
-	--font-sans: "Roboto Flex Variable";
 
 	@apply bg-background text-on-background font-body;
 }
