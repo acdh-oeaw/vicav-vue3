@@ -80,7 +80,7 @@ const markers = computed(() => {
 <template>
 	<div class="relative isolate grid h-full w-full grid-rows-[auto_1fr]">
 		<GeoMapToolbar
-			v-if="itemsById.size > 0 && !params.hideDefaultLayers"
+			v-if="itemsById.size > 0"
 			:options="itemsById"
 			:selected="selected"
 			@select="onSelect"

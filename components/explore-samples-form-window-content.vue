@@ -190,7 +190,7 @@ const openSearchResultsWindow = function () {
 		mapWindow.value = addWindow({
 			targetType: "WMap",
 			params: {
-				hideDefaultLayers: true,
+				title: "Search results",
 				queryString: "",
 				endpoint: "compare_markers",
 				queryParams: queryParams.value,
