@@ -276,6 +276,11 @@ export const useWindowsStore = defineStore("windows", () => {
 		}
 	}
 
+	watch([() => registry.value.size, arrangement], () => {
+		arrangeWindows();
+		updateUrl();
+	});
+
 	function serializeWindowStates() {
 		const windowStates: Array<WindowState> = [];
 
