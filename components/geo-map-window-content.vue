@@ -18,8 +18,10 @@ const { data: projectData } = useProjectInfo();
 const createId = function (params: Zod.infer<typeof GeoMapSchema>["params"]): ItemId {
 	let endpoint = params.endpoint,
 		queryString = params.queryString,
-		scope = params.scope?.join(",") ?? "";
-	return `${endpoint}:${queryString}:${scope}`;
+		scope = params.scope?.join(",") ?? "",
+		queryParams = Object.values(params.queryParams ?? {}).join(",");
+
+	return `${endpoint}:${queryString}:${scope}:${queryParams}`;
 };
 
 const itemsById = computed(() => {
@@ -34,16 +36,14 @@ const itemsById = computed(() => {
 		},
 		[] as Array<Zod.infer<typeof GeoMapSubnavItemSchema>>,
 	);
-
 	if (items == null) return new Map<ItemId, Zod.infer<typeof GeoMapSubnavItemSchema>>();
-
 	return keyByToMap(items, (item) => item.id);
 });
 
 const id = createId(params.value);
 if (!itemsById.value.has(id)) {
 	itemsById.value.set(id, {
-		title: id,
+		title: params.value.title ?? id,
 		params: params.value,
 	} as Zod.infer<typeof GeoMapSubnavItemSchema>);
 }
@@ -62,8 +62,7 @@ const onMarkerClick = useMarkerClickHandler();
 const queries = useGeoMarkerLayers(
 	computed(() => {
 		return Array.from(selected.value).map((id) => {
-			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-			return itemsById.value.get(id)!.params as Required<GeoTargetTypeParameters>;
+			return itemsById.value.get(id)?.params as Required<GeoTargetTypeParameters>;
 		});
 	}),
 );

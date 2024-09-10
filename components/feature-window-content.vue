@@ -60,15 +60,15 @@ const isLoading = computed(() => {
 }
 
 .tdFeaturesHead {
-	@apply border border-solid border-primary bg-primary text-on-primary text-lg;
+	@apply border border-solid border-primary text-primary text-lg;
 }
 
 .tdFeaturesHeadRight {
-	@apply align-top pr-[5px] border border-solid border-primary text-on-primary text-lg text-right;
+	@apply align-top pr-[5px] border border-solid border-primary text-primary text-lg text-right;
 }
 
 .tdFeaturesLeft {
-	@apply align-top w-[110px] pl-[3px] border border-solid border-primary bg-on-primary text-primary;
+	@apply align-top w-[110px] pl-[3px] border border-solid border-primary text-primary;
 }
 
 .iFeaturesTrans {
@@ -80,7 +80,7 @@ const isLoading = computed(() => {
 }
 
 .tdFeaturesRightTarget {
-	@apply align-top w-4/5 pl-[3px] border border-solid border-primary bg-on-primary text-[#a58103] italic;
+	@apply align-top w-4/5 pl-[3px] border border-solid border-primary bg-on-primary italic;
 }
 
 a.word-search {
@@ -90,7 +90,7 @@ a.word-search {
 .w,
 .phr,
 .pc {
-	@apply text-inherit not-italic no-underline;
+	@apply text-inherit not-italic no-underline font-normal text-base text-secondary;
 }
 
 .w.sample-text-tooltip {

@@ -27,8 +27,8 @@ export const QueryString = z.object({
 	queryString: z.string(),
 });
 
-export const ExploreSamplesQueryParams = z.object({
-	dataType: z.string(),
+export const ExploreSamplesQueryBase = z.object({
+	ids: z.string().optional(),
 	word: z.string().optional(),
 	person: z.string().optional(),
 	region: z.string().optional(),
@@ -36,7 +36,20 @@ export const ExploreSamplesQueryParams = z.object({
 	translation: z.string().optional(),
 	comment: z.string().optional(),
 	features: z.string().optional(),
+	page: z.number().optional(),
 });
+
+export const ExploreSamplesQueryParams = ExploreSamplesQueryBase.merge(
+	z.object({
+		dataType: z.enum(["SampleText", "Feature"]),
+	}),
+);
+
+export const ExploreSamplesQueryDbParams = ExploreSamplesQueryBase.merge(
+	z.object({
+		type: z.enum(["samples", "lingfeatures"]),
+	}),
+);
 
 export const ExploreSamplesFormParams = z.object({
 	dataTypes: z.array(z.enum(["Profile", "Text", "SampleText", "Feature", "CorpusText"])),
@@ -53,7 +66,7 @@ export const ExploreSamplesFormSchema = z.object({
 	targetType: z.literal("ExploreSamplesForm"),
 	params: z
 		.object({
-			dataTypes: z.array(z.enum(["Profile", "Text", "SampleText", "Feature", "CorpusText"])),
+			dataTypes: z.array(z.enum(["SampleText", "Feature"])),
 		})
 		.merge(TextId.partial())
 		.merge(TeiSource.partial()),
@@ -122,13 +135,18 @@ export const FeatureSchema = z.object({
 });
 export type FeatureWindowItem = WindowItemBase & z.infer<typeof FeatureSchema>;
 
+export const CompareMarkersParams = z.object();
+
 export const GeoMapScope = z.enum(["reg", "geo", "diaGroup"]);
 export const GeoMapSchema = z.object({
 	targetType: z.literal("WMap"),
 	params: QueryString.merge(
 		z.object({
+			title: z.string().optional(),
 			endpoint: z.string(),
+			queryParams: ExploreSamplesQueryDbParams.optional(),
 			scope: z.array(GeoMapScope).optional(),
+			hideDefaultLayers: z.boolean().optional(),
 		}),
 	),
 });
@@ -182,6 +200,17 @@ export const DataListSchema = z.object({
 
 export type DataListWindowItem = WindowItemBase & z.infer<typeof DataListSchema>;
 
+export const DataTableSchema = z.object({
+	targetType: z.literal("DataTable"),
+	params: z
+		.object({
+			dataTypes: z.array(z.enum(["Profile", "Text", "SampleText", "Feature", "CorpusText"])),
+		})
+		.merge(TextId.partial())
+		.merge(TeiSource.partial()),
+});
+export type DataTableWindowItem = WindowItemBase & z.infer<typeof DataTableSchema>;
+
 export const Schema = z.discriminatedUnion("targetType", [
 	BibliographyEntriesSchema,
 	DictQuerySchema,
@@ -195,6 +224,7 @@ export const Schema = z.discriminatedUnion("targetType", [
 	ListMapSchema,
 	GeojsonMapSchema,
 	DataListSchema,
+	DataTableSchema,
 	ExploreSamplesSchema,
 	ExploreSamplesFormSchema,
 ]);
@@ -231,6 +261,7 @@ export interface simpleTEIMetadata {
 	id: string;
 	label: string;
 	dataType: string;
+	secondaryDataType: string;
 	resp: string;
 	place: {
 		settlement: string;

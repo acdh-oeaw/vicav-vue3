@@ -31,7 +31,9 @@ const getGroupedItems: ComputedRef<groupedItemType> = function (dataTypesFilter:
 	// Group by country
 	const collectedItems = simpleItems.value
 		.filter((item) => {
-			return dataTypesFilter.includes(item.dataType);
+			return (
+				dataTypesFilter.includes(item.dataType) && (item.dataType !== "CorpusText" || item.hasTEIw)
+			);
 		})
 		.sort((a, b) => {
 			return a.label.localeCompare(b.label);
@@ -102,7 +104,7 @@ const openNewWindowFromAnchor = useAnchorClickHandler();
 						<ul v-for="item in items" :key="item.id">
 							<li class="text-base">
 								<a
-									v-if="dataType !== 'CorpusText' || item.hasTEIw"
+									v-if="item.dataType !== 'CorpusText' || item.hasTEIw"
 									class="text-primary underline"
 									href="#"
 									:data-target-type="dataTypes[dataType].targetType"
@@ -111,7 +113,6 @@ const openNewWindowFromAnchor = useAnchorClickHandler();
 								>
 									{{ item.label }}
 								</a>
-								<span v-else>{{ item.label }}</span>
 							</li>
 						</ul>
 					</div>

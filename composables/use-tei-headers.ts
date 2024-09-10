@@ -55,10 +55,15 @@ interface teiHeader {
 			settingDesc?: {
 				place: {
 					placeName?: teiStringNode;
-					settlement?: { name: Array<teiSettlement> };
+					settlement?: { name?: Array<teiSettlement>; placeName?: teiStringNode };
 					region?: teiStringNode;
 					country?: teiStringNode;
 					location?: { geo: teiStringNode };
+				};
+			};
+			textClass?: {
+				catRef: {
+					"@target": string;
 				};
 			};
 		};
@@ -91,6 +96,7 @@ const extractMetadata = function (item: teiHeader, dataType: string, corpusRaw: 
 		},
 		resp: "",
 		dataType: "",
+		secondaryDataType: "",
 		label: "",
 		hasTEIw: false,
 	} as simpleTEIMetadata;
@@ -104,12 +110,15 @@ const extractMetadata = function (item: teiHeader, dataType: string, corpusRaw: 
 	);
 	if (dataTypeObject) template.dataType = dataTypeObject.targetType;
 
+	let placeName;
 	if (place?.placeName) {
-		template.place.settlement = place.placeName.$;
+		placeName = place.placeName;
+	} else if (place?.settlement?.placeName) {
+		placeName = place.settlement.placeName;
 	} else if (place?.settlement?.name) {
-		const placeName = place.settlement.name.find((n) => n["@lang"] === "en");
-		if (placeName) template.place.settlement = placeName.$;
+		placeName = place.settlement.name.find((n) => n["@lang"] === "en");
 	}
+	if (placeName) template.place.settlement = placeName.$;
 
 	if (place?.region) {
 		template.place.region = place.region.$;
@@ -163,6 +172,27 @@ const extractMetadata = function (item: teiHeader, dataType: string, corpusRaw: 
 				}
 			}
 		}
+
+		const subtype = item.teiHeader.profileDesc?.textClass?.catRef
+			? item.teiHeader.profileDesc.textClass.catRef["@target"]
+			: "";
+		switch (subtype) {
+			case "corpus:textClass.ST":
+				template.secondaryDataType = "Sample Text";
+				break;
+			case "corpus:textClass.FL":
+				template.secondaryDataType = "Feature List";
+				break;
+			case "corpus:textClass.FS":
+				template.secondaryDataType = "Free Speech";
+				break;
+			case "corpus:textClass.TUN":
+				template.secondaryDataType = "Tunocent Questionnaire";
+				break;
+			case "corpus:textClass.WAD":
+				template.secondaryDataType = "WAD Questionnaire";
+				break;
+		}
 	} else {
 		const person = item.teiHeader.profileDesc?.particDesc?.person;
 		if (person) {
@@ -175,11 +205,16 @@ const extractMetadata = function (item: teiHeader, dataType: string, corpusRaw: 
 			}
 		}
 	}
-	template.label = template.person.name
-		? template.person.name
-		: item.teiHeader.fileDesc.titleStmt.titles
-			? item.teiHeader.fileDesc.titleStmt.titles[0].$
-			: template.place.settlement;
+
+	if (template.dataType === "CorpusText") {
+		template.label = item.teiHeader.fileDesc.titleStmt.titles[0].$;
+	} else {
+		template.label = template.person.name
+			? template.person.name
+			: item.teiHeader.fileDesc.titleStmt.titles
+				? item.teiHeader.fileDesc.titleStmt.titles[0].$
+				: template.place.settlement;
+	}
 
 	template.hasTEIw = item["@hasTEIw"] === "true";
 	return template;

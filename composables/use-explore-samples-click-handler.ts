@@ -1,4 +1,7 @@
-export default function useExploreSamplesClickHandler(features: Ref<Array<string>>) {
+export default function useExploreSamplesClickHandler(
+	features: Ref<Array<string>>,
+	page: Ref<number>,
+) {
 	const openNewWindowFromAnchor = useAnchorClickHandler();
 	return function (event: MouseEvent) {
 		const element = event.target as HTMLElement;
@@ -14,7 +17,9 @@ export default function useExploreSamplesClickHandler(features: Ref<Array<string
 		}
 
 		if (item.targetWindow && item.targetWindow === "self") {
-			features.value = item.features?.split(",");
+			const dataFeatures = item.features?.split(",");
+			if (dataFeatures) features.value = dataFeatures;
+			if (item.page) page.value = item.page;
 		} else {
 			openNewWindowFromAnchor(event);
 		}

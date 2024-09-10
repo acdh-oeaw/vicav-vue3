@@ -1,13 +1,15 @@
 <script lang="ts" setup>
 import {
 	type ColumnDef,
+	type ColumnFiltersState,
 	FlexRender,
 	getCoreRowModel,
+	getFilteredRowModel,
 	getPaginationRowModel,
 	useVueTable,
 } from "@tanstack/vue-table";
 
-const emit = defineEmits(["table-ready"]);
+const emit = defineEmits(["table-ready", "columnFiltersChange", "globalFilterChange"]);
 
 interface Props {
 	items: Array<never>;
@@ -16,6 +18,8 @@ interface Props {
 
 const props = defineProps<Props>();
 const { items, columns } = toRefs(props);
+const columnFilters = ref<ColumnFiltersState>([]);
+const globalFilter = ref("");
 
 const table = useVueTable({
 	get data() {
@@ -24,8 +28,27 @@ const table = useVueTable({
 	get columns() {
 		return columns.value;
 	},
+	state: {
+		get columnFilters() {
+			return columnFilters.value;
+		},
+		get globalFilter() {
+			return globalFilter.value;
+		},
+	},
+	onColumnFiltersChange: (updaterOrValue) => {
+		columnFilters.value =
+			typeof updaterOrValue === "function" ? updaterOrValue(columnFilters.value) : updaterOrValue;
+		emit("columnFiltersChange", columnFilters.value);
+	},
+	onGlobalFilterChange: (updaterOrValue) => {
+		globalFilter.value =
+			typeof updaterOrValue === "function" ? updaterOrValue(globalFilter.value) : updaterOrValue;
+		emit("globalFilterChange", globalFilter.value);
+	},
 	getCoreRowModel: getCoreRowModel(),
 	getPaginationRowModel: getPaginationRowModel(),
+	getFilteredRowModel: getFilteredRowModel(),
 });
 
 onMounted(() => {
