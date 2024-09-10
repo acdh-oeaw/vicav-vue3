@@ -43,7 +43,7 @@ const itemsById = computed(() => {
 const id = createId(params.value);
 if (!itemsById.value.has(id)) {
 	itemsById.value.set(id, {
-		title: id,
+		title: params.value.title ?? id,
 		params: params.value,
 	} as Zod.infer<typeof GeoMapSubnavItemSchema>);
 }

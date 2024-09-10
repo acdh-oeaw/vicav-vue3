@@ -213,8 +213,8 @@ export const useWindowsStore = defineStore("windows", () => {
 			if (!paramName1) {
 				windowValue = ci.data.params[paramName] === value;
 			} else if (paramName1 === "queryParams" && paramName2) {
-				const params = ci.data.params as { queryParams: QueryParamsType };
-				windowValue = params.queryParams[paramName2] as string;
+				const params = ci.data.params as { queryParams?: QueryParamsType };
+				windowValue = params.queryParams ? (params.queryParams[paramName2] as string) : undefined;
 			} else {
 				return;
 			}

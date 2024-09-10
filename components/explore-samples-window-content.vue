@@ -126,7 +126,7 @@ watch(isLoading, () => {
 }
 
 .tdFeaturesHeadLeft {
-	@apply align-top w-[110px] pl-[3px] border border-solid border-primary bg-on-primary text-primary;
+	@apply align-top w-[110px] pl-[3px] border border-solid border-primary bg-on-primary text-header;
 }
 
 .iFeaturesTrans {

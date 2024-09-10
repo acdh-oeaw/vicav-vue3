@@ -41,6 +41,7 @@ const places = ref([]);
 const words = ref([]);
 const features = ref([]);
 const sentences = ref([]);
+
 const age: Ref<Array<number>> = ref([0, 100]);
 const male = ref(true);
 const female = ref(true);
@@ -197,7 +198,7 @@ const openSearchResultsWindow = function () {
 			title: `${params.value.dataTypes[0]}s for ${[words.value.join(","), places.value.join(",")].join(", ")}`,
 		} as WindowState);
 	else {
-		mapWindow.value.params.queryParams = queryParams;
+		mapWindow.value.params.queryParams = queryParams.value;
 		mapWindow.value.winbox.setTitle(
 			`Search results for ${[words.value.join(","), places.value.join(",")].join(", ")}`,
 		);
@@ -325,7 +326,7 @@ const openSearchResultsWindow = function () {
 				<TagsInputRoot
 					v-model="sentences"
 					delimiter=""
-					class="my-2 flex w-full flex-wrap items-center gap-2 border border-gray-300 bg-white px-3 py-2 shadow"
+					class="my-2 flex w-full flex-wrap items-center gap-2 bg-white px-3 py-2 shadow"
 				>
 					<TagsInputItem
 						v-for="item in sentences"
@@ -340,8 +341,8 @@ const openSearchResultsWindow = function () {
 					</TagsInputItem>
 
 					<TagsInputInput
-						placeholder="Filter sentences..."
-						class="flex flex-wrap items-center gap-2 !bg-transparent px-1 focus:outline-none"
+						placeholder="Enter sentence numbers. Press enter key to select..."
+						class="flex flex-1 gap-2 !bg-transparent px-1 focus:outline-none"
 					/>
 				</TagsInputRoot>
 			</div>
@@ -370,12 +371,19 @@ const openSearchResultsWindow = function () {
 
 			<button
 				class="inline-block h-10 w-full whitespace-nowrap rounded border-2 border-solid border-primary bg-on-primary text-center align-middle font-bold text-primary hover:bg-primary hover:text-on-primary disabled:border-gray-400 disabled:text-gray-400 hover:disabled:bg-on-primary hover:disabled:text-gray-400"
-				:disabled="words.value === [] && places.value === []"
+				:disabled="
+					words.length === 0 &&
+					translation == '' &&
+					comment == '' &&
+					places.length === 0 &&
+					persons.length === 0 &&
+					features.length === 0 &&
+					sentences.length === 0
+				"
 				@click.prevent.stop="openSearchResultsWindow"
 			>
 				Query
 			</button>
-
 			<br />
 		</form>
 	</div>

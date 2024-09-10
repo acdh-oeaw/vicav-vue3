@@ -142,6 +142,7 @@ export const GeoMapSchema = z.object({
 	targetType: z.literal("WMap"),
 	params: QueryString.merge(
 		z.object({
+			title: z.string().optional(),
 			endpoint: z.string(),
 			queryParams: ExploreSamplesQueryDbParams.optional(),
 			scope: z.array(GeoMapScope).optional(),
