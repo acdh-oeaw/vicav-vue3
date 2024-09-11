@@ -152,13 +152,20 @@ const debugString = debug ? JSON.stringify(groupedItems, null, 2) : "";
 			></textarea>
 		</div>
 		<div v-for="(itemsByRegion, country) in groupedItems" :key="country" class="p-2">
-			<h2 v-if="Object.keys(groupedItems).length > 1" class="text-lg">{{ country }}</h2>
+			<h2 v-if="Object.keys(groupedItems).length > 1 && country !== ''" class="text-lg">
+				{{ country }}
+			</h2>
+			<h2 v-else-if="Object.keys(groupedItems).length > 1" class="text-lg">Unspecified country</h2>
 			<div v-for="(itemsByPlace, region) in itemsByRegion" :key="region" class="p-2 text-base">
-				<h4 class="text-lg italic">{{ region }}</h4>
+				<h4 v-if="region !== ''" class="text-lg italic">{{ region }}</h4>
+				<h4 v-else-if="Object.keys(itemsByRegion).length > 1" class="text-lg italic">
+					Unspecified region
+				</h4>
 				<div v-for="(itemsBydataType, place) in itemsByPlace" :key="place" class="p-2">
-					<h5 class="text-base font-bold">
+					<h5 v-if="place !== ''" class="text-base font-bold">
 						{{ place }}
 					</h5>
+					<h5 v-else class="text-base font-bold">Unspecified place</h5>
 					<div v-for="(items, dataType) in itemsBydataType as groupedByDataType" :key="dataType">
 						<em v-if="params.dataTypes.length > 1" class="text-sm italic">
 							{{ dataTypes[dataType]!.name }}
