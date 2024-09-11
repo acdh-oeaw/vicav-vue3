@@ -60,6 +60,11 @@ function updateQueryParam(queryString: string) {
 		:params="props.item.params"
 	/>
 
+	<DataTableWindowContent
+		v-else-if="props.item.targetType === 'DataTable'"
+		:params="props.item.params"
+	/>
+
 	<ExploreSamplesFormWindowContent
 		v-else-if="props.item.targetType === 'ExploreSamplesForm'"
 		:params="props.item.params"

@@ -2,6 +2,7 @@ import { nanoid } from "nanoid";
 import WinBox from "winbox";
 import { z } from "zod";
 
+import type { QueryParamsType } from "@/lib/api-client";
 import {
 	QueryString,
 	Schema,
@@ -185,6 +186,8 @@ export const useWindowsStore = defineStore("windows", () => {
 			targetType,
 			params,
 		} as WindowItem);
+
+		return registry.value.get(id);
 	}
 
 	function findWindowByTypeAndParam(
@@ -193,16 +196,30 @@ export const useWindowsStore = defineStore("windows", () => {
 		value: string,
 	): WindowItem | null {
 		let foundWindow: WindowItem | null = null;
+		const dot = paramName.indexOf(".");
+		let paramName1: string | undefined, paramName2: string | undefined;
+
+		if (dot !== -1) {
+			paramName1 = paramName.substring(0, dot);
+			paramName2 = paramName.substring(dot + 1);
+		}
+
 		registry.value.forEach((w) => {
 			const ci = Schema.safeParse(w);
+			let windowValue;
 
-			if (
-				foundWindow === null &&
-				w.targetType === targetType &&
-				ci.success &&
-				// @ts-expect-error ListMapSchema Params are not yet typed.
-				ci.data.params[paramName] === value
-			) {
+			if (!ci.success || foundWindow !== null || w.targetType !== targetType) return;
+
+			if (!paramName1) {
+				windowValue = ci.data.params[paramName] as string;
+			} else if (paramName1 === "queryParams" && paramName2) {
+				const params = ci.data.params as { queryParams?: QueryParamsType };
+				windowValue = params.queryParams ? (params.queryParams[paramName2] as string) : undefined;
+			} else {
+				return;
+			}
+
+			if (windowValue === value) {
 				foundWindow = w;
 			}
 		});

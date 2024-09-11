@@ -7,6 +7,7 @@ import type {
 	CorpusQueryWindowItem,
 	CorpusTextWindowItem,
 	DataListWindowItem,
+	DataTableWindowItem,
 	DictQueryWindowItem,
 	ExploreSamplesFormWindowItem,
 	ExploreSamplesWindowItem,
@@ -137,6 +138,13 @@ function onSelectMenuItem(item: ItemType) {
 				targetType: "ExploreSamples",
 				title: item.label ?? "",
 				params: item.params as ExploreSamplesWindowItem["params"],
+			};
+			break;
+		case "DataTable":
+			newWindowState = {
+				targetType: "DataTable",
+				title: item.label ?? "",
+				params: item.params as DataTableWindowItem["params"],
 			};
 			break;
 		default:

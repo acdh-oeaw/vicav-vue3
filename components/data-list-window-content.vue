@@ -68,7 +68,10 @@ const getGroupedItems = function (dataTypesFilter: Array<string>) {
 	// Group by country
 	const collectedItems = simpleItems.value
 		.filter((item) => {
-			return dataTypesFilter.includes(deepGet(item, "dataType") ?? "");
+			return (
+				dataTypesFilter.includes(deepGet(item, "dataType") ?? "") &&
+				((deepGet(item, "dataType") ?? "") !== "CorpusText" || (deepGet(item, "hasTEIw") ?? false))
+			);
 		})
 		.sort((a, b) => {
 			return (deepGet<string>(a, "label") ?? "").localeCompare(deepGet(b, "label") ?? "");
@@ -163,7 +166,7 @@ const debugString = debug ? JSON.stringify(groupedItems, null, 2) : "";
 						<ul v-for="item in items" :key="item.id">
 							<li class="text-base">
 								<a
-									v-if="dataType !== 'CorpusText' || item.hasTEIw"
+									v-if="item.dataType !== 'CorpusText' || item.hasTEIw"
 									class="text-primary underline"
 									href="#"
 									:data-target-type="dataTypes[dataType]!.targetType"
@@ -172,7 +175,6 @@ const debugString = debug ? JSON.stringify(groupedItems, null, 2) : "";
 								>
 									{{ item.label }}
 								</a>
-								<span v-else>{{ item.label }}</span>
 								<span v-if="item.teiHeader.fileDesc.sourceDesc.recordingStmt">
 									&nbsp; {{ item.teiHeader.fileDesc.sourceDesc.recordingStmt.recording["@type"] }}
 									<span v-if="item.teiHeader.fileDesc.sourceDesc.recordingStmt.recording.media">

@@ -15,6 +15,76 @@ import dataTypes from "../config/dataTypes";
 
 type RawTEIItems = ComputedRef<Array<TeiCorpus>>;
 
+interface teiStringNode {
+	$: string;
+}
+
+interface teiPersName {
+	"@id": string;
+	"@full"?: string;
+	$?: string;
+	"@forename"?: string;
+	"@surname"?: string;
+}
+interface teiPersNameRef {
+	"@ref": string;
+}
+
+interface RespStmt {
+	persName?: teiPersName | teiPersNameRef;
+}
+
+interface teiPerson {
+	"@sameAs"?: string;
+	"@id"?: string;
+	"@sex": string;
+	"@age": string;
+	$: string;
+}
+
+interface teiHeader {
+	"@id": string;
+	teiHeader: {
+		fileDesc: {
+			titleStmt: {
+				titles?: Array<teiStringNode>;
+				respStmts: Array<RespStmt>;
+			};
+			publicationStmt: { idno?: teiStringNode };
+		};
+		profileDesc?: {
+			taxonomy?: { category: { "@id": string; $: string } };
+			particDesc?: {
+				person?: teiPerson;
+				listPerson?: Array<teiPerson>;
+			};
+			settingDesc?: {
+				place: {
+					placeName?: teiStringNode;
+					settlement?: { name?: Array<teiSettlement>; placeName?: teiStringNode };
+					region?: teiStringNode;
+					country?: teiStringNode;
+					location?: { geo: teiStringNode };
+				};
+			};
+			textClass?: {
+				catRef: {
+					"@target": string;
+				};
+			};
+		};
+	};
+	"@hasTEIw": string;
+}
+
+interface TEIs {
+	"@id": string;
+	teiHeader?: teiHeader;
+	TEIs: Array<teiHeader>;
+}
+
+type RawTEIItems = ComputedRef<Array<TEIs | object>>;
+
 const extractMetadata = function (
 	item: TEI,
 	dataType: string,
@@ -35,6 +105,7 @@ const extractMetadata = function (
 		},
 		resp: "",
 		dataType: "Text",
+		secondaryDataType: "",
 		label: "",
 		hasTEIw: false,
 		teiHeader: item.teiHeader,
@@ -56,9 +127,15 @@ const extractMetadata = function (
 			if (placeName) template.place.settlement = placeName.$;
 		}
 
+		let placeName;
 		if (place.region) {
-			template.place.region = place.region.$;
+			placeName = place.region;
+		} else if (place.settlement?.name?.at(0)) {
+			placeName = place.settlement.name.at(0);
+		} else if (place.settlement?.name) {
+			placeName = place.settlement.name.find((n) => n["@lang"] === "en");
 		}
+		if (placeName) template.place.settlement = placeName.$;
 
 		if (place.country) {
 			template.place.country = place.country.$;
@@ -113,6 +190,29 @@ const extractMetadata = function (
 				}
 			}
 		}
+
+		const subtype = item.teiHeader.profileDesc?.textClass?.catRef
+			? item.teiHeader.profileDesc.textClass.catRef["@target"]
+			: "";
+		switch (subtype) {
+			case "corpus:textClass.ST":
+				template.secondaryDataType = "Sample Text";
+				break;
+			case "corpus:textClass.FL":
+				template.secondaryDataType = "Feature List";
+				break;
+			case "corpus:textClass.FS":
+				template.secondaryDataType = "Free Speech";
+				break;
+			case "corpus:textClass.TUN":
+				template.secondaryDataType = "Tunocent Questionnaire";
+				break;
+			case "corpus:textClass.WAD":
+				template.secondaryDataType = "WAD Questionnaire";
+				break;
+			default:
+				break;
+		}
 	} else {
 		const person = item.teiHeader.profileDesc?.particDesc?.person;
 		if (person?.$) {
@@ -134,6 +234,16 @@ const extractMetadata = function (
 	} else {
 		template.label = template.place.settlement;
 	}
+	if (template.dataType === "CorpusText") {
+		template.label = item.teiHeader.fileDesc.titleStmt.titles[0].$;
+	} else {
+		template.label = template.person.name
+			? template.person.name
+			: item.teiHeader.fileDesc.titleStmt.titles
+				? item.teiHeader.fileDesc.titleStmt.titles[0].$
+				: template.place.settlement;
+	}
+
 	template.hasTEIw = item["@hasTEIw"] === "true";
 	return template;
 };

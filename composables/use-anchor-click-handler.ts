@@ -8,17 +8,14 @@ export function useAnchorClickHandler() {
 	 * Intercept anchor clicks to open window instead of navigating.
 	 */
 	function openNewWindowFromAnchor(event: MouseEvent) {
-		console.log(event);
 		const element = event.target as HTMLElement;
 
 		let item: Record<string, string> | null = null;
-		console.log(element);
 		if (element instanceof HTMLAnchorElement) {
 			item = element.dataset as Record<string, string>;
 		} else if (element.parentElement instanceof HTMLAnchorElement) {
 			item = element.parentElement.dataset as Record<string, string>;
 		}
-		console.log(item);
 
 		if (item.targetType) {
 			if (item.targetType === "External-link") return;
