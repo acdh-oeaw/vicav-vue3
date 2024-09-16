@@ -196,6 +196,7 @@ export const DataListSchema = z.object({
 	params: z
 		.object({
 			dataTypes: z.array(DataTypesEnum),
+			filterListBy: z.string().optional(),
 		})
 		.merge(TextId.partial())
 		.merge(TeiSource.partial()),
