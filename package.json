@@ -5,9 +5,9 @@
 	"license": "MIT",
 	"engines": {
 		"node": "20.x",
-		"pnpm": "8.x"
+		"pnpm": "9.x"
 	},
-	"packageManager": "pnpm@8.9.2",
+	"packageManager": "pnpm@9.10.0",
 	"scripts": {
 		"analyze": "nuxt analyze",
 		"build": "run-s generate:api-client build:client",
