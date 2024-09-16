@@ -4,6 +4,7 @@ import type {
 	PersName,
 	Person,
 	RespStmt,
+	Settlement,
 	simpleTEIMetadata,
 	TEI,
 	TeiCorpus,
@@ -13,25 +14,10 @@ import type {
 
 import dataTypes from "../config/dataTypes";
 
-type RawTEIItems = ComputedRef<Array<TeiCorpus>>;
+type RawTEIItems = ComputedRef<Array<TEIs | object>>;
 
 interface teiStringNode {
 	$: string;
-}
-
-interface teiPersName {
-	"@id": string;
-	"@full"?: string;
-	$?: string;
-	"@forename"?: string;
-	"@surname"?: string;
-}
-interface teiPersNameRef {
-	"@ref": string;
-}
-
-interface RespStmt {
-	persName?: teiPersName | teiPersNameRef;
 }
 
 interface teiPerson {
@@ -61,7 +47,7 @@ interface teiHeader {
 			settingDesc?: {
 				place: {
 					placeName?: teiStringNode;
-					settlement?: { name?: Array<teiSettlement>; placeName?: teiStringNode };
+					settlement?: { name?: Array<Settlement>; placeName?: teiStringNode };
 					region?: teiStringNode;
 					country?: teiStringNode;
 					location?: { geo: teiStringNode };
@@ -82,8 +68,6 @@ interface TEIs {
 	teiHeader?: teiHeader;
 	TEIs: Array<teiHeader>;
 }
-
-type RawTEIItems = ComputedRef<Array<TEIs | object>>;
 
 const extractMetadata = function (
 	item: TEI,
@@ -234,13 +218,15 @@ const extractMetadata = function (
 	} else {
 		template.label = template.place.settlement;
 	}
-	if (template.dataType === "CorpusText") {
-		template.label = item.teiHeader.fileDesc.titleStmt.titles[0].$;
+	if (template.dataType === "CorpusText" && item.teiHeader.fileDesc.titleStmt.titles?.at(0)) {
+		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+		template.label = item.teiHeader.fileDesc.titleStmt.titles[0]!.$!;
 	} else {
 		template.label = template.person.name
 			? template.person.name
-			: item.teiHeader.fileDesc.titleStmt.titles
-				? item.teiHeader.fileDesc.titleStmt.titles[0].$
+			: item.teiHeader.fileDesc.titleStmt.titles?.at(0)
+				? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+					item.teiHeader.fileDesc.titleStmt.titles[0]!.$!
 				: template.place.settlement;
 	}
 
@@ -269,12 +255,13 @@ export function useTEIHeaders() {
 	});
 
 	const simpleItems: ComputedRef<Array<simpleTEIMetadata>> = computed(() => {
-		const corpusMetadata = rawItems.value.find(
-			(item) => item.teiHeader && item["@id"] === "vicav_corpus",
-		)?.teiHeader;
+		const corpusMetadata = rawItems.value
+			.filter(isTEIs)
+			.find((item) => item.teiHeader && item["@id"] === "vicav_corpus")?.teiHeader;
 		const data = rawItems.value
+			.filter(isTEIs)
 			// Google Gemini Cloude Code suggestion
-			.map((dataTypeTEIs: TeiCorpus) => {
+			.map((dataTypeTEIs) => {
 				return dataTypeTEIs.TEIs.map((item) =>
 					extractMetadata(item, dataTypeTEIs["@id"], corpusMetadata),
 				);
