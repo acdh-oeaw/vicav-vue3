@@ -27,7 +27,7 @@ interface LocationDataPoints {
 
 const groupedMarkers = computed<Record<string, LocationDataPoints> | null>(() => {
 	if (props.groupMarkers) {
-		let grouped = {};
+		const grouped = {};
 		props.markers.forEach((marker) => {
 			if (grouped[marker.properties.label] === undefined)
 				grouped[marker.properties.label] = { Profile: [], Feature: [], Sample: [] };

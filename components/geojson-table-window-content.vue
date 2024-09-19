@@ -85,8 +85,8 @@ function registerTable(table: Table<FeatureType>) {
 		</div>
 		<DataTable
 			v-if="!isPending"
-			:items="fetchedData.get(url)?.features"
 			:columns="columns"
+			:items="fetchedData.get(url)?.features"
 			@table-ready="registerTable"
 		></DataTable>
 		<div class="grid justify-items-end py-2">

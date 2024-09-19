@@ -4,7 +4,7 @@ import { defineConfig, devices } from "@playwright/test";
 import { isCI } from "ci-info";
 
 const port = 3000;
-const baseUrl = `http://localhost:${port}`;
+const baseUrl = `http://localhost:${port.toString()}`;
 
 export default defineConfig({
 	testDir: "./e2e",

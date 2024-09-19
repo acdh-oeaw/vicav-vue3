@@ -142,11 +142,12 @@ const extractMetadata = function (
 		});
 
 		let name;
-		if (respPerson?.persName && isPersName(respPerson.persName)) {
-			const persName2 = respPerson.persName;
-			name = persName2["@forename"]
-				? `${persName2["@forename"]} ${persName2["@surname"]}`
-				: persName2["@full"];
+		if (respPerson?.persName) {
+			const persName2 = respPerson.persName as PersName;
+			name =
+				persName2["@forename"] && persName2["@surname"]
+					? `${persName2["@forename"]} ${persName2["@surname"]}`
+					: persName2["@full"];
 		} else {
 			name = monogram;
 		}
@@ -213,20 +214,17 @@ const extractMetadata = function (
 		// this is true only for SHAWI data, needs to be checked in the future.
 		template.label = template.id;
 	} else if (item.teiHeader.fileDesc.titleStmt.titles?.at(0)?.$) {
-		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 		template.label = item.teiHeader.fileDesc.titleStmt.titles.at(0)!.$!;
 	} else {
 		template.label = template.place.settlement;
 	}
 	if (template.dataType === "CorpusText" && item.teiHeader.fileDesc.titleStmt.titles?.at(0)) {
-		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 		template.label = item.teiHeader.fileDesc.titleStmt.titles[0]!.$!;
 	} else {
 		template.label = template.person.name
 			? template.person.name
 			: item.teiHeader.fileDesc.titleStmt.titles?.at(0)
-				? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-					item.teiHeader.fileDesc.titleStmt.titles[0]!.$!
+				? item.teiHeader.fileDesc.titleStmt.titles[0]!.$!
 				: template.place.settlement;
 	}
 

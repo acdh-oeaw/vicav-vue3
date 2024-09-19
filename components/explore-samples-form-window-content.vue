@@ -101,7 +101,7 @@ const wordOptions = computed(() => {
 });
 
 const sex = computed(() => {
-	let result = [];
+	const result = [];
 	if (male.value) result.push("m");
 	if (female.value) result.push("f");
 	return result;
@@ -241,20 +241,20 @@ const openSearchResultsWindow = function () {
 					<SliderRoot
 						v-model="age"
 						class="relative mx-2 flex w-[200px] touch-none select-none items-center"
-						:min="0"
 						:max="100"
+						:min="0"
 						:step="10"
 					>
 						<SliderTrack class="relative h-[3px] grow rounded-full bg-gray-400">
 							<SliderRange class="absolute h-full rounded-full bg-primary" />
 						</SliderTrack>
 						<SliderThumb
-							class="block h-5 w-5 rounded-[10px] bg-white shadow-[0_2px_10px] focus:shadow-[0_0_0_2px]"
 							aria-label="Min age"
+							class="block h-5 w-5 rounded-[10px] bg-white shadow-[0_2px_10px] focus:shadow-[0_0_0_2px]"
 						/>
 						<SliderThumb
-							class="block h-5 w-5 rounded-[10px] bg-white shadow-[0_2px_10px] shadow-primary focus:shadow-[0_0_0_2px] focus:shadow-gray-400"
 							aria-label="Max age"
+							class="block h-5 w-5 rounded-[10px] bg-white shadow-[0_2px_10px] shadow-primary focus:shadow-[0_0_0_2px] focus:shadow-gray-400"
 						/>
 					</SliderRoot>
 					<span>{{ age[1] }}</span>
@@ -269,13 +269,13 @@ const openSearchResultsWindow = function () {
 					>
 						<CheckboxRoot
 							v-model:checked="male"
-							if="sex-male"
 							class="flex h-[25px] w-[25px] appearance-none items-center justify-center rounded-[4px] bg-white shadow-[0_2px_10px] shadow-gray-500 outline-none focus-within:shadow-[0_0_0_2px_gray]"
+							if="sex-male"
 						>
 							<CheckboxIndicator
 								class="flex h-full w-full items-center justify-center rounded bg-white"
 							>
-								<Icon icon="radix-icons:check" class="h-3.5 w-3.5" />
+								<Icon class="h-3.5 w-3.5" icon="radix-icons:check" />
 							</CheckboxIndicator>
 						</CheckboxRoot>
 						<span class="select-none">Male</span>
@@ -292,7 +292,7 @@ const openSearchResultsWindow = function () {
 							<CheckboxIndicator
 								class="flex h-full w-full items-center justify-center rounded bg-white"
 							>
-								<Icon icon="radix-icons:check" class="h-3.5 w-3.5" />
+								<Icon class="h-3.5 w-3.5" icon="radix-icons:check" />
 							</CheckboxIndicator>
 						</CheckboxRoot>
 						<span class="select-none">Female</span>
@@ -306,8 +306,8 @@ const openSearchResultsWindow = function () {
 				<TagsSelect
 					v-if="wordOptions"
 					v-model="words"
-					:placeholder="`Search for words...`"
 					:options="wordOptions"
+					:placeholder="`Search for words...`"
 				/>
 			</div>
 
@@ -316,8 +316,8 @@ const openSearchResultsWindow = function () {
 				<TagsSelect
 					v-if="featureLabelsQuery.data"
 					v-model="features"
-					:placeholder="`Search for features...`"
 					:options="featureLabelsQuery.data"
+					:placeholder="`Search for features...`"
 				/>
 			</div>
 
@@ -325,14 +325,14 @@ const openSearchResultsWindow = function () {
 				<label for="sentence">Sentences</label>
 				<TagsInputRoot
 					v-model="sentences"
-					delimiter=""
 					class="my-2 flex w-full flex-wrap items-center gap-2 bg-white px-3 py-2 shadow"
+					delimiter=""
 				>
 					<TagsInputItem
 						v-for="item in sentences"
 						:key="item"
-						:value="item"
 						class="flex items-center justify-center gap-2 rounded bg-primary px-2 py-1 text-white aria-[current=true]:bg-primary"
+						:value="item"
 					>
 						<TagsInputItemText class="text-sm">{{ item }}</TagsInputItemText>
 						<TagsInputItemDelete>
@@ -341,8 +341,8 @@ const openSearchResultsWindow = function () {
 					</TagsInputItem>
 
 					<TagsInputInput
-						placeholder="Enter sentence numbers. Press enter key to select..."
 						class="flex flex-1 gap-2 !bg-transparent px-1 focus:outline-none"
+						placeholder="Enter sentence numbers. Press enter key to select..."
 					/>
 				</TagsInputRoot>
 			</div>
@@ -352,9 +352,9 @@ const openSearchResultsWindow = function () {
 				<input
 					id="translation"
 					v-model="translation"
+					aria-label="Translation"
 					class="my-2 flex w-full border-gray-300 px-3 py-2 shadow"
 					placeholder="Search for translation..."
-					aria-label="Translation"
 				/>
 			</div>
 
@@ -363,9 +363,9 @@ const openSearchResultsWindow = function () {
 				<input
 					id="comment"
 					v-model="comment"
+					aria-label="Comment"
 					class="my-2 w-full border-gray-300 px-3 py-2 shadow"
 					placeholder="Search for comment..."
-					aria-label="Comment"
 				/>
 			</div>
 

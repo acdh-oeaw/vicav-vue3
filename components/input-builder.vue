@@ -27,7 +27,7 @@ const submit = () => {
 
 const InsertSnippet = async (snippet: string): Promise<void> => {
 	if (typeof inputElement.value.selectionStart !== "undefined") {
-		let selectionStart = Number(inputElement.value.selectionStart),
+		const selectionStart = Number(inputElement.value.selectionStart),
 			selectionEnd = Number(inputElement.value.selectionEnd);
 		myString.value =
 			myString.value.substring(0, selectionStart) +
@@ -40,7 +40,7 @@ const InsertSnippet = async (snippet: string): Promise<void> => {
 
 const restoreCursorPosition = (pos: number) => {
 	if (typeof inputElement.value.createTextRange !== "undefined") {
-		var range = inputElement.value.createTextRange();
+		const range = inputElement.value.createTextRange();
 		range.move("character", pos);
 		range.select();
 	} else if (typeof inputElement.value.setSelectionRange !== "undefined") {
@@ -94,8 +94,8 @@ watch(
 				<input
 					ref="inputElement"
 					v-model="myString"
-					type="text"
 					:placeholder="placeholder"
+					type="text"
 					@keydown.enter.prevent="submit"
 				/>
 			</div>

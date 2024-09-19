@@ -19,8 +19,13 @@ export default defineNuxtConfig({
 	devtools: {
 		enabled: process.env.NODE_ENV === "development",
 	},
+	eslint: {
+		config: {
+			standalone: true,
+		},
+	},
 	imports: { dirs: ["./config/"] },
-	modules: ["@pinia/nuxt", "@vueuse/nuxt"],
+	modules: ["@pinia/nuxt", "@vueuse/nuxt", "@nuxt/eslint"],
 	nitro: { compressPublicAssets: true },
 	postcss: {
 		plugins: {

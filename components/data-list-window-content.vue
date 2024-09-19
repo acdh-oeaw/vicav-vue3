@@ -58,7 +58,6 @@ const orderByGroup = function (unordered: Record<string, Array<simpleTEIMetadata
 	return Object.keys(unordered)
 		.sort()
 		.reduce((obj: Record<string, Array<simpleTEIMetadata>>, key: string) => {
-			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			obj[key] = unordered[key]!;
 			return obj;
 		}, {});
@@ -85,7 +84,6 @@ const getGroupedItems = function (dataTypesFilter: Array<string>) {
 	for (const country in groupedByCountry as Record<string, Array<simpleTEIMetadata>>) {
 		(groupedByCountry as groupedByPlace)[country] = orderByGroup(
 			Object.groupBy(
-				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 				(groupedByCountry as Record<string, Array<simpleTEIMetadata>>)[country]!,
 				(item: simpleTEIMetadata) => {
 					return deepGet(item, "place.region") ?? "";
@@ -95,10 +93,8 @@ const getGroupedItems = function (dataTypesFilter: Array<string>) {
 
 		// Group by place
 		for (const region in (groupedByCountry as groupedByPlace)[country]) {
-			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			(groupedByCountry as groupedByRegion)[country]![region] = orderByGroup(
 				Object.groupBy(
-					// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 					(groupedByCountry as groupedByPlace)[country]![region]!,
 					(item: simpleTEIMetadata) => {
 						return deepGet(item, "place.settlement") ?? "";
@@ -107,19 +103,16 @@ const getGroupedItems = function (dataTypesFilter: Array<string>) {
 			);
 
 			// Group by content type
-			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
 			for (const place in (groupedByCountry as groupedByRegion)[country]![region]) {
-				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 				(groupedByCountry as groupedItemType)[country]![region]![place] = Object.groupBy(
-					// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 					(groupedByCountry as groupedByRegion)[country]![region]![place]!,
 					(item) => {
 						return deepGet(item, "dataType") ?? "";
 					},
 				);
-				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
 				for (const dataType in (groupedByCountry as groupedItemType)[country]![region]![place]!) {
-					// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 					(groupedByCountry as groupedItemType)[country]![region]![place]![dataType] = (
 						groupedByCountry as groupedItemType
 					)[country]![region]![place]![dataType]!.sort((a, b) => {
@@ -134,7 +127,7 @@ const getGroupedItems = function (dataTypesFilter: Array<string>) {
 };
 const groupedItems = getGroupedItems(props.params.dataTypes);
 const openNewWindowFromAnchor = useAnchorClickHandler();
-// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+
 const debugString = debug ? JSON.stringify(groupedItems, null, 2) : "";
 </script>
 
@@ -175,9 +168,9 @@ const debugString = debug ? JSON.stringify(groupedItems, null, 2) : "";
 								<a
 									v-if="item.dataType !== 'CorpusText' || item.hasTEIw"
 									class="text-primary underline"
-									href="#"
-									:data-target-type="dataTypes[dataType]!.targetType"
+									:data-target-type="dataTypes[dataType].targetType"
 									:data-text-id="item.id"
+									href="#"
 									@click="openNewWindowFromAnchor"
 								>
 									{{ item.label }}

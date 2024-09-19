@@ -5,13 +5,13 @@ const props = defineProps<{
 </script>
 
 <template>
-	<Badge v-for="(key, value) in props.value" :key="value" variant="outline" class="mr-1">
+	<Badge v-for="(key, value) in props.value" :key="value" class="mr-1" variant="outline">
 		<div class="flex flex-col">
 			<p class="line-clamp-1">{{ value }}</p>
-			<Badge v-for="(subkey, subvalue) in key" :key="subvalue" variant="secondary" class="ml-1">
+			<Badge v-for="(subkey, subvalue) in key" :key="subvalue" class="ml-1" variant="secondary">
 				<p class="line-clamp-1">{{ subvalue }}</p>
-				<Badge v-for="(subsubkey, index) in subkey" :key="index" variant="secondary" class="ml-1">
-					<Badge variant="default" class="ml-1">{{ subsubkey }}</Badge>
+				<Badge v-for="(subsubkey, index) in subkey" :key="index" class="ml-1" variant="secondary">
+					<Badge class="ml-1" variant="default">{{ subsubkey }}</Badge>
 				</Badge>
 			</Badge>
 		</div>

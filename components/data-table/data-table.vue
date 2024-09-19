@@ -69,13 +69,13 @@ onMounted(() => {
 			<template v-if="table.getRowModel().rows?.length">
 				<TableRow v-for="row in table.getRowModel().rows" :key="row.id">
 					<TableCell v-for="cell in row.getVisibleCells()" :key="cell.id">
-						<FlexRender :render="cell.column.columnDef.cell" :props="cell.getContext()" />
+						<FlexRender :props="cell.getContext()" :render="cell.column.columnDef.cell" />
 					</TableCell>
 				</TableRow>
 			</template>
 			<template v-else>
 				<TableRow>
-					<TableCell :col-span="columns.length" class="h-24 text-center">No results.</TableCell>
+					<TableCell class="h-24 text-center" :col-span="columns.length">No results.</TableCell>
 				</TableRow>
 			</template>
 		</TableBody>

@@ -16,7 +16,7 @@ const { params } = toRefs(props);
 const { data: projectData } = useProjectInfo();
 
 const createId = function (params: Zod.infer<typeof GeoMapSchema>["params"]): ItemId {
-	let endpoint = params.endpoint,
+	const endpoint = params.endpoint,
 		queryString = params.queryString,
 		scope = params.scope?.join(",") ?? "",
 		queryParams = Object.values(params.queryParams ?? {}).join(",");
@@ -27,7 +27,7 @@ const createId = function (params: Zod.infer<typeof GeoMapSchema>["params"]): It
 const itemsById = computed(() => {
 	const items = projectData.value?.projectConfig?.menu?.subnav?.reduce(
 		(filtered: Array<Zod.infer<typeof GeoMapSubnavItemSchema>>, item) => {
-			let safeParse = GeoMapSubnavItemSchema.safeParse(item);
+			const safeParse = GeoMapSubnavItemSchema.safeParse(item);
 			if (safeParse.success) {
 				safeParse.data.id = createId(safeParse.data.params);
 				filtered.push(safeParse.data);
