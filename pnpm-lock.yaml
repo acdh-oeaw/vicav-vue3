@@ -34,6 +34,9 @@ importers:
       '@iconify/vue':
         specifier: ^4.1.2
         version: 4.1.2(vue@3.5.6(typescript@5.6.2))
+      '@nuxt/eslint':
+        specifier: ^0.5.7
+        version: 0.5.7(eslint@9.10.0(jiti@1.21.6))(magicast@0.3.5)(rollup@4.22.0)(typescript@5.6.2)(vite@5.4.6(@types/node@22.5.5)(terser@5.33.0))
       '@pinia/nuxt':
         specifier: ^0.5.1
         version: 0.5.4(magicast@0.3.5)(rollup@4.22.0)(typescript@5.6.2)(vue@3.5.6(typescript@5.6.2))
@@ -146,9 +149,6 @@ importers:
       '@nuxt/devtools':
         specifier: ^1.0.0
         version: 1.4.2(rollup@4.22.0)(vite@5.4.6(@types/node@22.5.5)(terser@5.33.0))(vue@3.5.6(typescript@5.6.2))
-      '@nuxt/eslint':
-        specifier: ^0.5.7
-        version: 0.5.7(eslint@9.10.0(jiti@1.21.6))(magicast@0.3.5)(rollup@4.22.0)(typescript@5.6.2)(vite@5.4.6(@types/node@22.5.5)(terser@5.33.0))
       '@playwright/test':
         specifier: ^1.39.0
         version: 1.47.1
