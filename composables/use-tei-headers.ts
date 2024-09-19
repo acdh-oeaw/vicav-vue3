@@ -4,7 +4,6 @@ import type {
 	PersName,
 	Person,
 	RespStmt,
-	Settlement,
 	simpleTEIMetadata,
 	TEI,
 	TeiCorpus,
@@ -14,60 +13,7 @@ import type {
 
 import dataTypes from "../config/dataTypes";
 
-type RawTEIItems = ComputedRef<Array<TEIs | object>>;
-
-interface teiStringNode {
-	$: string;
-}
-
-interface teiPerson {
-	"@sameAs"?: string;
-	"@id"?: string;
-	"@sex": string;
-	"@age": string;
-	$: string;
-}
-
-interface teiHeader {
-	"@id": string;
-	teiHeader: {
-		fileDesc: {
-			titleStmt: {
-				titles?: Array<teiStringNode>;
-				respStmts: Array<RespStmt>;
-			};
-			publicationStmt: { idno?: teiStringNode };
-		};
-		profileDesc?: {
-			taxonomy?: { category: { "@id": string; $: string } };
-			particDesc?: {
-				person?: teiPerson;
-				listPerson?: Array<teiPerson>;
-			};
-			settingDesc?: {
-				place: {
-					placeName?: teiStringNode;
-					settlement?: { name?: Array<Settlement>; placeName?: teiStringNode };
-					region?: teiStringNode;
-					country?: teiStringNode;
-					location?: { geo: teiStringNode };
-				};
-			};
-			textClass?: {
-				catRef: {
-					"@target": string;
-				};
-			};
-		};
-	};
-	"@hasTEIw": string;
-}
-
-interface TEIs {
-	"@id": string;
-	teiHeader?: teiHeader;
-	TEIs: Array<teiHeader>;
-}
+type RawTEIItems = ComputedRef<Array<TeiCorpus | object>>;
 
 const extractMetadata = function (
 	item: TEI,
