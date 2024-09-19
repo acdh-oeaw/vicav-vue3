@@ -13,7 +13,7 @@ export interface DataType {
 	collection: string;
 	explore_xslt?: string;
 }
-export type DataTypes = Record<string, DataType>;
+export type DataTypes = Record<DataTypesEnum, DataType>;
 
 interface WindowItemBase {
 	id: string;
