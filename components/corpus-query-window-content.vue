@@ -39,9 +39,9 @@ const specialCharacters = config.value?.projectConfig?.specialCharacters as Arra
 		>
 			<InputExtended
 				v-model="queryString"
-				:string-snippets="specialCharacters"
-				placeholder="Search in corpus ..."
 				aria-label="Search"
+				placeholder="Search in corpus ..."
+				:string-snippets="specialCharacters"
 				@submit="searchCorpus"
 			/>
 			<button
@@ -61,12 +61,12 @@ const specialCharacters = config.value?.projectConfig?.specialCharacters as Arra
 				<tr v-for="hit in hits" :key="hit.u">
 					<td class="p-0">
 						<a
-							href="#"
-							data-target-type="CorpusText"
 							:data-hits="hit.docHits"
+							:data-label="hit.label"
+							data-target-type="CorpusText"
 							:data-text-id="hit.doc"
 							:data-u="hit.u"
-							:data-label="hit.label"
+							href="#"
 							@click="openNewWindowFromAnchor"
 						>
 							<strong>{{ hit.u }}</strong>

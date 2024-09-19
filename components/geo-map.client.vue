@@ -62,8 +62,8 @@ const context: GeoMapContext = {
 };
 
 const ptDistanceSq = function (pt1: LeafletPoint, pt2: LeafletPoint): number {
-	let dx = pt1.x - pt2.x;
-	let dy = pt1.y - pt2.y;
+	const dx = pt1.x - pt2.x;
+	const dy = pt1.y - pt2.y;
 	return dx * dx + dy * dy;
 };
 
@@ -74,8 +74,8 @@ const addNearbyDataPopup = function (marker) {
 	const map = context.map;
 	if (featureGroup === null || map === null) return;
 
-	let distance = Math.floor(2 * map.getZoom());
-	let nearbyMarkerData = [];
+	const distance = Math.floor(2 * map.getZoom());
+	const nearbyMarkerData = [];
 	const pxSq = distance * distance;
 	const markerPt = map.latLngToLayerPoint(marker.getLatLng());
 
@@ -96,7 +96,7 @@ const addNearbyDataPopup = function (marker) {
 
 		// @todo determine whether grouping is needed based on the number of
 		// feature groups once separate feature groups for queries are supported.
-		let contentTypes = [];
+		const contentTypes = [];
 		markers.forEach((marker) => {
 			if (!contentTypes.includes(marker.properties.targetType)) {
 				contentTypes.push(marker.properties.targetType);
@@ -135,7 +135,7 @@ function updateMarkers(updateViewport = true) {
 
 function fitAllMarkersOnViewport() {
 	if (context.featureGroups.markers !== null) {
-		let boundingBox = context.featureGroups.markers.getBounds();
+		const boundingBox = context.featureGroups.markers.getBounds();
 		if (typeof boundingBox === "object" && Object.keys(boundingBox).length > 0) {
 			context.map?.fitBounds(boundingBox, { animate: false });
 		}
@@ -202,11 +202,11 @@ const resize = debounce(() => {
 	if (context.map === null) {
 		return;
 	}
-	let previousBoundingBox = context.map.getBounds();
+	const previousBoundingBox = context.map.getBounds();
 	void nextTick(() => {
 		context.map?.invalidateSize();
-		let featureMarkerBounds = context.featureGroups.markers?.getBounds();
-		let isAllMarkersInView =
+		const featureMarkerBounds = context.featureGroups.markers?.getBounds();
+		const isAllMarkersInView =
 			featureMarkerBounds === undefined || Object.keys(featureMarkerBounds).length === 0
 				? false
 				: previousBoundingBox.contains(featureMarkerBounds);

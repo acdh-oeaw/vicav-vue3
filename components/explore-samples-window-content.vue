@@ -88,8 +88,8 @@ watch(isLoading, () => {
 			v-if="data"
 			ref="content"
 			class="prose max-w-3xl p-8"
-			@click="anchorRouter"
 			@change="anchorRouter"
+			@click="anchorRouter"
 			@mouseover="handleHoverTooltip"
 			v-html="data"
 		/>

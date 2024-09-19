@@ -47,23 +47,23 @@ watch(
 <template>
 	<ComboboxRoot
 		v-model="model"
-		v-model:search-term="searchTerm"
 		v-model:open="open"
-		multiple
+		v-model:search-term="searchTerm"
 		class="mx-auto w-full"
+		multiple
 	>
 		<ComboboxAnchor class="w-full">
 			<TagsInputRoot
 				v-slot="{ modelValue: tags }"
-				:model-value="model"
-				delimiter=""
 				class="my-2 flex w-full flex-wrap items-center gap-2 border-gray-300 bg-white px-3 py-2 shadow"
+				delimiter=""
+				:model-value="model"
 			>
 				<TagsInputItem
 					v-for="item in tags"
 					:key="item"
-					:value="item"
 					class="flex items-center justify-center gap-2 rounded bg-primary px-2 py-1 text-white aria-[current=true]:bg-primary"
+					:value="item"
 				>
 					<TagsInputItemText class="text-sm">
 						{{ options.find((opt) => opt.value === item).label }}
@@ -75,8 +75,8 @@ watch(
 
 				<ComboboxInput as-child>
 					<TagsInputInput
-						:placeholder="placeholder"
 						class="flex flex-1 flex-wrap items-center gap-2 rounded !bg-transparent px-1 focus:outline-none"
+						:placeholder="placeholder"
 						@keydown.enter.prevent
 					/>
 				</ComboboxInput>

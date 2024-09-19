@@ -49,8 +49,8 @@ const setColumnFilter = function (column: string, value: string) {
 				<p id="dataTypeFilterSelect" class="whitespace-nowrap text-sm font-medium">Data type:</p>
 				<Select
 					aria-labelledby="dataTypeFilterSelect"
-					name="dataType"
 					:model-value="dataTypeFilter?.value"
+					name="dataType"
 					@update:model-value="setDataTypeFilter"
 				>
 					<SelectTrigger class="h-8 w-[70px]">

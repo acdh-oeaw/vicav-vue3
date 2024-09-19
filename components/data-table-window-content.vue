@@ -92,15 +92,15 @@ const setFilters = function (value: ColumnFiltersState) {
 <template>
 	<div v-if="simpleItems">
 		<div class="flex justify-between py-2">
-			<DataTableFilterTeiHeaders v-if="tables" :table="tables" :filters="columnFilters" />
+			<DataTableFilterTeiHeaders v-if="tables" :filters="columnFilters" :table="tables" />
 			<DataTablePagination v-if="tables" :table="tables" />
 		</div>
 		<DataTable
-			:items="items"
 			:columns="columns"
+			:items="items"
 			@click="openNewWindowFromAnchor"
-			@table-ready="registerTable"
 			@column-filters-change="setFilters"
+			@table-ready="registerTable"
 		></DataTable>
 		<div class="grid justify-items-end py-2">
 			<DataTablePagination v-if="tables" :table="tables" />

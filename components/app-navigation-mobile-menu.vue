@@ -62,8 +62,8 @@ onScopeDispose(() => {
 							<li
 								v-else-if="item.type === 'separator'"
 								:key="`separator-${index}`"
-								role="separator"
 								class="-mx-1 my-1 h-px bg-muted"
+								role="separator"
 							/>
 						</template>
 					</ul>

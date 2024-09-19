@@ -142,9 +142,10 @@ const extractMetadata = function (item: teiHeader, dataType: string, corpusRaw: 
 		let name;
 		if (respPerson) {
 			const persName2 = respPerson.persName as teiPersName;
-			name = persName2["@forename"]
-				? `${persName2["@forename"]} ${persName2["@surname"]}`
-				: persName2["@full"];
+			name =
+				persName2["@forename"] && persName2["@surname"]
+					? `${persName2["@forename"]} ${persName2["@surname"]}`
+					: persName2["@full"];
 		} else {
 			name = monogram;
 		}

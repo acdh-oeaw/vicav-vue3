@@ -129,7 +129,7 @@ const isLoading = computed(() => {
 const isExtendedFormOpen = ref(false);
 onMounted(() => {
 	initTWE({ Collapse });
-	let formElement = document.getElementById(`${formId}_ext`);
+	const formElement = document.getElementById(`${formId}_ext`);
 	formElement?.addEventListener("show.te.collapse", () => {
 		isExtendedFormOpen.value = true;
 	});
@@ -163,9 +163,9 @@ const api = useApiClient();
 			<div :id="formId" class="max-w-3xl bg-gray-200 p-4">
 				<div>
 					<label class="relative inline-flex cursor-pointer items-center">
-						<input v-model="isTextInputManual" type="checkbox" class="peer sr-only" />
+						<input v-model="isTextInputManual" class="peer sr-only" type="checkbox" />
 						<div
-							class="peer relative h-4 w-10 flex-auto shrink-0 rounded-[5px] bg-gray-500 after:absolute after:start-[2px] after:top-[1px] after:m-0.5 after:h-3 after:w-4 after:rounded-[3px] after:border after:border-gray-500/50 after:bg-on-primary after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-primary/50 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/50 rtl:peer-checked:after:-translate-x-full dark:border-gray-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800"
+							class="peer relative h-4 w-10 flex-auto shrink-0 rounded-[5px] bg-gray-500 after:absolute after:start-[2px] after:top-px after:m-0.5 after:h-3 after:w-4 after:rounded-[3px] after:border after:border-gray-500/50 after:bg-on-primary after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-primary/50 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/50 rtl:peer-checked:after:-translate-x-full dark:border-gray-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800"
 						></div>
 						<span class="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300">
 							Manual edit
@@ -179,13 +179,13 @@ const api = useApiClient();
 					<div>
 						<InputBuilder
 							v-model="textInput"
-							v-model:selectValue="queryTemplate"
+							v-model:select-value="queryTemplate"
+							aria-label="Search"
 							:button-labels="myDict.specChars"
+							class="mb-3"
+							placeholder="Filter by&hellip;"
 							:select-options="myDict.queryTemplates"
 							submit-button-label="+"
-							placeholder="Filter by&hellip;"
-							aria-label="Search"
-							class="mb-3"
 							@submit="addFilter"
 						/>
 					</div>
@@ -200,8 +200,8 @@ const api = useApiClient();
 							<span class="flex grow flex-row flex-nowrap">
 								<span class="text-center text-xs">{{ k }}</span>
 								<button
-									type="button"
 									class="ml-0.5 h-3.5 shrink-0 basis-3.5 content-center self-start rounded-full bg-on-primary/50 p-1 text-[84%] leading-[66%] text-primary hover:bg-on-primary dark:bg-gray-700 dark:text-white"
+									type="button"
 									@click.prevent="removeFilter(k)"
 								>
 									×
@@ -217,13 +217,13 @@ const api = useApiClient();
 				</div>
 				<div class="mt-4">
 					<button
+						:aria-controls="`${formId}_ext`"
+						aria-expanded="false"
 						class="dvStats flex w-full items-baseline"
-						type="button"
-						tabindex="0"
 						data-te-collapse-init
 						:data-te-target="`#${formId}_ext`"
-						aria-expanded="false"
-						:aria-controls="`${formId}_ext`"
+						tabindex="0"
+						type="button"
 					>
 						Extended options:
 						<div class="relative top-1 ml-auto mr-4">
@@ -237,8 +237,8 @@ const api = useApiClient();
 										height: 1em;
 										fill: currentColor;
 									"
-									viewBox="0 0 1024 1024"
 									version="1.1"
+									viewBox="0 0 1024 1024"
 									xmlns="http://www.w3.org/2000/svg"
 								>
 									<path
@@ -256,8 +256,8 @@ const api = useApiClient();
 										height: 1em;
 										fill: currentColor;
 									"
-									viewBox="0 0 1024 1024"
 									version="1.1"
+									viewBox="0 0 1024 1024"
 									xmlns="http://www.w3.org/2000/svg"
 								>
 									<path
@@ -277,25 +277,25 @@ const api = useApiClient();
 								<tr>
 									<th>page</th>
 									<td>
-										<input v-model="page" type="number" class="w-full" />
+										<input v-model="page" class="w-full" type="number" />
 									</td>
 								</tr>
 								<tr>
 									<th>pageSize</th>
 									<td>
-										<input v-model="pageSize" type="number" class="w-full" />
+										<input v-model="pageSize" class="w-full" type="number" />
 									</td>
 								</tr>
 								<tr>
 									<th>id</th>
 									<td>
-										<input v-model="id" type="text" class="w-full" />
+										<input v-model="id" class="w-full" type="text" />
 									</td>
 								</tr>
 								<tr>
 									<th>ids</th>
 									<td>
-										<input v-model="ids" type="text" class="w-full" />
+										<input v-model="ids" class="w-full" type="text" />
 									</td>
 								</tr>
 								<tr>
@@ -312,13 +312,13 @@ const api = useApiClient();
 								<tr>
 									<th>altLemma</th>
 									<td>
-										<input v-model="altLemma" type="text" class="w-full" />
+										<input v-model="altLemma" class="w-full" type="text" />
 									</td>
 								</tr>
 								<tr>
 									<th>format</th>
 									<td>
-										<input v-model="format" type="text" class="w-full" />
+										<input v-model="format" class="w-full" type="text" />
 									</td>
 								</tr>
 							</tbody>
