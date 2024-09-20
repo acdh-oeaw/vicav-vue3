@@ -1,6 +1,6 @@
 import { ref } from "vue";
 
-export function useHoverTooltipHandler(tooltip: Ref<HTMLElement | undefined>) {
+export function useHoverTooltipHandler(tooltip: Ref<HTMLElement | null>) {
 	const tooltipContent: Ref<string | null> = ref(null);
 	const showTooltip: Ref<boolean | null> = ref(null);
 

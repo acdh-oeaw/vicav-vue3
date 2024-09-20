@@ -8,7 +8,7 @@ interface Props {
 const props = defineProps<Props>();
 const { params } = toRefs(props);
 const content: Ref<HTMLElement | undefined> = ref();
-const tooltip: Ref<HTMLElement | undefined> = ref();
+const tooltip: Ref<HTMLElement | null> = ref(null);
 
 const { simpleItems } = useTEIHeaders();
 
@@ -69,7 +69,7 @@ const { findWindowByTypeAndParam } = useWindowsStore();
 
 watch(page, () => {
 	const window = findWindowByTypeAndParam("ExploreSamples", "ids", ids.value);
-	window.value.params.page = page.value;
+	(window! as ExploreSamplesWindowItem).params.page = page.value;
 });
 
 watch(isLoading, () => {
@@ -87,10 +87,9 @@ watch(isLoading, () => {
 			vuejs-accessibility/click-events-have-key-events,
 			vuejs-accessibility/no-static-element-interactions -->
 		<div
-			v-if="data"
+			v-if="!isPending"
 			ref="content"
 			class="prose max-w-3xl p-8"
-			@change="anchorRouter"
 			@click="anchorRouter"
 			@mouseover="handleHoverTooltip"
 			v-html="data"

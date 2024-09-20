@@ -27,11 +27,16 @@ interface LocationDataPoints {
 
 const groupedMarkers = computed<Record<string, LocationDataPoints> | null>(() => {
 	if (props.groupMarkers) {
-		const grouped = {};
+		const grouped: Record<string, LocationDataPoints> = {};
 		props.markers.forEach((marker) => {
 			if (grouped[marker.properties.label] === undefined)
+				//@ts-expect-error TODO: check if this is correct - key "Sample" does not exist on LocationDataPoints
 				grouped[marker.properties.label] = { Profile: [], Feature: [], Sample: [] };
-			grouped[marker.properties.label][marker.properties.targetType].push(marker);
+			(
+				grouped[marker.properties.label]![marker.properties.targetType!]! as Array<
+					Feature<Point, MarkerProperties>
+				>
+			).push(marker);
 		});
 		return grouped;
 	} else {

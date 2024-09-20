@@ -7,7 +7,7 @@ interface Props {
 
 const props = defineProps<Props>();
 const { params } = toRefs(props);
-const tooltip = ref(null);
+const tooltip: Ref<HTMLElement | null> = ref(null);
 
 const { data, isPending, isPlaceholderData } = useFeatureById(params);
 const openNewWindowFromAnchor = useAnchorClickHandler();
@@ -20,7 +20,7 @@ const isLoading = computed(() => {
 
 <template>
 	<div
-		class="relative isolate grid h-full w-full overflow-auto"
+		class="relative isolate grid size-full overflow-auto"
 		:class="{ 'opacity-50 grayscale': isLoading }"
 	>
 		<!-- eslint-disable vue/no-v-html,

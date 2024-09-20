@@ -28,7 +28,6 @@ const props = defineProps<{
 				:data-word="marker.properties.params?.word"
 				href="/"
 				@click.prevent.stop="openNewWindowFromAnchor"
-				@keyup="openNewWindowFromAnchor"
 			>
 				{{ marker.properties.alt || marker.properties.label }}
 			</a>
