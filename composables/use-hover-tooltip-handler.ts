@@ -1,8 +1,8 @@
 import { ref } from "vue";
 
-export function useHoverTooltipHandler(tooltip: MaybeRef<HTMLDivElement>) {
-	const tooltipContent = ref(null);
-	const showTooltip = ref(null);
+export function useHoverTooltipHandler(tooltip: Ref<HTMLElement | undefined>) {
+	const tooltipContent: Ref<string | null> = ref(null);
+	const showTooltip: Ref<boolean | null> = ref(null);
 
 	return {
 		tooltipContent,
@@ -10,13 +10,15 @@ export function useHoverTooltipHandler(tooltip: MaybeRef<HTMLDivElement>) {
 		handleHoverTooltip: (event: MouseEvent) => {
 			{
 				const element =
-					event.target.nodeName === "SPAN"
+					//@ts-expect-error TODO: fix this - nodeName does not exist on EventTarget
+					event.target!.nodeName === "SPAN"
 						? (event.target as HTMLSpanElement)
-						: (event.target.parentNode as HTMLSpanElement);
+						: //@ts-expect-error TODO: fix this - parentNode does not exist on EventTarget
+							(event.target!.parentNode as HTMLSpanElement);
 				if (element.dataset.tooltip) {
 					tooltipContent.value = element.dataset.tooltip;
 					showTooltip.value = true;
-					element.parentNode?.appendChild(tooltip.value);
+					element.parentNode?.appendChild(tooltip.value!);
 				} else {
 					showTooltip.value = false;
 				}
