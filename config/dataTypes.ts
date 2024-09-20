@@ -1,4 +1,4 @@
-import type { DataTypes } from "../types/global.d";
+import type { DataTypes } from "@/types/global";
 
 const types: DataTypes = {
 	Feature: {

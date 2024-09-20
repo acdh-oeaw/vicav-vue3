@@ -15,7 +15,7 @@ import {
 } from "radix-vue";
 
 import dataTypes from "@/config/dataTypes";
-import type { ExploreSamplesFormWindowItem, WindowItem } from "@/types/global.d";
+import type { ExploreSamplesFormWindowItem, GeoMapWindowItem, WindowItem } from "@/types/global.d";
 
 const { findWindowByTypeAndParam } = useWindowsStore();
 
@@ -32,22 +32,23 @@ const { addWindow } = windowsStore;
 interface Tag {
 	label: string;
 	value: string;
+	heading?: boolean;
 }
 
 const mapWindow: Ref<WindowItem | null> = ref(null);
 const resultsWindow: Ref<WindowItem | null> = ref(null);
 
-const places = ref([]);
-const words = ref([]);
-const features = ref([]);
-const sentences = ref([]);
+const places: Ref<Array<string>> = ref([]);
+const words: Ref<Array<string>> = ref([]);
+const features: Ref<Array<string>> = ref([]);
+const sentences: Ref<Array<string>> = ref([]);
 
 const age: Ref<Array<number>> = ref([0, 100]);
 const male = ref(true);
 const female = ref(true);
 const comment = ref("");
 const translation = ref("");
-const persons = ref([]);
+const persons: Ref<Array<string>> = ref([]);
 
 const dataset = simpleItems.value.filter((item) => params.value.dataTypes.includes(item.dataType));
 const countries = Array.from(new Set(dataset.map((item) => item.place.country)));
@@ -82,7 +83,7 @@ countries.forEach((country) => {
 
 const placeOptions = options;
 
-const uniqueFilter = function (value, index, array) {
+const uniqueFilter = function (value: unknown, index: number, array: Array<unknown>) {
 	return array.indexOf(value) === index;
 };
 const personOptions = dataset
@@ -93,7 +94,7 @@ const personOptions = dataset
 	});
 
 const featureLabelsQuery = useFeatureLabels();
-const dataWordsQuery = useDataWords({ dataType: props.params.dataTypes[0] });
+const dataWordsQuery = useDataWords({ dataType: props.params.dataTypes[0]! });
 const wordOptions = computed(() => {
 	return (dataWordsQuery.data.value ?? []).map((item) => {
 		return { label: item, value: item };
@@ -118,15 +119,14 @@ const personsFilter = computed(() =>
 					if (p[0] === "region" && item.place.region === p[1]) return true;
 					if (p[0] === "country" && item.place.country === p[1]) return true;
 					if (p[0] === item.place.settlement) return true;
+					return false;
 				});
 				if (!found.includes(true)) return false;
 			}
-
 			if (sex.value.length > 0 && !sex.value.includes(item.person.sex)) return false;
-			if (age.value[0] > parseInt(item.person.age) || age.value[1] < parseInt(item.person.age))
-				return false;
-
-			return true;
+			return !(
+				age.value[0]! > parseInt(item.person.age) || age.value[1]! < parseInt(item.person.age)
+			);
 		})
 		.map((item) => item.id),
 );
@@ -153,7 +153,9 @@ const resultWindowParams = computed(() => {
 
 const queryParams = computed(() => {
 	return Object.assign(resultParams.value, {
-		type: dataTypes[params.value.dataTypes[0]].collection.replace("vicav_", ""),
+		type: dataTypes[params.value.dataTypes[0]!].collection.replace("vicav_", "") as
+			| "samples"
+			| "lingfeatures",
 	});
 });
 
@@ -164,7 +166,7 @@ const openSearchResultsWindow = function () {
 	resultsWindow.value = findWindowByTypeAndParam(
 		"ExploreSamples",
 		"dataType",
-		params.value.dataTypes[0],
+		params.value.dataTypes[0]!,
 	);
 	mapWindow.value = findWindowByTypeAndParam("WMap", "queryParams.type", queryParams.value.type);
 
@@ -173,7 +175,7 @@ const openSearchResultsWindow = function () {
 			targetType: "ExploreSamples",
 			params: resultWindowParams.value,
 			title: `Search results for ${[words.value.join(","), places.value.join(",")].join(", ")}`,
-		} as WindowState);
+		} as WindowState)!;
 	else {
 		resultsWindow.value.params = resultWindowParams.value;
 		resultsWindow.value.winbox.setTitle(
@@ -182,7 +184,7 @@ const openSearchResultsWindow = function () {
 		resultsWindow.value.winbox.focus();
 		resultsWindow.value.winbox.addClass("highlighted");
 		setTimeout(() => {
-			resultsWindow.value.winbox.removeClass("highlighted");
+			resultsWindow.value!.winbox.removeClass("highlighted");
 		}, 1000);
 	}
 
@@ -196,23 +198,23 @@ const openSearchResultsWindow = function () {
 				queryParams: queryParams.value,
 			},
 			title: `${params.value.dataTypes[0]}s for ${[words.value.join(","), places.value.join(",")].join(", ")}`,
-		} as WindowState);
+		} as WindowState)!;
 	else {
-		mapWindow.value.params.queryParams = queryParams.value;
+		(mapWindow.value as GeoMapWindowItem).params.queryParams = queryParams.value;
 		mapWindow.value.winbox.setTitle(
 			`Search results for ${[words.value.join(","), places.value.join(",")].join(", ")}`,
 		);
 		mapWindow.value.winbox.focus();
 		mapWindow.value.winbox.addClass("highlighted");
 		setTimeout(() => {
-			mapWindow.value.winbox.removeClass("highlighted");
+			mapWindow.value!.winbox.removeClass("highlighted");
 		}, 1000);
 	}
 };
 </script>
 
 <template>
-	<div class="relative isolate grid h-full w-full overflow-auto">
+	<div class="relative isolate grid size-full overflow-auto">
 		<form
 			class="block w-full rounded border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
 		>
@@ -250,11 +252,11 @@ const openSearchResultsWindow = function () {
 						</SliderTrack>
 						<SliderThumb
 							aria-label="Min age"
-							class="block h-5 w-5 rounded-[10px] bg-white shadow-[0_2px_10px] focus:shadow-[0_0_0_2px]"
+							class="block size-5 rounded-[10px] bg-white shadow-[0_2px_10px] focus:shadow-[0_0_0_2px]"
 						/>
 						<SliderThumb
 							aria-label="Max age"
-							class="block h-5 w-5 rounded-[10px] bg-white shadow-[0_2px_10px] shadow-primary focus:shadow-[0_0_0_2px] focus:shadow-gray-400"
+							class="block size-5 rounded-[10px] bg-white shadow-[0_2px_10px] shadow-primary focus:shadow-[0_0_0_2px] focus:shadow-gray-400"
 						/>
 					</SliderRoot>
 					<span>{{ age[1] }}</span>
@@ -269,13 +271,13 @@ const openSearchResultsWindow = function () {
 					>
 						<CheckboxRoot
 							v-model:checked="male"
-							class="flex h-[25px] w-[25px] appearance-none items-center justify-center rounded-[4px] bg-white shadow-[0_2px_10px] shadow-gray-500 outline-none focus-within:shadow-[0_0_0_2px_gray]"
+							class="flex size-[25px] appearance-none items-center justify-center rounded-[4px] bg-white shadow-[0_2px_10px] shadow-gray-500 outline-none focus-within:shadow-[0_0_0_2px_gray]"
 							if="sex-male"
 						>
 							<CheckboxIndicator
-								class="flex h-full w-full items-center justify-center rounded bg-white"
+								class="flex size-full items-center justify-center rounded bg-white"
 							>
-								<Icon class="h-3.5 w-3.5" icon="radix-icons:check" />
+								<Icon class="size-3.5" icon="radix-icons:check" />
 							</CheckboxIndicator>
 						</CheckboxRoot>
 						<span class="select-none">Male</span>
@@ -287,12 +289,12 @@ const openSearchResultsWindow = function () {
 						<CheckboxRoot
 							id="sex-female"
 							v-model:checked="female"
-							class="flex h-[25px] w-[25px] appearance-none items-center justify-center rounded-[4px] bg-white shadow-[0_2px_10px] shadow-gray-500 outline-none focus-within:shadow-[0_0_0_2px_gray] hover:bg-white"
+							class="flex size-[25px] appearance-none items-center justify-center rounded-[4px] bg-white shadow-[0_2px_10px] shadow-gray-500 outline-none focus-within:shadow-[0_0_0_2px_gray] hover:bg-white"
 						>
 							<CheckboxIndicator
-								class="flex h-full w-full items-center justify-center rounded bg-white"
+								class="flex size-full items-center justify-center rounded bg-white"
 							>
-								<Icon class="h-3.5 w-3.5" icon="radix-icons:check" />
+								<Icon class="size-3.5" icon="radix-icons:check" />
 							</CheckboxIndicator>
 						</CheckboxRoot>
 						<span class="select-none">Female</span>
@@ -316,7 +318,7 @@ const openSearchResultsWindow = function () {
 				<TagsSelect
 					v-if="featureLabelsQuery.data"
 					v-model="features"
-					:options="featureLabelsQuery.data"
+					:options="featureLabelsQuery.data as unknown as Array<Tag>"
 					:placeholder="`Search for features...`"
 				/>
 			</div>

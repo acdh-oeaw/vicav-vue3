@@ -20,7 +20,7 @@ import {
 interface Tag {
 	label: string;
 	value: string;
-	heading: boolean;
+	heading?: boolean;
 }
 
 interface Props {
@@ -61,12 +61,12 @@ watch(
 			>
 				<TagsInputItem
 					v-for="item in tags"
-					:key="item"
+					:key="item.toString()"
 					class="flex items-center justify-center gap-2 rounded bg-primary px-2 py-1 text-white aria-[current=true]:bg-primary"
 					:value="item"
 				>
 					<TagsInputItemText class="text-sm">
-						{{ options.find((opt) => opt.value === item).label }}
+						{{ options.find((opt) => opt.value === item)!.label }}
 					</TagsInputItemText>
 					<TagsInputItemDelete>
 						<Icon icon="lucide:x" />
