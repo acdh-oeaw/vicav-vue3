@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import type { ColumnFiltersState, Table } from "@tanstack/vue-table";
 
+import type { simpleTEIMetadata } from "@/types/global";
+
 interface DataTableFilterProps {
-	table: Table<SimpleTEIHeader>;
+	table: Table<simpleTEIMetadata>;
 	filters: ColumnFiltersState;
 }
 const props = defineProps<DataTableFilterProps>();
@@ -25,13 +27,13 @@ const setDataTypeFilter = function (value: string) {
 };
 
 const setSettlementFilter = function (event: Event) {
-	setColumnFilter("settlement", event.target?.value);
+	setColumnFilter("settlement", (event.target as HTMLInputElement).value);
 };
 
 const setColumnFilter = function (column: string, value: string) {
 	const index = filters.value.findIndex((filter) => filter.id === column);
 	if (index !== -1) {
-		filters.value[index].value = value;
+		filters.value[index]!.value = value;
 	} else {
 		filters.value.push({
 			id: column,
@@ -49,7 +51,7 @@ const setColumnFilter = function (column: string, value: string) {
 				<p id="dataTypeFilterSelect" class="whitespace-nowrap text-sm font-medium">Data type:</p>
 				<Select
 					aria-labelledby="dataTypeFilterSelect"
-					:model-value="dataTypeFilter?.value"
+					:model-value="dataTypeFilter?.value as string"
 					name="dataType"
 					@update:model-value="setDataTypeFilter"
 				>
@@ -83,11 +85,10 @@ const setColumnFilter = function (column: string, value: string) {
 			</div>
 			<div class="flex items-center space-x-2">
 				<p id="settlement" class="whitespace-nowrap text-sm font-medium">Region:</p>
-				<Input
-					class="h-8 rounded-md border border-input"
-					:value="regionFilter?.value"
-					@change="setRegionFilter"
-				/>
+				<Input class="h-8 rounded-md border border-input" :value="regionFilter?.value" />
+				<!-- TODO: setRegionFilter seems to be missing
+				@change="setRegionFilter"
+				-->
 			</div>
 		</div>
 	</div>
