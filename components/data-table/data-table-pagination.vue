@@ -7,10 +7,8 @@ import {
 	ChevronRightIcon,
 } from "lucide-vue-next";
 
-import type { FeatureType } from "@/types/global.d";
-
 interface DataTablePaginationProps {
-	table: Table<FeatureType>;
+	table: Table<never>;
 }
 defineProps<DataTablePaginationProps>();
 </script>
@@ -45,44 +43,44 @@ defineProps<DataTablePaginationProps>();
 			</div>
 			<div class="flex items-center space-x-2">
 				<Button
-					class="hidden h-8 w-8 p-0 lg:flex"
+					class="hidden size-8 p-0 lg:flex"
 					:disabled="!table.getCanPreviousPage()"
 					size="icon"
 					variant="outline"
 					@click="table.setPageIndex(0)"
 				>
 					<span class="sr-only">Go to first page</span>
-					<ChevronFirstIcon class="h-4 w-4" />
+					<ChevronFirstIcon class="size-4" />
 				</Button>
 				<Button
-					class="h-8 w-8 p-0"
+					class="size-8 p-0"
 					:disabled="!table.getCanPreviousPage()"
 					size="icon"
 					variant="outline"
 					@click="table.previousPage()"
 				>
 					<span class="sr-only">Go to previous page</span>
-					<ChevronLeftIcon class="h-4 w-4" />
+					<ChevronLeftIcon class="size-4" />
 				</Button>
 				<Button
-					class="h-8 w-8 p-0"
+					class="size-8 p-0"
 					:disabled="!table.getCanNextPage()"
 					size="icon"
 					variant="outline"
 					@click="table.nextPage()"
 				>
 					<span class="sr-only">Go to next page</span>
-					<ChevronRightIcon class="h-4 w-4" />
+					<ChevronRightIcon class="size-4" />
 				</Button>
 				<Button
-					class="hidden h-8 w-8 p-0 lg:flex"
+					class="hidden size-8 p-0 lg:flex"
 					:disabled="!table.getCanNextPage()"
 					size="icon"
 					variant="outline"
 					@click="table.setPageIndex(table.getPageCount() - 1)"
 				>
 					<span class="sr-only">Go to last page</span>
-					<ChevronLastIcon class="h-4 w-4" />
+					<ChevronLastIcon class="size-4" />
 				</Button>
 			</div>
 		</div>
