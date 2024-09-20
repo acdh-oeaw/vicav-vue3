@@ -108,17 +108,9 @@ const { data, isPending, isPlaceholderData } = useDictsEntries({
 	queryParams: queryParams.value,
 });
 watch(data, (newData) => {
-	//TODO refactor this once response types are properly defined
-
-	if (newData === null) {
-		return;
-	}
-	if (newData.page) {
-		page.value = newData.page;
-	}
-	if (newData.page_size) {
-		pageSize.value = newData.page_size;
-	}
+	if (!newData) return;
+	page.value = parseInt(newData.page);
+	pageSize.value = parseInt(newData.page_size);
 });
 
 /* window behaviour */
@@ -154,7 +146,7 @@ const api = useApiClient();
 <template>
 	<div
 		v-if="!!myDict"
-		class="relative isolate h-full w-full overflow-auto"
+		class="relative isolate size-full overflow-auto"
 		:class="{ 'opacity-50 grayscale': isLoading }"
 	>
 		<!-- eslint-disable vuejs-accessibility/form-control-has-label, tailwindcss/no-custom-classname -->
@@ -165,7 +157,7 @@ const api = useApiClient();
 					<label class="relative inline-flex cursor-pointer items-center">
 						<input v-model="isTextInputManual" class="peer sr-only" type="checkbox" />
 						<div
-							class="peer relative h-4 w-10 flex-auto shrink-0 rounded-[5px] bg-gray-500 after:absolute after:start-[2px] after:top-px after:m-0.5 after:h-3 after:w-4 after:rounded-[3px] after:border after:border-gray-500/50 after:bg-on-primary after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-primary/50 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/50 rtl:peer-checked:after:-translate-x-full dark:border-gray-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800"
+							class="peer relative h-4 w-10 flex-auto shrink-0 rounded-[5px] bg-gray-500 after:absolute after:start-[2px] after:top-px after:m-0.5 after:h-3 after:w-4 after:rounded-[3px] after:border after:border-gray-500/50 after:bg-on-primary after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-primary/50 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/50 dark:border-gray-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800 rtl:peer-checked:after:-translate-x-full"
 						></div>
 						<span class="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300">
 							Manual edit
@@ -354,7 +346,7 @@ const api = useApiClient();
 					<div v-if="typeof e.id === 'string'" class="text-sm">
 						<span class="font-bold">id:&nbsp;</span>
 						<span>
-							<a :href="`${api.baseUrl}${e._links.self.href}`">{{ e.id }}</a>
+							<a :href="`${api.baseUrl}${e._links?.self.href}`">{{ e.id }}</a>
 						</span>
 					</div>
 					<div v-if="typeof e.sid === 'string'" class="text-sm">
@@ -391,7 +383,7 @@ const api = useApiClient();
 			<LoadingIndicator />
 		</Centered>
 	</div>
-	<div v-else class="prose relative isolate h-full w-full max-w-3xl overflow-auto px-8 pb-4 pt-8">
+	<div v-else class="prose relative isolate size-full max-w-3xl overflow-auto px-8 pb-4 pt-8">
 		Error: Dictionary "{{ params.textId }}" could not be loaded.
 	</div>
 </template>
