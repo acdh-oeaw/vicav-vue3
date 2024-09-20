@@ -4,11 +4,14 @@ export default defineNuxtConfig({
 	alias: {
 		"@": fileURLToPath(new URL("./", import.meta.url)),
 	},
+
 	app: {
 		layoutTransition: false,
 		pageTransition: false,
 	},
+
 	components: [{ path: "@/components", extensions: [".vue"], pathPrefix: false }],
+
 	css: [
 		"@fontsource-variable/roboto-flex/standard.css",
 		"tailwindcss/tailwind.css",
@@ -16,28 +19,34 @@ export default defineNuxtConfig({
 		"winbox/dist/css/winbox.min.css",
 		"leaflet/dist/leaflet.css",
 	],
+
 	devtools: {
 		enabled: process.env.NODE_ENV === "development",
 	},
+
 	eslint: {
 		config: {
 			standalone: true,
 		},
 	},
+
 	imports: { dirs: ["./config/"] },
 	modules: ["@pinia/nuxt", "@vueuse/nuxt", "@nuxt/eslint"],
 	nitro: { compressPublicAssets: true },
+
 	postcss: {
 		plugins: {
 			tailwindcss: {},
 			autoprefixer: {},
 		},
 	},
+
 	routeRules: {
 		"/**": {
 			headers: process.env.BOTS !== "enabled" ? { "X-Robots-Tag": "noindex, nofollow" } : {},
 		},
 	},
+
 	runtimeConfig: {
 		BOTS: process.env.BOTS,
 		public: {
@@ -53,6 +62,7 @@ export default defineNuxtConfig({
 			apiPass: process.env.NUXT_PUBLIC_API_PASS,
 		},
 	},
+
 	vite: {
 		vue: {
 			script: {
@@ -60,6 +70,7 @@ export default defineNuxtConfig({
 			},
 		},
 	},
+
 	typescript: {
 		shim: false,
 		strict: true,
@@ -72,4 +83,6 @@ export default defineNuxtConfig({
 			},
 		},
 	},
+
+	compatibilityDate: "2024-09-20",
 });
