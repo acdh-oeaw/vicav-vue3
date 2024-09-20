@@ -4,7 +4,7 @@ import type { ColumnFiltersState, Table } from "@tanstack/vue-table";
 import type { simpleTEIMetadata } from "@/types/global";
 
 interface DataTableFilterProps {
-	table: Table<simpleTEIMetadata>;
+	table: Table<Array<simpleTEIMetadata>>;
 	filters: ColumnFiltersState;
 }
 const props = defineProps<DataTableFilterProps>();

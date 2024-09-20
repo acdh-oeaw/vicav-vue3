@@ -21,14 +21,14 @@ defineProps<DataTablePaginationProps>();
 				<Select
 					aria-labelledby="pagesizeSelect"
 					:model-value="`${table.getState().pagination.pageSize}`"
-					@update:model-value="table.setPageSize"
+					@update:model-value="table.setPageSize(parseInt($event))"
 				>
 					<SelectTrigger class="h-8 w-[70px]">
 						<SelectValue :placeholder="`${table.getState().pagination.pageSize}`" />
 					</SelectTrigger>
 					<SelectContent class="bg-white">
 						<SelectItem
-							v-for="(pageSize, index) in [10, 20, 30, 40, 50]"
+							v-for="(pageSize, index) in [10, 20, 30, 40, 50] as Array<never>"
 							:key="index"
 							:value="`${pageSize}`"
 						>
