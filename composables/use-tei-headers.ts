@@ -1,87 +1,26 @@
 import { computed } from "vue";
 
-import type { simpleTEIMetadata } from "@/types/global";
+import type {
+	PersName,
+	Person,
+	RespStmt,
+	simpleTEIMetadata,
+	TEI,
+	TeiCorpus,
+	TeiHeader,
+	TeiTypedTarget,
+} from "@/types/global";
 
 import dataTypes from "../config/dataTypes";
 
-interface teiSettlement {
-	"@lang": string;
-	$: string;
-}
+type RawTEIItems = ComputedRef<Array<TeiCorpus | object>>;
 
-interface teiStringNode {
-	$: string;
-}
-
-interface teiPersName {
-	"@id": string;
-	"@full"?: string;
-	$?: string;
-	"@forename"?: string;
-	"@surname"?: string;
-}
-interface teiPersNameRef {
-	"@ref": string;
-}
-
-interface RespStmt {
-	persName?: teiPersName | teiPersNameRef;
-}
-
-interface teiPerson {
-	"@sameAs"?: string;
-	"@id"?: string;
-	"@sex": string;
-	"@age": string;
-	$: string;
-}
-
-interface teiHeader {
-	"@id": string;
-	teiHeader: {
-		fileDesc: {
-			titleStmt: {
-				titles?: Array<teiStringNode>;
-				respStmts: Array<RespStmt>;
-			};
-			publicationStmt: { idno?: teiStringNode };
-		};
-		profileDesc?: {
-			taxonomy?: { category: { "@id": string; $: string } };
-			particDesc?: {
-				person?: teiPerson;
-				listPerson?: Array<teiPerson>;
-			};
-			settingDesc?: {
-				place: {
-					placeName?: teiStringNode;
-					settlement?: { name?: Array<teiSettlement>; placeName?: teiStringNode };
-					region?: teiStringNode;
-					country?: teiStringNode;
-					location?: { geo: teiStringNode };
-				};
-			};
-			textClass?: {
-				catRef: {
-					"@target": string;
-				};
-			};
-		};
-	};
-	"@hasTEIw": string;
-}
-
-interface TEIs {
-	"@id": string;
-	teiHeader?: teiHeader;
-	TEIs: Array<teiHeader>;
-}
-
-type RawTEIItems = ComputedRef<Array<TEIs | object>>;
-
-const extractMetadata = function (item: teiHeader, dataType: string, corpusRaw: teiHeader) {
+const extractMetadata = function (
+	item: TEI,
+	dataType: string,
+	corpusMetadata: TeiHeader | undefined,
+) {
 	const place = item.teiHeader.profileDesc?.settingDesc?.place;
-	const corpusMetadata = corpusRaw.teiHeader;
 	const template = {
 		id: "",
 		place: {
@@ -95,10 +34,11 @@ const extractMetadata = function (item: teiHeader, dataType: string, corpusRaw: 
 			sex: "",
 		},
 		resp: "",
-		dataType: "",
+		dataType: "Text",
 		secondaryDataType: "",
 		label: "",
 		hasTEIw: false,
+		teiHeader: item.teiHeader,
 	} as simpleTEIMetadata;
 	template.id = item["@id"]
 		? item["@id"]
@@ -109,39 +49,47 @@ const extractMetadata = function (item: teiHeader, dataType: string, corpusRaw: 
 		(dataTypeObject) => dataTypeObject.collection === dataType,
 	);
 	if (dataTypeObject) template.dataType = dataTypeObject.targetType;
+	if (place) {
+		if (place.placeName) {
+			template.place.settlement = place.placeName.$;
+		} else if (place.settlement?.name) {
+			const placeName = place.settlement.name.find((n) => n["@lang"] === "en");
+			if (placeName) template.place.settlement = placeName.$;
+		}
 
-	let placeName;
-	if (place?.placeName) {
-		placeName = place.placeName;
-	} else if (place?.settlement?.placeName) {
-		placeName = place.settlement.placeName;
-	} else if (place?.settlement?.name) {
-		placeName = place.settlement.name.find((n) => n["@lang"] === "en");
+		let placeName;
+		if (place.region) {
+			placeName = place.region;
+		} else if (place.settlement?.name?.at(0)) {
+			placeName = place.settlement.name.at(0);
+		} else if (place.settlement?.name) {
+			placeName = place.settlement.name.find((n) => n["@lang"] === "en");
+		}
+		if (placeName) template.place.settlement = placeName.$;
+
+		if (place.country) {
+			template.place.country = place.country.$;
+		}
 	}
-	if (placeName) template.place.settlement = placeName.$;
-
-	if (place?.region) {
-		template.place.region = place.region.$;
-	}
-
-	if (place?.country) {
-		template.place.country = place.country.$;
-	}
-
 	if (
 		template.dataType === "CorpusText" &&
-		item.teiHeader.fileDesc.titleStmt.respStmts[0]?.persName
+		item.teiHeader.fileDesc.titleStmt.respStmts?.at(0)?.persName &&
+		corpusMetadata
 	) {
-		const persName = item.teiHeader.fileDesc.titleStmt.respStmts[0]?.persName as teiPersNameRef;
-		const monogram = persName["@ref"].replace("corpus:", "");
-		const respPerson = corpusMetadata.fileDesc.titleStmt.respStmts.find((resp: RespStmt) => {
-			const persName = resp.persName as teiPersName;
-			return persName["@id"] === monogram;
+		const persName = item.teiHeader.fileDesc.titleStmt.respStmts[0]?.persName as TeiTypedTarget;
+		const monogram = (persName["@ref"] ?? "missing persName").replace("corpus:", "");
+		const respPerson = corpusMetadata.fileDesc.titleStmt.respStmts?.find((resp: RespStmt) => {
+			if (resp.persName && isPersName(resp.persName)) {
+				const persName = resp.persName;
+				return persName["@id"] === monogram;
+			} else {
+				return false;
+			}
 		});
 
 		let name;
-		if (respPerson) {
-			const persName2 = respPerson.persName as teiPersName;
+		if (respPerson?.persName) {
+			const persName2 = respPerson.persName as PersName;
 			name =
 				persName2["@forename"] && persName2["@surname"]
 					? `${persName2["@forename"]} ${persName2["@surname"]}`
@@ -152,17 +100,17 @@ const extractMetadata = function (item: teiHeader, dataType: string, corpusRaw: 
 		if (name) template.resp = name;
 	}
 
-	if (template.dataType === "CorpusText") {
+	if (template.dataType === "CorpusText" && corpusMetadata) {
 		const corpusPersons = corpusMetadata.profileDesc?.particDesc?.listPerson;
 		if (corpusPersons && item.teiHeader.profileDesc?.particDesc?.listPerson) {
 			const persons = item.teiHeader.profileDesc.particDesc.listPerson
-				.map((item: teiPerson) => {
+				.map((item: Person) => {
 					if (!item["@sameAs"]) return;
 					return item["@sameAs"].replace("corpus:", "");
 				})
 				.filter((item: string | undefined) => item);
 
-			const person = corpusPersons.find((item: teiPerson) => item["@id"] === persons[0]);
+			const person = corpusPersons.find((item: Person) => item["@id"] === persons[0]);
 			if (person) {
 				if (person["@id"]) template.person.name = person["@id"];
 				if (person["@sex"]) {
@@ -193,10 +141,12 @@ const extractMetadata = function (item: teiHeader, dataType: string, corpusRaw: 
 			case "corpus:textClass.WAD":
 				template.secondaryDataType = "WAD Questionnaire";
 				break;
+			default:
+				break;
 		}
 	} else {
 		const person = item.teiHeader.profileDesc?.particDesc?.person;
-		if (person) {
+		if (person?.$) {
 			template.person.name = person.$;
 			if (person["@sex"]) {
 				template.person.sex = person["@sex"];
@@ -206,14 +156,21 @@ const extractMetadata = function (item: teiHeader, dataType: string, corpusRaw: 
 			}
 		}
 	}
-
-	if (template.dataType === "CorpusText") {
-		template.label = item.teiHeader.fileDesc.titleStmt.titles[0].$;
+	if (template.person.name) {
+		// this is true only for SHAWI data, needs to be checked in the future.
+		template.label = template.id;
+	} else if (item.teiHeader.fileDesc.titleStmt.titles?.at(0)?.$) {
+		template.label = item.teiHeader.fileDesc.titleStmt.titles.at(0)!.$!;
+	} else {
+		template.label = template.place.settlement;
+	}
+	if (template.dataType === "CorpusText" && item.teiHeader.fileDesc.titleStmt.titles?.at(0)) {
+		template.label = item.teiHeader.fileDesc.titleStmt.titles[0]!.$!;
 	} else {
 		template.label = template.person.name
 			? template.person.name
-			: item.teiHeader.fileDesc.titleStmt.titles
-				? item.teiHeader.fileDesc.titleStmt.titles[0].$
+			: item.teiHeader.fileDesc.titleStmt.titles?.at(0)
+				? item.teiHeader.fileDesc.titleStmt.titles[0]!.$!
 				: template.place.settlement;
 	}
 
@@ -222,8 +179,12 @@ const extractMetadata = function (item: teiHeader, dataType: string, corpusRaw: 
 };
 
 // Google Gemini Cloude Code suggestion
-function isTEIs(item: TEIs | object): item is TEIs {
-	return Object.prototype.hasOwnProperty.call(item, "TEIs");
+function isTEIs(item: TeiCorpus | object): item is TeiCorpus {
+	return Object.hasOwn(item, "TEIs");
+}
+
+function isPersName(item: PersName | object): item is PersName {
+	return Object.hasOwn(item, "@id");
 }
 
 export function useTEIHeaders() {
@@ -234,18 +195,18 @@ export function useTEIHeaders() {
 			projectData.value?.projectConfig?.staticData?.table
 				? projectData.value.projectConfig.staticData.table
 				: []
-		) as Array<TEIs>;
+		).filter(isTEIs);
 	});
 
 	const simpleItems: ComputedRef<Array<simpleTEIMetadata>> = computed(() => {
 		const corpusMetadata = rawItems.value
 			.filter(isTEIs)
-			.find((item: TEIs) => item.teiHeader && item["@id"] === "vicav_corpus");
+			.find((item) => item.teiHeader && item["@id"] === "vicav_corpus")?.teiHeader;
 		const data = rawItems.value
-			// Google Gemini Cloude Code suggestion
 			.filter(isTEIs)
-			.map((dataTypeTEIs: TEIs) => {
-				return dataTypeTEIs.TEIs.map((item: teiHeader) =>
+			// Google Gemini Cloude Code suggestion
+			.map((dataTypeTEIs) => {
+				return dataTypeTEIs.TEIs.map((item) =>
 					extractMetadata(item, dataTypeTEIs["@id"], corpusMetadata),
 				);
 			});

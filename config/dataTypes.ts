@@ -27,5 +27,11 @@ const types: DataTypes = {
 		categoryId: "corpustext",
 		collection: "vicav_corpus",
 	},
-};
+	Text: {
+		name: "meta text",
+		targetType: "Text",
+		categoryId: "text",
+		collection: "vicav_texts",
+	},
+} as const;
 export default types;
