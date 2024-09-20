@@ -275,3 +275,8 @@ export interface simpleTEIMetadata {
 	};
 	hasTEIw: boolean;
 }
+
+export interface VicavHTTPError extends Error {
+	status?: number;
+	error?: Record<string, string>;
+}
