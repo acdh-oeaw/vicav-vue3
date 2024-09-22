@@ -132,7 +132,7 @@ const debugString = debug ? JSON.stringify(groupedItems, null, 2) : "";
 </script>
 
 <template>
-	<div v-if="groupedItems" class="relative isolate grid h-full w-full overflow-auto">
+	<div v-if="groupedItems" class="relative isolate grid size-full overflow-auto">
 		<div v-if="debug">
 			<label for="debug">Debug</label>
 			<br />

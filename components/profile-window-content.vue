@@ -23,7 +23,7 @@ watch(content, () => {
 
 <template>
 	<div
-		class="relative isolate grid h-full w-full overflow-auto"
+		class="relative isolate grid size-full overflow-auto"
 		:class="{ 'opacity-50 grayscale': isLoading }"
 	>
 		<!-- eslint-disable-next-line vue/no-v-html, vuejs-accessibility/click-events-have-key-events, vuejs-accessibility/no-static-element-interactions -->

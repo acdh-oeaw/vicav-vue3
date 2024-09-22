@@ -9,7 +9,7 @@ const { width, height } = useElementSize(elementRef);
 <template>
 	<div
 		ref="elementRef"
-		class="relative isolate grid h-full w-full overflow-hidden"
+		class="relative isolate grid size-full overflow-hidden"
 		data-visualisation-container
 	>
 		<slot v-if="width && height" :height="height" :width="width" />

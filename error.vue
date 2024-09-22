@@ -14,7 +14,7 @@ const props = defineProps<Props>();
 
 <template>
 	<div
-		class="flex h-full w-full flex-col items-center justify-center bg-[url('/images/tlemcen.jpg')] bg-cover"
+		class="flex size-full flex-col items-center justify-center bg-[url('/images/tlemcen.jpg')] bg-cover"
 	>
 		<div
 			class="max-w-sm overflow-hidden rounded shadow-lg backdrop-blur"
