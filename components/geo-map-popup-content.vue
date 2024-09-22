@@ -3,29 +3,18 @@ import type { Feature, Point } from "geojson";
 import { computed, ref, useAttrs } from "vue";
 
 import type { MarkerProperties } from "@/components/geo-map.context";
+import DataTypes from "@/config/dataTypes.ts";
+import type { DataTypesEnum } from "@/types/global";
 
 const props = defineProps<{
 	markers: Array<Feature<Point, MarkerProperties>>;
 	groupMarkers: boolean;
 }>();
 const attrs = useAttrs();
-const contentTypeHeadings = {
-	Profile: "Profiles",
-	Feature: "Feature lists",
-	SampleText: "Sample texts",
-	CorpusText: "Corpus texts",
-};
-
 const $el = ref<HTMLElement>();
 
-enum TargetTypeEnum {
-	Profile = "Profile",
-	Feature = "Feature",
-	SampleText = "SampleText",
-	CorpusText = "CorpusText",
-}
 type LocationDataPoints = {
-	[key in TargetTypeEnum]: Array<Feature<Point, MarkerProperties>>;
+	[key in DataTypesEnum]: Array<Feature<Point, MarkerProperties>>;
 };
 
 const groupedMarkers = computed<Record<string, LocationDataPoints> | null>(() => {
@@ -38,10 +27,9 @@ const groupedMarkers = computed<Record<string, LocationDataPoints> | null>(() =>
 					Feature: [],
 					SampleText: [],
 					CorpusText: [],
+					Text: [],
 				};
-			grouped[marker.properties.label]![marker.properties.targetType as TargetTypeEnum].push(
-				marker,
-			);
+			grouped[marker.properties.label]![marker.properties.targetType as DataTypesEnum].push(marker);
 		});
 		return grouped;
 	} else {
@@ -68,7 +56,7 @@ defineExpose({
 					class="text-xs"
 				>
 					<h3 v-if="markersOfType.length > 0" class="italic">
-						{{ contentTypeHeadings[contentType] }}
+						{{ DataTypes[contentType].contentTypeHeading }}
 					</h3>
 
 					<GeoMapPopupLinks :markers="markersOfType" />

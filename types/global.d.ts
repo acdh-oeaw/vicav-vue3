@@ -12,6 +12,7 @@ export interface DataType {
 	categoryId: string;
 	collection: string;
 	explore_xslt?: string;
+	contentTypeHeading: string;
 }
 export type DataTypes = Record<DataTypesEnum, DataType>;
 
