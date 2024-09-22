@@ -18,25 +18,30 @@ const contentTypeHeadings = {
 
 const $el = ref<HTMLElement>();
 
-interface LocationDataPoints {
-	Feature: Array<Feature<Point, MarkerProperties>>;
-	Profile: Array<Feature<Point, MarkerProperties>>;
-	SampleText: Array<Feature<Point, MarkerProperties>>;
-	CorpusText: Array<Feature<Point, MarkerProperties>>;
+enum TargetTypeEnum {
+	Profile = "Profile",
+	Feature = "Feature",
+	SampleText = "SampleText",
+	CorpusText = "CorpusText",
 }
+type LocationDataPoints = {
+	[key in TargetTypeEnum]: Array<Feature<Point, MarkerProperties>>;
+};
 
 const groupedMarkers = computed<Record<string, LocationDataPoints> | null>(() => {
 	if (props.groupMarkers) {
 		const grouped: Record<string, LocationDataPoints> = {};
 		props.markers.forEach((marker) => {
-			if (grouped[marker.properties.label] === undefined)
-				//@ts-expect-error TODO: check if this is correct - key "Sample" does not exist on LocationDataPoints
-				grouped[marker.properties.label] = { Profile: [], Feature: [], Sample: [] };
-			(
-				grouped[marker.properties.label]![marker.properties.targetType!]! as Array<
-					Feature<Point, MarkerProperties>
-				>
-			).push(marker);
+			if (!grouped[marker.properties.label])
+				grouped[marker.properties.label] = {
+					Profile: [],
+					Feature: [],
+					SampleText: [],
+					CorpusText: [],
+				};
+			grouped[marker.properties.label]![marker.properties.targetType as TargetTypeEnum].push(
+				marker,
+			);
 		});
 		return grouped;
 	} else {
