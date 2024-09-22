@@ -16,10 +16,10 @@ export default function useExploreSamplesClickHandler(
 			item[element.name] = element.value;
 		}
 
-		if (item.targetWindow && item.targetWindow === "self") {
+		if (item?.targetWindow === "self") {
 			const dataFeatures = item.features?.split(",");
 			if (dataFeatures) features.value = dataFeatures;
-			if (item.page) page.value = item.page;
+			if (item.page) page.value = parseInt(item.page);
 		} else {
 			openNewWindowFromAnchor(event);
 		}

@@ -30,7 +30,7 @@ function onClose(id: string) {
 			@update:open="
 				(value: boolean) => {
 					if (value === false) {
-						onClose(toast.id);
+						onClose(toast!.id);
 					}
 				}
 			"

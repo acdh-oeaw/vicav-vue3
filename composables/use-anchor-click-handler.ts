@@ -17,7 +17,7 @@ export function useAnchorClickHandler() {
 			item = element.parentElement.dataset as Record<string, string>;
 		}
 
-		if (item.targetType) {
+		if (item?.targetType) {
 			if (item.targetType === "External-link") return;
 			event.preventDefault();
 			addWindow({

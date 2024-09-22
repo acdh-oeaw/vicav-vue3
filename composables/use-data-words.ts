@@ -1,5 +1,7 @@
 import { useQuery } from "@tanstack/vue-query";
 
+import type { DataTypesEnum } from "@/types/global";
+
 interface DataWordParams {
 	dataType: string;
 }
@@ -13,7 +15,7 @@ export function useDataWords(params: DataWordParams, options?: { enabled?: boole
 		async queryFn() {
 			const response = await api.vicav.getDataWords(
 				{
-					type: dataTypes[params.dataType]?.collection.replace("vicav_", ""),
+					type: dataTypes[params.dataType as DataTypesEnum].collection.replace("vicav_", ""),
 				},
 				{
 					headers: { accept: "application/json" },
