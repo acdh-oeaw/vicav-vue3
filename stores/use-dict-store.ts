@@ -161,7 +161,9 @@ export const useDictStore = defineStore("dict", () => {
 
 	const dictIndex = computed(() => {
 		const newDictIndex: DictIndex = new Set();
-		const dicts: Array<object> | undefined = dictData.value?._embedded.dicts;
+		//TODO: refine response types in API definition
+		//eslint-disable-next-line  @typescript-eslint/no-explicit-any
+		const dicts: Array<Record<string, any>> | undefined = dictData.value?._embedded.dicts;
 		if (dicts !== undefined) {
 			dicts.forEach((d) => {
 				const dictParse = Dict.shape.id.safeParse(d.name);
@@ -179,7 +181,11 @@ export const useDictStore = defineStore("dict", () => {
 		}
 		const { data, suspense: suspense } = useDictsDict({ id });
 		await suspense();
-		const dataObject = data.value?._embedded._.find((obj) => obj.note === "all entries");
+		//TODO: refine response types in API definition
+		//eslint-disable-next-line  @typescript-eslint/no-explicit-any
+		const dataObject: Record<string, any> | undefined = data.value!._embedded._.find(
+			(obj) => (obj as Record<string, any>).note === "all entries",
+		);
 		if (dataObject === undefined) {
 			return;
 		}
@@ -190,10 +196,8 @@ export const useDictStore = defineStore("dict", () => {
 		const dict: Zod.infer<typeof Dict> = {
 			id,
 			//TODO refine response types in API definition
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-member-access
-			queryTemplates: new Map(dataObject.queryTemplates.map((e) => [e, e])),
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-			dbNames: dataObject.dbNames,
+			queryTemplates: new Map((dataObject.queryTemplates as Array<string>).map((e) => [e, e])),
+			dbNames: dataObject.dbNames as Array<string>,
 			specChars,
 		};
 		return dict;

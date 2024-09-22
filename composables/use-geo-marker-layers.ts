@@ -28,9 +28,16 @@ export function useGeoMarkerLayers(
 								);
 								break;
 							case "compare_markers":
-								response = await api.vicav.getCompareMarkers(queryParams, {
-									headers: { accept: "application/json" },
-								});
+								response = await api.vicav.getCompareMarkers(
+									{
+										type: queryParams.type!,
+										ids: queryParams.ids!,
+										...queryParams,
+									},
+									{
+										headers: { accept: "application/json" },
+									},
+								);
 								break;
 							default:
 								response = await api.vicav.getGeoMarkers(
