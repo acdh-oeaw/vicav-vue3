@@ -247,7 +247,7 @@ provide(key, context);
 	<slot :context="context" />
 	<GeoMapPopupContent
 		v-for="popupInfo in componentPopups"
-		v-show="popupInfo.id === openedPopupId!.toString()"
+		v-show="popupInfo.id === openedPopupId?.toString()"
 		v-bind="popupInfo.props"
 		:id="popupInfo.id"
 		:key="popupInfo.id"
