@@ -1,4 +1,7 @@
 <script lang="ts" setup>
+import type { Feature, Point } from "geojson";
+
+import type { MarkerProperties } from "@/lib/api-client";
 import { useGeojsonStore } from "@/stores/use-geojson-store.ts";
 import type { GeojsonMapSchema } from "@/types/global.d";
 
@@ -27,7 +30,12 @@ const filteredMarkers = computed(() => {
 		v-slot="{ width, height }"
 		:class="{ 'opacity-50 grayscale': !filteredMarkers }"
 	>
-		<GeoMap v-if="filteredMarkers" :height="height" :markers="filteredMarkers" :width="width" />
+		<GeoMap
+			v-if="filteredMarkers"
+			:height="height"
+			:markers="filteredMarkers as Array<Feature<Point, MarkerProperties>>"
+			:width="width"
+		/>
 		<Centered v-if="!filteredMarkers">
 			<LoadingIndicator />
 		</Centered>

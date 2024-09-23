@@ -47,7 +47,7 @@ function submitNewQuery(): void {
 
 <template>
 	<div
-		class="relative isolate h-full w-full overflow-auto"
+		class="relative isolate size-full overflow-auto"
 		:class="{ 'opacity-50 grayscale': isLoading }"
 	>
 		<!-- eslint-disable vuejs-accessibility/form-control-has-label, tailwindcss/no-custom-classname -->
@@ -118,7 +118,7 @@ function submitNewQuery(): void {
 								<input
 									id="isTextQuery"
 									v-model="isTextQuery"
-									class="focus:ring-3 h-4 w-4 rounded border border-gray-300 bg-gray-50 focus:ring-blue-300 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-blue-600 dark:focus:ring-offset-gray-800"
+									class="focus:ring-3 size-4 rounded border border-gray-300 bg-gray-50 focus:ring-blue-300 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-blue-600 dark:focus:ring-offset-gray-800"
 									type="checkbox"
 								/>
 							</div>
@@ -134,7 +134,7 @@ function submitNewQuery(): void {
 								<input
 									id="isMapQuery"
 									v-model="isMapQuery"
-									class="focus:ring-3 h-4 w-4 rounded border border-gray-300 bg-gray-50 focus:ring-blue-300 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary dark:focus:ring-offset-gray-800"
+									class="focus:ring-3 size-4 rounded border border-gray-300 bg-gray-50 focus:ring-blue-300 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary dark:focus:ring-offset-gray-800"
 									type="checkbox"
 								/>
 							</div>

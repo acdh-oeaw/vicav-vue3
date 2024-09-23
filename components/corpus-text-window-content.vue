@@ -1,19 +1,20 @@
 <script setup lang="ts">
+//@ts-expect-error no types available
 import "v3-infinite-loading/lib/style.css"; //required if you're not going to override default slots
 
 import InfiniteLoading from "v3-infinite-loading";
 import type { StateHandler } from "v3-infinite-loading/lib/types";
 
 import type { CorpusTextUtterances } from "@/lib/api-client";
-import type { CorpusTextSchema } from "@/types/global";
+import type { CorpusTextSchema, VicavHTTPError } from "@/types/global";
 
 const props = defineProps<{
-	params: Zod.infer<typeof CorpusTextSchema>["params"];
+	params: Zod.infer<typeof CorpusTextSchema>["params"] & { label?: string };
 }>();
 
 const { simpleItems } = useTEIHeaders();
 const utterances = ref<Array<CorpusTextUtterances>>([]);
-const utterancesWrapper = ref<HTMLDivElement>(null);
+const utterancesWrapper = ref<HTMLDivElement | null>(null);
 const utteranceElements = ref<Array<Element>>([]);
 const currentPage = ref(1);
 const api = useApiClient();
@@ -45,7 +46,8 @@ const handleInfiniteScroll = async function ($state: StateHandler) {
 			$state.complete();
 		}
 	} catch (e) {
-		if (e.status === 404 && e.error.detail.indexOf("does not have page") !== -1) {
+		const err = e as VicavHTTPError;
+		if (err.status === 404 && err.error?.detail?.indexOf("does not have page") !== -1) {
 			scrollComplete.value = true;
 			$state.complete();
 			return;
@@ -66,7 +68,7 @@ const getText = async function () {
 	);
 };
 
-const scrollParentToChild = function (parent, child) {
+const scrollParentToChild = function (parent: Element, child: Element) {
 	// Where is the parent on page
 	const parentRect = parent.getBoundingClientRect();
 	// What can you see?
@@ -99,8 +101,8 @@ const scrollParentToChild = function (parent, child) {
 onMounted(async () => {
 	await getText();
 	const u = utteranceElements.value.find((u) => u.id === props.params.u);
-	const window = utterancesWrapper.value.parentElement;
-	if (u !== undefined) scrollParentToChild(window, u);
+	const window = utterancesWrapper.value?.parentElement;
+	if (u !== undefined) scrollParentToChild(window!, u);
 });
 </script>
 
@@ -112,13 +114,13 @@ onMounted(async () => {
 		<table class="m-3 border border-gray-300">
 			<tr>
 				<th>Contributed by:</th>
-				<td>{{ teiHeader.resp }}</td>
+				<td>{{ teiHeader?.resp }}</td>
 			</tr>
 			<tr>
 				<th>Speaker:</th>
 				<td>
-					{{ teiHeader.person.name }} (age: {{ teiHeader.person.age }}, sex:
-					{{ teiHeader.person.sex }})
+					{{ teiHeader?.person.name }} (age: {{ teiHeader?.person.age }}, sex:
+					{{ teiHeader?.person.sex }})
 				</td>
 			</tr>
 		</table>

@@ -16,7 +16,7 @@ const { arrangement: currentArrangement, registry } = storeToRefs(windowsStore);
 <template>
 	<MenubarMenu>
 		<MenubarTrigger aria-label="Windows" class="ml-auto">
-			<AppWindowIcon class="h-6 w-6" />
+			<AppWindowIcon class="size-6" />
 		</MenubarTrigger>
 		<MenubarContent align="end">
 			<template v-if="registry.size === 0">
@@ -63,7 +63,7 @@ const { arrangement: currentArrangement, registry } = storeToRefs(windowsStore);
 					"
 				>
 					{{ arrangement.label }}
-					<CheckIcon v-if="id === currentArrangement" class="h-4 w-4" />
+					<CheckIcon v-if="id === currentArrangement" class="size-4" />
 				</MenubarItem>
 			</template>
 		</MenubarContent>

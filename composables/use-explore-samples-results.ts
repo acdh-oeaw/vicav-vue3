@@ -16,13 +16,13 @@ export function useExploreSamplesResult(
 		async queryFn({ queryKey: [, params] }) {
 			const response = await api.vicav.getCompare(
 				{
-					type: dataTypes[params.dataType]?.collection.replace("vicav_", ""),
+					type: dataTypes[params.dataType].collection.replace("vicav_", ""),
 					word: params.word,
 					features: params.features,
 					comment: params.comment,
 					translation: params.translation,
-					ids: params.ids,
-					page: params.page,
+					ids: params.ids!,
+					page: params.page!.toString(),
 				},
 				{ headers: { accept: "application/xml" } },
 			);

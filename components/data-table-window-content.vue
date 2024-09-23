@@ -1,5 +1,10 @@
 <script lang="ts" setup>
-import { type ColumnFiltersState, createColumnHelper, type Table } from "@tanstack/vue-table";
+import {
+	type ColumnDef,
+	type ColumnFiltersState,
+	createColumnHelper,
+	type Table,
+} from "@tanstack/vue-table";
 import { h } from "vue";
 
 import { useTEIHeaders } from "@/composables/use-tei-headers";
@@ -77,7 +82,7 @@ const columns = ref([
 	}),
 ]);
 
-const tables = ref(null);
+const tables: Ref<Table<Array<simpleTEIMetadata>> | null> = ref(null);
 const columnFilters = ref<ColumnFiltersState>([]);
 
 const registerTable = function (table: Table<Array<simpleTEIMetadata>>) {
@@ -93,17 +98,17 @@ const setFilters = function (value: ColumnFiltersState) {
 	<div v-if="simpleItems">
 		<div class="flex justify-between py-2">
 			<DataTableFilterTeiHeaders v-if="tables" :filters="columnFilters" :table="tables" />
-			<DataTablePagination v-if="tables" :table="tables" />
+			<DataTablePagination v-if="tables" :table="tables as unknown as Table<never>" />
 		</div>
 		<DataTable
-			:columns="columns"
-			:items="items"
+			:columns="columns as Array<ColumnDef<never>>"
+			:items="items as Array<never>"
 			@click="openNewWindowFromAnchor"
 			@column-filters-change="setFilters"
 			@table-ready="registerTable"
 		></DataTable>
 		<div class="grid justify-items-end py-2">
-			<DataTablePagination v-if="tables" :table="tables" />
+			<DataTablePagination v-if="tables" :table="tables as unknown as Table<never>" />
 		</div>
 	</div>
 </template>

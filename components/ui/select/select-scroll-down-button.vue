@@ -11,7 +11,7 @@ const props = defineProps<SelectScrollDownButtonProps>();
 		:class="['flex cursor-default items-center justify-center py-1', $attrs.class]"
 	>
 		<slot>
-			<ChevronDown class="h-4 w-4" />
+			<ChevronDown class="size-4" />
 		</slot>
 	</SelectScrollDownButton>
 </template>

@@ -8,11 +8,11 @@ interface Props {
 const props = defineProps<Props>();
 const { params } = toRefs(props);
 const content: Ref<HTMLElement | undefined> = ref();
-const tooltip: Ref<HTMLElement | undefined> = ref();
+const tooltip: Ref<HTMLElement | null> = ref(null);
 
 const { simpleItems } = useTEIHeaders();
 
-const filters = ["region", "place"];
+const filters: Array<"region" | "place"> = ["region", "place"];
 const ids = computed(() => {
 	return params.value.ids
 		? params.value.ids
@@ -21,7 +21,9 @@ const ids = computed(() => {
 				.filter((item) => {
 					if (!params.value.region && !params.value.place) return true;
 					const filter_results = filters.map((key) => {
+						//@ts-expect-error TODO: check if this is correct - key "place" does not exist on simpleteimetadata.place
 						if (params.value[key]) return params.value[key] === item.place[key];
+						return null;
 					});
 					return filter_results.includes(true);
 				})
@@ -45,7 +47,7 @@ watch(params, (value) => {
 const extractedParams = computed(() => {
 	return {
 		dataType: params.value.dataType,
-		ids: ids,
+		ids: ids.value,
 		features: features.value.join(","),
 		word: params.value.word,
 		translation: params.value.translation,
@@ -67,7 +69,7 @@ const { findWindowByTypeAndParam } = useWindowsStore();
 
 watch(page, () => {
 	const window = findWindowByTypeAndParam("ExploreSamples", "ids", ids.value);
-	window.value.params.page = page.value;
+	(window! as ExploreSamplesWindowItem).params.page = page.value;
 });
 
 watch(isLoading, () => {
@@ -77,7 +79,7 @@ watch(isLoading, () => {
 
 <template>
 	<div
-		class="relative isolate grid h-full w-full overflow-auto"
+		class="relative isolate grid size-full overflow-auto"
 		:class="{ 'opacity-50 grayscale': isLoading }"
 	>
 		<!-- eslint-disable vue/no-v-html,
@@ -85,10 +87,9 @@ watch(isLoading, () => {
 			vuejs-accessibility/click-events-have-key-events,
 			vuejs-accessibility/no-static-element-interactions -->
 		<div
-			v-if="data"
+			v-if="!isPending"
 			ref="content"
 			class="prose max-w-3xl p-8"
-			@change="anchorRouter"
 			@click="anchorRouter"
 			@mouseover="handleHoverTooltip"
 			v-html="data"

@@ -6,7 +6,7 @@ const api = useApiClient();
 const { simpleItems } = useTEIHeaders();
 const props = defineProps<{ params: Zod.infer<typeof CorpusQuerySchema>["params"] }>();
 const queryString = ref(props.params.queryString);
-const hits = ref<Array<CorpusSearchHits> | undefined>([]);
+const hits = ref<Array<CorpusSearchHits & { label?: string }> | undefined>([]);
 
 async function searchCorpus() {
 	const result = await api.vicav.searchCorpus(
@@ -19,9 +19,9 @@ async function searchCorpus() {
 		return;
 	}
 	hits.value = result.data.hits;
-	hits.value.forEach((hit) => {
+	hits.value?.forEach((hit) => {
 		const teiHeader = simpleItems.value.find((header) => header.id === hit.doc);
-		hit.label = teiHeader.label;
+		hit.label = teiHeader?.label;
 	});
 }
 

@@ -25,7 +25,7 @@ const props = defineProps<Props>();
 
 const emit = defineEmits<{
 	(event: "ready", map: LeafletMap): void;
-	(event: "marker-click", feature: Feature<Point>): void;
+	(event: "marker-click", feature: Feature<Point, MarkerProperties>): void;
 }>();
 
 const { data: config } = useGeoMapConfig();
@@ -38,7 +38,7 @@ interface ComponentPopupInfo {
 	};
 }
 
-const popupElements = ref<Array<GeoMapPopupContent>>([]);
+const popupElements = ref<Array<typeof GeoMapPopupContent>>([]);
 const componentPopups = ref<Array<ComponentPopupInfo>>([]);
 const openedPopupId = ref<number | null>(null);
 const elementRef = ref<HTMLElement | null>(null);
@@ -46,7 +46,7 @@ const elementRef = ref<HTMLElement | null>(null);
 watchEffect(() => {
 	componentPopups.value.forEach((popup) => {
 		const element = popupElements.value.find((popupElement) => popup.id === popupElement.id);
-		const leafletMarker = context.featureGroups.markers?.getLayer(popup.id as number);
+		const leafletMarker = context.featureGroups.markers?.getLayer(parseInt(popup.id));
 		if (leafletMarker == null || element == null) return;
 
 		leafletMarker.bindPopup(element.$el, { minWidth: 150 });
@@ -69,44 +69,45 @@ const ptDistanceSq = function (pt1: LeafletPoint, pt2: LeafletPoint): number {
 
 // Bind a popup listing nearby data to markers close to each other.
 // Remove existing if there are no nearby markers on the map any more.
-const addNearbyDataPopup = function (marker) {
+const addNearbyDataPopup = function (marker: LeafletMarker) {
 	const featureGroup = context.featureGroups.markers;
 	const map = context.map;
 	if (featureGroup === null || map === null) return;
 
 	const distance = Math.floor(2 * map.getZoom());
-	const nearbyMarkerData = [];
+	const nearbyMarkerData: Array<Feature> = [];
 	const pxSq = distance * distance;
 	const markerPt = map.latLngToLayerPoint(marker.getLatLng());
 
 	const id = featureGroup.getLayerId(marker);
-	Object.values(featureGroup.getLayers()).forEach((m: LeafletMarker) => {
+	featureGroup.getLayers().forEach((m) => {
 		if (map.hasLayer(m)) {
-			const mPt = map.latLngToLayerPoint(m.getLatLng());
+			const marker: LeafletMarker = m as LeafletMarker;
+			const mPt = map.latLngToLayerPoint(marker.getLatLng());
 			if (ptDistanceSq(mPt, markerPt) < pxSq) {
-				nearbyMarkerData.push(m.feature);
+				nearbyMarkerData.push(marker.feature!);
 			}
 		}
 	});
 
 	if (nearbyMarkerData.length > 1) {
 		const markers = nearbyMarkerData.sort((a, b) => {
-			return a.properties.label.localeCompare(b.properties.label);
+			return a.properties!.label.localeCompare(b.properties!.label);
 		});
 
 		// @todo determine whether grouping is needed based on the number of
 		// feature groups once separate feature groups for queries are supported.
-		const contentTypes = [];
+		const contentTypes: Array<string> = [];
 		markers.forEach((marker) => {
-			if (!contentTypes.includes(marker.properties.targetType)) {
-				contentTypes.push(marker.properties.targetType);
+			if (!contentTypes.includes(marker.properties!.targetType)) {
+				contentTypes.push(marker.properties!.targetType);
 			}
 		});
 
 		componentPopups.value.push({
-			id: id as string,
+			id: id.toString(),
 			props: {
-				markers: markers,
+				markers: markers as Array<Feature<Point, MarkerProperties>>,
 				groupMarkers: contentTypes.length > 1,
 			},
 		});
@@ -126,7 +127,7 @@ function updateMarkers(updateViewport = true) {
 
 	if (config.nearbyMarkersPopup) {
 		Object.values(featureGroup.getLayers()).forEach((marker) => {
-			addNearbyDataPopup(marker);
+			addNearbyDataPopup(marker as LeafletMarker);
 		});
 	}
 
@@ -195,8 +196,10 @@ onMounted(async () => {
 	});
 });
 
-// noinspection TypeScriptValidateTypes
-watch(() => props.markers, updateMarkers);
+watch(
+	() => props.markers,
+	() => updateMarkers,
+);
 
 const resize = debounce(() => {
 	if (context.map === null) {
@@ -244,7 +247,7 @@ provide(key, context);
 	<slot :context="context" />
 	<GeoMapPopupContent
 		v-for="popupInfo in componentPopups"
-		v-show="popupInfo.id == openedPopupId"
+		v-show="popupInfo.id === openedPopupId?.toString()"
 		v-bind="popupInfo.props"
 		:id="popupInfo.id"
 		:key="popupInfo.id"

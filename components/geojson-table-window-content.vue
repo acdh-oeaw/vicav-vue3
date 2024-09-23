@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { Table } from "@tanstack/vue-table";
+import type { CellContext, ColumnDef, Table } from "@tanstack/vue-table";
 
 import { useGeojsonStore } from "@/stores/use-geojson-store.ts";
 import type { FeatureType } from "@/types/global";
@@ -20,21 +20,21 @@ const columns = computed(() => {
 					return {
 						id: Object.keys(heading).find((key) => /ft_*/.test(key)) ?? "",
 						header: heading[Object.keys(heading).find((key) => /ft_*/.test(key)) ?? ""],
-						cell: ({ cell }) => {
+						cell: ({ cell }: CellContext<FeatureType, never>) => {
 							return h(resolveComponent("GeojsonTablePropertyCell"), {
-								value: cell.row.original.properties[cell.column.columnDef.id],
+								value: cell.row.original.properties[cell.column.columnDef.id!],
 							});
 						},
 					};
-				case /name/.test(Object.keys(heading)[0]):
+				case /name/.test(Object.keys(heading)[0]!):
 					return {
 						id: Object.keys(heading)[0],
 						header: Object.values(heading)[0],
-						cell: ({ cell }) => {
+						cell: ({ cell }: CellContext<FeatureType, never>) => {
 							return h(
 								"span",
 								{ class: "max-w-[500px] truncate font-medium" },
-								cell.row.original.properties[cell.column.columnDef.id],
+								cell.row.original.properties[cell.column.columnDef.id!],
 							);
 						},
 					};
@@ -42,11 +42,11 @@ const columns = computed(() => {
 					return {
 						id: Object.keys(heading)[0],
 						header: Object.values(heading)[0],
-						cell: ({ cell }) => {
+						cell: ({ cell }: CellContext<FeatureType, never>) => {
 							return h(
 								"span",
 								{ class: "max-w-[500px] truncate font-medium" },
-								cell.row.original.properties[cell.column.columnDef.id],
+								cell.row.original.properties[cell.column.columnDef.id!],
 							);
 						},
 					};
@@ -81,16 +81,22 @@ function registerTable(table: Table<FeatureType>) {
 			<LoadingIndicator />
 		</Centered>
 		<div class="grid justify-items-end py-2">
-			<DataTablePagination v-if="tables.get(url)" :table="tables.get(url)" />
+			<DataTablePagination
+				v-if="tables.get(url)"
+				:table="tables.get(url) as unknown as Table<never>"
+			/>
 		</div>
 		<DataTable
 			v-if="!isPending"
-			:columns="columns"
-			:items="fetchedData.get(url)?.features"
+			:columns="columns as unknown as Array<ColumnDef<never>>"
+			:items="fetchedData.get(url)?.features as Array<never>"
 			@table-ready="registerTable"
 		></DataTable>
 		<div class="grid justify-items-end py-2">
-			<DataTablePagination v-if="tables.get(url)" :table="tables.get(url)" />
+			<DataTablePagination
+				v-if="tables.get(url)"
+				:table="tables.get(url) as unknown as Table<never>"
+			/>
 		</div>
 	</div>
 </template>

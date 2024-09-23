@@ -22,7 +22,7 @@ onMounted(() => {
 	<div
 		:id="windowRootId"
 		ref="rootElement"
-		class="pointer-events-none absolute inset-0 isolate z-10 grid h-full w-full overflow-hidden"
+		class="pointer-events-none absolute inset-0 isolate z-10 grid size-full overflow-hidden"
 	>
 		<template v-for="[id, item] of registry" :key="id">
 			<Teleport :to="`#${id} .wb-body`">

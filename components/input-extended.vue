@@ -49,11 +49,12 @@ const restoreCursorPosition = (pos: number) => {
 	<!-- eslint-disable tailwindcss/no-custom-classname -->
 	<div class="ie">
 		<div class="ie-buttons">
+			<!-- @ts-expect-error  -->
 			<button
 				v-for="(c, i) in stringSnippets"
 				:key="i"
-				@click.prevent="InsertSnippet(c.value)"
-				v-html="c.text ? c.text : c.value"
+				@click.prevent="InsertSnippet(c)"
+				v-html="c"
 			></button>
 		</div>
 		<div class="ie-textinput">
