@@ -132,6 +132,7 @@ const personsFilter = computed(() =>
 );
 
 const resultParams = computed(() => {
+	console.log(params.value.dataTypes);
 	return {
 		word: words.value.join(","),
 		comment: comment.value,
@@ -214,7 +215,7 @@ const openSearchResultsWindow = function () {
 </script>
 
 <template>
-	<div class="relative isolate grid size-full overflow-auto">
+	<div class="size-full relative isolate grid overflow-auto">
 		<form
 			class="block w-full rounded border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
 		>
@@ -252,11 +253,11 @@ const openSearchResultsWindow = function () {
 						</SliderTrack>
 						<SliderThumb
 							aria-label="Min age"
-							class="block size-5 rounded-[10px] bg-white shadow-[0_2px_10px] focus:shadow-[0_0_0_2px]"
+							class="size-5 block rounded-[10px] bg-white shadow-[0_2px_10px] focus:shadow-[0_0_0_2px]"
 						/>
 						<SliderThumb
 							aria-label="Max age"
-							class="block size-5 rounded-[10px] bg-white shadow-[0_2px_10px] shadow-primary focus:shadow-[0_0_0_2px] focus:shadow-gray-400"
+							class="size-5 block rounded-[10px] bg-white shadow-[0_2px_10px] shadow-primary focus:shadow-[0_0_0_2px] focus:shadow-gray-400"
 						/>
 					</SliderRoot>
 					<span>{{ age[1] }}</span>
@@ -271,11 +272,11 @@ const openSearchResultsWindow = function () {
 					>
 						<CheckboxRoot
 							v-model:checked="male"
-							class="flex size-[25px] appearance-none items-center justify-center rounded-[4px] bg-white shadow-[0_2px_10px] shadow-gray-500 outline-none focus-within:shadow-[0_0_0_2px_gray]"
+							class="size-[25px] flex appearance-none items-center justify-center rounded-[4px] bg-white shadow-[0_2px_10px] shadow-gray-500 outline-none focus-within:shadow-[0_0_0_2px_gray]"
 							if="sex-male"
 						>
 							<CheckboxIndicator
-								class="flex size-full items-center justify-center rounded bg-white"
+								class="size-full flex items-center justify-center rounded bg-white"
 							>
 								<Icon class="size-3.5" icon="radix-icons:check" />
 							</CheckboxIndicator>
@@ -289,10 +290,10 @@ const openSearchResultsWindow = function () {
 						<CheckboxRoot
 							id="sex-female"
 							v-model:checked="female"
-							class="flex size-[25px] appearance-none items-center justify-center rounded-[4px] bg-white shadow-[0_2px_10px] shadow-gray-500 outline-none focus-within:shadow-[0_0_0_2px_gray] hover:bg-white"
+							class="size-[25px] flex appearance-none items-center justify-center rounded-[4px] bg-white shadow-[0_2px_10px] shadow-gray-500 outline-none focus-within:shadow-[0_0_0_2px_gray] hover:bg-white"
 						>
 							<CheckboxIndicator
-								class="flex size-full items-center justify-center rounded bg-white"
+								class="size-full flex items-center justify-center rounded bg-white"
 							>
 								<Icon class="size-3.5" icon="radix-icons:check" />
 							</CheckboxIndicator>

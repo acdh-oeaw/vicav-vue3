@@ -269,6 +269,8 @@ export type FeatureCollectionType = z.infer<typeof FeatureCollectionSchema>;
 
 export interface simpleTEIMetadata {
 	id: string;
+	recordingDate?: string;
+	pubDate: string;
 	label: string;
 	dataType: DataTypesEnum;
 	secondaryDataType: string;

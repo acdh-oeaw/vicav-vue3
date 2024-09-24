@@ -31,10 +31,15 @@ const setSettlementFilter = function (event: Event) {
 	setColumnFilter("settlement", (event.target as HTMLInputElement).value);
 };
 
+const setRegionFilter = function (event: Event) {
+	setColumnFilter("region", event.target?.value);
+};
+
 const setColumnFilter = function (column: string, value: string) {
 	const index = filters.value.findIndex((filter) => filter.id === column);
 	if (index !== -1) {
-		filters.value[index]!.value = value;
+		if (value === "__all__") filters.value.splice(index, 1);
+		else if (filters.value[index]) filters.value[index].value = value;
 	} else {
 		filters.value.push({
 			id: column,
@@ -60,6 +65,7 @@ const setColumnFilter = function (column: string, value: string) {
 						<SelectValue placeholder="Select data type" />
 					</SelectTrigger>
 					<SelectContent class="bg-white">
+						<SelectItem :key="-1" value="__all__">Select All</SelectItem>
 						<SelectItem
 							v-for="(dataType, index) in [
 								'Feature List',
@@ -86,10 +92,11 @@ const setColumnFilter = function (column: string, value: string) {
 			</div>
 			<div class="flex items-center space-x-2">
 				<p id="settlement" class="whitespace-nowrap text-sm font-medium">Region:</p>
-				<Input class="h-8 rounded-md border border-input" :value="regionFilter?.value" />
-				<!-- TODO: setRegionFilter seems to be missing
-				@change="setRegionFilter"
-				-->
+				<Input
+					class="h-8 rounded-md border border-input"
+					:value="regionFilter?.value"
+					@change="setRegionFilter"
+				/>
 			</div>
 		</div>
 	</div>

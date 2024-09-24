@@ -23,6 +23,7 @@ const extractMetadata = function (
 	const place = item.teiHeader.profileDesc?.settingDesc?.place;
 	const template = {
 		id: "",
+		recordingDate: "",
 		place: {
 			settlement: "",
 			region: "",
@@ -45,6 +46,10 @@ const extractMetadata = function (
 		: item.teiHeader.fileDesc.publicationStmt.idno?.$
 			? item.teiHeader.fileDesc.publicationStmt.idno.$
 			: "no_id";
+
+	template.recordingDate =
+		item.teiHeader.fileDesc.sourceDesc.recordingStmt?.recording.date["@when"] ?? "unknown";
+	template.pubDate = item.teiHeader.fileDesc.publicationStmt.date.$ ?? "unknown";
 	const dataTypeObject = Object.values(dataTypes).find(
 		(dataTypeObject) => dataTypeObject.collection === dataType,
 	);
@@ -93,7 +98,7 @@ const extractMetadata = function (
 			name =
 				persName2["@forename"] && persName2["@surname"]
 					? `${persName2["@forename"]} ${persName2["@surname"]}`
-					: persName2["@full"];
+					: persName2.$;
 		} else {
 			name = monogram;
 		}

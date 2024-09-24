@@ -81,6 +81,20 @@ const columns = ref([
 		header: "Settlement",
 		footer: (props) => props.column.id,
 	}),
+
+	columnHelper.accessor((row) => row.recordingDate, {
+		id: "date",
+		cell: (info) => info.getValue(),
+		header: "Recording date",
+		footer: (props) => props.column.id,
+	}),
+
+	columnHelper.accessor((row) => row.resp, {
+		id: "respPerson",
+		cell: (info) => info.getValue(),
+		header: "Interviewer",
+		footer: (props) => props.column.id,
+	}),
 ]);
 
 const tables: Ref<Table<Array<simpleTEIMetadata>> | null> = ref(null);

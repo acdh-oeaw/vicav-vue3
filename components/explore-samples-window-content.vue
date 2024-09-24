@@ -40,6 +40,7 @@ const features: Ref<Array<string>> = ref([]);
 const page: Ref<number> = ref(1);
 
 watch(params, (value) => {
+	console.log(value);
 	if (value.features) features.value = value.features.split(",");
 	if (value.page) page.value = value.page;
 });
@@ -79,7 +80,7 @@ watch(isLoading, () => {
 
 <template>
 	<div
-		class="relative isolate grid size-full overflow-auto"
+		class="size-full relative isolate grid overflow-auto"
 		:class="{ 'opacity-50 grayscale': isLoading }"
 	>
 		<!-- eslint-disable vue/no-v-html,
