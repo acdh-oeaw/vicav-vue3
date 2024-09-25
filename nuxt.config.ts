@@ -31,7 +31,7 @@ export default defineNuxtConfig({
 	},
 
 	imports: { dirs: ["./config/"] },
-	modules: ["@pinia/nuxt", "@vueuse/nuxt", "@nuxt/eslint"],
+	modules: ["@pinia/nuxt", "@vueuse/nuxt", "@nuxt/eslint", "@nuxt/test-utils/module"],
 	nitro: { compressPublicAssets: true },
 
 	postcss: {
