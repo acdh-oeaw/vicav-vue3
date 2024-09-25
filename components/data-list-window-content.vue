@@ -1,7 +1,7 @@
 <!-- eslint-disable @typescript-eslint/sort-type-constituents -->
 <script lang="ts" setup>
-import { useTEIHeaders } from "@/composables/use-tei-headers";
-import type { DataListWindowItem, DataTypesEnum, simpleTEIMetadata } from "@/types/global.d";
+import type { DataListWindowItem, DataTypesEnum } from "@/types/global.d";
+import type { simpleTEIMetadata } from "@/types/teiCorpus.d";
 
 import dataTypes from "../config/dataTypes";
 
@@ -166,7 +166,7 @@ const debugString = debug ? JSON.stringify(groupedItems, null, 2) : "";
 						<ul v-for="item in items" :key="item.id">
 							<li class="text-base">
 								<a
-									v-if="item.dataType !== 'CorpusText' || item.hasTEIw"
+									v-if="item.dataType !== 'CorpusText' || item['@hasTEIw'] === 'true'"
 									class="text-primary underline"
 									:data-target-type="dataTypes[dataType].targetType"
 									:data-text-id="item.id"
@@ -175,7 +175,14 @@ const debugString = debug ? JSON.stringify(groupedItems, null, 2) : "";
 								>
 									{{ item.label }}
 								</a>
-								<span v-if="item.teiHeader.fileDesc.sourceDesc.recordingStmt">
+								<span v-else> {{ item.label }} </span>
+								<span
+									v-if="
+										item.teiHeader.fileDesc.sourceDesc.recordingStmt &&
+										(item.teiHeader.fileDesc.sourceDesc.recordingStmt.recording.media?.['@url'] ||
+											item.teiHeader.fileDesc.sourceDesc.recordingStmt.recording.p?.ref)
+									"
+								>
 									&nbsp; {{ item.teiHeader.fileDesc.sourceDesc.recordingStmt.recording["@type"] }}
 									<span v-if="item.teiHeader.fileDesc.sourceDesc.recordingStmt.recording.media">
 										: {{ item.teiHeader.fileDesc.sourceDesc.recordingStmt.recording.media["@url"] }}
