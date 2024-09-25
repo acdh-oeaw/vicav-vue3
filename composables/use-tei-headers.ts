@@ -9,7 +9,7 @@ import type {
 	TeiCorpus,
 	TeiHeader,
 	TeiTypedTarget,
-} from "@/types/global";
+} from "@/types/teiCorpus";
 
 import dataTypes from "../config/dataTypes";
 
@@ -37,7 +37,7 @@ const extractMetadata = function (
 		dataType: "Text",
 		secondaryDataType: "",
 		label: "",
-		hasTEIw: false,
+		"@hasTEIw": "false",
 		teiHeader: item.teiHeader,
 	} as simpleTEIMetadata;
 	template.id = item["@id"]
@@ -174,7 +174,7 @@ const extractMetadata = function (
 				: template.place.settlement;
 	}
 
-	template.hasTEIw = item["@hasTEIw"] === "true";
+	template["@hasTEIw"] = item["@hasTEIw"] === "true" ? "true" : "false";
 	return template;
 };
 

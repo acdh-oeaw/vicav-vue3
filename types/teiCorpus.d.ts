@@ -17,7 +17,7 @@ export type simpleTEIMetadata = {
 		sex: string;
 		age: string;
 	};
-	hasTEIw: string;
+	"@hasTEIw": string;
 	teiHeader: TeiHeader;
 };
 
