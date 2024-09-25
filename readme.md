@@ -7,7 +7,7 @@ frontend application for the VICAV project.
 prerequisites:
 
 - [Node.js v22](https://nodejs.org/en/download)
-- [pnpm](https://pnpm.io/installation)
+- pnpm (`corepack enable`)
 
 set required environment variables in `.env.local`:
 
@@ -15,7 +15,7 @@ set required environment variables in `.env.local`:
 cp .env.example .env.local
 ```
 
-also, set environment variables required by github actions. use
+also, set environment variables required by GitHub actions. use
 ["variables"](https://github.com/acdh-oeaw/template-app-nuxt/settings/variables/actions) for every
 environment variable prefixed with `NUXT_PUBLIC_`, and
 ["secrets"](https://github.com/acdh-oeaw/template-app-nuxt/settings/secrets/actions) for all others.
@@ -39,7 +39,9 @@ The automated build process is roughly equivalent to the following command seque
 ```bash
 pnpm run build
 pnpm run test
-pnpm prune
+# export CI=true or
+# $env:CI='true'
+pnpm prune --prod
 pnpm run start
 ```
 
@@ -57,3 +59,11 @@ and shows the new features you implemented.
 
 If you do not verify that these commands work after major overhauls there is a high change that
 `pnpm run dev` works but the deployed container does not.
+
+Get back dev packages:
+
+```bash
+# unset CI or
+# del env:CI
+pnpm prune
+```
