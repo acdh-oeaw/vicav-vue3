@@ -47,8 +47,9 @@ const extractMetadata = function (
 			? item.teiHeader.fileDesc.publicationStmt.idno.$
 			: "no_id";
 
-	template.recordingDate =
-		item.teiHeader.fileDesc.sourceDesc.recordingStmt?.recording.date["@when"] ?? "unknown";
+	if (item.teiHeader.fileDesc.sourceDesc.recordingStmt?.recording.date)
+		template.recordingDate =
+			item.teiHeader.fileDesc.sourceDesc.recordingStmt.recording.date["@when"];
 	template.pubDate = item.teiHeader.fileDesc.publicationStmt.date.$ ?? "unknown";
 	const dataTypeObject = Object.values(dataTypes).find(
 		(dataTypeObject) => dataTypeObject.collection === dataType,

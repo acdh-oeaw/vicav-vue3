@@ -58,7 +58,7 @@ const setSettlementFilter = function (event: Event) {
 };
 
 const setRegionFilter = function (event: Event) {
-	setColumnFilter("region", event.target?.value);
+	setColumnFilter("region", (event.target as HTMLInputElement).value);
 };
 
 const setColumnFilter = function (column: string, value: string | Array<number>) {
