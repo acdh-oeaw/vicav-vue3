@@ -29,13 +29,13 @@
 		"start:preview": "nuxt preview --dotenv ./.env.local",
 		"start": "node .output/server/index.mjs",
 		"start:local": "dotenv -e .env.local -- pnpm run start",
-		"test": "node checkenv.mjs && pnpm playwright install && playwright test",
+		"test": "dotenv -e .env.local -- node checkenv.mjs && pnpm playwright install && pnpm validate",
 		"test:e2e": "playwright test",
 		"test:e2e:codegen": "playwright codegen",
 		"test:e2e:debug": "playwright test --debug",
 		"test:e2e:ui": "playwright test --ui",
 		"types:check": "nuxt typecheck",
-		"validate": "run-p format:check lint:check types:check test test:e2e"
+		"validate": "run-p format:check lint:check types:check test:e2e"
 	},
 	"dependencies": {
 		"@acdh-oeaw/lib": "^0.1.6",
