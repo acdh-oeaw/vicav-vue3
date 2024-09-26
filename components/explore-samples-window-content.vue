@@ -7,52 +7,79 @@ interface Props {
 
 const props = defineProps<Props>();
 const { params } = toRefs(props);
-const content = ref(null);
-const tooltip = ref(null);
+const content: Ref<HTMLElement | undefined> = ref();
+const tooltip: Ref<HTMLElement | null> = ref(null);
 
 const { simpleItems } = useTEIHeaders();
 
-const filters = ["region", "place"];
-const persons = params.value.person
-	? params.value.person
-	: simpleItems.value
-			.filter((item) => {
-				const filter_results = filters.map((key) => {
-					if (params.value[key]) return params.value[key] === item.place[key];
-				});
-				return filter_results.includes(true);
-			})
-			.map((item) => item.person.name)
-			.join(",");
+const filters: Array<"region" | "place"> = ["region", "place"];
+const ids = computed(() => {
+	return params.value.ids
+		? params.value.ids
+		: simpleItems.value
+				.filter((item) => params.value.dataType === item.dataType)
+				.filter((item) => {
+					if (!params.value.region && !params.value.place) return true;
+					const filter_results = filters.map((key) => {
+						//@ts-expect-error TODO: check if this is correct - key "place" does not exist on simpleteimetadata.place
+						if (params.value[key]) return params.value[key] === item.place[key];
+						return null;
+					});
+					return filter_results.includes(true);
+				})
+				.filter((item) => {
+					if (params.value.person) {
+						return params.value.person === item.person.name;
+					} else return true;
+				})
+				.map((item) => item.id)
+				.join(",");
+});
 
-const features = ref([]);
-if (params.value.features) features.value = params.value.features.split(",");
+const features: Ref<Array<string>> = ref([]);
+const page: Ref<number> = ref(1);
+
+watch(params, (value) => {
+	if (value.features) features.value = value.features.split(",");
+	if (value.page) page.value = value.page;
+});
 
 const extractedParams = computed(() => {
 	return {
 		dataType: params.value.dataType,
-		person: persons,
-		features: features.value,
+		ids: ids.value,
+		features: features.value.join(","),
 		word: params.value.word,
 		translation: params.value.translation,
 		comment: params.value.comment,
+		page: page.value,
 	};
 });
 
 const { data, isPending, isPlaceholderData } = useExploreSamplesResult(extractedParams);
 
-const anchorRouter = useExploreSamplesClickHandler(features);
+const anchorRouter = useExploreSamplesClickHandler(features, page);
 
 const { showTooltip, tooltipContent, handleHoverTooltip } = useHoverTooltipHandler(tooltip);
 
 const isLoading = computed(() => {
 	return isPending.value || isPlaceholderData.value;
 });
+const { findWindowByTypeAndParam } = useWindowsStore();
+
+watch(page, () => {
+	const window = findWindowByTypeAndParam("ExploreSamples", "ids", ids.value);
+	(window! as ExploreSamplesWindowItem).params.page = page.value;
+});
+
+watch(isLoading, () => {
+	if (content.value) content.value.scrollTop = 0;
+});
 </script>
 
 <template>
 	<div
-		class="relative isolate grid h-full w-full overflow-auto"
+		class="relative isolate grid size-full overflow-auto"
 		:class="{ 'opacity-50 grayscale': isLoading }"
 	>
 		<!-- eslint-disable vue/no-v-html,
@@ -60,11 +87,10 @@ const isLoading = computed(() => {
 			vuejs-accessibility/click-events-have-key-events,
 			vuejs-accessibility/no-static-element-interactions -->
 		<div
-			v-if="data"
+			v-if="!isPending"
 			ref="content"
 			class="prose max-w-3xl p-8"
 			@click="anchorRouter"
-			@change="anchorRouter"
 			@mouseover="handleHoverTooltip"
 			v-html="data"
 		/>
@@ -101,7 +127,7 @@ const isLoading = computed(() => {
 }
 
 .tdFeaturesHeadLeft {
-	@apply align-top w-[110px] pl-[3px] border border-solid border-primary bg-on-primary text-primary;
+	@apply align-top w-[110px] pl-[3px] border border-solid border-primary bg-on-primary text-header;
 }
 
 .iFeaturesTrans {
@@ -110,12 +136,20 @@ const isLoading = computed(() => {
 
 .tdFeaturesRightSource {
 	@apply align-top w-4/5 pl-[3px] border border-solid border-primary
-bg-primary bg-opacity-30 text-[#7f960a];
+	bg-primary bg-opacity-30 text-[#7f960a];
 }
 
 .tdFeaturesRightTarget {
 	@apply align-top w-4/5 pl-[3px]
-border border-solid border-primary bg-on-primary text-[#a58103] italic;
+	border border-solid border-primary bg-on-primary text-[#a58103] italic;
+
+	a.show-sentence {
+		@apply pr-2;
+	}
+
+	.spSentence {
+		@apply inline;
+	}
 }
 
 a.word-search {

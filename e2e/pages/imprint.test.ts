@@ -1,3 +1,5 @@
+/* eslint-disable playwright/no-conditional-expect */
+/* eslint-disable playwright/no-conditional-in-test */
 import { expect, test } from "@playwright/test";
 
 test.describe("imprint page", () => {
@@ -10,7 +12,7 @@ test.describe("imprint page", () => {
 			case "https://wibarab-api.acdh-ch-dev.oeaw.ac.at":
 				await expect(page).toHaveTitle("Imprint | WIBARAB");
 				break;
-			case "https://tunocent-vicav.acdh-dev.oeaw.ac.at":
+			case "https://tunocent-22a417b1-9f07-406b-9098-288b3f981d99.acdh-ch-dev.oeaw.ac.at":
 				await expect(page).toHaveTitle("Imprint | TUNOCENT");
 				break;
 			default:

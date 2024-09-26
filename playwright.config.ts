@@ -4,7 +4,7 @@ import { defineConfig, devices } from "@playwright/test";
 import { isCI } from "ci-info";
 
 const port = 3000;
-const baseUrl = `http://localhost:${port}`;
+const baseUrl = `http://localhost:${port.toString()}`;
 
 export default defineConfig({
 	testDir: "./e2e",
@@ -48,7 +48,7 @@ export default defineConfig({
 		// },
 	],
 	webServer: {
-		command: "pnpm run start",
+		command: "pnpm run start:local",
 		url: baseUrl,
 		reuseExistingServer: !isCI,
 	},

@@ -120,7 +120,7 @@ const isWindowManagerVisible = computed(() => {
 		<MainContent>
 			<slot />
 
-			<div :class="{ hidden: !isWindowManagerVisible }" class="relative isolate grid h-full w-full">
+			<div class="relative isolate grid size-full" :class="{ hidden: !isWindowManagerVisible }">
 				<WindowManager />
 			</div>
 		</MainContent>

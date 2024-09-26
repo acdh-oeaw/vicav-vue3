@@ -24,7 +24,8 @@ const queryString: Ref<string> = ref(params.value.queryString);
 const isTextQuery: Ref<boolean> = ref(true);
 const isMapQuery: Ref<boolean> = ref(false);
 
-let isFormOpen = ref(queryString.value === "");
+const isFormOpen = ref(queryString.value === "");
+
 function submitNewQuery(): void {
 	if (queryString.value === "") return;
 	if (!isTextQuery.value && !isMapQuery.value) isTextQuery.value = true;
@@ -47,7 +48,7 @@ function submitNewQuery(): void {
 
 <template>
 	<div
-		class="relative isolate h-full w-full overflow-auto"
+		class="relative isolate size-full overflow-auto"
 		:class="{ 'opacity-50 grayscale': isLoading }"
 	>
 		<!-- eslint-disable vuejs-accessibility/form-control-has-label, tailwindcss/no-custom-classname -->
@@ -66,8 +67,8 @@ function submitNewQuery(): void {
 								height: 1em;
 								fill: currentColor;
 							"
-							viewBox="0 0 1024 1024"
 							version="1.1"
+							viewBox="0 0 1024 1024"
 							xmlns="http://www.w3.org/2000/svg"
 						>
 							<path
@@ -85,8 +86,8 @@ function submitNewQuery(): void {
 								height: 1em;
 								fill: currentColor;
 							"
-							viewBox="0 0 1024 1024"
 							version="1.1"
+							viewBox="0 0 1024 1024"
 							xmlns="http://www.w3.org/2000/svg"
 						>
 							<path
@@ -101,9 +102,9 @@ function submitNewQuery(): void {
 					<div class="pt-3">
 						<input
 							v-model="queryString"
-							type="text"
 							class="block w-full rounded border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
 							placeholder="Search in bibliographies&hellip;"
+							type="text"
 							@keyup.enter="submitNewQuery"
 						/>
 					</div>
@@ -118,13 +119,13 @@ function submitNewQuery(): void {
 								<input
 									id="isTextQuery"
 									v-model="isTextQuery"
+									class="focus:ring-3 size-4 rounded border border-gray-300 bg-gray-50 focus:ring-blue-300 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-blue-600 dark:focus:ring-offset-gray-800"
 									type="checkbox"
-									class="focus:ring-3 h-4 w-4 rounded border border-gray-300 bg-gray-50 focus:ring-blue-300 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-blue-600 dark:focus:ring-offset-gray-800"
 								/>
 							</div>
 							<label
-								for="isTextQuery"
 								class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300"
+								for="isTextQuery"
 							>
 								Display as text
 							</label>
@@ -134,13 +135,13 @@ function submitNewQuery(): void {
 								<input
 									id="isMapQuery"
 									v-model="isMapQuery"
+									class="focus:ring-3 size-4 rounded border border-gray-300 bg-gray-50 focus:ring-blue-300 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary dark:focus:ring-offset-gray-800"
 									type="checkbox"
-									class="focus:ring-3 h-4 w-4 rounded border border-gray-300 bg-gray-50 focus:ring-blue-300 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary dark:focus:ring-offset-gray-800"
 								/>
 							</div>
 							<label
-								for="isMapQuery"
 								class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300"
+								for="isMapQuery"
 							>
 								Display on map
 							</label>
@@ -151,9 +152,9 @@ function submitNewQuery(): void {
 							For details as to how to formulate meaningful queries in the bibliography
 							<a
 								class="aVicText"
-								href="/"
 								data-target-type="Text"
 								data-text-id="li_vicavExplanationBibliography"
+								href="/"
 								@click="openNewWindowFromAnchor"
 							>
 								click here

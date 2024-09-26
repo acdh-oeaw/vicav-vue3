@@ -34,7 +34,7 @@ onScopeDispose(() => {
 			<WindowListDropdown :is-mobile="true" />
 		</Menubar>
 		<SheetTrigger aria-label="Toggle menu" class="cursor-default">
-			<MenuIcon class="mx-3 my-1.5 h-5 w-5" />
+			<MenuIcon class="mx-3 my-1.5 size-5" />
 		</SheetTrigger>
 		<SheetContent class="overflow-y-auto">
 			<SheetTitle class="sr-only">Navigation menu</SheetTitle>
@@ -42,7 +42,7 @@ onScopeDispose(() => {
 				<details v-for="menu of menus" :key="menu.id" class="group py-4" name="menu-accordion">
 					<summary class="flex cursor-pointer list-none items-center justify-between font-medium">
 						{{ menu.title }}
-						<ChevronRightIcon class="h-4 w-4 transition group-open:rotate-90" />
+						<ChevronRightIcon class="size-4 transition group-open:rotate-90" />
 					</summary>
 					<ul class="mt-2 grid gap-1" role="list">
 						<template v-for="(item, index) of menu.item">
@@ -62,8 +62,8 @@ onScopeDispose(() => {
 							<li
 								v-else-if="item.type === 'separator'"
 								:key="`separator-${index}`"
-								role="separator"
 								class="-mx-1 my-1 h-px bg-muted"
+								role="separator"
 							/>
 						</template>
 					</ul>

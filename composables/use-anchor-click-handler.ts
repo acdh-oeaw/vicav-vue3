@@ -11,14 +11,13 @@ export function useAnchorClickHandler() {
 		const element = event.target as HTMLElement;
 
 		let item: Record<string, string> | null = null;
-
 		if (element instanceof HTMLAnchorElement) {
 			item = element.dataset as Record<string, string>;
 		} else if (element.parentElement instanceof HTMLAnchorElement) {
 			item = element.parentElement.dataset as Record<string, string>;
 		}
 
-		if (item.targetType) {
+		if (item?.targetType) {
 			if (item.targetType === "External-link") return;
 			event.preventDefault();
 			addWindow({

@@ -13,9 +13,9 @@ const props = defineProps<SelectItemProps>();
 			$attrs.class,
 		]"
 	>
-		<span class="flex h-3.5 w-3.5 items-center justify-end px-1">
+		<span class="flex size-3.5 items-center justify-end px-1">
 			<SelectItemIndicator>
-				<Check class="h-4 w-4" />
+				<Check class="size-4" />
 			</SelectItemIndicator>
 		</span>
 

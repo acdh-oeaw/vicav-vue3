@@ -3,11 +3,10 @@ import type { CorpusSearchHits } from "@/lib/api-client";
 import type { CorpusQuerySchema } from "@/types/global";
 
 const api = useApiClient();
-
+const { simpleItems } = useTEIHeaders();
 const props = defineProps<{ params: Zod.infer<typeof CorpusQuerySchema>["params"] }>();
-
 const queryString = ref(props.params.queryString);
-const hits = ref<Array<CorpusSearchHits> | undefined>([]);
+const hits = ref<Array<CorpusSearchHits & { label?: string }> | undefined>([]);
 
 async function searchCorpus() {
 	const result = await api.vicav.searchCorpus(
@@ -20,33 +19,16 @@ async function searchCorpus() {
 		return;
 	}
 	hits.value = result.data.hits;
+	hits.value?.forEach((hit) => {
+		const teiHeader = simpleItems.value.find((header) => header.id === hit.doc);
+		hit.label = teiHeader?.label;
+	});
 }
 
 const openNewWindowFromAnchor = useAnchorClickHandler();
 
-const specialCharacters: Array<string> = [
-	"ē",
-	"ṛ",
-	"ṯ",
-	"ẓ",
-	"ū",
-	"ī",
-	"ō",
-	"ā",
-	"š",
-	"ḏ",
-	"ṭ",
-	"ǧ",
-	"ḥ",
-	"ž",
-	"ṣ",
-	"ḏ̣",
-	"ʕ",
-	"ʔ",
-	"ġ",
-	"ḅ",
-	"ṃ",
-];
+const { data: config } = useProjectInfo();
+const specialCharacters = config.value?.projectConfig?.specialCharacters as Array<string>;
 </script>
 
 <template>
@@ -57,9 +39,9 @@ const specialCharacters: Array<string> = [
 		>
 			<InputExtended
 				v-model="queryString"
-				:string-snippets="specialCharacters"
-				placeholder="Search in corpus ..."
 				aria-label="Search"
+				placeholder="Search in corpus ..."
+				:string-snippets="specialCharacters"
 				@submit="searchCorpus"
 			/>
 			<button
@@ -72,25 +54,26 @@ const specialCharacters: Array<string> = [
 			<br />
 		</form>
 		<div>
-			<div v-if="hits === undefined || hits.length > 0">
-				TODO write the CQL here: "{{ queryString }}"
+			<div v-if="hits === undefined || hits.length > 0" class="my-2">
+				Query: "{{ queryString }}"
 			</div>
 			<table>
 				<tr v-for="hit in hits" :key="hit.u">
-					<td class="p-0 pe-3">
+					<td class="p-0">
 						<a
-							href="#"
-							data-target-type="CorpusText"
 							:data-hits="hit.docHits"
-							:data-doc="hit.doc"
-							:data-uid="hit.u"
-							@click.self="openNewWindowFromAnchor"
+							:data-label="hit.label"
+							data-target-type="CorpusText"
+							:data-text-id="hit.doc"
+							:data-u="hit.u"
+							href="#"
+							@click="openNewWindowFromAnchor"
 						>
 							<strong>{{ hit.u }}</strong>
 						</a>
 					</td>
-					<td class="p-0 text-right" v-html="hit.content?.left"></td>
-					<td class="bg-[beige] p-0 text-center" v-html="hit.content?.kwic"></td>
+					<td class="pl-5 text-right" v-html="hit.content?.left"></td>
+					<td class="max-w-fit bg-[beige] px-[2px] text-center" v-html="hit.content?.kwic"></td>
 					<td class="p-0" v-html="hit.content?.right"></td>
 				</tr>
 			</table>

@@ -51,7 +51,7 @@ async function fetchWithETag(
 		}
 		return response;
 	} else {
-		throw new Error(`HTTP error! Status: ${response.status}`);
+		throw new Error(`HTTP error! Status: ${response.status.toString()}`);
 	}
 }
 

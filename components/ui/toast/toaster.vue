@@ -24,13 +24,13 @@ function onClose(id: string) {
 		<Toast
 			v-if="toast != null"
 			:duration="toast.duration"
+			:open="!isExiting"
 			:type="toast.type"
 			:variant="toast.variant"
-			:open="!isExiting"
 			@update:open="
 				(value: boolean) => {
 					if (value === false) {
-						onClose(toast.id);
+						onClose(toast!.id);
 					}
 				}
 			"

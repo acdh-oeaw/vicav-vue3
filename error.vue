@@ -9,12 +9,13 @@ interface Props {
 		data: unknown;
 	};
 }
+
 const props = defineProps<Props>();
 </script>
 
 <template>
 	<div
-		class="flex h-full w-full flex-col items-center justify-center bg-[url('/images/tlemcen.jpg')] bg-cover"
+		class="flex size-full flex-col items-center justify-center bg-[url('/images/tlemcen.jpg')] bg-cover"
 	>
 		<div
 			class="max-w-sm overflow-hidden rounded shadow-lg backdrop-blur"
@@ -25,13 +26,13 @@ const props = defineProps<Props>();
 					<svg
 						id="Capa_1"
 						class="fill-blue-700"
+						height="min(25vh, 25vw)"
 						version="1.1"
+						viewBox="0 0 56.244 56.245"
+						width="min(25vh, 25vw)"
+						xml:space="preserve"
 						xmlns="http://www.w3.org/2000/svg"
 						xmlns:xlink="http://www.w3.org/1999/xlink"
-						width="min(25vh, 25vw)"
-						height="min(25vh, 25vw)"
-						viewBox="0 0 56.244 56.245"
-						xml:space="preserve"
 					>
 						<g>
 							<g>
@@ -94,7 +95,7 @@ const props = defineProps<Props>();
 				>
 					<span v-if="props.error?.statusCode == 404">
 						The page you are looking for does not exist. Check the url in the browser or go to the
-						<NuxtLink to="/" class="text-blue-700 underline">main site</NuxtLink>
+						<NuxtLink class="text-blue-700 underline" to="/">main site</NuxtLink>
 						.
 					</span>
 					<span v-else>This site is under maintenance right now. Please check back later!</span>
@@ -102,8 +103,8 @@ const props = defineProps<Props>();
 			</div>
 		</div>
 		<div
-			style="background-color: hsl(0deg 0% 100% / 50%)"
 			class="mt-8 flex w-3/4 flex-col items-center justify-center p-4 text-sm backdrop-blur"
+			style="background-color: hsl(0deg 0% 100% / 50%)"
 		>
 			<div class="flex w-full flex-col">
 				<div>

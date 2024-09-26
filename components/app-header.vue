@@ -7,6 +7,8 @@ import type {
 	CorpusQueryWindowItem,
 	CorpusTextWindowItem,
 	DataListWindowItem,
+	DataTableWindowItem,
+	DictQueryWindowItem,
 	ExploreSamplesFormWindowItem,
 	ExploreSamplesWindowItem,
 	FeatureWindowItem,
@@ -52,11 +54,18 @@ function onSelectMenuItem(item: ItemType) {
 				title: item.label ?? "",
 			};
 			break;
+		case "DictQuery":
+			newWindowState = {
+				targetType: "DictQuery",
+				params: item.params as DictQueryWindowItem["params"],
+				title: item.label ?? "Dictionary Query",
+			};
+			break;
 		case "CorpusQuery":
 			newWindowState = {
 				targetType: "CorpusQuery",
 				params: {
-					queryString: "Two wrongs don't make a right, but three lefts do.", // TODO: pass this value from the backend and replace the string with item.params
+					queryString: "", // TODO: pass this value from the backend and replace the string with item.params
 				} as CorpusQueryWindowItem["params"],
 				title: item.label ?? "",
 			};
@@ -129,6 +138,13 @@ function onSelectMenuItem(item: ItemType) {
 				targetType: "ExploreSamples",
 				title: item.label ?? "",
 				params: item.params as ExploreSamplesWindowItem["params"],
+			};
+			break;
+		case "DataTable":
+			newWindowState = {
+				targetType: "DataTable",
+				title: item.label ?? "",
+				params: item.params as DataTableWindowItem["params"],
 			};
 			break;
 		default:

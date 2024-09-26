@@ -23,7 +23,7 @@ watch(content, () => {
 
 <template>
 	<div
-		class="relative isolate grid h-full w-full overflow-auto"
+		class="relative isolate grid size-full overflow-auto"
 		:class="{ 'opacity-50 grayscale': isLoading }"
 	>
 		<!-- eslint-disable-next-line vue/no-v-html, vuejs-accessibility/click-events-have-key-events, vuejs-accessibility/no-static-element-interactions -->
@@ -43,6 +43,11 @@ watch(content, () => {
 
 <style>
 /* stylelint-disable selector-class-pattern */
+
+.profileHeader img,
+.figure img {
+	@apply m-0;
+}
 
 .tbProfile {
 	@apply border border-solid border-[#59533c];
@@ -120,5 +125,29 @@ a:hover {
 	@apply text-white;
 
 	height: 450px;
+}
+
+.pFigure.fig-col-3 {
+	@apply grid grid-cols-3 gap-2;
+}
+
+.pFigure.fig-col-4 {
+	@apply grid grid-cols-4 gap-2;
+}
+
+.pFigure.fig-col-1 {
+	@apply flex justify-center;
+}
+
+.pFigure .figure {
+	@apply content-end flex flex-col flex-wrap gap-3 justify-start;
+}
+
+.grid .figure img {
+	@apply aspect-square object-cover;
+}
+
+.lg-item .lg-sub-html {
+	@apply bg-opacity-40 bg-black;
 }
 </style>

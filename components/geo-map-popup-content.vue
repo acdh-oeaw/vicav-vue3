@@ -3,35 +3,33 @@ import type { Feature, Point } from "geojson";
 import { computed, ref, useAttrs } from "vue";
 
 import type { MarkerProperties } from "@/components/geo-map.context";
+import DataTypes from "@/config/dataTypes.ts";
+import type { DataTypesEnum } from "@/types/global";
 
 const props = defineProps<{
 	markers: Array<Feature<Point, MarkerProperties>>;
 	groupMarkers: boolean;
 }>();
 const attrs = useAttrs();
-const contentTypeHeadings = {
-	Profile: "Profiles",
-	Feature: "Feature lists",
-	SampleText: "Sample texts",
-	CorpusText: "Corpus texts",
-};
-
 const $el = ref<HTMLElement>();
 
-interface LocationDataPoints {
-	Feature: Array<Feature<Point, MarkerProperties>>;
-	Profile: Array<Feature<Point, MarkerProperties>>;
-	SampleText: Array<Feature<Point, MarkerProperties>>;
-	CorpusText: Array<Feature<Point, MarkerProperties>>;
-}
+type LocationDataPoints = {
+	[key in DataTypesEnum]: Array<Feature<Point, MarkerProperties>>;
+};
 
 const groupedMarkers = computed<Record<string, LocationDataPoints> | null>(() => {
 	if (props.groupMarkers) {
-		let grouped = {};
+		const grouped: Record<string, LocationDataPoints> = {};
 		props.markers.forEach((marker) => {
-			if (grouped[marker.properties.label] === undefined)
-				grouped[marker.properties.label] = { Profile: [], Feature: [], Sample: [] };
-			grouped[marker.properties.label][marker.properties.targetType].push(marker);
+			if (!grouped[marker.properties.label])
+				grouped[marker.properties.label] = {
+					Profile: [],
+					Feature: [],
+					SampleText: [],
+					CorpusText: [],
+					Text: [],
+				};
+			grouped[marker.properties.label]![marker.properties.targetType as DataTypesEnum].push(marker);
 		});
 		return grouped;
 	} else {
@@ -58,7 +56,7 @@ defineExpose({
 					class="text-xs"
 				>
 					<h3 v-if="markersOfType.length > 0" class="italic">
-						{{ contentTypeHeadings[contentType] }}
+						{{ DataTypes[contentType].contentTypeHeading }}
 					</h3>
 
 					<GeoMapPopupLinks :markers="markersOfType" />
