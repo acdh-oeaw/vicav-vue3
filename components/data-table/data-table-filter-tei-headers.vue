@@ -7,6 +7,7 @@ interface DataTableFilterProps {
 	table: Table<Array<simpleTEIMetadata>>;
 	filters: ColumnFiltersState;
 }
+
 const props = defineProps<DataTableFilterProps>();
 const { table, filters } = toRefs(props);
 
