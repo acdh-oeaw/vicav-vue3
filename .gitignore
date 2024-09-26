@@ -36,4 +36,4 @@ dist
 /lib/api-client/
 
 # heroku buildpack specific directory
-./heroku/**
+/.heroku/**
