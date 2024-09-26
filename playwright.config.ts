@@ -48,7 +48,7 @@ export default defineConfig({
 		// },
 	],
 	webServer: {
-		command: "pnpm run start",
+		command: "pnpm run start:local",
 		url: baseUrl,
 		reuseExistingServer: !isCI,
 	},
