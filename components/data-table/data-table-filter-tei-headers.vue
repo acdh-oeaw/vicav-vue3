@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { ColumnFiltersState, Table } from "@tanstack/vue-table";
 
-import type { simpleTEIMetadata } from "@/types/global";
+import type { simpleTEIMetadata } from "@/types/teiCorpus.d";
 
 interface DataTableFilterProps {
 	table: Table<Array<simpleTEIMetadata>>;

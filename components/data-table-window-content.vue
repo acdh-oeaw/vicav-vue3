@@ -8,7 +8,8 @@ import {
 import { h } from "vue";
 
 import { useTEIHeaders } from "@/composables/use-tei-headers";
-import type { DataTableWindowItem, simpleTEIMetadata } from "@/types/global.d";
+import type { DataTableWindowItem } from "@/types/global.d";
+import type { simpleTEIMetadata } from "@/types/teiCorpus.d";
 
 interface Props {
 	params: DataTableWindowItem["params"];
