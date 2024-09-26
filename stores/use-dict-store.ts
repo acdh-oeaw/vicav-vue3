@@ -184,6 +184,7 @@ export const useDictStore = defineStore("dict", () => {
 		//TODO: refine response types in API definition
 		//eslint-disable-next-line  @typescript-eslint/no-explicit-any
 		const dataObject: Record<string, any> | undefined = data.value!._embedded._.find(
+			//eslint-disable-next-line  @typescript-eslint/no-explicit-any
 			(obj) => (obj as Record<string, any>).note === "all entries",
 		);
 		if (dataObject === undefined) {
