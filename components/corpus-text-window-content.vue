@@ -112,17 +112,23 @@ onMounted(async () => {
 		<h2 class="m-3 text-lg">{{ props.params.label }}</h2>
 
 		<table class="m-3 border border-gray-300">
-			<tr>
-				<th>Contributed by:</th>
-				<td>{{ teiHeader?.resp }}</td>
-			</tr>
-			<tr>
-				<th>Speaker:</th>
-				<td>
-					{{ teiHeader?.person.name }} (age: {{ teiHeader?.person.age }}, sex:
-					{{ teiHeader?.person.sex }})
-				</td>
-			</tr>
+			<thead>
+				<tr></tr>
+				<tr></tr>
+			</thead>
+			<tbody>
+				<tr>
+					<th>Contributed by:</th>
+					<td>{{ teiHeader?.resp }}</td>
+				</tr>
+				<tr>
+					<th>Speaker:</th>
+					<td>
+						{{ teiHeader?.person.name }} (age: {{ teiHeader?.person.age }}, sex:
+						{{ teiHeader?.person.sex }})
+					</td>
+				</tr>
+			</tbody>
 		</table>
 		<div
 			v-for="u in utterances"
