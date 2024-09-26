@@ -10,6 +10,7 @@ import {
 interface DataTablePaginationProps {
 	table: Table<never>;
 }
+
 defineProps<DataTablePaginationProps>();
 </script>
 

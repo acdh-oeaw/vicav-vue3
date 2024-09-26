@@ -9,6 +9,7 @@ interface Props {
 		data: unknown;
 	};
 }
+
 const props = defineProps<Props>();
 </script>
 

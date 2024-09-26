@@ -136,12 +136,12 @@ watch(isLoading, () => {
 
 .tdFeaturesRightSource {
 	@apply align-top w-4/5 pl-[3px] border border-solid border-primary
-bg-primary bg-opacity-30 text-[#7f960a];
+	bg-primary bg-opacity-30 text-[#7f960a];
 }
 
 .tdFeaturesRightTarget {
 	@apply align-top w-4/5 pl-[3px]
-border border-solid border-primary bg-on-primary text-[#a58103] italic;
+	border border-solid border-primary bg-on-primary text-[#a58103] italic;
 
 	a.show-sentence {
 		@apply pr-2;

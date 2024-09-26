@@ -55,6 +55,7 @@ export const useWindowsStore = defineStore("windows", () => {
 	const initialScreenSetup = computed(() => {
 		return data.value?.projectConfig?.panel ?? [];
 	});
+
 	async function initializeScreen() {
 		await suspense();
 		await navigateTo({

@@ -25,6 +25,7 @@ const isTextQuery: Ref<boolean> = ref(true);
 const isMapQuery: Ref<boolean> = ref(false);
 
 const isFormOpen = ref(queryString.value === "");
+
 function submitNewQuery(): void {
 	if (queryString.value === "") return;
 	if (!isTextQuery.value && !isMapQuery.value) isTextQuery.value = true;
