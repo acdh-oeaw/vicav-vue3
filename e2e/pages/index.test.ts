@@ -1,3 +1,5 @@
+/* eslint-disable playwright/no-conditional-expect */
+/* eslint-disable playwright/no-conditional-in-test */
 import { expect, test } from "@playwright/test";
 
 test.describe("home page", () => {
