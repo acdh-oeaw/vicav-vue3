@@ -30,6 +30,7 @@ dist
 /test-results/
 /playwright-report/
 /playwright/.cache/
+/.cache/**
 
 # auto-generated api-client
 /lib/api-client/
