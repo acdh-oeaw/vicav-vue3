@@ -14,7 +14,7 @@ test.describe("home page", () => {
 				await expect(page).toHaveTitle("Home | TUNOCENT");
 				break;
 			default:
-				await expect(page).toHaveTitle("Imprint | VICAV3.0 - Vienna Corpus of Arabic Varieties");
+				await expect(page).toHaveTitle("Home | VICAV3.0 - Vienna Corpus of Arabic Varieties");
 		}
 	});
 });
