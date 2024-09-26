@@ -34,3 +34,6 @@ dist
 
 # auto-generated api-client
 /lib/api-client/
+
+# heroku buildpack specific directory
+./heroku/**
