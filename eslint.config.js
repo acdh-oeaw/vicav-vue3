@@ -18,6 +18,7 @@ const config = [
 	...tailwindcssConfig,
 	...playwrightConfig,
 	{
+		ignores: ["./.cache/**/*"],
 		rules: {
 			"vue/attributes-order": ["warn", { alphabetical: true }],
 		},
