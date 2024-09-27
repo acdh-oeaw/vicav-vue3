@@ -318,7 +318,7 @@ export type Person = {
 	birth?: Birth | XmlTextNode;
 	note?: XmlTextNode;
 	state?: State;
-	idno?: Idno;
+	idno?: TeiTypedTarget;
 	affiliation?: XmlTextNode;
 	$?: string;
 };
