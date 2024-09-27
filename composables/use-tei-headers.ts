@@ -24,6 +24,7 @@ const extractMetadata = function (
 	const template = {
 		id: "",
 		recordingDate: "",
+		pubDate: "",
 		place: {
 			settlement: "",
 			region: "",
