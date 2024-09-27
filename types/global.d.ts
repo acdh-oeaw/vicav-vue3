@@ -266,3 +266,8 @@ export const FeatureCollectionSchema = z.object({
 	features: z.array(GeoFeatureSchema),
 });
 export type FeatureCollectionType = z.infer<typeof FeatureCollectionSchema>;
+
+export interface VicavHTTPError extends Error {
+	status?: number;
+	error?: Record<string, string>;
+}

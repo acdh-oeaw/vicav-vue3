@@ -19,7 +19,7 @@ const ids = computed(() => {
 		: simpleItems.value
 				.filter((item) => params.value.dataType === item.dataType)
 				.filter((item) => {
-					if (!params.value.region && !params.value.place) return true;
+					if (!params.value.region && !params.value.settlement) return true;
 					const filter_results = filters.map((key) => {
 						if (params.value[key]) return params.value[key] === item.place[key];
 						return null;

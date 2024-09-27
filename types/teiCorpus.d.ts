@@ -7,6 +7,8 @@ export type simpleTEIMetadata = {
 	dataType: DataTypesEnum;
 	secondaryDataType: string;
 	resp: string;
+	pubDate: string | TeiDate;
+	recordingDate?: string | TeiDate;
 	place: {
 		settlement: string;
 		country: string;
