@@ -63,9 +63,7 @@ const extractMetadata = function (
 		}
 
 		let placeName;
-		if (place.region) {
-			placeName = place.region;
-		} else if (place.settlement?.name?.at(0)) {
+		if (place.settlement?.name?.at(0)) {
 			placeName = place.settlement.name.at(0);
 		} else if (place.settlement?.name) {
 			placeName = place.settlement.name.find((n) => n["@lang"] === "en");
@@ -74,6 +72,10 @@ const extractMetadata = function (
 
 		if (place.country) {
 			template.place.country = place.country.$;
+		}
+
+		if (place.region) {
+			template.place.region = place.region.$;
 		}
 	}
 	if (
