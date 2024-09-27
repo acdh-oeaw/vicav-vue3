@@ -12,7 +12,7 @@ const tooltip: Ref<HTMLElement | null> = ref(null);
 
 const { simpleItems } = useTEIHeaders();
 
-const filters: Array<"region" | "place"> = ["region", "place"];
+const filters: Array<"region" | "settlement"> = ["region", "settlement"];
 const ids = computed(() => {
 	return params.value.ids
 		? params.value.ids
@@ -21,7 +21,6 @@ const ids = computed(() => {
 				.filter((item) => {
 					if (!params.value.region && !params.value.place) return true;
 					const filter_results = filters.map((key) => {
-						//@ts-expect-error TODO: check if this is correct - key "place" does not exist on simpleteimetadata.place
 						if (params.value[key]) return params.value[key] === item.place[key];
 						return null;
 					});
@@ -40,7 +39,6 @@ const features: Ref<Array<string>> = ref([]);
 const page: Ref<number> = ref(1);
 
 watch(params, (value) => {
-	console.log(value);
 	if (value.features) features.value = value.features.split(",");
 	if (value.page) page.value = value.page;
 });
@@ -80,7 +78,7 @@ watch(isLoading, () => {
 
 <template>
 	<div
-		class="size-full relative isolate grid overflow-auto"
+		class="relative isolate grid size-full overflow-auto"
 		:class="{ 'opacity-50 grayscale': isLoading }"
 	>
 		<!-- eslint-disable vue/no-v-html,

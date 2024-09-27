@@ -1,12 +1,6 @@
 <script lang="ts" setup>
 import { Icon } from "@iconify/vue";
 import {
-	CheckboxIndicator,
-	CheckboxRoot,
-	SliderRange,
-	SliderRoot,
-	SliderThumb,
-	SliderTrack,
 	TagsInputInput,
 	TagsInputItem,
 	TagsInputItemDelete,
@@ -44,8 +38,6 @@ const features: Ref<Array<string>> = ref([]);
 const sentences: Ref<Array<string>> = ref([]);
 
 const age: Ref<Array<number>> = ref([0, 100]);
-const male = ref(true);
-const female = ref(true);
 const comment = ref("");
 const translation = ref("");
 const persons: Ref<Array<string>> = ref([]);
@@ -101,12 +93,7 @@ const wordOptions = computed(() => {
 	});
 });
 
-const sex = computed(() => {
-	const result = [];
-	if (male.value) result.push("m");
-	if (female.value) result.push("f");
-	return result;
-});
+const sex = ref(["m", "f"]);
 
 const personsFilter = computed(() =>
 	simpleItems.value
@@ -132,7 +119,6 @@ const personsFilter = computed(() =>
 );
 
 const resultParams = computed(() => {
-	console.log(params.value.dataTypes);
 	return {
 		word: words.value.join(","),
 		comment: comment.value,
@@ -215,7 +201,7 @@ const openSearchResultsWindow = function () {
 </script>
 
 <template>
-	<div class="size-full relative isolate grid overflow-auto">
+	<div class="relative isolate grid size-full overflow-auto">
 		<form
 			class="block w-full rounded border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
 		>
@@ -239,68 +225,11 @@ const openSearchResultsWindow = function () {
 
 			<div class="flex flex-row gap-2.5">
 				<label class="" for="age">Age</label>
-				<div class="my-2 flex flex-row px-3 py-2">
-					<span>{{ age[0] }}</span>
-					<SliderRoot
-						v-model="age"
-						class="relative mx-2 flex w-[200px] touch-none select-none items-center"
-						:max="100"
-						:min="0"
-						:step="10"
-					>
-						<SliderTrack class="relative h-[3px] grow rounded-full bg-gray-400">
-							<SliderRange class="absolute h-full rounded-full bg-primary" />
-						</SliderTrack>
-						<SliderThumb
-							aria-label="Min age"
-							class="size-5 block rounded-[10px] bg-white shadow-[0_2px_10px] focus:shadow-[0_0_0_2px]"
-						/>
-						<SliderThumb
-							aria-label="Max age"
-							class="size-5 block rounded-[10px] bg-white shadow-[0_2px_10px] shadow-primary focus:shadow-[0_0_0_2px] focus:shadow-gray-400"
-						/>
-					</SliderRoot>
-					<span>{{ age[1] }}</span>
-				</div>
+				<AgeFilter v-model="age" />
 			</div>
 			<div class="flex flex-row gap-2.5">
 				<label for="sex">Sex</label>
-				<div class="flex flex-row gap-2.5">
-					<label
-						class="flex flex-row items-center gap-4 [&>.checkbox]:hover:bg-neutral-100"
-						for="sex-male"
-					>
-						<CheckboxRoot
-							v-model:checked="male"
-							class="size-[25px] flex appearance-none items-center justify-center rounded-[4px] bg-white shadow-[0_2px_10px] shadow-gray-500 outline-none focus-within:shadow-[0_0_0_2px_gray]"
-							if="sex-male"
-						>
-							<CheckboxIndicator
-								class="size-full flex items-center justify-center rounded bg-white"
-							>
-								<Icon class="size-3.5" icon="radix-icons:check" />
-							</CheckboxIndicator>
-						</CheckboxRoot>
-						<span class="select-none">Male</span>
-					</label>
-					<label
-						class="flex flex-row items-center gap-4 [&>.checkbox]:hover:bg-neutral-100"
-						for="sex-female"
-					>
-						<CheckboxRoot
-							id="sex-female"
-							v-model:checked="female"
-							class="size-[25px] flex appearance-none items-center justify-center rounded-[4px] bg-white shadow-[0_2px_10px] shadow-gray-500 outline-none focus-within:shadow-[0_0_0_2px_gray] hover:bg-white"
-						>
-							<CheckboxIndicator
-								class="size-full flex items-center justify-center rounded bg-white"
-							>
-								<Icon class="size-3.5" icon="radix-icons:check" />
-							</CheckboxIndicator>
-						</CheckboxRoot>
-						<span class="select-none">Female</span>
-					</label>
-				</div>
+				<SexFilter v-model="sex" />
 			</div>
 
 			<div class="flex flex-row gap-2.5">

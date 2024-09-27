@@ -28,6 +28,19 @@ const table = useVueTable({
 	get columns() {
 		return columns.value;
 	},
+	initialState: {
+		columnVisibility: {
+			label: true,
+			person: false,
+			age: false,
+			sex: false,
+			type: true,
+			region: true,
+			settlement: true,
+			date: true,
+			respPerson: true,
+		},
+	},
 	state: {
 		get columnFilters() {
 			return columnFilters.value;

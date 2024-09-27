@@ -11,6 +11,20 @@ interface DataTableFilterProps {
 const props = defineProps<DataTableFilterProps>();
 const { table, filters } = toRefs(props);
 
+const sex: Ref<Array<string>> = ref(["m", "f"]);
+const age: Ref<Array<number>> = ref([0, 100]);
+
+const sexFilterValue = computed(() => {
+	if (sex.value.length === 1) {
+		return sex.value.at(0) ?? "__all__";
+	}
+	return "__all__";
+});
+
+const speakerFilter = computed(() => {
+	return filters.value.find((filter) => filter.id === "name");
+});
+
 const dataTypeFilter = computed(() => {
 	return filters.value.find((filter) => filter.id === "dataType");
 });
@@ -27,6 +41,18 @@ const setDataTypeFilter = function (value: string) {
 	setColumnFilter("dataType", value);
 };
 
+const setSpeakerFilter = function (event: Event) {
+	setColumnFilter("name", (event.target as HTMLInputElement).value);
+};
+
+const setSexFilter = function () {
+	setColumnFilter("sex", sexFilterValue.value);
+};
+
+const setAgeFilter = function (value: Array<number>) {
+	setColumnFilter("age", value);
+};
+
 const setSettlementFilter = function (event: Event) {
 	setColumnFilter("settlement", (event.target as HTMLInputElement).value);
 };
@@ -35,12 +61,13 @@ const setRegionFilter = function (event: Event) {
 	setColumnFilter("region", event.target?.value);
 };
 
-const setColumnFilter = function (column: string, value: string) {
+const setColumnFilter = function (column: string, value: string | Array<number>) {
 	const index = filters.value.findIndex((filter) => filter.id === column);
+
 	if (index !== -1) {
 		if (value === "__all__") filters.value.splice(index, 1);
 		else if (filters.value[index]) filters.value[index].value = value;
-	} else {
+	} else if (value !== "__all__") {
 		filters.value.push({
 			id: column,
 			value: value,
@@ -51,8 +78,8 @@ const setColumnFilter = function (column: string, value: string) {
 </script>
 
 <template>
-	<div class="flex items-center justify-between px-2">
-		<div class="flex items-center space-x-6 lg:space-x-8">
+	<div class="flex flex-wrap justify-between px-2">
+		<div class="flex items-center space-x-2">
 			<div class="flex items-center space-x-2">
 				<p id="dataTypeFilterSelect" class="whitespace-nowrap text-sm font-medium">Data type:</p>
 				<Select
@@ -85,7 +112,7 @@ const setColumnFilter = function (column: string, value: string) {
 			<div class="flex items-center space-x-2">
 				<p id="settlement" class="whitespace-nowrap text-sm font-medium">Place:</p>
 				<Input
-					class="h-8 rounded-md border border-input"
+					class="h-8 w-32 rounded-md border border-input"
 					:value="settlementFilter?.value"
 					@change="setSettlementFilter"
 				/>
@@ -93,10 +120,29 @@ const setColumnFilter = function (column: string, value: string) {
 			<div class="flex items-center space-x-2">
 				<p id="settlement" class="whitespace-nowrap text-sm font-medium">Region:</p>
 				<Input
-					class="h-8 rounded-md border border-input"
+					class="h-8 w-32 rounded-md border border-input"
 					:value="regionFilter?.value"
 					@change="setRegionFilter"
 				/>
+			</div>
+		</div>
+		<div class="flex items-center space-x-2">
+			<div class="flex items-center space-x-2">
+				<p id="name" class="whitespace-nowrap text-sm font-medium">Speaker:</p>
+				<Input
+					class="h-8 w-32 rounded-md border border-input"
+					:value="speakerFilter?.value"
+					@change="setSpeakerFilter"
+				/>
+			</div>
+
+			<div class="flex items-center space-x-2">
+				<p id="sexFilterSelect" class="whitespace-nowrap text-sm font-medium">Sex:</p>
+				<SexFilter v-model="sex" @update:model-value="setSexFilter" />
+			</div>
+			<div class="flex items-center space-x-2">
+				<p id="ageFilterSelect" class="whitespace-nowrap text-sm font-medium">Age:</p>
+				<AgeFilter v-model="age" @update:model-value="setAgeFilter" />
 			</div>
 		</div>
 	</div>

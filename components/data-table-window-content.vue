@@ -61,6 +61,33 @@ const columns = ref([
 		header: "Name",
 		footer: (props) => props.column.id,
 	}),
+	columnHelper.accessor((row) => row.person.name, {
+		id: "name",
+		cell: (info) => info.getValue(),
+		header: "Name",
+		footer: (props) => props.column.id,
+	}),
+	columnHelper.accessor((row) => row.person.age, {
+		id: "age",
+		cell: (info) => info.getValue(),
+		header: "Age",
+		footer: (props) => props.column.id,
+		filterFn: "inNumberRange",
+	}),
+	columnHelper.accessor((row) => row.person.sex, {
+		id: "sex",
+		cell: (info) => info.getValue(),
+		header: "Sex",
+		footer: (props) => props.column.id,
+	}),
+
+	columnHelper.accessor((row) => row.place.region, {
+		id: "region",
+		cell: (info) => info.getValue(),
+		header: "Region",
+		footer: (props) => props.column.id,
+	}),
+
 	columnHelper.accessor((row) => row.secondaryDataType, {
 		id: "dataType",
 		cell: (info) => {
@@ -111,7 +138,7 @@ const setFilters = function (value: ColumnFiltersState) {
 
 <template>
 	<div v-if="simpleItems">
-		<div class="flex justify-between py-2">
+		<div class="flex flex-wrap justify-between py-2">
 			<DataTableFilterTeiHeaders v-if="tables" :filters="columnFilters" :table="tables" />
 			<DataTablePagination v-if="tables" :table="tables as unknown as Table<never>" />
 		</div>
