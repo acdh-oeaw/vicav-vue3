@@ -7,6 +7,7 @@ import {
 	TagsInputItemText,
 	TagsInputRoot,
 } from "radix-vue";
+import { transliterate as tr } from "transliteration";
 
 import dataTypes from "@/config/dataTypes";
 import type { ExploreSamplesFormWindowItem, GeoMapWindowItem, WindowItem } from "@/types/global.d";
@@ -92,6 +93,14 @@ const wordOptions = computed(() => {
 		return { label: item, value: item };
 	});
 });
+
+const wordFilter = function (list: Array<string>, searchTerm: string) {
+	const translitTerm = tr(searchTerm);
+
+	return list.filter((item) => {
+		return tr(item).indexOf(translitTerm) !== -1;
+	});
+};
 
 const sex = ref(["m", "f"]);
 
@@ -238,6 +247,7 @@ const openSearchResultsWindow = function () {
 				<TagsSelect
 					v-if="wordOptions"
 					v-model="words"
+					:filter-function="wordFilter"
 					:options="wordOptions"
 					:placeholder="`Search for words...`"
 				/>
