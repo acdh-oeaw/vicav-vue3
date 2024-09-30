@@ -26,7 +26,7 @@ interface Tag {
 interface Props {
 	options: Array<Tag>;
 	placeholder: string;
-	filterFunction?: (list: Array<string>, searchTerm: string) => Array<Tag>;
+	filterFunction?: (list: Array<string>, searchTerm: string) => Array<string>;
 }
 
 const props = defineProps<Props>();
@@ -38,7 +38,7 @@ const filter = computed(() => {
 	return (
 		filterFunction.value ??
 		function (list: Array<string>, searchTerm: string) {
-			list.filter((value) => value === searchTerm);
+			return list.filter((value) => value === searchTerm);
 		}
 	);
 });
@@ -75,7 +75,11 @@ watch(
 					:value="item"
 				>
 					<TagsInputItemText class="text-sm">
-						{{ options.find((opt) => opt.value === item)!.label }}
+						{{
+							options?.find((opt) => opt.value === item)
+								? options?.find((opt) => opt.value === item)!.label
+								: item
+						}}
 					</TagsInputItemText>
 					<TagsInputItemDelete>
 						<Icon icon="lucide:x" />
@@ -86,7 +90,6 @@ watch(
 					<TagsInputInput
 						class="flex flex-1 flex-wrap items-center gap-2 rounded !bg-transparent px-1 focus:outline-none"
 						:placeholder="placeholder"
-						@keydown.enter.prevent
 					/>
 				</ComboboxInput>
 			</TagsInputRoot>
@@ -98,6 +101,18 @@ watch(
 				<ComboboxEmpty class="py-2 text-center text-xs font-medium text-gray-400" />
 
 				<ComboboxGroup>
+					<ComboboxItem
+						v-if="searchTerm"
+						:key="searchTerm"
+						class="relative flex h-[25px] select-none items-center rounded-[3px] pl-[25px] pr-[35px] text-[13px] leading-none data-[disabled]:pointer-events-none data-[highlighted]:bg-secondary data-[disabled]:text-gray-300 data-[highlighted]:outline-none"
+						:value="searchTerm"
+						><ComboboxItemIndicator
+							class="absolute left-0 inline-flex w-[25px] items-center justify-center"
+						>
+							<Icon icon="radix-icons:check" />
+						</ComboboxItemIndicator>
+						<span>{{ searchTerm }} </span>
+					</ComboboxItem>
 					<ComboboxItem
 						v-for="(option, index) in options"
 						:key="index"

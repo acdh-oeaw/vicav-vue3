@@ -75,7 +75,6 @@ countries.forEach((country) => {
 });
 
 const placeOptions = options;
-
 const uniqueFilter = function (value: unknown, index: number, array: Array<unknown>) {
 	return array.indexOf(value) === index;
 };
