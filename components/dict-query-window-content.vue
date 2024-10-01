@@ -14,7 +14,7 @@ const dictStore = useDictStore();
 await dictStore.initialize();
 const myDict = await dictStore.getDictById(params.value.textId);
 
-const formId = `biblioQueryForm-${params.value.textId}`;
+const formId = `dictQueryForm-${params.value.textId}`;
 
 /* data fetch parameters editing copies */
 const q = ref<string | undefined>(params.value.queryParams?.q ?? "");
