@@ -149,6 +149,36 @@ const dictDataExtra = {
 				"ʔ",
 			],
 		],
+		[
+			"dc_shawi_eng",
+			[
+				"ʕ",
+				"ʔ",
+				"ā",
+				"ḅ",
+				"ʕ",
+				"ḍ",
+				"ḏ",
+				"ǝ",
+				"ᵊ",
+				"ē",
+				"ġ",
+				"ǧ",
+				"ḥ",
+				"ī",
+				"ḷ",
+				"ṃ",
+				"ō",
+				"ṛ",
+				"ṣ",
+				"š",
+				"ṭ",
+				"ṯ",
+				"ū",
+				"ẓ",
+				"ž",
+			],
+		],
 	]),
 };
 
@@ -192,7 +222,7 @@ export const useDictStore = defineStore("dict", () => {
 		}
 		const specChars = dictDataExtra.specChars.get(id); // TODO: this is obsolete, and is inserted here temporarily
 		if (specChars === undefined) {
-			return;
+			throw new Error("Missing virtual keyboard definition!");
 		}
 		const dict: Zod.infer<typeof Dict> = {
 			id,
