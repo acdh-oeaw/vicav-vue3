@@ -1,27 +1,26 @@
 /* eslint-disable no-console */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
 export default defineNuxtPlugin((nuxtApp) => {
+	const toastsStore = useToastsStore();
+	const { addToast } = toastsStore;
 	// TODO: remove or transform before deploying to production
-	nuxtApp.hook("app:error", (..._args) => {
-		console.log(
-			`app:error: [${_args.length} errors]`,
-			_args.map((e) => e.message),
-		);
+	nuxtApp.hook("app:error", (err) => {
+		console.log(`app:error`, err instanceof Error ? (err.stack ?? err.message) : "");
 	});
-	nuxtApp.hook("vue:error", (..._args) => {
-		console.log(
-			`vue:error: [${_args.length} errors]`,
-			//@ts-expect-error TODO establish proper error typing
-			_args.map((e) => e.message),
-		);
+	nuxtApp.hook("vue:error", (error, _instance, _info) => {
+		// get the name of the instance/component? info is something like setup function so also helpful.
+		const errorMessage = {
+			title: "Error",
+			description: error instanceof Error ? (error.stack ?? error.message) : "",
+			type: "foreground",
+			variant: "negative",
+		} as const;
+		console.log(`vue:error`, errorMessage.description);
+		addToast(errorMessage);
 	});
-	nuxtApp.vueApp.config.errorHandler = (..._args) => {
+	nuxtApp.vueApp.config.errorHandler = (error, _instance, _info) => {
 		console.log(
-			`global error handler: [${_args.length} errors]`,
-			//@ts-expect-error TODO establish proper error typing
-			_args.map((e) => e.message),
+			`global error handler`,
+			error instanceof Error ? (error.stack ?? error.message) : "",
 		);
 	};
 });
