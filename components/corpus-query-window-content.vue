@@ -28,7 +28,7 @@ async function searchCorpus() {
 const openNewWindowFromAnchor = useAnchorClickHandler();
 
 const { data: config } = useProjectInfo();
-const specialCharacters = config.value?.projectConfig?.specialCharacters as Array<string>;
+const specialCharacters = config.value?.projectConfig?.specialCharacters;
 </script>
 
 <template>
@@ -38,10 +38,11 @@ const specialCharacters = config.value?.projectConfig?.specialCharacters as Arra
 			class="block w-full rounded border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
 		>
 			<InputExtended
+				v-if="specialCharacters"
 				v-model="queryString"
 				aria-label="Search"
 				placeholder="Search in corpus ..."
-				:string-snippets="specialCharacters"
+				:special-characters="specialCharacters"
 				@submit="searchCorpus"
 			/>
 			<button

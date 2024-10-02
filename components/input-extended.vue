@@ -1,9 +1,11 @@
 <script setup lang="ts">
-const props = defineProps({
-	modelValue: String,
-	stringSnippets: Array<string>,
-	placeholder: String,
-});
+import type { SpecialCharacters } from "@/lib/api-client";
+
+const props = defineProps<{
+	modelValue: string;
+	specialCharacters: SpecialCharacters;
+	placeholder: string;
+}>();
 const emit = defineEmits(["update:modelValue", "submit"]);
 
 const inputElement = ref();
@@ -51,10 +53,10 @@ const restoreCursorPosition = (pos: number) => {
 		<div class="ie-buttons">
 			<!-- @ts-expect-error  -->
 			<button
-				v-for="(c, i) in stringSnippets"
+				v-for="(c, i) in specialCharacters"
 				:key="i"
-				@click.prevent="InsertSnippet(c)"
-				v-html="c"
+				@click.prevent="InsertSnippet(c.value)"
+				v-html="c.text ? c.text : c.value"
 			></button>
 		</div>
 		<div class="ie-textinput">
