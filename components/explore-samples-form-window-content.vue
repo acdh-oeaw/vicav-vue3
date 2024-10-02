@@ -259,6 +259,7 @@ const openSearchResultsWindow = function () {
 				<TagsSelect
 					v-if="featureLabelsQuery.data"
 					v-model="features"
+					:filter-function="(i) => i"
 					:options="featureLabelsQuery.data as unknown as Array<Tag>"
 					:placeholder="`Search for features...`"
 				/>
