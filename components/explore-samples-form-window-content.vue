@@ -12,6 +12,22 @@ import { transliterate as tr } from "transliteration";
 import dataTypes from "@/config/dataTypes";
 import type { ExploreSamplesFormWindowItem, GeoMapWindowItem, WindowItem } from "@/types/global.d";
 
+const trOptions = {
+	replace: {
+		ᵃ: "a",
+		ᵉ: "e",
+		ⁱ: "i",
+		ᵒ: "o",
+		ᵘ: "u",
+		ᵊ: "e",
+		ʷ: "w",
+		ʸ: "y",
+		ˢ: "s",
+		ᶴ: "s",
+		q: "q",
+	},
+};
+
 const { findWindowByTypeAndParam } = useWindowsStore();
 
 interface Props {
@@ -94,10 +110,10 @@ const wordOptions = computed(() => {
 });
 
 const wordFilter = function (list: Array<string>, searchTerm: string) {
-	const translitTerm = tr(searchTerm);
+	const translitTerm = tr(searchTerm, trOptions);
 
 	return list.filter((item) => {
-		return tr(item).indexOf(translitTerm) !== -1;
+		return tr(item, trOptions).indexOf(translitTerm) !== -1;
 	});
 };
 
@@ -126,6 +142,11 @@ const personsFilter = computed(() =>
 		.map((item) => item.id),
 );
 
+const filterFunction = function (list: Array<string>, searchTerm: string) {
+	return list.filter((item) => {
+		return item.toLowerCase().includes(searchTerm.toLowerCase());
+	});
+};
 const resultParams = computed(() => {
 	return {
 		word: words.value.join(","),
@@ -217,7 +238,7 @@ const openSearchResultsWindow = function () {
 				<label for="place">Place</label>
 				<TagsSelect
 					v-model="places"
-					:filter-function="(i, _j) => i"
+					:filter-function="filterFunction"
 					:options="placeOptions"
 					placeholder="Search for counries, regions or settlements..."
 				></TagsSelect>
@@ -227,7 +248,7 @@ const openSearchResultsWindow = function () {
 				<label for="place">Speaker identifier</label>
 				<TagsSelect
 					v-model="persons"
-					:filter-function="(i, _j) => i"
+					:filter-function="filterFunction"
 					:options="personOptions"
 					placeholder="Search for speaker identifiers eg. Beja1..."
 				></TagsSelect>
@@ -259,7 +280,7 @@ const openSearchResultsWindow = function () {
 				<TagsSelect
 					v-if="featureLabelsQuery.data"
 					v-model="features"
-					:filter-function="(i) => i"
+					:filter-function="filterFunction"
 					:options="featureLabelsQuery.data as unknown as Array<Tag>"
 					:placeholder="`Search for features...`"
 				/>
