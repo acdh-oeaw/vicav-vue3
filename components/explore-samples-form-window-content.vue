@@ -217,6 +217,7 @@ const openSearchResultsWindow = function () {
 				<label for="place">Place</label>
 				<TagsSelect
 					v-model="places"
+					:filter-function="(i, _j) => i"
 					:options="placeOptions"
 					placeholder="Search for counries, regions or settlements..."
 				></TagsSelect>
@@ -226,6 +227,7 @@ const openSearchResultsWindow = function () {
 				<label for="place">Speaker identifier</label>
 				<TagsSelect
 					v-model="persons"
+					:filter-function="(i, _j) => i"
 					:options="personOptions"
 					placeholder="Search for speaker identifiers eg. Beja1..."
 				></TagsSelect>
