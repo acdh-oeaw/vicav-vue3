@@ -17,7 +17,7 @@ const myDict = await dictStore.getDictById(params.value.textId);
 const formId = `dictQueryForm-${params.value.textId}`;
 
 /* data fetch parameters editing copies */
-const q = ref<string | undefined>(params.value.queryParams?.q ?? "");
+const q = ref<string>(params.value.queryParams?.q ?? "");
 const page = ref<number>(params.value.queryParams?.page ?? 1);
 const pageSize = ref<number | undefined>(params.value.queryParams?.pageSize);
 const id = ref<string | null | undefined>(params.value.queryParams?.id);
@@ -165,7 +165,11 @@ const api = useApiClient();
 					</label>
 				</div>
 				<div v-if="isTextInputManual">
-					<InputBuilder v-model="q" :button-labels="myDict.specChars" @submit="updateQueryParams" />
+					<InputBuilder
+						v-model="q"
+						:special-characters="myDict.specialCharacters"
+						@submit="updateQueryParams"
+					/>
 				</div>
 				<div v-else>
 					<div>
@@ -173,10 +177,10 @@ const api = useApiClient();
 							v-model="textInput"
 							v-model:select-value="queryTemplate"
 							aria-label="Search"
-							:button-labels="myDict.specChars"
 							class="mb-3"
 							placeholder="Filter by&hellip;"
 							:select-options="myDict.queryTemplates"
+							:special-characters="myDict.specialCharacters"
 							submit-button-label="+"
 							@submit="addFilter"
 						/>
