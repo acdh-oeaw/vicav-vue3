@@ -26,7 +26,7 @@ interface Tag {
 interface Props {
 	options: Array<Tag>;
 	placeholder: string;
-	filterFunction?: (list: Array<string>, searchTerm: string) => Array<string>;
+	filterFunction: (list: Array<string>, searchTerm: string) => Array<string>;
 }
 
 const props = defineProps<Props>();
@@ -34,14 +34,6 @@ const { options, placeholder, filterFunction } = toRefs(props);
 const searchTerm = ref("");
 const model = defineModel<Array<string>>();
 const open = ref(false);
-const filter = computed(() => {
-	return (
-		filterFunction.value ??
-		function (list: Array<string>, searchTerm: string) {
-			return list.filter((value) => value === searchTerm);
-		}
-	);
-});
 watch(
 	model,
 	() => {
@@ -58,7 +50,7 @@ watch(
 		v-model:open="open"
 		v-model:search-term="searchTerm"
 		class="mx-auto w-full"
-		:filter-function="filter"
+		:filter-function="filterFunction"
 		multiple
 	>
 		<ComboboxAnchor class="w-full">
