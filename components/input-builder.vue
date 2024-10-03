@@ -1,12 +1,22 @@
 <script setup lang="ts">
-const props = defineProps({
-	modelValue: { type: String, default: "" },
-	selectValue: { type: String },
-	buttonLabels: { type: Array<string>, default: [] },
-	selectOptions: { type: Map<string, string>, default: new Map([]) },
-	placeholder: { type: String, default: "" },
-	submitButtonLabel: { type: String },
-});
+import type { SpecialCharacters } from "@/lib/api-client";
+
+const props = withDefaults(
+	defineProps<{
+		modelValue: string;
+		selectValue?: string;
+		specialCharacters: SpecialCharacters;
+		selectOptions?: Map<string, string>;
+		placeholder?: string;
+		submitButtonLabel?: string;
+	}>(),
+	{
+		selectValue: "",
+		selectOptions: () => new Map<string, string>([]),
+		placeholder: "",
+		submitButtonLabel: "",
+	},
+);
 const emit = defineEmits(["update:modelValue", "update:selectValue", "submit"]);
 
 const inputElement = ref();
@@ -82,10 +92,10 @@ watch(
 	<div class="ib">
 		<div class="ib-buttons">
 			<button
-				v-for="(c, i) in buttonLabels"
+				v-for="(c, i) in specialCharacters"
 				:key="i"
-				@click.prevent="InsertSnippet(c)"
-				v-text="c"
+				@click.prevent="InsertSnippet(c.value)"
+				v-html="c.text ? c.text : c.value"
 			></button>
 		</div>
 		<div class="ib-input-row">
