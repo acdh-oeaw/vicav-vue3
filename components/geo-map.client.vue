@@ -196,10 +196,7 @@ onMounted(async () => {
 	});
 });
 
-watch(
-	() => props.markers,
-	() => updateMarkers,
-);
+watch(() => props.markers, updateMarkers);
 
 const resize = debounce(() => {
 	if (context.map === null) {
