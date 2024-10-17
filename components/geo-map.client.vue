@@ -198,7 +198,7 @@ onMounted(async () => {
 
 watch(
 	() => props.markers,
-	() => updateMarkers,
+	() => updateMarkers(),
 );
 
 const resize = debounce(() => {
