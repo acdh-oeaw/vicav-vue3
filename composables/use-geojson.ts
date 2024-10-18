@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/vue-query";
 
-import { type FeatureCollectionType, GeoFeatureSchema } from "@/types/global.d.ts";
+import { GeoFeatureSchema } from "@/types/geojson";
+import type { FeatureCollectionType } from "@/types/global.d.ts";
 
 export function useGeojson(options?: { enabled?: boolean }) {
 	const api = useApiClient();

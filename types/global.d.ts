@@ -1,6 +1,8 @@
 import type { Ref } from "vue";
 import { z } from "zod";
 
+import type { FeatureCollectionSchema, GeoFeatureSchema } from "@/types/geojson";
+
 type MaybeRef<T> = Ref<T> | T;
 
 export const DataTypesEnum = z.enum(["Profile", "Text", "SampleText", "Feature", "CorpusText"]);
@@ -246,25 +248,7 @@ export type WindowItemMap = {
 	[TargetType in WindowItemTargetType]: Extract<WindowItem, { targetType: TargetType }>;
 };
 
-export const GeoFeatureSchema = z.object({
-	type: z.literal("Feature"),
-	id: z.string(),
-	geometry: z.object({
-		type: z.literal("Point"),
-		coordinates: z.array(z.number()),
-	}),
-	properties: z.any(),
-});
 export type FeatureType = z.infer<typeof GeoFeatureSchema>;
-
-export const FeatureCollectionSchema = z.object({
-	type: z.literal("FeatureCollection"),
-	properties: z.object({
-		name: z.string(),
-		column_headings: z.array(z.any()),
-	}),
-	features: z.array(GeoFeatureSchema),
-});
 export type FeatureCollectionType = z.infer<typeof FeatureCollectionSchema>;
 
 export interface VicavHTTPError extends Error {
