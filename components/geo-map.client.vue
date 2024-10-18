@@ -92,7 +92,8 @@ const addNearbyDataPopup = function (marker: LeafletMarker) {
 
 	if (nearbyMarkerData.length > 1) {
 		const markers = nearbyMarkerData.sort((a, b) => {
-			return a.properties!.label.localeCompare(b.properties!.label);
+			if (a.properties!.label) return a.properties!.label.localeCompare(b.properties!.label);
+			return 0;
 		});
 
 		// @todo determine whether grouping is needed based on the number of
