@@ -6,7 +6,6 @@ import { useGeojsonStore } from "@/stores/use-geojson-store.ts";
 import type { FeatureType } from "@/types/global.d.ts";
 
 const { data, isPending } = useGeojson();
-console.log(data.value, isPending.value);
 
 const GeojsonStore = useGeojsonStore();
 const { tables } = storeToRefs(GeojsonStore);
@@ -57,7 +56,6 @@ const columns = computed(() => {
 });
 
 function registerTable(table: Table<FeatureType>) {
-	console.log(table);
 	tables.value.set("0", table);
 	const mw = findWindowByTypeAndParam("GeojsonMap", "url", "0");
 	if (mw) {

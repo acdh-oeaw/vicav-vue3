@@ -9,7 +9,6 @@ export function useGeojson(options?: { enabled?: boolean }) {
 		enabled: options?.enabled,
 		queryKey: ["get-geojson-data"] as const,
 		async queryFn() {
-			console.log("Fetching project info");
 			return await api.vicav.getProject({ headers: { accept: "application/json" } });
 		},
 		select: (response) => {
@@ -31,7 +30,6 @@ export function useGeojson(options?: { enabled?: boolean }) {
 					...rawGeoData[index],
 				});
 			});
-			console.log(GeoData);
 			return GeoData;
 		},
 	});
