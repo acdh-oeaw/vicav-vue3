@@ -1,20 +1,21 @@
 <script lang="ts" setup>
 import type { CellContext, ColumnDef, Table } from "@tanstack/vue-table";
 
+import { useGeojson } from "@/composables/use-geojson.ts";
 import { useGeojsonStore } from "@/stores/use-geojson-store.ts";
-import type { FeatureType } from "@/types/global";
+import type { FeatureType } from "@/types/global.d.ts";
+
+const { data, isPending } = useGeojson();
+console.log(data.value, isPending.value);
 
 const GeojsonStore = useGeojsonStore();
-const { addWindow, findWindowByTypeAndParam } = useWindowsStore();
-const url = "https://raw.githubusercontent.com/wibarab/wibarab-data/main/wibarab_varieties.geojson";
+const { tables } = storeToRefs(GeojsonStore);
 
-const { isPending } = GeojsonStore.fetchGeojson(url);
-const { fetchedData, tables } = storeToRefs(GeojsonStore);
+const { addWindow, findWindowByTypeAndParam } = useWindowsStore();
 
 const columns = computed(() => {
-	return fetchedData.value
-		.get(url)
-		?.properties.column_headings.map((heading: Record<string, never>) => {
+	if (data.value && data.value[0])
+		return data.value[0].properties.column_headings.map((heading: Record<string, never>) => {
 			switch (true) {
 				case Object.keys(heading).some((key) => /ft_*/.test(key)):
 					return {
@@ -52,11 +53,13 @@ const columns = computed(() => {
 					};
 			}
 		});
+	return [];
 });
 
 function registerTable(table: Table<FeatureType>) {
-	tables.value.set(url, table);
-	const mw = findWindowByTypeAndParam("GeojsonMap", "url", url);
+	console.log(table);
+	tables.value.set("0", table);
+	const mw = findWindowByTypeAndParam("GeojsonMap", "url", "0");
 	if (mw) {
 		mw.winbox.focus();
 		mw.winbox.addClass("highlighted");
@@ -67,7 +70,7 @@ function registerTable(table: Table<FeatureType>) {
 		addWindow({
 			targetType: "GeojsonMap",
 			params: {
-				url,
+				url: "0",
 			},
 			title: "Variety Data - Map View",
 		});
@@ -82,20 +85,20 @@ function registerTable(table: Table<FeatureType>) {
 		</Centered>
 		<div class="grid justify-items-end py-2">
 			<DataTablePagination
-				v-if="tables.get(url)"
-				:table="tables.get(url) as unknown as Table<never>"
+				v-if="tables.get('0')"
+				:table="tables.get('0') as unknown as Table<never>"
 			/>
 		</div>
 		<DataTable
-			v-if="!isPending"
+			v-if="!isPending && data && data[0]"
 			:columns="columns as unknown as Array<ColumnDef<never>>"
-			:items="fetchedData.get(url)?.features as Array<never>"
+			:items="data[0].features as Array<never>"
 			@table-ready="registerTable"
 		></DataTable>
 		<div class="grid justify-items-end py-2">
 			<DataTablePagination
-				v-if="tables.get(url)"
-				:table="tables.get(url) as unknown as Table<never>"
+				v-if="tables.get('0')"
+				:table="tables.get('0') as unknown as Table<never>"
 			/>
 		</div>
 	</div>
