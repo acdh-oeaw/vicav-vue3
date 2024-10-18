@@ -81,15 +81,22 @@ function registerTable(table: Table<FeatureType>) {
 		<Centered v-if="isPending">
 			<LoadingIndicator />
 		</Centered>
-		<div class="grid justify-items-end py-2">
-			<DataTablePagination
-				v-if="tables.get('0')"
-				:table="tables.get('0') as unknown as Table<never>"
-			/>
+		<div class="sticky top-0 z-10">
+			<div v-if="tables.get('0')" class="grid justify-items-end bg-white py-2">
+				<DataTablePagination :table="tables.get('0') as unknown as Table<never>" />
+			</div>
+			<TableHeader class="bg-primary font-bold text-on-primary">
+				<TableRow v-for="headerGroup in tables.get('0')!.getHeaderGroups()" :key="headerGroup.id">
+					<TableHead v-for="header in headerGroup.headers" :key="header.id">
+						{{ header.column.columnDef.header }}
+					</TableHead>
+				</TableRow>
+			</TableHeader>
 		</div>
 		<DataTable
 			v-if="!isPending && data && data[0]"
 			:columns="columns as unknown as Array<ColumnDef<never>>"
+			:header="false"
 			:items="data[0].features as Array<never>"
 			@table-ready="registerTable"
 		></DataTable>

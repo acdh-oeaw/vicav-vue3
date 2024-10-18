@@ -14,6 +14,7 @@ const emit = defineEmits(["table-ready", "columnFiltersChange", "globalFilterCha
 interface Props {
 	items: Array<never>;
 	columns: Array<ColumnDef<never>>;
+	header: boolean;
 }
 
 const props = defineProps<Props>();
@@ -71,7 +72,7 @@ onMounted(() => {
 
 <template>
 	<Table>
-		<TableHeader class="bg-primary font-bold text-on-primary">
+		<TableHeader v-if="header" class="bg-primary font-bold text-on-primary">
 			<TableRow v-for="headerGroup in table.getHeaderGroups()" :key="headerGroup.id">
 				<TableHead v-for="header in headerGroup.headers" :key="header.id">
 					{{ header.column.columnDef.header }}
