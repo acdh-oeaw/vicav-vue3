@@ -58,7 +58,7 @@ const debugString = debug ? JSON.stringify(groupedItems, null, 2) : "";
 				</h4>
 				<div v-for="(itemsBydataType, place) in itemsByPlace" :key="place" class="p-2">
 					<h5 v-if="place !== ''" class="text-base font-bold">
-						{{ place }}
+						{{ place.replace(/^zzz_/, "") }}
 					</h5>
 					<h5 v-else class="text-base font-bold">Unspecified place</h5>
 					<div v-for="(items, dataType) in itemsBydataType as groupedByDataType" :key="dataType">
