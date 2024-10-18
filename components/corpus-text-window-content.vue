@@ -57,17 +57,6 @@ const handleInfiniteScroll = async function ($state: StateHandler) {
 	}
 };
 
-const getText = async function () {
-	let text;
-	do {
-		text = await loadNextPage();
-	} while (
-		text.data.utterances !== undefined &&
-		text.data.utterances.filter((u) => u.id === props.params.u).length === 0 &&
-		text.data.utterances.length !== 0
-	);
-};
-
 const scrollParentToChild = function (parent: Element, child: Element) {
 	// Where is the parent on page
 	const parentRect = parent.getBoundingClientRect();
@@ -99,7 +88,6 @@ const scrollParentToChild = function (parent: Element, child: Element) {
 };
 
 onMounted(async () => {
-	await getText();
 	const u = utteranceElements.value.find((u) => u.id === props.params.u);
 	const window = utterancesWrapper.value?.parentElement;
 	if (u !== undefined) scrollParentToChild(window!, u);
@@ -138,10 +126,7 @@ onMounted(async () => {
 			class="corpus-utterance table-row"
 			v-html="u.content"
 		/>
-		<InfiniteLoading
-			v-if="utterances.length > 0 && !scrollComplete"
-			@infinite="handleInfiniteScroll"
-		/>
+		<InfiniteLoading v-if="!scrollComplete" @infinite="handleInfiniteScroll" />
 	</div>
 </template>
 
