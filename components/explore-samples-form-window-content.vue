@@ -95,7 +95,8 @@ const uniqueFilter = function (value: unknown, index: number, array: Array<unkno
 	return array.indexOf(value) === index;
 };
 const personOptions = dataset
-	.map((item) => item.person.name)
+	.map((item) => item.person.map((i) => i.name))
+	.flat()
 	.filter(uniqueFilter)
 	.map((item: string) => {
 		return { label: item, value: item };
@@ -123,7 +124,8 @@ const personsFilter = computed(() =>
 	simpleItems.value
 		.filter((item) => {
 			if (!params.value.dataTypes.includes(item.dataType)) return false;
-			if (persons.value.length > 0) return persons.value.includes(item.person.name);
+			if (persons.value.length > 0)
+				return item.person.forEach((p) => persons.value.includes(p.name));
 			else if (places.value.length > 0) {
 				const found = places.value.map((place) => {
 					const p = place.split(":");
@@ -134,10 +136,16 @@ const personsFilter = computed(() =>
 				});
 				if (!found.includes(true)) return false;
 			}
-			if (sex.value.length > 0 && !sex.value.includes(item.person.sex)) return false;
-			return !(
-				age.value[0]! > parseInt(item.person.age) || age.value[1]! < parseInt(item.person.age)
-			);
+			if (sex.value.length > 0) {
+				if (
+					// If none of the participants are of the given sex
+					!item.person.map((p) => sex.value.includes(p.sex)).includes(true)
+				)
+					return false;
+			}
+			return item.person
+				.map((p) => age.value[0]! > parseInt(p.age) && age.value[1]! < parseInt(p.age))
+				.includes(true);
 		})
 		.map((item) => item.id),
 );

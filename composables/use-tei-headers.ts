@@ -15,6 +15,29 @@ import dataTypes from "../config/dataTypes";
 
 type RawTEIItems = ComputedRef<Array<TeiCorpus | object>>;
 
+const extractPersons = function (item: TEI, corpusMetadata: TeiHeader | undefined) {
+	const corpusPersons = corpusMetadata?.profileDesc?.particDesc?.listPerson;
+	const results = [];
+	if (corpusPersons && item.teiHeader.profileDesc?.particDesc?.listPerson) {
+		const persons = item.teiHeader.profileDesc.particDesc.listPerson
+			.map((item: Person) => {
+				return (item["@sameAs"] ?? item.$ ?? "").replace("corpus:", "");
+			})
+			.filter((item: string | undefined) => item);
+
+		for (const personId of persons) {
+			const person = corpusPersons.find((item: Person) => item["@id"] === personId);
+			if (person)
+				results.push({
+					name: person["@id"] ?? "",
+					sex: person["@sex"] ?? "",
+					age: person["@age"] ?? "",
+				});
+		}
+	}
+	return results;
+};
+
 const extractMetadata = function (
 	item: TEI,
 	dataType: string,
@@ -30,11 +53,13 @@ const extractMetadata = function (
 			region: "",
 			country: "",
 		},
-		person: {
-			name: "",
-			age: "",
-			sex: "",
-		},
+		person: [
+			{
+				name: "",
+				age: "",
+				sex: "",
+			},
+		],
 		resp: "",
 		dataType: "Text",
 		secondaryDataType: "",
@@ -42,6 +67,7 @@ const extractMetadata = function (
 		"@hasTEIw": "false",
 		teiHeader: item.teiHeader,
 	} as simpleTEIMetadata;
+
 	template.id = item["@id"]
 		? item["@id"]
 		: item.teiHeader.fileDesc.publicationStmt.idno?.$
@@ -109,28 +135,8 @@ const extractMetadata = function (
 		if (name) template.resp = name;
 	}
 
+	template.person = extractPersons(item, corpusMetadata);
 	if (template.dataType === "CorpusText" && corpusMetadata) {
-		const corpusPersons = corpusMetadata.profileDesc?.particDesc?.listPerson;
-		if (corpusPersons && item.teiHeader.profileDesc?.particDesc?.listPerson) {
-			const persons = item.teiHeader.profileDesc.particDesc.listPerson
-				.map((item: Person) => {
-					if (!item["@sameAs"]) return;
-					return item["@sameAs"].replace("corpus:", "");
-				})
-				.filter((item: string | undefined) => item);
-
-			const person = corpusPersons.find((item: Person) => item["@id"] === persons[0]);
-			if (person) {
-				if (person["@id"]) template.person.name = person["@id"];
-				if (person["@sex"]) {
-					template.person.sex = person["@sex"];
-				}
-				if (person["@age"]) {
-					template.person.age = person["@age"];
-				}
-			}
-		}
-
 		const subtype = item.teiHeader.profileDesc?.textClass?.catRef
 			? item.teiHeader.profileDesc.textClass.catRef["@target"]
 			: "";
@@ -153,19 +159,9 @@ const extractMetadata = function (
 			default:
 				break;
 		}
-	} else {
-		const person = item.teiHeader.profileDesc?.particDesc?.person;
-		if (person?.$) {
-			template.person.name = person.$;
-			if (person["@sex"]) {
-				template.person.sex = person["@sex"];
-			}
-			if (person["@age"]) {
-				template.person.age = person["@age"];
-			}
-		}
 	}
-	if (template.person.name) {
+
+	if (!template.person.at(0)?.name) {
 		// this is true only for SHAWI data, needs to be checked in the future.
 		template.label = template.id;
 	} else if (item.teiHeader.fileDesc.titleStmt.titles?.at(0)?.$) {
@@ -176,11 +172,13 @@ const extractMetadata = function (
 	if (template.dataType === "CorpusText" && item.teiHeader.fileDesc.titleStmt.titles?.at(0)) {
 		template.label = item.teiHeader.fileDesc.titleStmt.titles[0]!.$!;
 	} else {
-		template.label = template.person.name
-			? template.person.name
-			: item.teiHeader.fileDesc.titleStmt.titles?.at(0)
+		if (template.person.at(0)) {
+			template.label = template.person[0]!.name;
+		} else {
+			template.label = item.teiHeader.fileDesc.titleStmt.titles?.at(0)
 				? item.teiHeader.fileDesc.titleStmt.titles[0]!.$!
 				: template.place.settlement;
+		}
 	}
 
 	template["@hasTEIw"] = item["@hasTEIw"] === "true" ? "true" : "false";
