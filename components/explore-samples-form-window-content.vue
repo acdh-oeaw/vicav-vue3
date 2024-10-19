@@ -235,6 +235,27 @@ const openSearchResultsWindow = function () {
 		}, 1000);
 	}
 };
+
+/**
+ * Open search results in new window.
+ */
+const openSearchResultsNewWindow = function () {
+	addWindow({
+		targetType: "ExploreSamples",
+		params: resultWindowParams.value,
+		title: `Search results for ${[words.value.join(","), places.value.join(",")].join(", ")}`,
+	} as WindowState)!;
+	addWindow({
+		targetType: "WMap",
+		params: {
+			title: "Search results",
+			queryString: "",
+			endpoint: "compare_markers",
+			queryParams: queryParams.value,
+		},
+		title: `${params.value.dataTypes[0]}s for ${[words.value.join(","), places.value.join(",")].join(", ")}`,
+	} as WindowState)!;
+};
 </script>
 
 <template>
@@ -320,7 +341,7 @@ const openSearchResultsWindow = function () {
 				</TagsInputRoot>
 			</div>
 
-			<div class="flex flex-row gap-2.5">
+			<div v-if="params.dataTypes.includes('Feature')" class="flex flex-row gap-2.5">
 				<label for="translation">Translation</label>
 				<input
 					id="translation"
@@ -357,7 +378,22 @@ const openSearchResultsWindow = function () {
 			>
 				Query
 			</button>
-			<br />
+
+			<button
+				class="inline-block h-10 w-full whitespace-nowrap rounded border-2 border-solid border-primary bg-on-primary text-center align-middle font-bold text-primary hover:bg-primary hover:text-on-primary disabled:border-gray-400 disabled:text-gray-400 hover:disabled:bg-on-primary hover:disabled:text-gray-400"
+				:disabled="
+					words.length === 0 &&
+					translation == '' &&
+					comment == '' &&
+					places.length === 0 &&
+					persons.length === 0 &&
+					features.length === 0 &&
+					sentences.length === 0
+				"
+				@click.prevent.stop="openSearchResultsNewWindow"
+			>
+				Search in new window
+			</button>
 		</form>
 	</div>
 </template>
