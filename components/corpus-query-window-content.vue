@@ -59,9 +59,16 @@ const words: Ref<Array<string>> = ref([]);
 	<!-- eslint-disable vue/no-v-html -->
 	<div class="p-2">
 		<form
-			class="block w-full rounded border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
+			class="block w-full rounded border border-gray-300 bg-gray-50 p-2.5 px-4 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
 		>
-			<label class="font-bold" for="word_tags">Search for words</label>
+			<label class="mb-2 flex !w-40 p-0 font-bold" for="word_tags">
+				<span class="grow">Search for words</span>
+			</label>
+			<div class="flex items-center gap-2">
+				<Info class="size-4" /><span class="text-gray-500"
+					>Enter non-accented Latin characters and select word options from the list</span
+				>
+			</div>
 			<TagsSelect
 				v-if="wordOptions"
 				id="word_tags"
@@ -71,19 +78,22 @@ const words: Ref<Array<string>> = ref([]);
 				:options="wordOptions"
 				:placeholder="`Search for words...`"
 			/>
-			<label class="flex !w-40 font-bold" for="query"
-				><span class="grow">Advanced search</span>
-				<a
-					class="content-center"
-					href="https://howto.acdh.oeaw.ac.at/de/resources/corpus-query-language-im-austrian-media-corpus"
-					target="_blank"
-					title="More information about CQL syntax"
-					><Info class="size-4" /><span class="hidden">More information about CQL Syntax</span></a
-				>
-			</label>
 
+			<label class="mb-2 flex !w-40 p-0 font-bold" for="word_tags">
+				<span class="grow">Advanced search</span>
+			</label>
+			<div class="mb-2 flex items-center gap-2">
+				<Info class="size-4" /><span class="text-gray-500"
+					>Enter exact words within a CQL query. (<a
+						class="content-center"
+						href="https://howto.acdh.oeaw.ac.at/de/resources/corpus-query-language-im-austrian-media-corpus"
+						target="_blank"
+						title="More information about CQL syntax"
+						><span>More info</span></a
+					>)
+				</span>
+			</div>
 			<InputExtended
-				v-if="specialCharacters"
 				id="query"
 				v-model="queryString"
 				aria-label="Search"
