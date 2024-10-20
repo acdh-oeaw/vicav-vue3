@@ -1,6 +1,11 @@
 /* eslint-disable @typescript-eslint/consistent-type-definitions */
 import type { JsonValue } from "type-fest";
 
+type simplePerson = {
+	name: string;
+	sex: string;
+	age: string;
+};
 export type simpleTEIMetadata = {
 	id: string;
 	label: string;
@@ -14,11 +19,7 @@ export type simpleTEIMetadata = {
 		country: string;
 		region: string;
 	};
-	person: {
-		name: string;
-		sex: string;
-		age: string;
-	};
+	person: Array<simplePerson>;
 	"@hasTEIw": string;
 	teiHeader: TeiHeader;
 };

@@ -31,8 +31,8 @@ interface Props {
 
 const props = defineProps<Props>();
 const { options, placeholder, filterFunction } = toRefs(props);
-const searchTerm = ref("");
 const model = defineModel<Array<string>>();
+const searchTerm = defineModel<string>("searchTerm");
 const open = ref(false);
 watch(
 	model,

@@ -9,7 +9,6 @@ const props = defineProps<Props>();
 const { params } = toRefs(props);
 const content: Ref<HTMLElement | undefined> = ref();
 const tooltip: Ref<HTMLElement | null> = ref(null);
-
 const { simpleItems } = useTEIHeaders();
 
 const filters: Array<"region" | "settlement"> = ["region", "settlement"];
@@ -28,14 +27,14 @@ const ids = computed(() => {
 				})
 				.filter((item) => {
 					if (params.value.person) {
-						return params.value.person === item.person.name;
+						return item.person.map((p) => p.name).includes(params.value.person);
 					} else return true;
 				})
 				.map((item) => item.id)
 				.join(",");
 });
 
-const features: Ref<Array<string>> = ref([]);
+const features: Ref<Array<string>> = ref(params.value.features?.split(",") ?? []);
 const page: Ref<number> = ref(1);
 
 watch(params, (value) => {

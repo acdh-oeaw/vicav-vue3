@@ -17,9 +17,20 @@ export function getGroupedItems(
 	levelProperties: [string, string, string, string],
 	dataTypeProperty: string,
 	allowedDataTypes: Array<string>,
-	sortProperty: string,
+	sortProperty: string | ((a: JsonObject, b: JsonObject) => number),
 	filterListBy?: { key: string; value: string },
 ) {
+	const sortFunction =
+		typeof sortProperty === "string"
+			? (a: JsonObject, b: JsonObject) => {
+					const aLabel = deepGet(a, sortProperty, ""),
+						bLabel = deepGet(b, sortProperty, "");
+					if (aLabel && bLabel && typeof aLabel === "string" && typeof bLabel === "string") {
+						return aLabel.localeCompare(bLabel);
+					}
+					return 0;
+				}
+			: sortProperty;
 	// Group by L1
 	const collectedItems = items
 		.filter((item) => {
@@ -30,14 +41,7 @@ export function getGroupedItems(
 			if (typeof dataType !== "string") return false;
 			return isAllowedDataType && filterByIsTrue;
 		})
-		.sort((a, b) => {
-			const aLabel = deepGet(a, sortProperty, ""),
-				bLabel = deepGet(b, sortProperty, "");
-			if (aLabel && bLabel && typeof aLabel === "string" && typeof bLabel === "string") {
-				return aLabel.localeCompare(bLabel);
-			}
-			return 0;
-		});
+		.sort(sortFunction);
 
 	const grouped = Object.groupBy(collectedItems, (item: JsonObject) => {
 		const L1 = deepGet(item, levelProperties[0], "");
@@ -80,14 +84,7 @@ export function getGroupedItems(
 				for (const L4 in (grouped as groupedByL1)[L1]![L2]![L3]!) {
 					(grouped as groupedByL1)[L1]![L2]![L3]![L4] = (grouped as groupedByL1)[L1]![L2]![L3]![
 						L4
-					]!.sort((a, b) => {
-						const aLabel = deepGet(a, sortProperty, ""),
-							bLabel = deepGet(b, sortProperty, "");
-						if (aLabel && bLabel && typeof aLabel === "string" && typeof bLabel === "string") {
-							return aLabel.localeCompare(bLabel);
-						}
-						return 0;
-					});
+					]!.sort(sortFunction);
 				}
 			}
 		}
