@@ -7,26 +7,9 @@ import {
 	TagsInputItemText,
 	TagsInputRoot,
 } from "radix-vue";
-import { transliterate as tr } from "transliteration";
 
 import dataTypes from "@/config/dataTypes";
 import type { ExploreSamplesFormWindowItem, GeoMapWindowItem, WindowItem } from "@/types/global.d";
-
-const trOptions = {
-	replace: {
-		ᵃ: "a",
-		ᵉ: "e",
-		ⁱ: "i",
-		ᵒ: "o",
-		ᵘ: "u",
-		ᵊ: "e",
-		ʷ: "w",
-		ʸ: "y",
-		ˢ: "s",
-		ᶴ: "s",
-		q: "q",
-	},
-};
 
 const { findWindowByTypeAndParam } = useWindowsStore();
 
@@ -102,21 +85,25 @@ const personOptions = dataset
 		return { label: item, value: item };
 	});
 
+const wordSearch = ref("");
+
 const featureLabelsQuery = useFeatureLabels();
-const dataWordsQuery = useDataWords({ dataType: props.params.dataTypes[0]! });
+
+watch(wordSearch, async (value) => {
+	if (!value || value.length < 2) return;
+	await dataWordsQuery.refetch();
+});
+
+const dataWordsQuery = useDataWords(
+	{ dataType: props.params.dataTypes[0]!, query: wordSearch },
+	{ enabled: false },
+);
+
 const wordOptions = computed(() => {
-	return (dataWordsQuery.data.value ?? []).map((item) => {
+	return ((dataWordsQuery.data.value as unknown as Array<string>) ?? []).map((item) => {
 		return { label: item, value: item };
 	});
 });
-
-const wordFilter = function (list: Array<string>, searchTerm: string) {
-	const translitTerm = tr(searchTerm, trOptions);
-
-	return list.filter((item) => {
-		return tr(item, trOptions).indexOf(translitTerm) !== -1;
-	});
-};
 
 const sex = ref(["m", "f"]);
 
@@ -296,9 +283,9 @@ const openSearchResultsNewWindow = function () {
 				<label for="word">Word</label>
 
 				<TagsSelect
-					v-if="wordOptions"
 					v-model="words"
-					:filter-function="wordFilter"
+					v-model:search-term="wordSearch"
+					:filter-function="(i) => i"
 					:options="wordOptions"
 					:placeholder="`Search for words...`"
 				/>

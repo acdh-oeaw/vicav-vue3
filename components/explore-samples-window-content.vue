@@ -9,7 +9,6 @@ const props = defineProps<Props>();
 const { params } = toRefs(props);
 const content: Ref<HTMLElement | undefined> = ref();
 const tooltip: Ref<HTMLElement | null> = ref(null);
-console.log(params);
 const { simpleItems } = useTEIHeaders();
 
 const filters: Array<"region" | "settlement"> = ["region", "settlement"];
