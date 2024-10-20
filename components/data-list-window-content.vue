@@ -1,5 +1,7 @@
 <!-- eslint-disable @typescript-eslint/sort-type-constituents -->
 <script lang="ts" setup>
+import type { JsonObject } from "type-fest";
+
 import type { DataListWindowItem, DataTypesEnum } from "@/types/global.d";
 import type { simpleTEIMetadata } from "@/types/teiCorpus.d";
 
@@ -25,7 +27,16 @@ const groupedItems = getGroupedItems(
 	["place.country", "place.region", "place.settlement", "dataType"],
 	"dataType",
 	props.params.dataTypes,
-	"label",
+	(a: JsonObject, b: JsonObject) => {
+		const amatch = Number((a as simpleTEIMetadata).label?.match(/[a-z]+(\d+)/i)?.at(1));
+		const bmatch = Number((b as simpleTEIMetadata).label?.match(/[a-z]+(\d+)/i)?.at(1));
+
+		if (!amatch || !bmatch)
+			return !a.label || !b.label ? 0 : a.label < b.label ? -1 : a.label > b.label ? 1 : 0;
+		else {
+			return amatch < bmatch ? -1 : amatch > bmatch ? 1 : 0;
+		}
+	},
 	props.params.filterListBy,
 ) as groupedByCountry;
 const openNewWindowFromAnchor = useAnchorClickHandler();
@@ -54,7 +65,9 @@ const debugString = debug ? JSON.stringify(groupedItems, null, 2) : "";
 			<div v-for="(itemsByPlace, region) in itemsByRegion" :key="region" class="p-2 text-base">
 				<h4 v-if="region !== ''" class="text-lg italic">
 					{{ region }}
-					<span>({{ Object.values(itemsByPlace).flat(2).length }})</span>
+					<span v-if="Object.values(itemsByPlace).flat(2).length > 1"
+						>({{ Object.values(itemsByPlace).flat(2).length }})</span
+					>
 				</h4>
 				<h4 v-else-if="Object.keys(itemsByRegion).length > 1" class="text-lg italic">
 					Unspecified region
@@ -62,7 +75,6 @@ const debugString = debug ? JSON.stringify(groupedItems, null, 2) : "";
 				<div v-for="(itemsBydataType, place) in itemsByPlace" :key="place" class="p-2">
 					<h5 v-if="place !== ''" class="text-base font-bold">
 						{{ place.replace(/^zzz_/, "") }}
-						<span>({{ Object.values(itemsBydataType).flat().length }})</span>
 					</h5>
 					<h5 v-else class="text-base font-bold">Unspecified place</h5>
 					<div v-for="(items, dataType) in itemsBydataType as groupedByDataType" :key="dataType">
