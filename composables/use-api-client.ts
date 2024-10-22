@@ -16,7 +16,7 @@ function basicSecurityWorker(securityData: userPass | null): RequestParams | und
 	return undefined;
 }
 
-const cache: Map<string, Record<string, Response>> = new Map<string, Record<string, Response>>();
+const cache: Map<string, Record<string, unknown>> = new Map<string, Record<string, unknown>>();
 
 async function fetchWithETag(
 	input: globalThis.Request | URL | string,
@@ -41,13 +41,15 @@ async function fetchWithETag(
 
 	if (response.status === 304) {
 		if (cachedETag && Object.keys(cachedETag).length === 1) {
-			const response = Object.values(cachedETag)[0];
-			if (response) return response.clone();
+			const body = Object.values(cachedETag)[0];
+			if (body) return new Response(JSON.stringify(body), { status: 200 });
 		}
 		throw new Error(`Cache error!`);
 	} else if (response.ok) {
 		if (currentETag) {
-			cache.set(url, { [currentETag]: response.clone() });
+			// response body can't be typed at this point
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+			cache.set(url, { [currentETag]: await response.clone().json() });
 		}
 		return response;
 	} else {
