@@ -94,6 +94,7 @@ const words: Ref<Array<string>> = ref([]);
 				</span>
 			</div>
 			<InputExtended
+				v-if="specialCharacters"
 				id="query"
 				v-model="queryString"
 				aria-label="Search"
