@@ -8,6 +8,8 @@ import type { StateHandler } from "v3-infinite-loading/lib/types";
 import type { CorpusTextUtterances } from "@/lib/api-client";
 import type { CorpusTextSchema, VicavHTTPError } from "@/types/global";
 
+const openNewWindowFromAnchor = useAnchorClickHandler();
+
 const props = defineProps<{
 	params: Zod.infer<typeof CorpusTextSchema>["params"] & { label?: string };
 }>();
@@ -95,7 +97,10 @@ onMounted(async () => {
 </script>
 
 <template>
-	<!-- eslint-disable tailwindcss/no-custom-classname, vue/no-v-html -->
+	<!-- eslint-disable tailwindcss/no-custom-classname, vue/no-v-html
+			vuejs-accessibility/mouse-events-have-key-events,
+			vuejs-accessibility/click-events-have-key-events,
+			vuejs-accessibility/no-static-element-interactions -->
 	<div :id="params.textId" ref="utterancesWrapper" class="p-4">
 		<h2 class="m-3 text-lg">{{ props.params.label }}</h2>
 
@@ -124,6 +129,7 @@ onMounted(async () => {
 			:key="u.id"
 			ref="utteranceElements"
 			class="corpus-utterance table-row"
+			@click="openNewWindowFromAnchor"
 			v-html="u.content"
 		/>
 		<InfiniteLoading v-if="!scrollComplete" @infinite="handleInfiniteScroll" />
@@ -145,6 +151,26 @@ onMounted(async () => {
 	.content {
 		.hit {
 			@apply font-bold;
+		}
+	}
+
+	.w,
+	.pc,
+	.c {
+		display: inline-block;
+		text-align: center;
+
+		.ana {
+			display: block;
+			font-size: small;
+
+			.sep {
+				color: #fff;
+			}
+
+			.lang {
+				display: none;
+			}
 		}
 	}
 }
