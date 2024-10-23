@@ -22,7 +22,7 @@ export function useAnchorClickHandler() {
 			event.preventDefault();
 			addWindow({
 				targetType: item.targetType,
-				params: item,
+				params: jsonStringsToObject(item),
 				title: isNonEmptyString(item.label) ? item.label : element.innerText,
 			} as WindowState);
 		}
