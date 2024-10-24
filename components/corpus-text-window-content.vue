@@ -110,10 +110,12 @@ onMounted(async () => {
 					<td>{{ teiHeader?.resp }}</td>
 				</tr>
 				<tr>
-					<th>Speaker:</th>
+					<th>Speakers:</th>
 					<td>
-						{{ teiHeader?.person.name }} (age: {{ teiHeader?.person.age }}, sex:
-						{{ teiHeader?.person.sex }})
+						<span v-for="(person, index) in teiHeader?.person" :key="index">
+							{{ person.name }} (age: {{ person.age }}, sex: {{ person.sex }})
+							<span v-if="index < (teiHeader?.person.length || 1) - 1">, </span>
+						</span>
 					</td>
 				</tr>
 			</tbody>

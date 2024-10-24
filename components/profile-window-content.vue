@@ -43,6 +43,7 @@ watch(content, () => {
 
 <style>
 /* stylelint-disable selector-class-pattern */
+/* stylelint-disable selector-type-no-unknown */
 
 .profileHeader img,
 .figure img {
@@ -50,11 +51,11 @@ watch(content, () => {
 }
 
 .tbProfile {
-	@apply border border-solid border-[#59533c];
+	@apply border border-solid border-[#59533c] mt-0;
 }
 
 .tdHead {
-	@apply align-top w-[150px] pr-[5px] border-dotted border-primary border-b bg-primary text-on-primary text-right break-words;
+	@apply align-top !w-[150px] pr-[5px] border-dotted border-primary border-b bg-primary text-on-primary text-right break-words;
 }
 
 .tdProfileTableRight {
@@ -102,11 +103,19 @@ a:hover {
 }
 
 .pNorm {
-	@apply mb-[10px];
+	@apply mb-4;
+}
+
+gallery + .pNorm {
+	@apply my-6;
+}
+
+.pNorm:has(+ gallery) {
+	@apply mb-6;
 }
 
 .imgCaption {
-	@apply pb-2 italic text-xs text-center;
+	@apply p-2 italic text-[0.85rem] text-center;
 }
 
 .h3ProfileTypology {
@@ -125,6 +134,11 @@ a:hover {
 	@apply text-white;
 
 	height: 450px;
+}
+
+.pFigure,
+.lg-container {
+	@apply my-4;
 }
 
 .pFigure.fig-col-3 {

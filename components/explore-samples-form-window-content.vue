@@ -7,26 +7,9 @@ import {
 	TagsInputItemText,
 	TagsInputRoot,
 } from "radix-vue";
-import { transliterate as tr } from "transliteration";
 
 import dataTypes from "@/config/dataTypes";
 import type { ExploreSamplesFormWindowItem, GeoMapWindowItem, WindowItem } from "@/types/global.d";
-
-const trOptions = {
-	replace: {
-		ᵃ: "a",
-		ᵉ: "e",
-		ⁱ: "i",
-		ᵒ: "o",
-		ᵘ: "u",
-		ᵊ: "e",
-		ʷ: "w",
-		ʸ: "y",
-		ˢ: "s",
-		ᶴ: "s",
-		q: "q",
-	},
-};
 
 const { findWindowByTypeAndParam } = useWindowsStore();
 
@@ -95,27 +78,32 @@ const uniqueFilter = function (value: unknown, index: number, array: Array<unkno
 	return array.indexOf(value) === index;
 };
 const personOptions = dataset
-	.map((item) => item.person.name)
+	.map((item) => item.person.map((i) => i.name))
+	.flat()
 	.filter(uniqueFilter)
 	.map((item: string) => {
 		return { label: item, value: item };
 	});
 
+const wordSearch = ref("");
+
 const featureLabelsQuery = useFeatureLabels();
-const dataWordsQuery = useDataWords({ dataType: props.params.dataTypes[0]! });
+
+watch(wordSearch, async (value) => {
+	if (!value || value.length < 2) return;
+	await dataWordsQuery.refetch();
+});
+
+const dataWordsQuery = useDataWords(
+	{ dataType: props.params.dataTypes[0]!, query: wordSearch },
+	{ enabled: false },
+);
+
 const wordOptions = computed(() => {
-	return (dataWordsQuery.data.value ?? []).map((item) => {
+	return ((dataWordsQuery.data.value as unknown as Array<string>) ?? []).map((item) => {
 		return { label: item, value: item };
 	});
 });
-
-const wordFilter = function (list: Array<string>, searchTerm: string) {
-	const translitTerm = tr(searchTerm, trOptions);
-
-	return list.filter((item) => {
-		return tr(item, trOptions).indexOf(translitTerm) !== -1;
-	});
-};
 
 const sex = ref(["m", "f"]);
 
@@ -123,7 +111,8 @@ const personsFilter = computed(() =>
 	simpleItems.value
 		.filter((item) => {
 			if (!params.value.dataTypes.includes(item.dataType)) return false;
-			if (persons.value.length > 0) return persons.value.includes(item.person.name);
+			if (persons.value.length > 0)
+				return item.person.forEach((p) => persons.value.includes(p.name));
 			else if (places.value.length > 0) {
 				const found = places.value.map((place) => {
 					const p = place.split(":");
@@ -134,10 +123,16 @@ const personsFilter = computed(() =>
 				});
 				if (!found.includes(true)) return false;
 			}
-			if (sex.value.length > 0 && !sex.value.includes(item.person.sex)) return false;
-			return !(
-				age.value[0]! > parseInt(item.person.age) || age.value[1]! < parseInt(item.person.age)
-			);
+			if (sex.value.length > 0) {
+				if (
+					// If none of the participants are of the given sex
+					!item.person.map((p) => sex.value.includes(p.sex)).includes(true)
+				)
+					return false;
+			}
+			return item.person
+				.map((p) => age.value[0]! > parseInt(p.age) && age.value[1]! < parseInt(p.age))
+				.includes(true);
 		})
 		.map((item) => item.id),
 );
@@ -227,6 +222,27 @@ const openSearchResultsWindow = function () {
 		}, 1000);
 	}
 };
+
+/**
+ * Open search results in new window.
+ */
+const openSearchResultsNewWindow = function () {
+	addWindow({
+		targetType: "ExploreSamples",
+		params: resultWindowParams.value,
+		title: `Search results for ${[words.value.join(","), places.value.join(",")].join(", ")}`,
+	} as WindowState)!;
+	addWindow({
+		targetType: "WMap",
+		params: {
+			title: "Search results",
+			queryString: "",
+			endpoint: "compare_markers",
+			queryParams: queryParams.value,
+		},
+		title: `${params.value.dataTypes[0]}s for ${[words.value.join(","), places.value.join(",")].join(", ")}`,
+	} as WindowState)!;
+};
 </script>
 
 <template>
@@ -267,9 +283,9 @@ const openSearchResultsWindow = function () {
 				<label for="word">Word</label>
 
 				<TagsSelect
-					v-if="wordOptions"
 					v-model="words"
-					:filter-function="wordFilter"
+					v-model:search-term="wordSearch"
+					:filter-function="(i) => i"
 					:options="wordOptions"
 					:placeholder="`Search for words...`"
 				/>
@@ -312,7 +328,7 @@ const openSearchResultsWindow = function () {
 				</TagsInputRoot>
 			</div>
 
-			<div class="flex flex-row gap-2.5">
+			<div v-if="params.dataTypes.includes('Feature')" class="flex flex-row gap-2.5">
 				<label for="translation">Translation</label>
 				<input
 					id="translation"
@@ -349,7 +365,22 @@ const openSearchResultsWindow = function () {
 			>
 				Query
 			</button>
-			<br />
+
+			<button
+				class="inline-block h-10 w-full whitespace-nowrap rounded border-2 border-solid border-primary bg-on-primary text-center align-middle font-bold text-primary hover:bg-primary hover:text-on-primary disabled:border-gray-400 disabled:text-gray-400 hover:disabled:bg-on-primary hover:disabled:text-gray-400"
+				:disabled="
+					words.length === 0 &&
+					translation == '' &&
+					comment == '' &&
+					places.length === 0 &&
+					persons.length === 0 &&
+					features.length === 0 &&
+					sentences.length === 0
+				"
+				@click.prevent.stop="openSearchResultsNewWindow"
+			>
+				Search in new window
+			</button>
 		</form>
 	</div>
 </template>
