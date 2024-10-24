@@ -11,7 +11,7 @@ import type { CorpusTextSchema, VicavHTTPError } from "@/types/global";
 const openNewWindowFromAnchor = useAnchorClickHandler();
 
 const props = defineProps<{
-	params: Zod.infer<typeof CorpusTextSchema>["params"] & { label?: string };
+	params: Zod.infer<typeof CorpusTextSchema>["params"];
 }>();
 
 const { simpleItems } = useTEIHeaders();
