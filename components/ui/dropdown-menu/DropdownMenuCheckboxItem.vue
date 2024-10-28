@@ -7,6 +7,7 @@ import {
 	DropdownMenuItemIndicator,
 	useForwardPropsEmits,
 } from "radix-vue";
+import { twMerge } from "tailwind-merge";
 import { computed, type HTMLAttributes } from "vue";
 
 const props = defineProps<DropdownMenuCheckboxItemProps & { class?: HTMLAttributes["class"] }>();
@@ -24,7 +25,12 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits);
 <template>
 	<DropdownMenuCheckboxItem
 		v-bind="forwarded"
-		class="relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors focus:bg-accent data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+		:class="
+			twMerge(
+				'relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors focus:bg-accent data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+				props.class,
+			)
+		"
 	>
 		<span class="absolute left-2 flex size-3.5 items-center justify-center">
 			<DropdownMenuItemIndicator>
