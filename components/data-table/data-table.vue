@@ -14,6 +14,7 @@ const emit = defineEmits(["table-ready", "columnFiltersChange", "globalFilterCha
 interface Props {
 	items: Array<never>;
 	columns: Array<ColumnDef<never>>;
+	minHeaderDepth?: number;
 }
 
 const props = defineProps<Props>();
@@ -72,7 +73,12 @@ onMounted(() => {
 <template>
 	<Table>
 		<TableHeader class="bg-primary font-bold text-on-primary">
-			<TableRow v-for="headerGroup in table.getHeaderGroups()" :key="headerGroup.id">
+			<TableRow
+				v-for="headerGroup in table
+					.getHeaderGroups()
+					.filter((header) => header.depth >= (props.minHeaderDepth ?? 0))"
+				:key="headerGroup.id"
+			>
 				<TableHead v-for="header in headerGroup.headers" :key="header.id">
 					{{ header.column.columnDef.header }}
 				</TableHead>

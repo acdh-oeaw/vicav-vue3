@@ -21,50 +21,52 @@ const columnHelper = createColumnHelper();
 const columns = computed(() => {
 	const columnHeadings = fetchedData.value.get(url)?.properties.column_headings;
 	const categories = [...new Set(columnHeadings?.flatMap((heading) => heading.category))];
-	const groupedColumns = categories.map((categoryName: string | undefined) => {
-		switch (typeof categoryName) {
-			case "string":
-				return columnHelper.group({
-					header: categoryName,
-					//@ts-expect-error type mismatch in accessorFn
-					columns: columnHeadings
-						?.filter((heading) => heading.category === categoryName)
-						.map((heading) => {
-							return {
-								id: Object.keys(heading).find((key) => /ft_*/.test(key)) ?? "",
-								header: heading[Object.keys(heading).find((key) => /ft_*/.test(key)) ?? ""],
-								cell: (cell: CellContext<FeatureType, never>) => {
-									return h(resolveComponent("GeojsonTablePropertyCell"), {
-										value: cell.row.original.properties[cell.column.columnDef.id!],
-									});
-								},
-							};
-						}),
-				});
-			default:
-				return columnHelper.group({
-					header: "-",
-					enableHiding: false,
-					//@ts-expect-error type mismatch in accessorFn
-					columns: columnHeadings
-						?.filter((heading) => heading.category === categoryName)
-						.map((heading) => {
-							return {
-								id: Object.keys(heading)[0],
-								header: Object.values(heading)[0],
-								enableHiding: false,
-								cell: ({ cell }: CellContext<FeatureType, never>) => {
-									return h(
-										"span",
-										{ class: "max-w-[500px] truncate font-medium" },
-										cell.row.original.properties[cell.column.columnDef.id!],
-									);
-								},
-							};
-						}),
-				});
-		}
-	});
+	const groupedColumns = categories
+		.map((categoryName: string | undefined) => {
+			switch (typeof categoryName) {
+				case "string":
+					return columnHelper.group({
+						header: categoryName,
+						//@ts-expect-error type mismatch in accessorFn
+						columns: columnHeadings
+							?.filter((heading) => heading.category === categoryName)
+							.map((heading) => {
+								return {
+									id: Object.keys(heading).find((key) => /ft_*/.test(key)) ?? "",
+									header: heading[Object.keys(heading).find((key) => /ft_*/.test(key)) ?? ""],
+									cell: (cell: CellContext<FeatureType, never>) => {
+										return h(resolveComponent("GeojsonTablePropertyCell"), {
+											value: cell.row.original.properties[cell.column.columnDef.id!],
+										});
+									},
+								};
+							}),
+					});
+				default:
+					return columnHelper.group({
+						header: "-",
+						enableHiding: false,
+						//@ts-expect-error type mismatch in accessorFn
+						columns: columnHeadings
+							?.filter((heading) => heading.category === categoryName)
+							.map((heading) => {
+								return {
+									id: Object.keys(heading)[0],
+									header: Object.values(heading)[0],
+									enableHiding: false,
+									cell: ({ cell }: CellContext<FeatureType, never>) => {
+										return h(
+											"span",
+											{ class: "max-w-[500px] truncate font-medium" },
+											cell.row.original.properties[cell.column.columnDef.id!],
+										);
+									},
+								};
+							}),
+					});
+			}
+		})
+		.sort((a, b) => String(a.header).localeCompare(String(b.header)));
 	return groupedColumns;
 });
 
@@ -109,6 +111,7 @@ function registerTable(table: Table<FeatureType>) {
 			v-if="!isPending"
 			:columns="columns as unknown as Array<ColumnDef<never>>"
 			:items="fetchedData.get(url)?.features as Array<never>"
+			:min-header-depth="1"
 			@table-ready="registerTable"
 		></DataTable>
 		<div class="grid justify-items-end py-2">
