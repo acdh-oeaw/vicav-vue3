@@ -26,13 +26,13 @@ const items = computed(() => {
 });
 
 const columns = ref([
-	columnHelper.accessor((row) => row.person.name, {
+	columnHelper.accessor((row) => row.person.at(0)?.name, {
 		id: "label",
 		cell: (info) => {
 			const identifier =
 				info.getValue() +
-				(info.row.original.person.sex ? `/${info.row.original.person.sex}` : "") +
-				(info.row.original.person.age ? `/${info.row.original.person.age}` : "");
+				(info.row.original.person.at(0)?.sex ? `/${info.row.original.person.at(0)?.sex}` : "") +
+				(info.row.original.person.at(0)?.age ? `/${info.row.original.person.at(0)?.age}` : "");
 			let linked_id: string | undefined = undefined;
 			let linked_type: string | undefined = undefined;
 			if (info.row.original.secondaryDataType === "Sample Text") {
@@ -43,7 +43,10 @@ const columns = ref([
 
 			if (linked_type) {
 				linked_id = simpleItems.value.find((i) => {
-					return i.dataType === linked_type && i.person.name === info.row.original.person.name;
+					return (
+						i.dataType === linked_type &&
+						i.person.at(0)?.name === info.row.original.person.at(0)?.name
+					);
 				})?.id;
 			}
 			return linked_id
@@ -61,20 +64,20 @@ const columns = ref([
 		header: "Name",
 		footer: (props) => props.column.id,
 	}),
-	columnHelper.accessor((row) => row.person.name, {
+	columnHelper.accessor((row) => row.person.at(0)?.name, {
 		id: "name",
 		cell: (info) => info.getValue(),
 		header: "Name",
 		footer: (props) => props.column.id,
 	}),
-	columnHelper.accessor((row) => row.person.age, {
+	columnHelper.accessor((row) => row.person.at(0)?.age, {
 		id: "age",
 		cell: (info) => info.getValue(),
 		header: "Age",
 		footer: (props) => props.column.id,
 		filterFn: "inNumberRange",
 	}),
-	columnHelper.accessor((row) => row.person.sex, {
+	columnHelper.accessor((row) => row.person.at(0)?.sex, {
 		id: "sex",
 		cell: (info) => info.getValue(),
 		header: "Sex",
@@ -139,8 +142,9 @@ const setFilters = function (value: ColumnFiltersState) {
 <template>
 	<div v-if="simpleItems">
 		<div class="flex flex-wrap justify-between py-2">
-			<DataTableFilterTeiHeaders v-if="tables" :filters="columnFilters" :table="tables" />
+			<DataTableFilterTeiHeaders v-if="tables" :filters="columnFilters" rows="" :table="tables" />
 			<DataTablePagination v-if="tables" :table="tables as unknown as Table<never>" />
+			<div>{{ tables?.getFilteredRowModel().rows.length }} results</div>
 		</div>
 		<DataTable
 			:columns="columns as Array<ColumnDef<never>>"
