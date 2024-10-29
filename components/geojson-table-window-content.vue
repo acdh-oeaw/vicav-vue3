@@ -1,5 +1,10 @@
 <script lang="ts" setup>
-import type { CellContext, ColumnDef, Table } from "@tanstack/vue-table";
+import {
+	type CellContext,
+	type ColumnDef,
+	createColumnHelper,
+	type Table,
+} from "@tanstack/vue-table";
 
 import { useGeojsonStore } from "@/stores/use-geojson-store.ts";
 import type { FeatureType } from "@/types/global";
@@ -11,47 +16,56 @@ const url = "https://raw.githubusercontent.com/wibarab/wibarab-data/main/wibarab
 const { isPending } = GeojsonStore.fetchGeojson(url);
 const { fetchedData, tables } = storeToRefs(GeojsonStore);
 
+const columnHelper = createColumnHelper();
+
 const columns = computed(() => {
-	return fetchedData.value
-		.get(url)
-		?.properties.column_headings.map((heading: Record<string, never>) => {
-			switch (true) {
-				case Object.keys(heading).some((key) => /ft_*/.test(key)):
-					return {
-						id: Object.keys(heading).find((key) => /ft_*/.test(key)) ?? "",
-						header: heading[Object.keys(heading).find((key) => /ft_*/.test(key)) ?? ""],
-						cell: ({ cell }: CellContext<FeatureType, never>) => {
-							return h(resolveComponent("GeojsonTablePropertyCell"), {
-								value: cell.row.original.properties[cell.column.columnDef.id!],
-							});
-						},
-					};
-				case /name/.test(Object.keys(heading)[0]!):
-					return {
-						id: Object.keys(heading)[0],
-						header: Object.values(heading)[0],
-						cell: ({ cell }: CellContext<FeatureType, never>) => {
-							return h(
-								"span",
-								{ class: "max-w-[500px] truncate font-medium" },
-								cell.row.original.properties[cell.column.columnDef.id!],
-							);
-						},
-					};
-				default:
-					return {
-						id: Object.keys(heading)[0],
-						header: Object.values(heading)[0],
-						cell: ({ cell }: CellContext<FeatureType, never>) => {
-							return h(
-								"span",
-								{ class: "max-w-[500px] truncate font-medium" },
-								cell.row.original.properties[cell.column.columnDef.id!],
-							);
-						},
-					};
-			}
-		});
+	const columnHeadings = fetchedData.value.get(url)?.properties.column_headings;
+	const categories = [...new Set(columnHeadings?.flatMap((heading) => heading.category))];
+	const groupedColumns = categories.map((categoryName: string | undefined) => {
+		switch (typeof categoryName) {
+			case "string":
+				return columnHelper.group({
+					header: categoryName,
+					//@ts-expect-error type mismatch in accessorFn
+					columns: columnHeadings
+						?.filter((heading) => heading.category === categoryName)
+						.map((heading) => {
+							return {
+								id: Object.keys(heading).find((key) => /ft_*/.test(key)) ?? "",
+								header: heading[Object.keys(heading).find((key) => /ft_*/.test(key)) ?? ""],
+								cell: (cell: CellContext<FeatureType, never>) => {
+									return h(resolveComponent("GeojsonTablePropertyCell"), {
+										value: cell.row.original.properties[cell.column.columnDef.id!],
+									});
+								},
+							};
+						}),
+				});
+			default:
+				return columnHelper.group({
+					header: "-",
+					enableHiding: false,
+					//@ts-expect-error type mismatch in accessorFn
+					columns: columnHeadings
+						?.filter((heading) => heading.category === categoryName)
+						.map((heading) => {
+							return {
+								id: Object.keys(heading)[0],
+								header: Object.values(heading)[0],
+								enableHiding: false,
+								cell: ({ cell }: CellContext<FeatureType, never>) => {
+									return h(
+										"span",
+										{ class: "max-w-[500px] truncate font-medium" },
+										cell.row.original.properties[cell.column.columnDef.id!],
+									);
+								},
+							};
+						}),
+				});
+		}
+	});
+	return groupedColumns;
 });
 
 function registerTable(table: Table<FeatureType>) {
@@ -80,9 +94,14 @@ function registerTable(table: Table<FeatureType>) {
 		<Centered v-if="isPending">
 			<LoadingIndicator />
 		</Centered>
-		<div class="grid justify-items-end py-2">
+		<div class="flex justify-items-end py-2">
 			<DataTablePagination
 				v-if="tables.get(url)"
+				:table="tables.get(url) as unknown as Table<never>"
+			/>
+			<DataTableFilterColumns
+				v-if="tables.get(url)"
+				class="inline"
 				:table="tables.get(url) as unknown as Table<never>"
 			/>
 		</div>
