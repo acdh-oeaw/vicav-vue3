@@ -39,6 +39,13 @@ const columns = computed(() => {
 											value: cell.row.original.properties[cell.column.columnDef.id!],
 										});
 									},
+									accessorFn: (cell: FeatureType) => {
+										return Object.keys(
+											cell.properties[
+												String(Object.keys(heading).find((key) => /ft_*/.test(key)) ?? "")
+											] ?? {},
+										);
+									},
 								};
 							}),
 					});
@@ -61,6 +68,8 @@ const columns = computed(() => {
 											cell.row.original.properties[cell.column.columnDef.id!],
 										);
 									},
+									accessorFn: (cell: FeatureType) =>
+										cell.properties[String(Object.keys(heading)[0])],
 								};
 							}),
 					});
@@ -110,6 +119,7 @@ function registerTable(table: Table<FeatureType>) {
 		<DataTable
 			v-if="!isPending"
 			:columns="columns as unknown as Array<ColumnDef<never>>"
+			:enable-filter-on-columns="true"
 			:items="fetchedData.get(url)?.features as Array<never>"
 			:min-header-depth="1"
 			@table-ready="registerTable"
