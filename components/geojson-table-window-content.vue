@@ -46,6 +46,12 @@ const columns = computed(() => {
 											] ?? {},
 										);
 									},
+									filterFn: (row, columnId, filterValue) => {
+										const filter = Object.values(filterValue).some((val) =>
+											(row.getValue(columnId) as Array<string>).includes(String(val)),
+										);
+										return filter;
+									},
 								};
 							}),
 					});
