@@ -111,9 +111,11 @@ const personsFilter = computed(() =>
 	simpleItems.value
 		.filter((item) => {
 			if (!params.value.dataTypes.includes(item.dataType)) return false;
-			if (persons.value.length > 0)
-				return item.person.forEach((p) => persons.value.includes(p.name));
-			else if (places.value.length > 0) {
+			if (persons.value.length > 0) {
+				const found = item.person.map((p) => persons.value.includes(p.name));
+				if (found.includes(true)) return true;
+			}
+			if (places.value.length > 0) {
 				const found = places.value.map((place) => {
 					const p = place.split(":");
 					if (p[0] === "region" && item.place.region === p[1]) return true;
@@ -121,7 +123,7 @@ const personsFilter = computed(() =>
 					if (p[0] === item.place.settlement) return true;
 					return false;
 				});
-				if (!found.includes(true)) return false;
+				if (found.includes(true)) return true;
 			}
 			if (sex.value.length > 0) {
 				if (
@@ -367,7 +369,7 @@ const openSearchResultsNewWindow = function () {
 			</button>
 
 			<button
-				class="inline-block h-10 w-full whitespace-nowrap rounded border-2 border-solid border-primary bg-on-primary text-center align-middle font-bold text-primary hover:bg-primary hover:text-on-primary disabled:border-gray-400 disabled:text-gray-400 hover:disabled:bg-on-primary hover:disabled:text-gray-400"
+				class="mt-2 inline-block h-10 w-full whitespace-nowrap rounded border-2 border-solid border-primary bg-on-primary text-center align-middle font-bold text-primary hover:bg-primary hover:text-on-primary disabled:border-gray-400 disabled:text-gray-400 hover:disabled:bg-on-primary hover:disabled:text-gray-400"
 				:disabled="
 					words.length === 0 &&
 					translation == '' &&
