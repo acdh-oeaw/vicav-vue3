@@ -47,6 +47,7 @@ const columns = computed(() => {
 										);
 									},
 									filterFn: (row, columnId, filterValue) => {
+										if (Object.keys(filterValue).length === 0) return true;
 										const filter = Object.values(filterValue).some((val) =>
 											(row.getValue(columnId) as Array<string>).includes(String(val)),
 										);

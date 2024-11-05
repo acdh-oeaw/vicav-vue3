@@ -4,10 +4,13 @@ import {
 	type ColumnFiltersState,
 	FlexRender,
 	getCoreRowModel,
+	getFacetedRowModel,
 	getFilteredRowModel,
 	getPaginationRowModel,
 	useVueTable,
 } from "@tanstack/vue-table";
+
+import customFacetedUniqueValues from "@/utils/customFacetedUniqueValues";
 
 const emit = defineEmits(["table-ready", "columnFiltersChange", "globalFilterChange"]);
 
@@ -15,6 +18,7 @@ interface Props {
 	items: Array<never>;
 	columns: Array<ColumnDef<never>>;
 	minHeaderDepth?: number;
+	enableFilterOnColumns?: boolean;
 }
 
 const props = defineProps<Props>();
@@ -63,6 +67,8 @@ const table = useVueTable({
 	getCoreRowModel: getCoreRowModel(),
 	getPaginationRowModel: getPaginationRowModel(),
 	getFilteredRowModel: getFilteredRowModel(),
+	getFacetedRowModel: getFacetedRowModel(),
+	getFacetedUniqueValues: customFacetedUniqueValues,
 });
 
 onMounted(() => {
@@ -78,9 +84,14 @@ onMounted(() => {
 					.getHeaderGroups()
 					.filter((header) => header.depth >= (props.minHeaderDepth ?? 0))"
 				:key="headerGroup.id"
+				class="hover:bg-primary"
 			>
 				<TableHead v-for="header in headerGroup.headers" :key="header.id">
 					{{ header.column.columnDef.header }}
+					<DataTableFacetedFilter
+						v-if="enableFilterOnColumns"
+						:column="header.column"
+					></DataTableFacetedFilter>
 				</TableHead>
 			</TableRow>
 		</TableHeader>
