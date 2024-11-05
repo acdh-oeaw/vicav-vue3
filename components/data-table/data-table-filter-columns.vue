@@ -35,7 +35,10 @@ function toggleCategory(category: Column<never>) {
 		default:
 			targetVisibility = true;
 	}
-	category.columns.forEach((c) => c.toggleVisibility(targetVisibility));
+	category.columns.forEach((c) => {
+		c.toggleVisibility(targetVisibility);
+		if (!targetVisibility) c.setFilterValue([]);
+	});
 }
 
 const isCollapsibleOpen = ref(columns.value.map(() => false));
@@ -77,7 +80,12 @@ const visibilityToIcon: Record<visibilityState, Component> = {
 							:key="column.id"
 							:checked="column.getIsVisible()"
 							@select.prevent
-							@update:checked="(value) => column.toggleVisibility(!!value)"
+							@update:checked="
+								(value) => {
+									column.toggleVisibility(!!value);
+									column.setFilterValue([]);
+								}
+							"
 						>
 							{{ column.columnDef.header }}
 						</DropdownMenuCheckboxItem>
