@@ -57,6 +57,7 @@ function toggleAllCategories() {
 			targetVisibility = true;
 	}
 	props.table.toggleAllColumnsVisible(targetVisibility);
+	if (!targetVisibility) props.table.resetColumnFilters();
 }
 
 const isCollapsibleOpen = ref(columns.value.map(() => false));
