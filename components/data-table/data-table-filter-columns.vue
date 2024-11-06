@@ -40,6 +40,24 @@ function toggleCategory(category: Column<never>) {
 		if (!targetVisibility) c.setFilterValue([]);
 	});
 }
+function getAllColumnsVisibilityState() {
+	if (props.table.getIsAllColumnsVisible()) return "ALL_VISIBLE";
+
+	const visibleColumns = props.table.getVisibleLeafColumns();
+	const hidableColumns = props.table.getAllLeafColumns().filter((c) => !c.getCanHide());
+	return visibleColumns.length > hidableColumns.length ? "SOME_VISIBLE" : "NONE_VISIBLE";
+}
+function toggleAllCategories() {
+	let targetVisibility = true;
+	switch (getAllColumnsVisibilityState()) {
+		case "ALL_VISIBLE":
+			targetVisibility = false;
+			break;
+		default:
+			targetVisibility = true;
+	}
+	props.table.toggleAllColumnsVisible(targetVisibility);
+}
 
 const isCollapsibleOpen = ref(columns.value.map(() => false));
 
@@ -58,8 +76,19 @@ const visibilityToIcon: Record<visibilityState, Component> = {
 				Columns
 			</Button>
 		</DropdownMenuTrigger>
-		<DropdownMenuContent align="end" class="max-h-[350px] w-64 max-w-none overflow-y-auto">
-			<DropdownMenuLabel>Toggle columns</DropdownMenuLabel>
+		<DropdownMenuContent align="end" class="max-h-[350px] w-72 max-w-none overflow-y-auto">
+			<DropdownMenuLabel class="flex items-center justify-between"
+				><span>Toggle columns</span
+				><Button class="ml-2 h-8" size="sm" variant="outline" @click.stop="toggleAllCategories()"
+					><component
+						:is="visibilityToIcon[getAllColumnsVisibilityState()]"
+						class="mr-2 size-4 align-middle"
+					></component
+					><span class="align-middle">{{
+						getAllColumnsVisibilityState() === "ALL_VISIBLE" ? "Deselect all" : "Select all"
+					}}</span></Button
+				></DropdownMenuLabel
+			>
 			<DropdownMenuSeparator />
 			<div v-for="(group, idx) in columns" :key="group.id">
 				<Collapsible v-slot="{ open }" v-model:open="isCollapsibleOpen[idx]">
