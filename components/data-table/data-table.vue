@@ -89,7 +89,7 @@ onMounted(() => {
 				<TableHead v-for="header in headerGroup.headers" :key="header.id">
 					{{ header.column.columnDef.header }}
 					<DataTableFacetedFilter
-						v-if="enableFilterOnColumns"
+						v-if="enableFilterOnColumns && header.column.getCanFilter()"
 						:column="header.column"
 					></DataTableFacetedFilter>
 				</TableHead>

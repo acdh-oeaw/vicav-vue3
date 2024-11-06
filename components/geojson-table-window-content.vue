@@ -77,6 +77,7 @@ const columns = computed(() => {
 									},
 									accessorFn: (cell: FeatureType) =>
 										cell.properties[String(Object.keys(heading)[0])],
+									enableColumnFilter: false,
 								};
 							}),
 					});
