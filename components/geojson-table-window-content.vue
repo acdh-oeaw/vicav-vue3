@@ -112,16 +112,23 @@ function registerTable(table: Table<FeatureType>) {
 		<Centered v-if="isPending">
 			<LoadingIndicator />
 		</Centered>
-		<div class="flex justify-items-end py-2">
+		<div class="flex justify-between justify-items-end py-2">
 			<DataTablePagination
 				v-if="tables.get(url)"
 				:table="tables.get(url) as unknown as Table<never>"
 			/>
-			<DataTableFilterColumns
-				v-if="tables.get(url)"
-				class="inline"
-				:table="tables.get(url) as unknown as Table<never>"
-			/>
+			<div class="flex gap-2">
+				<DataTableActiveFilters
+					v-if="tables.get(url)"
+					class="inline"
+					:table="tables.get(url) as unknown as Table<never>"
+				></DataTableActiveFilters>
+				<DataTableFilterColumns
+					v-if="tables.get(url)"
+					class="inline"
+					:table="tables.get(url) as unknown as Table<never>"
+				/>
+			</div>
 		</div>
 		<DataTable
 			v-if="!isPending"
