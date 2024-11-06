@@ -17,6 +17,13 @@ function removeFilters(colId: string) {
 function removeAllFilters() {
 	props.table.resetColumnFilters();
 }
+function removeValFromColumnFilter(col: ColumnFilter, val: string) {
+	const newFilter = (col.value as Array<string>).toSpliced(
+		(col.value as Array<string>).indexOf(val),
+		1,
+	);
+	props.table.getColumn(col.id)?.setFilterValue(newFilter);
+}
 </script>
 
 <template>
@@ -52,7 +59,17 @@ function removeAllFilters() {
 				:key="col.id"
 				class="flex justify-between p-2 text-sm"
 			>
-				<span>{{ props.table.getColumn(col.id)?.columnDef.header }}</span
+				<span
+					>{{ props.table.getColumn(col.id)?.columnDef.header }}
+					<Badge
+						v-for="val in col.value"
+						:key="val"
+						class="mx-0.5 cursor-pointer"
+						title="Remove"
+						variant="secondary"
+						@click="removeValFromColumnFilter(col, val)"
+						>{{ val }}</Badge
+					> </span
 				><button @click="removeFilters(col.id)">
 					<X class="size-4 hover:scale-125"></X><span class="sr-only">Remove filter</span>
 				</button>
