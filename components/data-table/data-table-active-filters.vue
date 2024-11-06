@@ -40,9 +40,9 @@ function removeValFromColumnFilter(col: ColumnFilter, val: string) {
 				<Badge class="ml-2" variant="outline">{{ activeFilterColumns.length }}</Badge>
 			</Button>
 		</DropdownMenuTrigger>
-		<DropdownMenuContent align="end" class="max-h-[350px] w-80 max-w-none overflow-y-auto">
+		<DropdownMenuContent align="end" class="max-h-[350px] w-72 max-w-none overflow-y-auto">
 			<DropdownMenuLabel class="flex items-center justify-between"
-				><span>Remove column filters</span
+				><span>Remove filters</span
 				><Button
 					class="ml-2 flex h-8 gap-1"
 					:disabled="activeFilterColumns.length === 0"

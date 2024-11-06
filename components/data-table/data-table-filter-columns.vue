@@ -74,12 +74,12 @@ const visibilityToIcon: Record<visibilityState, Component> = {
 		<DropdownMenuTrigger as-child>
 			<Button class="ml-auto hidden h-8 lg:flex" size="sm" variant="outline">
 				<TableProperties class="mr-2 size-4" />
-				Columns
+				Features
 			</Button>
 		</DropdownMenuTrigger>
 		<DropdownMenuContent align="end" class="max-h-[350px] w-72 max-w-none overflow-y-auto">
 			<DropdownMenuLabel class="flex items-center justify-between"
-				><span>Toggle columns</span
+				><span>Select features</span
 				><Button class="ml-2 h-8" size="sm" variant="outline" @click.stop="toggleAllCategories()"
 					><component
 						:is="visibilityToIcon[getAllColumnsVisibilityState()]"
