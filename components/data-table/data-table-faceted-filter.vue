@@ -5,7 +5,9 @@ import { Filter } from "lucide-vue-next";
 const props = defineProps<{
 	column: Column<never, unknown>;
 }>();
-const facets = computed(() => props.column?.getFacetedUniqueValues());
+const facets = computed(() =>
+	[...props.column.getFacetedUniqueValues()]?.sort((a, b) => b[1] - a[1]),
+);
 const selectedValues = computed(() => new Set(props.column?.getFilterValue() as Array<string>));
 </script>
 
