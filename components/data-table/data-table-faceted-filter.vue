@@ -12,7 +12,10 @@ const selectedValues = computed(() => new Set(props.column?.getFilterValue() as 
 <template>
 	<DropdownMenu>
 		<DropdownMenuTrigger class="group p-1 align-middle"
-			><Filter class="size-4 group-hover:scale-125"></Filter
+			><Filter
+				class="size-4 group-hover:scale-125"
+				:class="selectedValues.size > 0 && 'fill-white'"
+			></Filter
 		></DropdownMenuTrigger>
 		<DropdownMenuContent>
 			<DropdownMenuCheckboxItem
