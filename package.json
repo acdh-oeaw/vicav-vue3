@@ -10,9 +10,9 @@
 	"packageManager": "pnpm@9.10.0+sha256.355a8ab8dbb6ad41befbef39bc4fd6b5df85e12761d2724bd01f13e878de4b13",
 	"scripts": {
 		"analyze": "nuxt analyze",
-		"build": "NUXT_PUBLIC_CURRENT_GIT_SHA=$(git rev-parse HEAD) && run-s generate:api-client build:client",
+		"build": "NUXT_PUBLIC_CURRENT_GIT_SHA=$(git describe --tags --always) && run-s generate:api-client build:client",
 		"build:client": "nuxt build --dotenv ./.env.local",
-		"dev": "NUXT_PUBLIC_CURRENT_GIT_SHA=$(git rev-parse HEAD) && nuxt dev --dotenv ./.env.local --host 127.0.0.1 --no-fork",
+		"dev": "NUXT_PUBLIC_CURRENT_GIT_SHA=$(git describe --tags --always) && nuxt dev --dotenv ./.env.local --host 127.0.0.1 --no-fork",
 		"format:check": "prettier . --cache --check --ignore-path ./.gitignore",
 		"format:fix": "pnpm run format:check --write",
 		"generate:api-client": "swagger-typescript-api --path \"https://raw.githubusercontent.com/acdh-oeaw/vicav-app-api/master/openapi.json\" --clean-output --name index.ts --output ./lib/api-client/",
