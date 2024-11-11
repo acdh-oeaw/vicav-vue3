@@ -86,6 +86,12 @@ const columns = computed(() => {
 		.sort((a, b) => String(a.header).localeCompare(String(b.header)));
 	return groupedColumns;
 });
+const columnVisibility = computed(() => {
+	const columnHeadings = fetchedData.value.get(url)?.properties.column_headings ?? [];
+	return Object.fromEntries(
+		columnHeadings?.map((heading) => [Object.keys(heading).find((key) => /ft_*/.test(key)), false]),
+	);
+});
 
 function registerTable(table: Table<FeatureType>) {
 	tables.value.set(url, table);
@@ -135,6 +141,7 @@ function registerTable(table: Table<FeatureType>) {
 			v-if="!isPending"
 			:columns="columns as unknown as Array<ColumnDef<never>>"
 			:enable-filter-on-columns="true"
+			:initial-column-visibility="columnVisibility"
 			:items="fetchedData.get(url)?.features as Array<never>"
 			:min-header-depth="1"
 			@table-ready="registerTable"

@@ -19,13 +19,13 @@ interface Props {
 	columns: Array<ColumnDef<never>>;
 	minHeaderDepth?: number;
 	enableFilterOnColumns?: boolean;
+	initialColumnVisibility?: Record<string, boolean>;
 }
 
 const props = defineProps<Props>();
 const { items, columns } = toRefs(props);
 const columnFilters = ref<ColumnFiltersState>([]);
 const globalFilter = ref("");
-
 const table = useVueTable({
 	get data() {
 		return items.value;
@@ -44,6 +44,7 @@ const table = useVueTable({
 			settlement: true,
 			date: true,
 			respPerson: true,
+			...props.initialColumnVisibility,
 		},
 	},
 	state: {
