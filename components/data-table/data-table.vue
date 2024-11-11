@@ -8,11 +8,17 @@ import {
 	getFilteredRowModel,
 	getPaginationRowModel,
 	useVueTable,
+	type VisibilityState,
 } from "@tanstack/vue-table";
 
 import customFacetedUniqueValues from "@/utils/customFacetedUniqueValues";
 
-const emit = defineEmits(["table-ready", "columnFiltersChange", "globalFilterChange"]);
+const emit = defineEmits([
+	"table-ready",
+	"columnFiltersChange",
+	"globalFilterChange",
+	"columnVisibilityChange",
+]);
 
 interface Props {
 	items: Array<never>;
@@ -23,9 +29,21 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-const { items, columns } = toRefs(props);
+const { items, columns, initialColumnVisibility } = toRefs(props);
 const columnFilters = ref<ColumnFiltersState>([]);
 const globalFilter = ref("");
+const columnVisibility = ref<VisibilityState>({
+	label: true,
+	person: false,
+	age: false,
+	sex: false,
+	type: true,
+	region: true,
+	settlement: true,
+	date: true,
+	respPerson: true,
+	...initialColumnVisibility.value,
+});
 const table = useVueTable({
 	get data() {
 		return items.value;
@@ -34,18 +52,8 @@ const table = useVueTable({
 		return columns.value;
 	},
 	initialState: {
-		columnVisibility: {
-			label: true,
-			person: false,
-			age: false,
-			sex: false,
-			type: true,
-			region: true,
-			settlement: true,
-			date: true,
-			respPerson: true,
-			...props.initialColumnVisibility,
-		},
+		columnVisibility: columnVisibility.value,
+		globalFilter: globalFilter.value,
 	},
 	state: {
 		get columnFilters() {
@@ -53,6 +61,9 @@ const table = useVueTable({
 		},
 		get globalFilter() {
 			return globalFilter.value;
+		},
+		get columnVisibility() {
+			return columnVisibility.value;
 		},
 	},
 	onColumnFiltersChange: (updaterOrValue) => {
@@ -64,6 +75,13 @@ const table = useVueTable({
 		globalFilter.value =
 			typeof updaterOrValue === "function" ? updaterOrValue(globalFilter.value) : updaterOrValue;
 		emit("globalFilterChange", globalFilter.value);
+	},
+	onColumnVisibilityChange: (updaterOrValue) => {
+		columnVisibility.value =
+			typeof updaterOrValue === "function"
+				? updaterOrValue(columnVisibility.value)
+				: updaterOrValue;
+		emit("columnVisibilityChange", table);
 	},
 	getCoreRowModel: getCoreRowModel(),
 	getPaginationRowModel: getPaginationRowModel(),

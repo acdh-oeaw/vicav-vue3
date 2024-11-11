@@ -47,12 +47,19 @@ const columns = computed(() => {
 										);
 									},
 									filterFn: (row, columnId, filterValue) => {
+										if (
+											!row.getValue(columnId) ||
+											(row.getValue(columnId) as Array<string>).length === 0
+										) {
+											return false;
+										}
 										if (Object.keys(filterValue).length === 0) return true;
 										const filter = Object.values(filterValue).some((val) =>
 											(row.getValue(columnId) as Array<string>).includes(String(val)),
 										);
 										return filter;
 									},
+									enableGlobalFilter: true,
 								};
 							}),
 					});
@@ -78,6 +85,7 @@ const columns = computed(() => {
 									accessorFn: (cell: FeatureType) =>
 										cell.properties[String(Object.keys(heading)[0])],
 									enableColumnFilter: false,
+									enableGlobalFilter: false,
 								};
 							}),
 					});
@@ -92,6 +100,11 @@ const columnVisibility = computed(() => {
 		columnHeadings?.map((heading) => [Object.keys(heading).find((key) => /ft_*/.test(key)), false]),
 	);
 });
+
+function applyGlobalFilter(table: Table<FeatureType>) {
+	table.resetGlobalFilter(true);
+	table.setGlobalFilter(true);
+}
 
 function registerTable(table: Table<FeatureType>) {
 	tables.value.set(url, table);
@@ -144,6 +157,7 @@ function registerTable(table: Table<FeatureType>) {
 			:initial-column-visibility="columnVisibility"
 			:items="fetchedData.get(url)?.features as Array<never>"
 			:min-header-depth="1"
+			@column-visibility-change="applyGlobalFilter"
 			@table-ready="registerTable"
 		></DataTable>
 		<div class="grid justify-items-end py-2">
