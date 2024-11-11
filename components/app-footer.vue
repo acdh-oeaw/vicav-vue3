@@ -1,4 +1,7 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+const env = useRuntimeConfig();
+const { data: config } = useProjectInfo();
+</script>
 
 <template>
 	<footer
@@ -18,6 +21,18 @@
 			</span>
 			<span>|</span>
 			<NuxtLink class="hover:underline hover:underline-offset-2" href="/imprint">Imprint</NuxtLink>
+			<span>|</span>
+			<span class="flex gap-1">
+				<span>Frontend: {{ env.public.currentGitSha }}</span>
+			</span>
+			<span>|</span>
+			<span class="flex gap-1">
+				<span>Backend: {{ config?.projectConfig?.version?.backend }}</span>
+			</span>
+			<span>|</span>
+			<span class="flex gap-1">
+				<span>Data: {{ config?.projectConfig?.version?.data }}</span>
+			</span>
 			<div
 				class="h-4 flex-1"
 				onmouseover="document.querySelector('footer').classList.add('-translate-y-80')"
