@@ -62,6 +62,7 @@ export default defineNuxtConfig({
 			teiBaseurl: process.env.NUXT_PUBLIC_TEI_BASEURL,
 			apiUser: process.env.NUXT_PUBLIC_API_USER,
 			apiPass: process.env.NUXT_PUBLIC_API_PASS,
+			currentGitSha: process.env.NUXT_PUBLIC_CURRENT_GIT_SHA,
 		},
 	},
 
