@@ -39,10 +39,6 @@ dist
 
 ## .dockerignore ##
 
-# git
-.git/
-.gitignore
-
 # github
 .github/
 
