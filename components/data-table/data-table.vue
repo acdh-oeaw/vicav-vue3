@@ -2,6 +2,7 @@
 import {
 	type ColumnDef,
 	type ColumnFiltersState,
+	type FilterFn,
 	FlexRender,
 	getCoreRowModel,
 	getFacetedRowModel,
@@ -26,6 +27,7 @@ interface Props {
 	minHeaderDepth?: number;
 	enableFilterOnColumns?: boolean;
 	initialColumnVisibility?: Record<string, boolean>;
+	globalFilterFn?: FilterFn<never>;
 }
 
 const props = defineProps<Props>();
@@ -88,6 +90,7 @@ const table = useVueTable({
 	getFilteredRowModel: getFilteredRowModel(),
 	getFacetedRowModel: getFacetedRowModel(),
 	getFacetedUniqueValues: customFacetedUniqueValues,
+	globalFilterFn: props.globalFilterFn,
 });
 
 onMounted(() => {

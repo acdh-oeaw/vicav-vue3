@@ -3,6 +3,7 @@ import {
 	type CellContext,
 	type ColumnDef,
 	createColumnHelper,
+	type Row,
 	type Table,
 } from "@tanstack/vue-table";
 
@@ -47,11 +48,8 @@ const columns = computed(() => {
 										);
 									},
 									filterFn: (row, columnId, filterValue) => {
-										if (
-											!row.getValue(columnId) ||
-											(row.getValue(columnId) as Array<string>).length === 0
-										) {
-											return false;
+										if (!row.getVisibleCells().find((cell) => cell.column.id === columnId)) {
+											return true;
 										}
 										if (Object.keys(filterValue).length === 0) return true;
 										const filter = Object.values(filterValue).some((val) =>
@@ -82,10 +80,11 @@ const columns = computed(() => {
 											cell.row.original.properties[cell.column.columnDef.id!],
 										);
 									},
-									accessorFn: (cell: FeatureType) =>
-										cell.properties[String(Object.keys(heading)[0])],
+									accessorFn: (cell: FeatureType) => {
+										return cell.properties[String(Object.keys(heading)[0])];
+									},
 									enableColumnFilter: false,
-									enableGlobalFilter: false,
+									enableGlobalFilter: true,
 								};
 							}),
 					});
@@ -101,7 +100,20 @@ const columnVisibility = computed(() => {
 	);
 });
 
+function filterEmptyRows(row: Row<never>) {
+	const hidableVisibleCells = row.getVisibleCells().filter((cell) => cell.column.getCanHide());
+	if (
+		hidableVisibleCells.length > 0 &&
+		hidableVisibleCells.every(
+			(cell) => !cell.getValue() || (cell.getValue() as string).length === 0,
+		)
+	)
+		return false;
+	return true;
+}
+
 function applyGlobalFilter(table: Table<FeatureType>) {
+	// re-apply global filter to remove empty lines from the table
 	table.resetGlobalFilter(true);
 	table.setGlobalFilter(true);
 }
@@ -154,6 +166,7 @@ function registerTable(table: Table<FeatureType>) {
 			v-if="!isPending"
 			:columns="columns as unknown as Array<ColumnDef<never>>"
 			:enable-filter-on-columns="true"
+			:global-filter-fn="filterEmptyRows"
 			:initial-column-visibility="columnVisibility"
 			:items="fetchedData.get(url)?.features as Array<never>"
 			:min-header-depth="1"

@@ -36,8 +36,10 @@ function toggleCategory(category: Column<never>) {
 			targetVisibility = true;
 	}
 	category.columns.forEach((c) => {
-		c.toggleVisibility(targetVisibility);
-		if (!targetVisibility) c.setFilterValue([]);
+		if (c.getIsVisible() !== targetVisibility) {
+			c.setFilterValue([]);
+			c.toggleVisibility(targetVisibility);
+		}
 	});
 }
 function getAllColumnsVisibilityState() {
@@ -56,8 +58,9 @@ function toggleAllCategories() {
 		default:
 			targetVisibility = true;
 	}
+
+	if (!targetVisibility) props.table.resetColumnFilters(true);
 	props.table.toggleAllColumnsVisible(targetVisibility);
-	if (!targetVisibility) props.table.resetColumnFilters();
 }
 
 const isCollapsibleOpen = ref(columns.value.map(() => false));
