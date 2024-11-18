@@ -67,6 +67,7 @@
 		"pino": "^9.2.0",
 		"radix-vue": "^1.8.3",
 		"swagger-typescript-api": "^13.0.3",
+		"tailwind-merge": "^2.5.4",
 		"transliteration": "^2.3.5",
 		"ts-error": "^1.0.6",
 		"tw-elements": "^2.0.0",
