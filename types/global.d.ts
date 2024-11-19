@@ -184,10 +184,13 @@ export const ListMapSchema = z.object({
 });
 export type ListMapWindowItem = WindowItemBase & z.infer<typeof ListMapSchema>;
 
+export const MarkerEnum = z.enum(["petal", "default"]);
+export type MarkerType = z.infer<typeof MarkerEnum>;
 export const GeojsonMapSchema = z.object({
 	targetType: z.literal("GeojsonMap"),
 	params: z.object({
 		url: z.string(),
+		markerType: MarkerEnum.optional(),
 	}),
 });
 export type GeojsonMapWindowItem = WindowItemBase & z.infer<typeof GeojsonMapSchema>;

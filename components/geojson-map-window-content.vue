@@ -33,6 +33,7 @@ const filteredMarkers = computed(() => {
 		<GeoMap
 			v-if="filteredMarkers"
 			:height="height"
+			:marker-type="params.markerType"
 			:markers="filteredMarkers as Array<Feature<Point, MarkerProperties>>"
 			:width="width"
 		/>
