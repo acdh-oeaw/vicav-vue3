@@ -2,8 +2,6 @@ import type { Column } from "@tanstack/vue-table";
 import type { Feature as GeoJsonFeature, Point } from "geojson";
 import { divIcon, type LatLng, marker } from "leaflet";
 
-//@ts-expect-error asset not found
-import petal from "@/assets/petal.svg?raw";
 import type { MarkerProperties } from "@/lib/api-client";
 import { useGeojsonStore } from "@/stores/use-geojson-store.ts";
 
@@ -26,16 +24,24 @@ function getPetalSVG(entries: Array<Column<never>>) {
 	const div = document.createElement("div");
 	div.className = "hover:scale-150 transition origin-center relative size-6";
 	const NUM_PETALS = entries.length;
+	const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+	svg.setAttribute("width", "12px");
+	svg.setAttribute("height", "12px");
+	svg.classList.add("overflow-visible");
+	// svg.setHTMLUnsafe(String(petal));
 	for (const [i, value] of entries.entries()) {
-		const svg = document.createElement("svg");
-		svg.setHTMLUnsafe(String(petal));
-		svg.setAttribute("fill", sampleColors[i % sampleColors.length] ?? "#cccccc");
-		svg.style.transformOrigin = "bottom";
-		svg.style.transform = `rotate(${String((i * 360) / NUM_PETALS)}deg)`;
-		svg.className = "size-3 absolute ml-1.5";
-		svg.title = value.id;
-		div.appendChild(svg);
+		const petal = document.createElementNS("http://www.w3.org/2000/svg", "use");
+		petal.setAttribute("href", "#petal");
+
+		petal.setAttribute("fill", sampleColors[i % sampleColors.length] ?? "#cccccc");
+		petal.style.transformOrigin = "bottom";
+		petal.style.transform = `rotate(${String((i * 360) / NUM_PETALS)}deg)`;
+		petal.classList.add("size-3", "absolute", "ml-1.5");
+		petal.setAttribute("title", value.id);
+		svg.appendChild(petal);
 	}
+
+	div.appendChild(svg);
 
 	return div;
 }

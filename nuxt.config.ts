@@ -33,7 +33,7 @@ export default defineNuxtConfig({
 	},
 
 	imports: { dirs: ["./config/"] },
-	modules: ["@pinia/nuxt", "@vueuse/nuxt", "@nuxt/eslint", "@nuxt/test-utils/module"],
+	modules: ["@pinia/nuxt", "@vueuse/nuxt", "@nuxt/eslint", "@nuxt/test-utils/module", "nuxt-svgo"],
 	nitro: { compressPublicAssets: true },
 
 	postcss: {
@@ -63,6 +63,23 @@ export default defineNuxtConfig({
 			apiUser: process.env.NUXT_PUBLIC_API_USER,
 			apiPass: process.env.NUXT_PUBLIC_API_PASS,
 			currentGitSha: process.env.NUXT_PUBLIC_CURRENT_GIT_SHA,
+		},
+	},
+	svgo: {
+		defaultImport: "component",
+		autoImportPath: "./assets/svg/",
+		svgoConfig: {
+			plugins: [
+				{
+					name: "preset-default",
+					params: {
+						overrides: {
+							removeUselessDefs: false,
+							cleanupIds: false,
+						},
+					},
+				},
+			],
 		},
 	},
 
