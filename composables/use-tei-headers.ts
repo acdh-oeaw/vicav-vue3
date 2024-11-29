@@ -67,7 +67,6 @@ const extractMetadata = function (
 		"@hasTEIw": "false",
 		teiHeader: item.teiHeader,
 	} as simpleTEIMetadata;
-
 	template.id = item["@id"]
 		? item["@id"]
 		: item.teiHeader.fileDesc.publicationStmt.idno?.$
@@ -137,23 +136,26 @@ const extractMetadata = function (
 
 	template.person = extractPersons(item, corpusMetadata);
 	if (template.dataType === "CorpusText" && corpusMetadata) {
-		const subtype = item.teiHeader.profileDesc?.textClass?.catRef
+		const categoryId = item.teiHeader.profileDesc?.textClass?.catRef
 			? item.teiHeader.profileDesc.textClass.catRef["@target"]
 			: "";
+
+		const subtype = categoryId?.split(".").at(2);
+
 		switch (subtype) {
-			case "corpus:textClass.ST":
+			case "ST":
 				template.secondaryDataType = "Sample Text";
 				break;
-			case "corpus:textClass.FL":
+			case "FL":
 				template.secondaryDataType = "Feature List";
 				break;
-			case "corpus:textClass.FS":
-				template.secondaryDataType = "Free Speech";
+			case "UMS":
+				template.secondaryDataType = "Unmonitored Speech";
 				break;
-			case "corpus:textClass.TUN":
+			case "TUN":
 				template.secondaryDataType = "Tunocent Questionnaire";
 				break;
-			case "corpus:textClass.WAD":
+			case "WAD":
 				template.secondaryDataType = "WAD Questionnaire";
 				break;
 			default:
