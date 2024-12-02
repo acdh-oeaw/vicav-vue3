@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { ChevronDown } from "lucide-vue-next";
 
+import { useColorsStore } from "@/stores/use-colors-store";
 import { useGeojsonStore } from "@/stores/use-geojson-store.ts";
 import type { GeojsonMapSchema } from "@/types/global.d";
 
@@ -25,6 +26,8 @@ function titleCase(s: string) {
 		.replace(/[-_]+(.)/g, (_, c) => " " + c.toUpperCase()); // First char after each -/_
 }
 const isCollapsibleOpen = ref(categories.value!.map(() => false));
+
+const { colors, addColor } = useColorsStore();
 </script>
 
 <template>
@@ -34,6 +37,12 @@ const isCollapsibleOpen = ref(categories.value!.map(() => false));
 				<DropdownMenu v-slot="{ open }" v-model:open="isCollapsibleOpen[idx]">
 					<DropdownMenuTrigger class="flex w-full items-center gap-1 p-2 text-sm">
 						<span>{{ titleCase(group.id) }}</span>
+						<Badge
+							v-if="group.getLeafColumns().filter((c) => c.getIsVisible()).length"
+							variant="outline"
+							>{{ group.getLeafColumns().filter((c) => c.getIsVisible()).length }}</Badge
+						>
+
 						<ChevronDown class="size-4" :class="open ? 'rotate-180' : ''"></ChevronDown>
 					</DropdownMenuTrigger>
 
@@ -47,10 +56,26 @@ const isCollapsibleOpen = ref(categories.value!.map(() => false));
 								(value) => {
 									column.toggleVisibility(!!value);
 									column.setFilterValue([]);
+									addColor({ id: column.id, colorCode: '#cccccc' });
 								}
 							"
 						>
-							{{ column.columnDef.header }}
+							<span class="flex-1">{{ column.columnDef.header }}</span>
+							<label v-if="column.getIsVisible()" class="grow-0 basis-0 p-0">
+								<input
+									class="size-5"
+									type="color"
+									:value="colors[column.id]?.colorCode || '#cccccc'"
+									@click.capture.stop
+									@input="
+										(event) => {
+											//@ts-expect-error target.value not recognized
+											addColor({ id: column.id, colorCode: event.target!.value });
+										}
+									"
+								/>
+								<span class="sr-only">Select color</span>
+							</label>
 						</DropdownMenuCheckboxItem>
 					</DropdownMenuContent>
 				</DropdownMenu>
