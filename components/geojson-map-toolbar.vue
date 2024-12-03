@@ -27,7 +27,7 @@ function titleCase(s: string) {
 }
 const isCollapsibleOpen = ref(categories.value!.map(() => false));
 
-const { colors, addColor } = useColorsStore();
+const { colors, addColor, setColor } = useColorsStore();
 </script>
 
 <template>
@@ -56,7 +56,7 @@ const { colors, addColor } = useColorsStore();
 								(value) => {
 									column.toggleVisibility(!!value);
 									column.setFilterValue([]);
-									addColor({ id: column.id, colorCode: '#cccccc' });
+									addColor(column.id);
 								}
 							"
 						>
@@ -65,12 +65,12 @@ const { colors, addColor } = useColorsStore();
 								<input
 									class="size-5"
 									type="color"
-									:value="colors[column.id]?.colorCode || '#cccccc'"
+									:value="colors.get(column.id)?.colorCode || '#cccccc'"
 									@click.capture.stop
 									@input="
 										(event) => {
 											//@ts-expect-error target.value not recognized
-											addColor({ id: column.id, colorCode: event.target!.value });
+											setColor({ id: column.id, colorCode: event.target!.value });
 										}
 									"
 								/>
