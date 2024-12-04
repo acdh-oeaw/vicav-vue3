@@ -32,10 +32,7 @@ export const useColorsStore = defineStore("colors", () => {
 	}
 
 	function addColor(id: ColorInterface["id"]) {
-		//colorjs unfortunately has some typescript issues which will hopefully be fixed soon in version 0.6.0
-
 		const lastColor = new Color(refColor.value).to("lch");
-
 		lastColor.h += 79;
 		const color: ColorInterface = {
 			id: id,

@@ -56,7 +56,7 @@ const { colors, addColor, setColor } = useColorsStore();
 								(value) => {
 									column.toggleVisibility(!!value);
 									column.setFilterValue([]);
-									addColor(column.id);
+									if (!colors.has(column.id)) addColor(column.id);
 								}
 							"
 						>
