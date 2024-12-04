@@ -10,6 +10,7 @@ const config = {
 		"./layouts/**/*.@(ts|tsx|vue)",
 		"./pages/**/*.@(ts|tsx|vue)",
 		"./styles/**/*.css",
+		"./composables/**/*.@(ts|tsx|vue)",
 	],
 	darkMode: ["class", 'data-ui-color-scheme="dark"'],
 	plugins: [animatePlugin, typographyPlugin],

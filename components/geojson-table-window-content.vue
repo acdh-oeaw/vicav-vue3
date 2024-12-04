@@ -8,7 +8,7 @@ import {
 } from "@tanstack/vue-table";
 
 import { useGeojsonStore } from "@/stores/use-geojson-store.ts";
-import type { FeatureType } from "@/types/global";
+import type { FeatureType, MarkerType } from "@/types/global";
 
 const GeojsonStore = useGeojsonStore();
 const { addWindow, findWindowByTypeAndParam } = useWindowsStore();
@@ -132,6 +132,7 @@ function registerTable(table: Table<FeatureType>) {
 			targetType: "GeojsonMap",
 			params: {
 				url,
+				markerType: "petal" as MarkerType,
 			},
 			title: "Variety Data - Map View",
 		});

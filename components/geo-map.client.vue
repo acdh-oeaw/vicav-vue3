@@ -14,11 +14,13 @@ import {
 
 import { type GeoMapContext, key, type MarkerProperties } from "@/components/geo-map.context";
 import GeoMapPopupContent from "@/components/geo-map-popup-content.vue";
+import type { MarkerType } from "@/types/global";
 
 interface Props {
 	height: number;
 	markers: Array<Feature<Point, MarkerProperties>>;
 	width: number;
+	markerType?: MarkerType;
 }
 
 const props = defineProps<Props>();
@@ -182,6 +184,7 @@ onMounted(async () => {
 			});
 		},
 		pointToLayer(feature, latlng) {
+			if (props.markerType === "petal") return usePetalMarker(feature, latlng);
 			if (feature.properties.type === "reg") {
 				return circleMarker(latlng, config.marker.region);
 			}
@@ -243,6 +246,7 @@ provide(key, context);
 </script>
 
 <template>
+	<SvgoPetal v-if="props.markerType === 'petal'" />
 	<div ref="elementRef" class="absolute inset-0 grid" data-geo-map />
 	<slot :context="context" />
 	<GeoMapPopupContent
