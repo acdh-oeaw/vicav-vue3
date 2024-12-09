@@ -43,6 +43,11 @@ const filteredMarkers = computed(() => {
 			<Centered v-if="!filteredMarkers">
 				<LoadingIndicator />
 			</Centered>
+			<GeojsonMapLegend
+				v-if="filteredMarkers"
+				class="absolute bottom-0 left-0"
+				:params="params"
+			></GeojsonMapLegend>
 		</VisualisationContainer>
 	</div>
 </template>
