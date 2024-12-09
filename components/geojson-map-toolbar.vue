@@ -32,7 +32,7 @@ const isCollapsibleOpen = ref(
 	),
 );
 
-const { colors, addColor, setColor } = useColorsStore();
+const { colors, setColor } = useColorsStore();
 </script>
 
 <template>
@@ -87,7 +87,6 @@ const { colors, addColor, setColor } = useColorsStore();
 										(value) => {
 											column.toggleVisibility(!!value);
 											column.setFilterValue([]);
-											if (!colors.has(column.id)) addColor(column.id);
 										}
 									"
 								>

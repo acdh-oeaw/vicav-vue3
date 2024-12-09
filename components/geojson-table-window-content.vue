@@ -149,6 +149,13 @@ function applyGlobalFilter(table: Table<FeatureType>) {
 	table.setGlobalFilter(true);
 }
 
+const { colors, addColor } = useColorsStore();
+function onVisibilityChange(props: { table: Table<FeatureType>; col: Record<string, boolean> }) {
+	applyGlobalFilter(props.table);
+	const changedColumnKey = Object.keys(props.col)[0]!;
+	const visibilityValue = props.col[changedColumnKey]!;
+	if (visibilityValue && !colors.has(changedColumnKey)) addColor(changedColumnKey);
+}
 function registerTable(table: Table<FeatureType>) {
 	tables.value.set(url, table);
 	const mw = findWindowByTypeAndParam("GeojsonMap", "url", url);
@@ -202,7 +209,7 @@ function registerTable(table: Table<FeatureType>) {
 			:initial-column-visibility="columnVisibility"
 			:items="fetchedData.get(url)?.features as Array<never>"
 			:min-header-depth="2"
-			@column-visibility-change="applyGlobalFilter"
+			@column-visibility-change="onVisibilityChange"
 			@table-ready="registerTable"
 		></DataTable>
 		<div class="grid justify-items-end py-2">
