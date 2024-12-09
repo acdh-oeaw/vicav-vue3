@@ -3,6 +3,7 @@ import {
 	type CellContext,
 	type ColumnDef,
 	createColumnHelper,
+	type GroupColumnDef,
 	type Row,
 	type Table,
 } from "@tanstack/vue-table";
@@ -17,10 +18,11 @@ const url = "https://raw.githubusercontent.com/wibarab/wibarab-data/main/wibarab
 const { isPending } = GeojsonStore.fetchGeojson(url);
 const { fetchedData, tables } = storeToRefs(GeojsonStore);
 const { data: projectData } = useProjectInfo();
+const columnHelper = createColumnHelper();
 
 const columns = computed(() => {
 	const columnHeadings = fetchedData.value.get(url)?.properties.column_headings;
-	const columnHelper = createColumnHelper();
+
 	const categories = projectData.value!.projectConfig?.staticData?.table?.[1] as Record<
 		string,
 		Record<string, unknown>
@@ -30,12 +32,12 @@ const columns = computed(() => {
 		{
 			header: "-",
 			enableHiding: false,
-			columns: [] as Array<ColumnDef<unknown>>,
+			columns: [] as Array<GroupColumnDef<unknown>>,
 		},
 		...Object.keys(categories).map((categoryName) => {
 			return {
 				header: categoryName,
-				columns: [] as Array<ColumnDef<unknown>>,
+				columns: [] as Array<GroupColumnDef<unknown>>,
 			};
 		}),
 	];
@@ -48,6 +50,7 @@ const columns = computed(() => {
 			).map(([categoryName, categoryLabel]) => {
 				return columnHelper.group({
 					header: String(categoryLabel),
+					id: String(categoryName),
 					//@ts-expect-error type mismatch in accessorFn
 					columns: columnHeadings
 						.filter((heading) => heading.category === categoryName)
@@ -86,6 +89,7 @@ const columns = computed(() => {
 			subcategoryColumns = [
 				columnHelper.group({
 					header: "-",
+					id: "-",
 					enableHiding: false,
 					//@ts-expect-error type mismatch in accessorFn
 					columns: columnHeadings
@@ -112,9 +116,10 @@ const columns = computed(() => {
 				}),
 			];
 		}
-		col.columns = subcategoryColumns;
+		col.columns = subcategoryColumns as Array<GroupColumnDef<unknown>>;
 	});
 	const groupedColumns = topLevelColumns
+		.filter((col) => col.columns.some((col) => (col.columns?.length ?? -1) > 0))
 		.map((col) => columnHelper.group(col))
 		.sort((a, b) => String(a.header).localeCompare(String(b.header)));
 	return groupedColumns;
