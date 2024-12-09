@@ -64,6 +64,11 @@ function toggleAllCategories() {
 }
 
 const isCollapsibleOpen = ref(columns.value.map(() => false));
+const isSubCollapsibleOpen = ref(
+	Object.fromEntries(
+		columns.value!.map((category) => [category.id, category.columns.map(() => false)]),
+	),
+);
 
 const visibilityToIcon: Record<visibilityState, Component> = {
 	ALL_VISIBLE: ListChecks,
@@ -94,34 +99,50 @@ const visibilityToIcon: Record<visibilityState, Component> = {
 				></DropdownMenuLabel
 			>
 			<DropdownMenuSeparator />
-			<div v-for="(group, idx) in columns" :key="group.id">
+			<div v-for="(category, idx) in columns" :key="category.id">
 				<Collapsible v-slot="{ open }" v-model:open="isCollapsibleOpen[idx]">
-					<CollapsibleTrigger class="flex w-full items-center gap-1 p-2 text-sm">
-						<Button class="mr-2 p-2" variant="outline" @click.stop="toggleCategory(group)"
-							><component
-								:is="visibilityToIcon[getVisibilityState(group)]"
-								class="size-4"
-							></component
-						></Button>
-						<span>{{ titleCase(group.id) }}</span>
+					<CollapsibleTrigger class="flex w-full items-center justify-between gap-1 p-2 text-sm">
+						<span>{{ titleCase(category.id) }}</span>
 						<ChevronDown class="size-4" :class="open ? 'rotate-180' : ''"></ChevronDown>
 					</CollapsibleTrigger>
 
 					<CollapsibleContent class="">
-						<DropdownMenuCheckboxItem
-							v-for="column in group.columns"
-							:key="column.id"
-							:checked="column.getIsVisible()"
-							@select.prevent
-							@update:checked="
-								(value) => {
-									column.toggleVisibility(!!value);
-									column.setFilterValue([]);
-								}
-							"
+						<Collapsible
+							v-for="(subcategory, subcatIdx) in category.columns"
+							:key="subcategory.id"
+							v-slot="{ open: subcatOpen }"
+							v-model:open="isSubCollapsibleOpen[category.id]![subcatIdx]"
 						>
-							{{ column.columnDef.header }}
-						</DropdownMenuCheckboxItem>
+							<CollapsibleTrigger class="flex w-full items-center gap-1 p-2 text-left text-sm">
+								<Button class="mr-2 p-2" variant="outline" @click.stop="toggleCategory(subcategory)"
+									><component
+										:is="visibilityToIcon[getVisibilityState(subcategory)]"
+										class="size-4"
+									></component
+								></Button>
+								<span>{{ titleCase(subcategory.id) }}</span>
+								<ChevronDown
+									class="size-4 shrink-0 grow-0"
+									:class="subcatOpen ? 'rotate-180' : ''"
+								></ChevronDown>
+							</CollapsibleTrigger>
+							<CollapsibleContent class="">
+								<DropdownMenuCheckboxItem
+									v-for="column in subcategory.columns"
+									:key="column.id"
+									:checked="column.getIsVisible()"
+									@select.prevent
+									@update:checked="
+										(value) => {
+											column.toggleVisibility(!!value);
+											column.setFilterValue([]);
+										}
+									"
+								>
+									{{ column.columnDef.header }}
+								</DropdownMenuCheckboxItem>
+							</CollapsibleContent>
+						</Collapsible>
 					</CollapsibleContent>
 					<DropdownMenuSeparator />
 				</Collapsible>
