@@ -67,3 +67,16 @@ Get back dev packages:
 # del env:CI
 pnpm prune
 ```
+
+## Release
+
+- Checkput `main` branch
+- Merge `develop` into `main`
+- Update version in package.json (e. g. 0.8.0)
+- Commit version change
+- Create tag with version (e. g. v0.8.0)
+- `git push` and `git push origin --tags`
+- Checkout `develop` branch
+- Merge `main` into `develop`
+- Revert the commit `Limit actions to production ready`
+- `git push`
