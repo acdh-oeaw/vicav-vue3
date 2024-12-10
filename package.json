@@ -1,5 +1,6 @@
 {
 	"name": "@acdh-oeaw/vicav-frontend",
+	"version": "0.8.0",
 	"private": true,
 	"type": "module",
 	"license": "MIT",
