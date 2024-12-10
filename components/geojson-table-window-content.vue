@@ -47,44 +47,49 @@ const columns = computed(() => {
 		if (col.header in categories) {
 			subcategoryColumns = Object.entries(
 				categories[col.header]?.subcategories ?? { [col.header]: categories[col.header]?.title },
-			).map(([categoryName, categoryLabel]) => {
-				return columnHelper.group({
-					header: String(categoryLabel),
-					id: String(categoryName),
-					//@ts-expect-error type mismatch in accessorFn
-					columns: columnHeadings
-						.filter((heading) => heading.category === categoryName)
-						.map((heading) => {
-							return {
-								id: Object.keys(heading).find((key) => /ft_*/.test(key)) ?? "",
-								header: heading[Object.keys(heading).find((key) => /ft_*/.test(key)) ?? ""],
-								cell: (cell: CellContext<FeatureType, never>) => {
-									return h(resolveComponent("GeojsonTablePropertyCell"), {
-										value: cell.row.original.properties[cell.column.columnDef.id!],
-									});
-								},
-								accessorFn: (cell: FeatureType) => {
-									return Object.keys(
-										cell.properties[
-											String(Object.keys(heading).find((key) => /ft_*/.test(key)) ?? "")
-										] ?? {},
-									);
-								},
-								filterFn: (row, columnId, filterValue) => {
-									if (!row.getVisibleCells().find((cell) => cell.column.id === columnId)) {
-										return true;
-									}
-									if (Object.keys(filterValue).length === 0) return true;
-									const filter = Object.values(filterValue).some((val) =>
-										(row.getValue(columnId) as Array<string>).includes(String(val)),
-									);
-									return filter;
-								},
-								enableGlobalFilter: true,
-							};
-						}),
+			)
+				.filter(
+					([categoryName, _]) =>
+						columnHeadings!.filter((heading) => heading.category === categoryName).length > 0,
+				)
+				.map(([categoryName, categoryLabel]) => {
+					return columnHelper.group({
+						header: String(categoryLabel),
+						id: String(categoryName),
+						//@ts-expect-error type mismatch in accessorFn
+						columns: columnHeadings
+							.filter((heading) => heading.category === categoryName)
+							.map((heading) => {
+								return {
+									id: Object.keys(heading).find((key) => /ft_*/.test(key)) ?? "",
+									header: heading[Object.keys(heading).find((key) => /ft_*/.test(key)) ?? ""],
+									cell: (cell: CellContext<FeatureType, never>) => {
+										return h(resolveComponent("GeojsonTablePropertyCell"), {
+											value: cell.row.original.properties[cell.column.columnDef.id!],
+										});
+									},
+									accessorFn: (cell: FeatureType) => {
+										return Object.keys(
+											cell.properties[
+												String(Object.keys(heading).find((key) => /ft_*/.test(key)) ?? "")
+											] ?? {},
+										);
+									},
+									filterFn: (row, columnId, filterValue) => {
+										if (!row.getVisibleCells().find((cell) => cell.column.id === columnId)) {
+											return true;
+										}
+										if (Object.keys(filterValue).length === 0) return true;
+										const filter = Object.values(filterValue).some((val) =>
+											(row.getValue(columnId) as Array<string>).includes(String(val)),
+										);
+										return filter;
+									},
+									enableGlobalFilter: true,
+								};
+							}),
+					});
 				});
-			});
 		} else {
 			subcategoryColumns = [
 				columnHelper.group({
