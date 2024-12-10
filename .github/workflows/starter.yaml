@@ -64,8 +64,75 @@ jobs:
       environment_short: ${{ needs.setup_workflow_env.outputs.environment_short }}
       PUBLIC_URL: ${{ steps.generate_public_url.outputs.public_url }}
       APP_NAME: ${{ needs.setup_workflow_env.outputs.APP_NAME }}
+  generate_workflow_vars_shawi:
+    needs: [setup_workflow_env]
+    environment:
+      name: ${{ needs.setup_workflow_env.outputs.environment }}-shawi
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate PUBLIC_URL if not set
+        id: generate_public_url
+        run: |
+          kube_ingress_base_domain="${{ vars.KUBE_INGRESS_BASE_DOMAIN }}"
+          public_url="${{ needs.setup_workflow_env.outputs.PUBLIC_URL || vars.PUBLIC_URL }}"
+          if [ "${public_url}x" == 'x' ]
+          then public_url=https://shawi-${{ needs.setup_workflow_env.outputs.environment_short }}.${kube_ingress_base_domain}
+          fi
+          echo "public_url=$public_url" >> $GITHUB_OUTPUT
+    outputs:
+      environment: ${{ needs.setup_workflow_env.outputs.environment }}-shawi
+      environment_short: shawi-${{ needs.setup_workflow_env.outputs.environment_short }}
+      PUBLIC_URL: ${{ steps.generate_public_url.outputs.public_url }}
+      APP_NAME: ${{ needs.setup_workflow_env.outputs.APP_NAME }}
+  generate_workflow_vars_tunocent:
+    needs: [setup_workflow_env]
+    environment:
+      name: ${{ needs.setup_workflow_env.outputs.environment }}-tunocent
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate PUBLIC_URL if not set
+        id: generate_public_url
+        run: |
+          kube_ingress_base_domain="${{ vars.KUBE_INGRESS_BASE_DOMAIN }}"
+          public_url="${{ needs.setup_workflow_env.outputs.PUBLIC_URL || vars.PUBLIC_URL }}"
+          if [ "${public_url}x" == 'x' ]
+          then public_url=https://tunocent-${{ needs.setup_workflow_env.outputs.environment_short }}.${kube_ingress_base_domain}
+          fi
+          echo "public_url=$public_url" >> $GITHUB_OUTPUT
+    outputs:
+      environment: ${{ needs.setup_workflow_env.outputs.environment }}-tunocent
+      environment_short: tunocent-${{ needs.setup_workflow_env.outputs.environment_short }}
+      PUBLIC_URL: ${{ steps.generate_public_url.outputs.public_url }}
+      APP_NAME: ${{ needs.setup_workflow_env.outputs.APP_NAME }}
+  generate_workflow_vars_wibarab:
+    needs: [setup_workflow_env]
+    environment:
+      name: ${{ needs.setup_workflow_env.outputs.environment }}-wibarab
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate PUBLIC_URL if not set
+        id: generate_public_url
+        run: |
+          kube_ingress_base_domain="${{ vars.KUBE_INGRESS_BASE_DOMAIN }}"
+          public_url="${{ needs.setup_workflow_env.outputs.PUBLIC_URL || vars.PUBLIC_URL }}"
+          if [ "${public_url}x" == 'x' ]
+          then public_url=https://wibarab-${{ needs.setup_workflow_env.outputs.environment_short }}.${kube_ingress_base_domain}
+          fi
+          echo "public_url=$public_url" >> $GITHUB_OUTPUT
+    outputs:
+      environment: ${{ needs.setup_workflow_env.outputs.environment }}-wibarab
+      environment_short: wibarab-${{ needs.setup_workflow_env.outputs.environment_short }}
+      PUBLIC_URL: ${{ steps.generate_public_url.outputs.public_url }}
+      APP_NAME: ${{ needs.setup_workflow_env.outputs.APP_NAME }}
   _1:
-    needs: [setup_workflow_env, generate_workflow_vars]
+    needs:
+      [
+        setup_workflow_env,
+        generate_workflow_vars,
+        generate_workflow_vars_wibarab,
+        generate_workflow_vars_tunocent,
+        generate_workflow_vars_shawi,
+      ]
     uses: acdh-oeaw/gl-autodevops-minimal-port/.github/workflows/build-herokuish-and-push-to-registry.yaml@main
     secrets: inherit
     # if you run this outside of of an org that provides KUBE_CONFIG etc as a secret, you need to specify every secret you want to pass by name
@@ -106,6 +173,63 @@ jobs:
         needs.generate_workflow_vars.outputs.environment_short }}
       APP_ROOT: ${{ needs.setup_workflow_env.outputs.APP_ROOT }}
       PUBLIC_URL: ${{ needs.generate_workflow_vars.outputs.PUBLIC_URL }}
+      do_not_generate_additional_host_names: "true"
+      POSTGRES_ENABLED: ${{ needs.setup_workflow_env.outputs.POSTGRES_ENABLED == 'true'}}
+      default_port: "${{ needs.setup_workflow_env.outputs.default_port}}"
+      submodules: ${{ needs.setup_workflow_env.outputs.submodules }}
+  _3-shawi:
+    needs: [setup_workflow_env, generate_workflow_vars_shawi, _1, _2]
+    uses: acdh-oeaw/gl-autodevops-minimal-port/.github/workflows/deploy.yml@main
+    secrets: inherit
+    with:
+      environment: ${{ needs.generate_workflow_vars_shawi.outputs.environment}}
+      fetch-depth: ${{ fromJson(needs.setup_workflow_env.outputs.fetch-depth) }}
+      DOCKER_TAG:
+        ${{ needs.setup_workflow_env.outputs.registry_root }}${{
+        needs.setup_workflow_env.outputs.image_name }}
+      APP_NAME:
+        ${{ needs.generate_workflow_vars_shawi.outputs.APP_NAME }}-${{
+        needs.generate_workflow_vars_shawi.outputs.environment_short }}
+      APP_ROOT: ${{ needs.setup_workflow_env.outputs.APP_ROOT }}
+      PUBLIC_URL: ${{ needs.generate_workflow_vars_shawi.outputs.PUBLIC_URL }}
+      do_not_generate_additional_host_names: "true"
+      POSTGRES_ENABLED: ${{ needs.setup_workflow_env.outputs.POSTGRES_ENABLED == 'true'}}
+      default_port: "${{ needs.setup_workflow_env.outputs.default_port}}"
+      submodules: ${{ needs.setup_workflow_env.outputs.submodules }}
+  _3-tunocent:
+    needs: [setup_workflow_env, generate_workflow_vars_tunocent, _1, _2]
+    uses: acdh-oeaw/gl-autodevops-minimal-port/.github/workflows/deploy.yml@main
+    secrets: inherit
+    with:
+      environment: ${{ needs.generate_workflow_vars_tunocent.outputs.environment}}
+      fetch-depth: ${{ fromJson(needs.setup_workflow_env.outputs.fetch-depth) }}
+      DOCKER_TAG:
+        ${{ needs.setup_workflow_env.outputs.registry_root }}${{
+        needs.setup_workflow_env.outputs.image_name }}
+      APP_NAME:
+        ${{ needs.generate_workflow_vars_tunocent.outputs.APP_NAME }}-${{
+        needs.generate_workflow_vars_tunocent.outputs.environment_short }}
+      APP_ROOT: ${{ needs.setup_workflow_env.outputs.APP_ROOT }}
+      PUBLIC_URL: ${{ needs.generate_workflow_vars_tunocent.outputs.PUBLIC_URL }}
+      do_not_generate_additional_host_names: "true"
+      POSTGRES_ENABLED: ${{ needs.setup_workflow_env.outputs.POSTGRES_ENABLED == 'true'}}
+      default_port: "${{ needs.setup_workflow_env.outputs.default_port}}"
+      submodules: ${{ needs.setup_workflow_env.outputs.submodules }}
+  _3-wibarab:
+    needs: [setup_workflow_env, generate_workflow_vars_wibarab, _1, _2]
+    uses: acdh-oeaw/gl-autodevops-minimal-port/.github/workflows/deploy.yml@main
+    secrets: inherit
+    with:
+      environment: ${{ needs.generate_workflow_vars_wibarab.outputs.environment}}
+      fetch-depth: ${{ fromJson(needs.setup_workflow_env.outputs.fetch-depth) }}
+      DOCKER_TAG:
+        ${{ needs.setup_workflow_env.outputs.registry_root }}${{
+        needs.setup_workflow_env.outputs.image_name }}
+      APP_NAME:
+        ${{ needs.generate_workflow_vars_wibarab.outputs.APP_NAME }}-${{
+        needs.generate_workflow_vars_wibarab.outputs.environment_short }}
+      APP_ROOT: ${{ needs.setup_workflow_env.outputs.APP_ROOT }}
+      PUBLIC_URL: ${{ needs.generate_workflow_vars_wibarab.outputs.PUBLIC_URL }}
       do_not_generate_additional_host_names: "true"
       POSTGRES_ENABLED: ${{ needs.setup_workflow_env.outputs.POSTGRES_ENABLED == 'true'}}
       default_port: "${{ needs.setup_workflow_env.outputs.default_port}}"
