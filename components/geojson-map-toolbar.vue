@@ -91,9 +91,21 @@ const { colors, setColor } = useColorsStore();
 									"
 								>
 									<span class="flex-1">{{ column.columnDef.header }}</span>
-									<label v-if="column.getIsVisible()" class="grow-0 basis-0 p-0">
+
+									<label
+										v-if="column.getIsVisible()"
+										class="ml-3 flex grow-0 basis-0 items-center p-0"
+										@click.capture.stop
+									>
+										<div
+											class="size-4 rounded"
+											:style="{
+												backgroundColor: `var(--${column.id})`,
+												stroke: `var(--${column.id})`,
+											}"
+										></div>
 										<input
-											class="size-5"
+											class="size-0"
 											type="color"
 											:value="colors.get(column.id)?.colorCode || '#cccccc'"
 											@click.capture.stop
