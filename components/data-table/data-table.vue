@@ -83,7 +83,11 @@ const table = useVueTable({
 			typeof updaterOrValue === "function"
 				? updaterOrValue(columnVisibility.value)
 				: updaterOrValue;
-		emit("columnVisibilityChange", table);
+		emit("columnVisibilityChange", {
+			table,
+			//@ts-expect-error missing optional argument for updaterOrValue()
+			col: typeof updaterOrValue === "function" ? updaterOrValue() : updaterOrValue,
+		});
 	},
 	getCoreRowModel: getCoreRowModel(),
 	getPaginationRowModel: getPaginationRowModel(),

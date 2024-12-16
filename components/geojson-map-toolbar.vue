@@ -32,7 +32,7 @@ const isCollapsibleOpen = ref(
 	),
 );
 
-const { colors, addColor, setColor } = useColorsStore();
+const { colors, setColor } = useColorsStore();
 </script>
 
 <template>
@@ -61,15 +61,20 @@ const { colors, addColor, setColor } = useColorsStore();
 							<CollapsibleTrigger
 								class="flex w-full items-center justify-between gap-1 p-2 text-left text-sm"
 							>
-								<span>{{ titleCase(subcategory.id) }}</span>
-								<Badge
-									v-if="
-										subcategory.columns.length > 0 &&
-										subcategory.getLeafColumns().filter((c) => c.getIsVisible()).length
-									"
-									variant="outline"
-									>{{ subcategory.getLeafColumns().filter((c) => c.getIsVisible()).length }}</Badge
-								>
+								<div>
+									<span>{{ titleCase(subcategory.id) }}</span>
+									<Badge
+										v-if="
+											subcategory.columns.length > 0 &&
+											subcategory.getLeafColumns().filter((c) => c.getIsVisible()).length
+										"
+										class="ml-2"
+										variant="outline"
+										>{{
+											subcategory.getLeafColumns().filter((c) => c.getIsVisible()).length
+										}}</Badge
+									>
+								</div>
 
 								<ChevronDown
 									class="size-4 shrink-0 grow-0"
@@ -87,14 +92,25 @@ const { colors, addColor, setColor } = useColorsStore();
 										(value) => {
 											column.toggleVisibility(!!value);
 											column.setFilterValue([]);
-											if (!colors.has(column.id)) addColor(column.id);
 										}
 									"
 								>
 									<span class="flex-1">{{ column.columnDef.header }}</span>
-									<label v-if="column.getIsVisible()" class="grow-0 basis-0 p-0">
+
+									<label
+										v-if="column.getIsVisible()"
+										class="ml-3 flex grow-0 basis-0 items-center p-0"
+										@click.capture.stop
+									>
+										<div
+											class="size-4 rounded"
+											:style="{
+												backgroundColor: `var(--${column.id})`,
+												stroke: `var(--${column.id})`,
+											}"
+										></div>
 										<input
-											class="size-5"
+											class="size-0"
 											type="color"
 											:value="colors.get(column.id)?.colorCode || '#cccccc'"
 											@click.capture.stop

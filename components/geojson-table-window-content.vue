@@ -47,44 +47,49 @@ const columns = computed(() => {
 		if (col.header in categories) {
 			subcategoryColumns = Object.entries(
 				categories[col.header]?.subcategories ?? { [col.header]: categories[col.header]?.title },
-			).map(([categoryName, categoryLabel]) => {
-				return columnHelper.group({
-					header: String(categoryLabel),
-					id: String(categoryName),
-					//@ts-expect-error type mismatch in accessorFn
-					columns: columnHeadings
-						.filter((heading) => heading.category === categoryName)
-						.map((heading) => {
-							return {
-								id: Object.keys(heading).find((key) => /ft_*/.test(key)) ?? "",
-								header: heading[Object.keys(heading).find((key) => /ft_*/.test(key)) ?? ""],
-								cell: (cell: CellContext<FeatureType, never>) => {
-									return h(resolveComponent("GeojsonTablePropertyCell"), {
-										value: cell.row.original.properties[cell.column.columnDef.id!],
-									});
-								},
-								accessorFn: (cell: FeatureType) => {
-									return Object.keys(
-										cell.properties[
-											String(Object.keys(heading).find((key) => /ft_*/.test(key)) ?? "")
-										] ?? {},
-									);
-								},
-								filterFn: (row, columnId, filterValue) => {
-									if (!row.getVisibleCells().find((cell) => cell.column.id === columnId)) {
-										return true;
-									}
-									if (Object.keys(filterValue).length === 0) return true;
-									const filter = Object.values(filterValue).some((val) =>
-										(row.getValue(columnId) as Array<string>).includes(String(val)),
-									);
-									return filter;
-								},
-								enableGlobalFilter: true,
-							};
-						}),
+			)
+				.filter(
+					([categoryName, _]) =>
+						columnHeadings!.filter((heading) => heading.category === categoryName).length > 0,
+				)
+				.map(([categoryName, categoryLabel]) => {
+					return columnHelper.group({
+						header: String(categoryLabel),
+						id: String(categoryName),
+						//@ts-expect-error type mismatch in accessorFn
+						columns: columnHeadings
+							.filter((heading) => heading.category === categoryName)
+							.map((heading) => {
+								return {
+									id: Object.keys(heading).find((key) => /ft_*/.test(key)) ?? "",
+									header: heading[Object.keys(heading).find((key) => /ft_*/.test(key)) ?? ""],
+									cell: (cell: CellContext<FeatureType, never>) => {
+										return h(resolveComponent("GeojsonTablePropertyCell"), {
+											value: cell.row.original.properties[cell.column.columnDef.id!],
+										});
+									},
+									accessorFn: (cell: FeatureType) => {
+										return Object.keys(
+											cell.properties[
+												String(Object.keys(heading).find((key) => /ft_*/.test(key)) ?? "")
+											] ?? {},
+										);
+									},
+									filterFn: (row, columnId, filterValue) => {
+										if (!row.getVisibleCells().find((cell) => cell.column.id === columnId)) {
+											return true;
+										}
+										if (Object.keys(filterValue).length === 0) return true;
+										const filter = Object.values(filterValue).some((val) =>
+											(row.getValue(columnId) as Array<string>).includes(String(val)),
+										);
+										return filter;
+									},
+									enableGlobalFilter: true,
+								};
+							}),
+					});
 				});
-			});
 		} else {
 			subcategoryColumns = [
 				columnHelper.group({
@@ -149,6 +154,13 @@ function applyGlobalFilter(table: Table<FeatureType>) {
 	table.setGlobalFilter(true);
 }
 
+const { colors, addColor } = useColorsStore();
+function onVisibilityChange(props: { table: Table<FeatureType>; col: Record<string, boolean> }) {
+	applyGlobalFilter(props.table);
+	const changedColumnKey = Object.keys(props.col)[0]!;
+	const visibilityValue = props.col[changedColumnKey]!;
+	if (visibilityValue && !colors.has(changedColumnKey)) addColor(changedColumnKey);
+}
 function registerTable(table: Table<FeatureType>) {
 	tables.value.set(url, table);
 	const mw = findWindowByTypeAndParam("GeojsonMap", "url", url);
@@ -202,7 +214,7 @@ function registerTable(table: Table<FeatureType>) {
 			:initial-column-visibility="columnVisibility"
 			:items="fetchedData.get(url)?.features as Array<never>"
 			:min-header-depth="2"
-			@column-visibility-change="applyGlobalFilter"
+			@column-visibility-change="onVisibilityChange"
 			@table-ready="registerTable"
 		></DataTable>
 		<div class="grid justify-items-end py-2">
