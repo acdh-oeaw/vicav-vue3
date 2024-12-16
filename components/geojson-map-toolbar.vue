@@ -61,15 +61,20 @@ const { colors, setColor } = useColorsStore();
 							<CollapsibleTrigger
 								class="flex w-full items-center justify-between gap-1 p-2 text-left text-sm"
 							>
-								<span>{{ titleCase(subcategory.id) }}</span>
-								<Badge
-									v-if="
-										subcategory.columns.length > 0 &&
-										subcategory.getLeafColumns().filter((c) => c.getIsVisible()).length
-									"
-									variant="outline"
-									>{{ subcategory.getLeafColumns().filter((c) => c.getIsVisible()).length }}</Badge
-								>
+								<div>
+									<span>{{ titleCase(subcategory.id) }}</span>
+									<Badge
+										v-if="
+											subcategory.columns.length > 0 &&
+											subcategory.getLeafColumns().filter((c) => c.getIsVisible()).length
+										"
+										class="ml-2"
+										variant="outline"
+										>{{
+											subcategory.getLeafColumns().filter((c) => c.getIsVisible()).length
+										}}</Badge
+									>
+								</div>
 
 								<ChevronDown
 									class="size-4 shrink-0 grow-0"
