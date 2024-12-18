@@ -14,12 +14,7 @@ import {
 
 import customFacetedUniqueValues from "@/utils/customFacetedUniqueValues";
 
-const emit = defineEmits([
-	"table-ready",
-	"columnFiltersChange",
-	"globalFilterChange",
-	"columnVisibilityChange",
-]);
+const emit = defineEmits(["table-ready", "columnFiltersChange", "globalFilterChange"]);
 
 interface Props {
 	items: Array<never>;
@@ -28,6 +23,8 @@ interface Props {
 	enableFilterOnColumns?: boolean;
 	initialColumnVisibility?: Record<string, boolean>;
 	globalFilterFn?: FilterFn<never>;
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+	visibilityChangeFn?: Function;
 }
 
 const props = defineProps<Props>();
@@ -83,11 +80,13 @@ const table = useVueTable({
 			typeof updaterOrValue === "function"
 				? updaterOrValue(columnVisibility.value)
 				: updaterOrValue;
-		emit("columnVisibilityChange", {
-			table,
-			//@ts-expect-error missing optional argument for updaterOrValue()
-			col: typeof updaterOrValue === "function" ? updaterOrValue() : updaterOrValue,
-		});
+		if (props.visibilityChangeFn) {
+			props.visibilityChangeFn({
+				table,
+				//@ts-expect-error missing optional argument for updaterOrValue()
+				col: typeof updaterOrValue === "function" ? updaterOrValue() : updaterOrValue,
+			});
+		}
 	},
 	getCoreRowModel: getCoreRowModel(),
 	getPaginationRowModel: getPaginationRowModel(),
