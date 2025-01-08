@@ -20,7 +20,6 @@ const props = defineProps<Props>();
 const { simpleItems } = useTEIHeaders();
 const openNewWindowFromAnchor = useAnchorClickHandler();
 const columnHelper = createColumnHelper<simpleTEIMetadata>();
-
 const items = computed(() => {
 	return simpleItems.value.filter((i) => props.params.dataTypes.includes(i.dataType));
 });
@@ -64,10 +63,10 @@ const columns = ref([
 		header: "Name",
 		footer: (props) => props.column.id,
 	}),
-	columnHelper.accessor((row) => row.person.at(0)?.name, {
+	columnHelper.accessor((row) => row.person.map((p) => p.name).join(", "), {
 		id: "name",
 		cell: (info) => info.getValue(),
-		header: "Name",
+		header: "Speakers",
 		footer: (props) => props.column.id,
 	}),
 	columnHelper.accessor((row) => row.person.at(0)?.age, {
