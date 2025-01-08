@@ -90,7 +90,7 @@ const scrollParentToChild = function (parent: Element, child: Element) {
 
 onMounted(async () => {
 	const u = utteranceElements.value.find((u) => u.id === props.params.u);
-	const window = utterancesWrapper.value?.parentElement.parentElement;
+	const window = utterancesWrapper.value?.parentElement?.parentElement;
 	if (u !== undefined) scrollParentToChild(window!, u);
 });
 
@@ -99,7 +99,9 @@ watch(utteranceElements.value, (value) => {
 		value.forEach((u) => {
 			const playButton = u.querySelector("a.play");
 			const audio = u.querySelector("audio");
-			playButton.addEventListener("click", (_e) => audio.play());
+			if (playButton && audio) {
+				playButton!.addEventListener("click", (_e) => audio!.play());
+			}
 		});
 	}
 });
