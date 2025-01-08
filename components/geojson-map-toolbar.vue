@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import type { Column } from "@tanstack/vue-table";
 import { ChevronDown } from "lucide-vue-next";
 
 import { useColorsStore } from "@/stores/use-colors-store";
@@ -123,6 +124,7 @@ const { colors, setColor } = useColorsStore();
 										/>
 										<span class="sr-only">Select color</span>
 									</label>
+									<FeatureSelectionDialog :column="column as Column<unknown>" />
 								</DropdownMenuCheckboxItem>
 							</CollapsibleContent>
 						</Collapsible>
