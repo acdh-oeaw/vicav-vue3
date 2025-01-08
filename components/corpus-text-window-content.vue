@@ -2,6 +2,7 @@
 //@ts-expect-error no types available
 import "v3-infinite-loading/lib/style.css"; //required if you're not going to override default slots
 
+import { Play } from "lucide-vue-next";
 import InfiniteLoading from "v3-infinite-loading";
 import type { StateHandler } from "v3-infinite-loading/lib/types";
 
@@ -89,8 +90,18 @@ const scrollParentToChild = function (parent: Element, child: Element) {
 
 onMounted(async () => {
 	const u = utteranceElements.value.find((u) => u.id === props.params.u);
-	const window = utterancesWrapper.value?.parentElement;
+	const window = utterancesWrapper.value?.parentElement.parentElement;
 	if (u !== undefined) scrollParentToChild(window!, u);
+});
+
+watch(utteranceElements.value, (value) => {
+	if (value.length > 0) {
+		value.forEach((u) => {
+			const playButton = u.querySelector("a.play");
+			const audio = u.querySelector("audio");
+			playButton.addEventListener("click", (_e) => audio.play());
+		});
+	}
 });
 </script>
 
@@ -120,22 +131,35 @@ onMounted(async () => {
 				</tr>
 			</tbody>
 		</table>
-		<div
-			v-for="u in utterances"
-			:id="u.id"
-			:key="u.id"
-			ref="utteranceElements"
-			class="corpus-utterance table-row"
-			v-html="u.content"
-		/>
+		<table>
+			<tr
+				v-for="u in utterances"
+				:id="u.id"
+				:key="u.id"
+				ref="utteranceElements"
+				class="corpus-utterance u table-row"
+			>
+				<td>
+					<a v-if="u.audio" class="play mt-1"
+						><Play class="size-4" /><span class="hidden">Play</span></a
+					>
+					<!-- eslint-disable-next-line vuejs-accessibility/media-has-caption -->
+					<audio v-if="u.audio" hidden="hidden">
+						<source :src="u.audio" />
+					</audio>
+				</td>
+				<th class="min-w-fit px-3 font-bold">
+					{{ u.id }}
+				</th>
+				<td class="table-cell" v-html="u.content"></td>
+			</tr>
+		</table>
 		<InfiniteLoading v-if="!scrollComplete" @infinite="handleInfiniteScroll" />
 	</div>
 </template>
 
 <style>
 .u {
-	@apply flex gap-2;
-
 	.xml-id {
 		@apply min-w-fit px-3 font-bold;
 	}
