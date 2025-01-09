@@ -29,13 +29,13 @@ interface Props {
 	options: Array<Tag>;
 	placeholder: string;
 	filterFunction: (list: Array<string>, searchTerm: string) => Array<string>;
-	specialCharacters: SpecialCharacters;
+	specialCharacters?: SpecialCharacters;
 }
 
 const props = defineProps<Props>();
 const { options, placeholder, filterFunction } = toRefs(props);
 const model = defineModel<Array<string>>();
-const searchTerm = defineModel<string>("searchTerm");
+const searchTerm = defineModel<string>("searchTerm", { default: "" });
 const open = ref(false);
 watch(
 	model,
@@ -86,9 +86,12 @@ watch(
 						v-if="specialCharacters"
 						as-child
 						class="w-full items-center gap-2 rounded !bg-transparent focus:outline-none"
-						:placeholder="placeholder"
 					>
-						<InputExtended v-model="searchTerm" :special-characters="specialCharacters" />
+						<InputExtended
+							v-model="searchTerm"
+							:placeholder="placeholder"
+							:special-characters="specialCharacters"
+						/>
 					</TagsInputInput>
 					<TagsInputInput
 						v-else
