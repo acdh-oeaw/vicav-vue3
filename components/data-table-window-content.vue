@@ -25,13 +25,13 @@ const items = computed(() => {
 });
 
 const columns = ref([
-	columnHelper.accessor((row) => row.person.at(0)?.name, {
+	columnHelper.accessor((row) => row.label, {
 		id: "label",
 		cell: (info) => {
-			const identifier =
-				info.getValue() +
-				(info.row.original.person.at(0)?.sex ? `/${info.row.original.person.at(0)?.sex}` : "") +
-				(info.row.original.person.at(0)?.age ? `/${info.row.original.person.at(0)?.age}` : "");
+			// const identifier =
+			// 	info.getValue() +
+			// 	(info.row.original.person.at(0)?.sex ? `/${info.row.original.person.at(0)?.sex}` : "") +
+			// 	(info.row.original.person.at(0)?.age ? `/${info.row.original.person.at(0)?.age}` : "");
 			let linked_id: string | undefined = undefined;
 			let linked_type: string | undefined = undefined;
 			if (info.row.original.secondaryDataType === "Sample Text") {
@@ -56,11 +56,11 @@ const columns = ref([
 							"data-target-type": linked_type,
 							"data-text-id": linked_id,
 						},
-						identifier,
+						info.getValue(),
 					)
-				: identifier;
+				: info.getValue();
 		},
-		header: "Name",
+		header: "Title",
 		footer: (props) => props.column.id,
 	}),
 	columnHelper.accessor((row) => row.person.map((p) => p.name).join(", "), {
