@@ -62,7 +62,7 @@ const extractMetadata = function (
 		],
 		resp: "",
 		dataType: "Text",
-		secondaryDataType: "",
+		category: "",
 		label: "",
 		"@hasTEIw": "false",
 		teiHeader: item.teiHeader,
