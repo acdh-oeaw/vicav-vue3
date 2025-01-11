@@ -24,19 +24,17 @@ const items = computed(() => {
 	return simpleItems.value.filter((i) => props.params.dataTypes.includes(i.dataType));
 });
 
+const categories = [...new Set(items.value.map((i) => i.category))];
+
 const columns = ref([
 	columnHelper.accessor((row) => row.label, {
 		id: "label",
 		cell: (info) => {
-			// const identifier =
-			// 	info.getValue() +
-			// 	(info.row.original.person.at(0)?.sex ? `/${info.row.original.person.at(0)?.sex}` : "") +
-			// 	(info.row.original.person.at(0)?.age ? `/${info.row.original.person.at(0)?.age}` : "");
 			let linked_id: string | undefined = undefined;
 			let linked_type: string | undefined = undefined;
-			if (info.row.original.secondaryDataType === "Sample Text") {
+			if (info.row.original.category === "VICAV Sample Text") {
 				linked_type = "SampleText";
-			} else if (info.row.original.secondaryDataType === "Feature List") {
+			} else if (info.row.original.category === "VICAV Feature List") {
 				linked_type = "Feature";
 			}
 
@@ -90,7 +88,7 @@ const columns = ref([
 		footer: (props) => props.column.id,
 	}),
 
-	columnHelper.accessor((row) => row.secondaryDataType, {
+	columnHelper.accessor((row) => row.category, {
 		id: "dataType",
 		cell: (info) => {
 			return info.getValue();
@@ -141,7 +139,13 @@ const setFilters = function (value: ColumnFiltersState) {
 <template>
 	<div v-if="simpleItems">
 		<div class="flex flex-wrap justify-between py-2">
-			<DataTableFilterTeiHeaders v-if="tables" :filters="columnFilters" rows="" :table="tables" />
+			<DataTableFilterTeiHeaders
+				v-if="tables"
+				:categories="categories"
+				:filters="columnFilters"
+				rows=""
+				:table="tables"
+			/>
 			<DataTablePagination v-if="tables" :table="tables as unknown as Table<never>" />
 			<div>{{ tables?.getFilteredRowModel().rows.length }} results</div>
 		</div>

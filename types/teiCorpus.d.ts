@@ -10,7 +10,7 @@ export type simpleTEIMetadata = {
 	id: string;
 	label: string;
 	dataType: DataTypesEnum;
-	secondaryDataType: string;
+	category: string;
 	resp: string;
 	pubDate: string | TeiDate;
 	recordingDate?: string | TeiDate;
@@ -241,7 +241,11 @@ export type Taxonomy = {
 export type Category = {
 	"@id": string;
 	"@n"?: string;
-	catDesc: XmlTextNode;
+	catDesc: CatDesc;
+};
+
+export type CatDesc = {
+	name: XmlTextNode;
 };
 
 export type LangUsage = {

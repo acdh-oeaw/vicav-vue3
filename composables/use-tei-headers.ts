@@ -140,27 +140,11 @@ const extractMetadata = function (
 			? item.teiHeader.profileDesc.textClass.catRef["@target"]
 			: "";
 
-		const subtype = categoryId?.split(".").at(2);
+		const category = corpusMetadata.encodingDesc.classDecl?.taxonomy.categories?.find(
+			(cat) => cat["@id"] === categoryId?.replace("corpus:", ""),
+		);
 
-		switch (subtype) {
-			case "ST":
-				template.secondaryDataType = "Sample Text";
-				break;
-			case "FL":
-				template.secondaryDataType = "Feature List";
-				break;
-			case "UMS":
-				template.secondaryDataType = "Unmonitored Speech";
-				break;
-			case "TUN":
-				template.secondaryDataType = "Tunocent Questionnaire";
-				break;
-			case "WAD":
-				template.secondaryDataType = "WAD Questionnaire";
-				break;
-			default:
-				break;
-		}
+		template.category = category!.catDesc.name.$;
 	}
 
 	if (!template.person.at(0)?.name) {
