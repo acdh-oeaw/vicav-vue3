@@ -1,5 +1,6 @@
 /* eslint-disable playwright/no-conditional-expect */
 /* eslint-disable playwright/no-conditional-in-test */
+/* eslint-disable @typescript-eslint/switch-exhaustiveness-check */
 import { expect, test } from "@playwright/test";
 
 test.describe("home page", () => {
