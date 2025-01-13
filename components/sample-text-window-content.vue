@@ -16,6 +16,31 @@ const { showTooltip, tooltipContent, handleHoverTooltip } = useHoverTooltipHandl
 const isLoading = computed(() => {
 	return isPending.value || isPlaceholderData.value;
 });
+
+const content: Ref<HTMLDivElement | null> = ref(null);
+
+watch(content, () => {
+	if (content.value) {
+		const playButton = content.value.querySelector("a.play");
+		const stopButton = content.value.querySelector("a.stop");
+		const audio = content.value.querySelector("audio");
+
+		playButton!.addEventListener("click", () => {
+			audio!.play();
+			playButton?.classList.add("hidden");
+			stopButton?.classList.remove("hidden");
+		});
+		audio!.addEventListener("ended", () => {
+			stopButton?.classList.add("hidden");
+			playButton?.classList.remove("hidden");
+		});
+		stopButton!.addEventListener("click", () => {
+			audio!.pause();
+			stopButton?.classList.add("hidden");
+			playButton?.classList.remove("hidden");
+		});
+	}
+});
 </script>
 
 <template>
@@ -35,6 +60,7 @@ const isLoading = computed(() => {
 		></div>
 		<div
 			v-if="data"
+			ref="content"
 			class="prose max-w-3xl p-8"
 			@click="openNewWindowFromAnchor"
 			@mouseover="handleHoverTooltip"
@@ -48,6 +74,9 @@ const isLoading = computed(() => {
 </template>
 
 <style>
+a > svg {
+	@apply self-center;
+}
 /* stylelint-disable selector-class-pattern */
 a.word-search {
 	@apply text-inherit no-underline;
