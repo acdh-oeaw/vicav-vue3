@@ -53,7 +53,7 @@ watch(
 	filterCriteria,
 	() => {
 		q.value = [...filterCriteria.value.entries()]
-			.map(function ([key, value]) {
+			.map(([key, value]) => {
 				return `${key}=${value}`;
 			})
 			.join(" & ");

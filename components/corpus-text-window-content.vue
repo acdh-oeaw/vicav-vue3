@@ -1,5 +1,4 @@
 <script setup lang="ts">
-//@ts-expect-error no types available
 import "v3-infinite-loading/lib/style.css"; //required if you're not going to override default slots
 
 import { Play } from "lucide-vue-next";

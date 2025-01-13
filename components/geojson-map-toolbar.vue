@@ -24,7 +24,7 @@ const categories = computed(() => {
 function titleCase(s: string) {
 	return s
 		.replace(/^[-_]*(.)/, (_, c) => c.toUpperCase()) // Initial char (after -/_)
-		.replace(/[-_]+(.)/g, (_, c) => " " + c.toUpperCase()); // First char after each -/_
+		.replace(/[-_]+(.)/g, (_, c) => ` ${c.toUpperCase()}`); // First char after each -/_
 }
 const isMenuOpen = ref(categories.value!.map(() => false));
 const isCollapsibleOpen = ref(

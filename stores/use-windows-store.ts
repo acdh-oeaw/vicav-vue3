@@ -291,7 +291,7 @@ export const useWindowsStore = defineStore("windows", () => {
 		const viewport = rootElement.getBoundingClientRect();
 
 		function viewportPercentageWith2DigitPrecision(x: number, dir: "height" | "width") {
-			return String(Math.floor((10000 * x) / viewport[dir]) / 100) + "%";
+			return `${String(Math.floor((10000 * x) / viewport[dir]) / 100)}%`;
 		}
 
 		registry.value.forEach((w) => {
@@ -320,7 +320,7 @@ export const useWindowsStore = defineStore("windows", () => {
 					? c
 					: c
 							.split("")
-							.map((a) => "\\u" + a.charCodeAt(0).toString(16).padStart(4, "0"))
+							.map((a) => `\\u${a.charCodeAt(0).toString(16).padStart(4, "0")}`)
 							.join(""),
 			)
 			.join("");

@@ -13,9 +13,7 @@ const props = defineProps<{
 const attrs = useAttrs();
 const $el = ref<HTMLElement>();
 
-type LocationDataPoints = {
-	[key in DataTypesEnum]: Array<Feature<Point, MarkerProperties>>;
-};
+type LocationDataPoints = Record<DataTypesEnum, Array<Feature<Point, MarkerProperties>>>;
 
 const groupedMarkers = computed<Record<string, LocationDataPoints> | null>(() => {
 	if (props.groupMarkers) {

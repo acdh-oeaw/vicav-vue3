@@ -12,7 +12,7 @@ const hits = ref<Array<CorpusSearchHits & { label?: string }> | undefined>([]);
 const showHelp = ref<boolean>(false);
 async function searchCorpus() {
 	if (!queryString.value && words.value.length > 0)
-		queryString.value = '[word="' + words.value.join("|") + '"]';
+		queryString.value = `[word="${words.value.join("|")}"]`;
 
 	const result = await api.vicav.searchCorpus(
 		{ query: queryString.value },

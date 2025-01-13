@@ -10,7 +10,7 @@ let api = new Api<userPass>();
 function basicSecurityWorker(securityData: userPass | null): RequestParams | undefined {
 	if (securityData) {
 		return {
-			headers: { authorization: "Basic " + btoa(securityData.user + ":" + securityData.pass) },
+			headers: { authorization: `Basic ${btoa(`${securityData.user}:${securityData.pass}`)}` },
 		};
 	}
 	return undefined;

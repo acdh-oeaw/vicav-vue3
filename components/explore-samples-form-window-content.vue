@@ -50,13 +50,13 @@ const countries = Array.from(new Set(dataset.map((item) => item.place.country)))
 let options: Array<Tag> = [];
 
 countries.forEach((country) => {
-	options.push({ label: country + " (country)", value: "country:" + country });
+	options.push({ label: `${country} (country)`, value: `country:${country}` });
 	const countryItems = dataset.filter((item) => item.place.country === country);
 	const regions = Array.from(new Set(countryItems.map((item) => item.place.region)));
 	regions.forEach((region) => {
 		options.push({
-			label: region + " (region)",
-			value: "region:" + region,
+			label: `${region} (region)`,
+			value: `region:${region}`,
 			heading: true,
 		});
 

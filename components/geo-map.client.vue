@@ -194,7 +194,7 @@ onMounted(async () => {
 	}).addTo(context.map);
 
 	updateMarkers();
-	context.map.on("zoomend", function () {
+	context.map.on("zoomend", () => {
 		updateMarkers(false);
 	});
 });
