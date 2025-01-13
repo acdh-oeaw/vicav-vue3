@@ -37,21 +37,24 @@ const { buildFeatureValueId } = useColorsStore();
 			<CollapsibleContent>
 				<div v-for="feature in activeFeatures" :key="feature.id" class="my-1">
 					<div class="flex items-start gap-2">
-						<svg class="mt-0.5 size-3.5">
+						<svg
+							v-if="((feature.getFilterValue() as Array<string>) ?? []).length <= 0"
+							class="mt-0.5 size-3.5"
+						>
 							<use href="#petal" :style="{ fill: `var(--${feature.id})` }"></use>
 						</svg>
 						<span>{{ feature.columnDef.header }} ({{ getMatchingRowCount(feature.id) }})</span>
 					</div>
 					<div
 						v-if="feature.getIsFiltered() && (feature.getFilterValue() as Array<string>).length > 0"
-						class="ml-2"
+						class="ml-4"
 					>
 						<div
 							v-for="[value, count] in [...feature.getFacetedUniqueValues().entries()].filter(
 								([value, count]) => (feature.getFilterValue() as Array<string>).includes(value),
 							)"
 							:key="value"
-							class="flex items-center"
+							class="flex items-center gap-2"
 						>
 							<svg class="mt-0.5 size-3.5">
 								<use
