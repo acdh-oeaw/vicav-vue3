@@ -17,6 +17,8 @@ import {
 	TagsInputRoot,
 } from "radix-vue";
 
+import type { SpecialCharacters } from "@/lib/api-client";
+
 interface Tag {
 	label: string;
 	value: string;
@@ -27,12 +29,13 @@ interface Props {
 	options: Array<Tag>;
 	placeholder: string;
 	filterFunction: (list: Array<string>, searchTerm: string) => Array<string>;
+	specialCharacters?: SpecialCharacters;
 }
 
 const props = defineProps<Props>();
 const { options, placeholder, filterFunction } = toRefs(props);
 const model = defineModel<Array<string>>();
-const searchTerm = defineModel<string>("searchTerm");
+const searchTerm = defineModel<string>("searchTerm", { default: "" });
 const open = ref(false);
 watch(
 	model,
@@ -80,6 +83,18 @@ watch(
 
 				<ComboboxInput as-child>
 					<TagsInputInput
+						v-if="specialCharacters"
+						as-child
+						class="w-full items-center gap-2 rounded !bg-transparent focus:outline-none"
+					>
+						<InputExtended
+							v-model="searchTerm"
+							:placeholder="placeholder"
+							:special-characters="specialCharacters"
+						/>
+					</TagsInputInput>
+					<TagsInputInput
+						v-else
 						class="flex flex-1 flex-wrap items-center gap-2 rounded !bg-transparent px-1 focus:outline-none"
 						:placeholder="placeholder"
 					/>

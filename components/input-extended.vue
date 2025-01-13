@@ -14,6 +14,10 @@ const myString = ref(`${props.modelValue}`);
 watch(myString, (val) => {
 	emit("update:modelValue", val);
 });
+watch(
+	() => props.modelValue,
+	(val) => (myString.value = val),
+);
 const submit = () => {
 	emit("submit", myString);
 };

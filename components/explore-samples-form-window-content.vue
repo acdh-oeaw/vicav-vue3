@@ -17,6 +17,9 @@ interface Props {
 	params: ExploreSamplesFormWindowItem["params"];
 }
 
+const { data: config } = useProjectInfo();
+const specialCharacters = config.value?.projectConfig?.specialCharacters;
+
 const props = defineProps<Props>();
 const { params } = toRefs(props);
 const { simpleItems } = useTEIHeaders();
@@ -290,6 +293,7 @@ const openSearchResultsNewWindow = function () {
 					:filter-function="(i) => i"
 					:options="wordOptions"
 					:placeholder="`Search for words...`"
+					:special-characters="specialCharacters"
 				/>
 			</div>
 

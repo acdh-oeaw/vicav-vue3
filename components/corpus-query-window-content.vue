@@ -9,11 +9,10 @@ const { simpleItems } = useTEIHeaders();
 const props = defineProps<{ params: Zod.infer<typeof CorpusQuerySchema>["params"] }>();
 const queryString = ref(props.params.queryString);
 const hits = ref<Array<CorpusSearchHits & { label?: string }> | undefined>([]);
-
+const showHelp = ref<boolean>(false);
 async function searchCorpus() {
-	if (words.value.length > 0)
-		queryString.value =
-			'[word="' + words.value.map((w) => w.replace("*", ".*").replace("?", ".")).join("|") + '"]';
+	if (!queryString.value && words.value.length > 0)
+		queryString.value = '[word="' + words.value.join("|") + '"]';
 
 	const result = await api.vicav.searchCorpus(
 		{ query: queryString.value },
@@ -61,13 +60,24 @@ const words: Ref<Array<string>> = ref([]);
 		<form
 			class="block w-full rounded border border-gray-300 bg-gray-50 p-2.5 px-4 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
 		>
-			<label class="mb-2 flex !w-40 p-0 font-bold" for="word_tags">
-				<span class="grow">Search for words</span>
+			<label class="mb-2 flex !w-48 p-0 font-bold" for="word_tags">
+				<span class="grow">Search for exact words</span>
+				<a href="#" title="More information" @click="showHelp = true"
+					><span class="hidden">More information</span><Info class="size-4"
+				/></a>
 			</label>
-			<div class="flex items-center gap-2">
-				<Info class="size-4" /><span class="text-gray-500"
-					>Enter non-accented Latin characters and select word options from the list</span
-				>
+			<div v-if="showHelp" class="flex items-center gap-2">
+				<span class="text-gray-500"
+					>Enter beginning of the word to trigger autocomplete suggestions from the words occurring
+					in the corpus. Autocomplete is accent-insensitive, allowing for a simplified word form
+					selection. Eg. "wa" will return results starting with "wā" or "ẉa" as well. <br />
+					Apart from the accent-insensitivity, "?" is used as a shortcut for ʔalif or ʕayn.<br />
+					Instead of choosing exact word forms from autocomplete results, you can enter a word with
+					wildcards and add it to the queried words by pressing enter. Supported wildcards: ".?"
+					stand for one character ".*" stands for multiple characters. characters.<br />
+					Example: w.?n would yield results like "wen", "win", "w.*n" would yield results for "wen,
+					win or weyn" as well.
+				</span>
 			</div>
 			<TagsSelect
 				v-if="wordOptions"
@@ -76,7 +86,8 @@ const words: Ref<Array<string>> = ref([]);
 				v-model:search-term="wordSearch"
 				:filter-function="(i) => i"
 				:options="wordOptions"
-				:placeholder="`Search for words...`"
+				placeholder="Search for words..."
+				:special-characters="specialCharacters"
 			/>
 
 			<label class="mb-2 flex !w-40 p-0 font-bold" for="word_tags">
@@ -84,7 +95,7 @@ const words: Ref<Array<string>> = ref([]);
 			</label>
 			<div class="mb-2 flex items-center gap-2">
 				<Info class="size-4" /><span class="text-gray-500"
-					>Enter exact words within a CQL query. (<a
+					>Enter a proper CQL query with exact transliateration characters. (<a
 						class="content-center"
 						href="https://howto.acdh.oeaw.ac.at/de/resources/corpus-query-language-im-austrian-media-corpus"
 						target="_blank"

@@ -6,6 +6,7 @@ import type { simpleTEIMetadata } from "@/types/teiCorpus.d";
 interface DataTableFilterProps {
 	table: Table<Array<simpleTEIMetadata>>;
 	filters: ColumnFiltersState;
+	categories: Array<string>;
 }
 
 const props = defineProps<DataTableFilterProps>();
@@ -93,17 +94,7 @@ const setColumnFilter = function (column: string, value: string | Array<number>)
 					</SelectTrigger>
 					<SelectContent class="bg-white">
 						<SelectItem :key="-1" value="__all__">Select All</SelectItem>
-						<SelectItem
-							v-for="(dataType, index) in [
-								'Feature List',
-								'Sample Text',
-								'Free Speech',
-								'Tunocent Questionnaire',
-								'WAD Questionnaire',
-							]"
-							:key="index"
-							:value="`${dataType}`"
-						>
+						<SelectItem v-for="(dataType, index) in categories" :key="index" :value="`${dataType}`">
 							{{ dataType }}
 						</SelectItem>
 					</SelectContent>
