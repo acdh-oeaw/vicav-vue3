@@ -214,7 +214,7 @@ function registerTable(table: Table<FeatureType>) {
 			:initial-column-visibility="columnVisibility"
 			:items="fetchedData.get(url)?.features as Array<never>"
 			:min-header-depth="2"
-			@column-visibility-change="onVisibilityChange"
+			:visibility-change-fn="onVisibilityChange"
 			@table-ready="registerTable"
 		></DataTable>
 		<div class="grid justify-items-end py-2">

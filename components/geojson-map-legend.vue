@@ -23,6 +23,8 @@ function getMatchingRowCount(columnId: string) {
 		.length;
 }
 const collapsibleOpen = ref(true);
+
+const { buildFeatureValueId } = useColorsStore();
 </script>
 
 <template>
@@ -33,15 +35,36 @@ const collapsibleOpen = ref(true);
 				><ChevronDown class="size-4" :class="collapsibleOpen ? '' : 'rotate-180'"></ChevronDown
 			></CollapsibleTrigger>
 			<CollapsibleContent>
-				<div
-					v-for="feature in activeFeatures"
-					:key="feature.id"
-					class="my-1 flex items-start gap-2"
-				>
-					<svg class="mt-0.5 size-3.5">
-						<use href="#petal" :style="{ fill: `var(--${feature.id})` }"></use>
-					</svg>
-					<span>{{ feature.columnDef.header }} ({{ getMatchingRowCount(feature.id) }})</span>
+				<div v-for="feature in activeFeatures" :key="feature.id" class="my-1">
+					<div class="flex items-start gap-2">
+						<svg
+							v-if="((feature.getFilterValue() as Array<string>) ?? []).length <= 0"
+							class="mt-0.5 size-3.5"
+						>
+							<use href="#petal" :style="{ fill: `var(--${feature.id})` }"></use>
+						</svg>
+						<span>{{ feature.columnDef.header }} ({{ getMatchingRowCount(feature.id) }})</span>
+					</div>
+					<div
+						v-if="feature.getIsFiltered() && (feature.getFilterValue() as Array<string>).length > 0"
+						class="ml-4"
+					>
+						<div
+							v-for="[value, count] in [...feature.getFacetedUniqueValues().entries()].filter(
+								([value, count]) => (feature.getFilterValue() as Array<string>).includes(value),
+							)"
+							:key="value"
+							class="flex items-center gap-2"
+						>
+							<svg class="mt-0.5 size-3.5">
+								<use
+									href="#petal"
+									:style="{ fill: `var(--${buildFeatureValueId(feature.id, value)})` }"
+								></use>
+							</svg>
+							<span>{{ value }} ({{ count }})</span>
+						</div>
+					</div>
 				</div></CollapsibleContent
 			>
 		</div>

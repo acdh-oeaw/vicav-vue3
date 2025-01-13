@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import type { Column } from "@tanstack/vue-table";
 import { ChevronDown } from "lucide-vue-next";
 
 import { useColorsStore } from "@/stores/use-colors-store";
@@ -98,7 +99,11 @@ const { colors, setColor } = useColorsStore();
 									<span class="flex-1">{{ column.columnDef.header }}</span>
 
 									<label
-										v-if="column.getIsVisible()"
+										v-if="
+											column.getIsVisible() &&
+											(!column.getIsFiltered() ||
+												(column.getFilterValue() as Array<string>).length <= 0)
+										"
 										class="ml-3 flex grow-0 basis-0 items-center p-0"
 										@click.capture.stop
 									>
@@ -123,6 +128,7 @@ const { colors, setColor } = useColorsStore();
 										/>
 										<span class="sr-only">Select color</span>
 									</label>
+									<FeatureSelectionDialog :column="column as Column<unknown>" />
 								</DropdownMenuCheckboxItem>
 							</CollapsibleContent>
 						</Collapsible>
