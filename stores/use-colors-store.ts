@@ -7,7 +7,7 @@ interface ColorInterface {
 }
 
 export const useColorsStore = defineStore("colors", () => {
-	const colors = ref<Map<ColorInterface["id"], ColorInterface>>(new Map());
+	const colors = shallowRef<Map<ColorInterface["id"], ColorInterface>>(new Map());
 	const refColor = ref(
 		// `hsl(${document.documentElement.style.getPropertyValue("--color-primary")})`,
 		`hsl(-57.76924deg 26.53061224489796% 51.9607843137255%)`,

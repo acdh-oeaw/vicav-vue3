@@ -5,7 +5,7 @@ import { type FeatureCollectionType, type FeatureType, GeoFeatureSchema } from "
 
 export const useGeojsonStore = defineStore("geojson", () => {
 	const fetchedData = ref<Map<string, FeatureCollectionType>>(new Map());
-	const tables = ref<Map<string, Table<FeatureType>>>(new Map());
+	const tables = shallowRef<Map<string, Table<FeatureType>>>(new Map());
 
 	const fetchGeojson = (url: string) => {
 		return useQuery({
