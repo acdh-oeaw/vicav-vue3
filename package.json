@@ -57,6 +57,7 @@
 		"class-variance-authority": "^0.7.1",
 		"colorjs.io": "^0.5.2",
 		"cva": "1.0.0-beta.1",
+		"h3-compression": "^0.3.2",
 		"is-ci": "^3.0.1",
 		"leaflet": "^1.9.4",
 		"lightgallery": "^2.8.2",
