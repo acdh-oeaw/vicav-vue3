@@ -5,6 +5,7 @@ import type {
 	Person,
 	RespStmt,
 	simpleTEIMetadata,
+	Taxonomy,
 	TEI,
 	TeiCorpus,
 	TeiHeader,
@@ -140,7 +141,14 @@ const extractMetadata = function (
 			? item.teiHeader.profileDesc.textClass.catRef["@target"]
 			: "";
 
-		const category = corpusMetadata.encodingDesc.classDecl?.taxonomy.categories?.find(
+		const mergedTaxonomies: Taxonomy = {
+			categories: [],
+		};
+		corpusMetadata.encodingDesc.classDecl?.taxonomies.forEach((t) => {
+			mergedTaxonomies.categories = mergedTaxonomies.categories?.concat(t.categories!);
+			return mergedTaxonomies;
+		});
+		const category = mergedTaxonomies.categories?.find(
 			(cat) => cat["@id"] === categoryId?.replace("corpus:", ""),
 		);
 

@@ -392,7 +392,7 @@ export type Funder = {
 };
 
 export type ClassDecl = {
-	taxonomy: Taxonomy;
+	taxonomies: Array<Taxonomy>;
 };
 
 export type StandOff = {
