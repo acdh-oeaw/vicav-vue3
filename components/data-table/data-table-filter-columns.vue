@@ -37,7 +37,7 @@ function toggleCategory(category: Column<never>) {
 	}
 	category.columns.forEach((c) => {
 		if (c.getIsVisible() !== targetVisibility) {
-			c.setFilterValue([]);
+			c.setFilterValue(new Map());
 			c.toggleVisibility(targetVisibility);
 		}
 	});
@@ -135,7 +135,7 @@ const visibilityToIcon: Record<visibilityState, Component> = {
 									@update:checked="
 										(value) => {
 											column.toggleVisibility(!!value);
-											column.setFilterValue([]);
+											column.setFilterValue(new Map());
 										}
 									"
 								>

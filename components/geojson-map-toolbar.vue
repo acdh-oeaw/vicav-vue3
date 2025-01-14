@@ -32,8 +32,8 @@ const isCollapsibleOpen = ref(
 		categories.value!.map((category) => [category.id, category.columns.map(() => false)]),
 	),
 );
-
-const { colors, setColor } = useColorsStore();
+const { colors } = storeToRefs(useColorsStore());
+const { setColor } = useColorsStore();
 </script>
 
 <template>
@@ -92,7 +92,7 @@ const { colors, setColor } = useColorsStore();
 									@update:checked="
 										(value) => {
 											column.toggleVisibility(!!value);
-											column.setFilterValue([]);
+											column.setFilterValue(new Map());
 										}
 									"
 								>
@@ -102,7 +102,7 @@ const { colors, setColor } = useColorsStore();
 										v-if="
 											column.getIsVisible() &&
 											(!column.getIsFiltered() ||
-												(column.getFilterValue() as Array<string>).length <= 0)
+												(column.getFilterValue() as Map<string, number>).size <= 0)
 										"
 										class="ml-3 flex grow-0 basis-0 items-center p-0"
 										@click.capture.stop
