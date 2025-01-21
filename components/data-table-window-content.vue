@@ -24,7 +24,9 @@ const items = computed(() => {
 	return simpleItems.value.filter((i) => props.params.dataTypes.includes(i.dataType));
 });
 
-const categories = [...new Set(items.value.map((i) => i.category))];
+const categories = [
+	...new Set(items.value.map((i) => i.category).filter((category) => category !== "")),
+];
 
 const columns = ref([
 	columnHelper.accessor((row) => row.label, {
@@ -125,7 +127,17 @@ const columns = ref([
 ]);
 
 const tables: Ref<Table<Array<simpleTEIMetadata>> | null> = ref(null);
-const columnFilters = ref<ColumnFiltersState>([]);
+const columnFilters = ref<ColumnFiltersState>(
+	props.params.filters ? props.params.filters.map((f) => ({ id: f.key, value: f.value })) : [],
+);
+
+watch(
+	() => props.params.filters,
+	() => {
+		if (!props.params.filters) return;
+		columnFilters.value = props.params.filters.map((f) => ({ id: f.key, value: f.value }));
+	},
+);
 
 const registerTable = function (table: Table<Array<simpleTEIMetadata>>) {
 	tables.value = table;

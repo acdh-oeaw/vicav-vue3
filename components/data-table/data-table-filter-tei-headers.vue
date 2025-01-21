@@ -76,6 +76,23 @@ const setColumnFilter = function (column: string, value: string | Array<number>)
 	}
 	table.value.setColumnFilters(filters.value);
 };
+
+onMounted(() => {
+	if (filters.value.length > 0)
+		filters.value.forEach((filter) =>
+			setColumnFilter(filter.id, filter.value as string | Array<number>),
+		);
+});
+
+watch(
+	() => filters.value,
+	(newFilters, oldFilters) => {
+		if (JSON.stringify(newFilters) !== JSON.stringify(oldFilters))
+			newFilters.forEach((filter) =>
+				setColumnFilter(filter.id, filter.value as string | Array<number>),
+			);
+	},
+);
 </script>
 
 <template>

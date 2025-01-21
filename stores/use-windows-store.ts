@@ -228,6 +228,22 @@ export const useWindowsStore = defineStore("windows", () => {
 		return foundWindow;
 	}
 
+	function findWindowByTypeAndTitle(
+		targetType: WindowItemTargetType,
+		title: string,
+	): WindowItem | null {
+		let foundWindow: WindowItem | null = null;
+		registry.value.forEach((w) => {
+			const ci = Schema.safeParse(w);
+			if (!ci.success || foundWindow !== null || w.targetType !== targetType) return;
+
+			if (w.winbox.title === title) {
+				foundWindow = w;
+			}
+		});
+		return foundWindow;
+	}
+
 	function removeWindow(id: WindowItem["id"]) {
 		registry.value.get(id)?.winbox.close();
 	}
@@ -361,5 +377,6 @@ export const useWindowsStore = defineStore("windows", () => {
 		setWindowArrangement,
 		arrangeWindows,
 		findWindowByTypeAndParam,
+		findWindowByTypeAndTitle,
 	};
 });
