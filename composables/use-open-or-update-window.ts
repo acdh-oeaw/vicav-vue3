@@ -1,4 +1,4 @@
-import { TextId, type WindowItem } from "@/types/global";
+import { TextId, type WindowItem } from "@/types/global.d";
 
 export function useOpenOrUpdateWindow() {
 	const windowsStore = useWindowsStore();
