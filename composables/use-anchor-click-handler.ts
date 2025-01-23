@@ -1,5 +1,7 @@
 import { isNonEmptyString } from "@acdh-oeaw/lib";
 
+import type { WindowItem } from "@/types/global";
+
 export function useAnchorClickHandler() {
 	const openOrUpdateWindow = useOpenOrUpdateWindow();
 
@@ -20,7 +22,10 @@ export function useAnchorClickHandler() {
 			if (item.targetType === "External-link") return;
 			event.preventDefault();
 
-			openOrUpdateWindow(item, isNonEmptyString(item.label) ? item.label : element.innerText);
+			openOrUpdateWindow(
+				item as unknown as WindowItem,
+				isNonEmptyString(item.label) ? item.label : element.innerText,
+			);
 		}
 	}
 

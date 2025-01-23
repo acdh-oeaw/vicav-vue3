@@ -1,4 +1,4 @@
-import type { WindowItem } from "@/types/global";
+import { TextId, type WindowItem } from "@/types/global";
 
 export function useOpenOrUpdateWindow() {
 	const windowsStore = useWindowsStore();
@@ -6,22 +6,20 @@ export function useOpenOrUpdateWindow() {
 
 	const { data: config } = useProjectInfo();
 	return function (item: WindowItem, title: string) {
-		if (item.params.textId) {
+		const ci = TextId.safeParse(item.params);
+		if (ci.success) {
 			const targetConfig = config.value?.projectConfig?.menu?.main
 				?.flatMap((menuEntry) => menuEntry.item)
 				.find((menuEntry) => {
-					return menuEntry.id === item.params.textId;
+					return menuEntry.id === String(ci.data.textId);
 				});
 
-			const window = findWindowByTypeAndParam(
-				item.targetType,
-				"textId",
-				item.params.textId as string,
-			);
+			const window = findWindowByTypeAndParam(item.targetType, "textId", String(ci.data.textId));
 			if (window) {
+				const windowItem = window;
 				const originalParams: object = window.params as object;
-				window.params = { ...originalParams, ...item.params };
-				window.winbox.focus();
+				windowItem.params = { ...originalParams, ...(item.params as object) };
+				windowItem.winbox.focus();
 				return;
 			}
 
