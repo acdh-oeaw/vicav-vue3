@@ -220,7 +220,6 @@ export const useWindowsStore = defineStore("windows", () => {
 			} else {
 				return;
 			}
-
 			if (windowValue === value) {
 				foundWindow = w;
 			}

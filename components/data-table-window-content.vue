@@ -16,6 +16,7 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+const { params } = toRefs(props);
 
 const { simpleItems } = useTEIHeaders();
 const openNewWindowFromAnchor = useAnchorClickHandler();
@@ -83,13 +84,6 @@ const columns = ref([
 		footer: (props) => props.column.id,
 	}),
 
-	columnHelper.accessor((row) => row.place.region, {
-		id: "region",
-		cell: (info) => info.getValue(),
-		header: "Region",
-		footer: (props) => props.column.id,
-	}),
-
 	columnHelper.accessor((row) => row.category, {
 		id: "dataType",
 		cell: (info) => {
@@ -107,7 +101,7 @@ const columns = ref([
 	columnHelper.accessor((row) => row.place.settlement, {
 		id: "settlement",
 		cell: (info) => info.getValue(),
-		header: "Settlement",
+		header: "Location",
 		footer: (props) => props.column.id,
 	}),
 
@@ -132,10 +126,10 @@ const columnFilters = ref<ColumnFiltersState>(
 );
 
 watch(
-	() => props.params.filters,
+	() => params.value.filters,
 	() => {
-		if (!props.params.filters) return;
-		columnFilters.value = props.params.filters.map((f) => ({ id: f.key, value: f.value }));
+		if (!params.value.filters) return;
+		columnFilters.value = params.value.filters.map((f) => ({ id: f.key, value: f.value }));
 	},
 );
 

@@ -1,8 +1,7 @@
 import { isNonEmptyString } from "@acdh-oeaw/lib";
 
 export function useAnchorClickHandler() {
-	const windowsStore = useWindowsStore();
-	const { addWindow } = windowsStore;
+	const openOrUpdateWindow = useOpenOrUpdateWindow();
 
 	/**
 	 * Intercept anchor clicks to open window instead of navigating.
@@ -20,11 +19,8 @@ export function useAnchorClickHandler() {
 		if (item?.targetType) {
 			if (item.targetType === "External-link") return;
 			event.preventDefault();
-			addWindow({
-				targetType: item.targetType,
-				params: item,
-				title: isNonEmptyString(item.label) ? item.label : element.innerText,
-			} as WindowState);
+
+			openOrUpdateWindow(item, isNonEmptyString(item.label) ? item.label : element.innerText);
 		}
 	}
 
