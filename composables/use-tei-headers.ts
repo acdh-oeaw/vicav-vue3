@@ -1,10 +1,12 @@
 import { computed } from "vue";
 
 import type {
+	Category,
 	PersName,
 	Person,
 	RespStmt,
 	simpleTEIMetadata,
+	Taxonomy,
 	TEI,
 	TeiCorpus,
 	TeiHeader,
@@ -140,11 +142,14 @@ const extractMetadata = function (
 			? item.teiHeader.profileDesc.textClass.catRef["@target"]
 			: "";
 
-		const category = corpusMetadata.encodingDesc.classDecl?.taxonomy.categories?.find(
-			(cat) => cat["@id"] === categoryId?.replace("corpus:", ""),
-		);
-
-		template.category = category!.catDesc.name.$;
+		corpusMetadata.encodingDesc.classDecl?.taxonomies.forEach((taxonomy: Taxonomy) => {
+			taxonomy.categories!.forEach((cat: Category) => {
+				if (cat["@id"] === categoryId?.replace("corpus:", "")) {
+					template.category = cat.catDesc.name.$;
+					return;
+				}
+			});
+		});
 	}
 
 	if (!template.person.at(0)?.name) {

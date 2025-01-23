@@ -235,6 +235,7 @@ export type ProfileDesc = {
 };
 
 export type Taxonomy = {
+	"@id": string;
 	categories?: Array<Category>;
 };
 
@@ -392,7 +393,7 @@ export type Funder = {
 };
 
 export type ClassDecl = {
-	taxonomy: Taxonomy;
+	taxonomies: Array<Taxonomy>;
 };
 
 export type StandOff = {
