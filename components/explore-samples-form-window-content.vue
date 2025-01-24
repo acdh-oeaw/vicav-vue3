@@ -114,20 +114,6 @@ const personsFilter = computed(() =>
 	simpleItems.value
 		.filter((item) => {
 			if (!params.value.dataTypes.includes(item.dataType)) return false;
-			if (persons.value.length > 0) {
-				const found = item.person.map((p) => persons.value.includes(p.name));
-				if (found.includes(true)) return true;
-			}
-			if (places.value.length > 0) {
-				const found = places.value.map((place) => {
-					const p = place.split(":");
-					if (p[0] === "region" && item.place.region === p[1]) return true;
-					if (p[0] === "country" && item.place.country === p[1]) return true;
-					if (p[0] === item.place.settlement) return true;
-					return false;
-				});
-				if (found.includes(true)) return true;
-			}
 			if (sex.value.length > 0) {
 				if (
 					// If none of the participants are of the given sex
@@ -135,9 +121,29 @@ const personsFilter = computed(() =>
 				)
 					return false;
 			}
-			return item.person
-				.map((p) => age.value[0]! > parseInt(p.age) && age.value[1]! < parseInt(p.age))
+			console.log(
+				item.person.map((p) => age.value[0]! < parseInt(p.age) && age.value[1]! > parseInt(p.age)),
+			);
+			if (
+				!item.person
+					.map((p) => age.value[0]! < parseInt(p.age) && age.value[1]! > parseInt(p.age))
+					.includes(true)
+			)
+				return false;
+
+			const matchPerson = item.person.map((p) => persons.value.includes(p.name)).includes(true);
+
+			const matchPlace = places.value
+				.map((place) => {
+					const p = place.split(":");
+					if (p[0] === "region" && item.place.region === p[1]) return true;
+					if (p[0] === "country" && item.place.country === p[1]) return true;
+					if (p[0] === item.place.settlement) return true;
+					return false;
+				})
 				.includes(true);
+
+			return matchPerson || matchPlace;
 		})
 		.map((item) => item.id),
 );
@@ -148,6 +154,7 @@ const filterFunction = function (list: Array<string>, searchTerm: string) {
 	});
 };
 const resultParams = computed(() => {
+	console.log(personsFilter);
 	return {
 		word: words.value.join(","),
 		comment: comment.value,
