@@ -45,6 +45,9 @@ watch(
 	},
 	{ deep: true },
 );
+const update = function (event) {
+	model.value = event;
+};
 </script>
 
 <template>
@@ -60,8 +63,9 @@ watch(
 			<TagsInputRoot
 				v-slot="{ modelValue: tags }"
 				class="my-2 flex w-full flex-wrap items-center gap-2 border-gray-300 bg-white px-3 py-2 shadow"
-				delimiter=""
+				delimiter=" "
 				:model-value="model"
+				@update:model-value="update"
 			>
 				<TagsInputItem
 					v-for="item in tags"
@@ -76,7 +80,7 @@ watch(
 								: item
 						}}
 					</TagsInputItemText>
-					<TagsInputItemDelete>
+					<TagsInputItemDelete as-child>
 						<Icon icon="lucide:x" />
 					</TagsInputItemDelete>
 				</TagsInputItem>
