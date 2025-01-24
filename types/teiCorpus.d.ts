@@ -14,6 +14,8 @@ export type simpleTEIMetadata = {
 	resp: string;
 	pubDate: string | TeiDate;
 	recordingDate?: string | TeiDate;
+	duration?: string;
+	audioAvailability: string;
 	place: {
 		settlement: string;
 		country: string;

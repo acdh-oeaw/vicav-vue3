@@ -48,6 +48,8 @@ const extractMetadata = function (
 	const template = {
 		id: "",
 		recordingDate: "",
+		audioAvailability: "restricted",
+		duration: "",
 		pubDate: "",
 		place: {
 			settlement: "",
@@ -107,6 +109,21 @@ const extractMetadata = function (
 		}
 	}
 
+	if (item.teiHeader.fileDesc.sourceDesc.recordingStmt?.recording) {
+		const duration = parseInt(
+			item.teiHeader.fileDesc.sourceDesc.recordingStmt.recording["@dur-iso"]
+				.replace("PT", "")
+				.replace(".0", ""),
+		);
+		const durHours = Math.floor(duration / 3600);
+		const durSeconds = Math.floor(duration % 60);
+		const durMinutes = Math.floor(((duration % 3600) - durSeconds) / 60);
+		template.duration = `${
+			durHours ? `${String(durHours).padStart(2, "0")}:` : ""
+		}${String(durMinutes).padStart(2, "0")}:${String(durSeconds).padStart(2, "0")}`;
+		template.audioAvailability = item.teiHeader.fileDesc.publicationStmt.availability["@status"];
+	}
+
 	if (
 		template.dataType === "CorpusText" &&
 		item.teiHeader.fileDesc.sourceDesc.recordingStmt?.recording.respStmt?.persName &&
@@ -122,7 +139,6 @@ const extractMetadata = function (
 				return false;
 			}
 		});
-		console.log(respPerson);
 		let name;
 		if (respPerson?.persName) {
 			const persName2 = respPerson.persName as PersName;

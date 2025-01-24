@@ -5,6 +5,7 @@ import {
 	createColumnHelper,
 	type Table,
 } from "@tanstack/vue-table";
+import { Volume2, VolumeX } from "lucide-vue-next";
 import { h } from "vue";
 
 import { useTEIHeaders } from "@/composables/use-tei-headers";
@@ -120,6 +121,23 @@ const columns = ref([
 		id: "respPerson",
 		cell: (info) => info.getValue(),
 		header: "Interviewer",
+		footer: (props) => props.column.id,
+	}),
+
+	columnHelper.accessor((row) => row.duration, {
+		id: "duration",
+		cell: (info) => info.getValue(),
+		header: "Duration",
+		footer: (props) => props.column.id,
+	}),
+
+	columnHelper.accessor((row) => row.audioAvailability, {
+		id: "audioAvailability",
+		cell: (info) =>
+			info.getValue() === "free"
+				? h(Volume2, { title: info.getValue() })
+				: h(VolumeX, { title: info.getValue() }),
+		header: "Avaiilability",
 		footer: (props) => props.column.id,
 	}),
 ]);
