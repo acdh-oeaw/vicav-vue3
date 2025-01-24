@@ -25,7 +25,6 @@ const extractPersons = function (item: TEI, corpusMetadata: TeiHeader | undefine
 				return (item["@sameAs"] ?? item.$ ?? "").replace("corpus:", "");
 			})
 			.filter((item: string | undefined) => item);
-
 		for (const personId of persons) {
 			const person = corpusPersons.find((item: Person) => item["@id"] === personId);
 			if (person)
