@@ -95,8 +95,6 @@ export type PersName = {
 	"@id": string;
 	"@full"?: string;
 	$?: string;
-	"@forename"?: string;
-	"@surname"?: string;
 	forename?: XmlTextNode;
 	surname?: XmlTextNode;
 };
@@ -165,7 +163,7 @@ export type Recording = {
 	"@dur-iso": string;
 	"@type": string;
 	date?: TeiDate;
-	respStmt: RespStmt;
+	respStmt?: RespStmt;
 	media?: Media;
 	p?: P;
 };
@@ -235,7 +233,7 @@ export type ProfileDesc = {
 };
 
 export type Taxonomy = {
-	categories?: Array<Category>;
+	categories: Array<Category>;
 };
 
 export type Category = {

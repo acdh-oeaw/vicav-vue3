@@ -106,33 +106,39 @@ const extractMetadata = function (
 			template.place.region = place.region.$;
 		}
 	}
+
 	if (
 		template.dataType === "CorpusText" &&
-		item.teiHeader.fileDesc.titleStmt.respStmts?.at(0)?.persName &&
+		item.teiHeader.fileDesc.sourceDesc.recordingStmt?.recording.respStmt?.persName &&
 		corpusMetadata
 	) {
-		const persName = item.teiHeader.fileDesc.titleStmt.respStmts[0]?.persName as TeiTypedTarget;
-		const monogram = (persName["@ref"] ?? "missing persName").replace("corpus:", "");
+		const persName = item.teiHeader.fileDesc.sourceDesc.recordingStmt.recording.respStmt
+			.persName as TeiTypedTarget;
+
 		const respPerson = corpusMetadata.fileDesc.titleStmt.respStmts?.find((resp: RespStmt) => {
 			if (resp.persName && isPersName(resp.persName)) {
-				const persName = resp.persName;
-				return persName["@id"] === monogram;
+				return resp.persName["@ref"] === persName["@ref"];
 			} else {
 				return false;
 			}
 		});
-
+		console.log(respPerson);
 		let name;
 		if (respPerson?.persName) {
 			const persName2 = respPerson.persName as PersName;
 			name =
-				persName2["@forename"] && persName2["@surname"]
-					? `${persName2["@forename"]} ${persName2["@surname"]}`
+				persName2.forename && persName2.surname
+					? `${persName2.forename.$} ${persName2.surname.$}`
 					: persName2.$;
 		} else {
-			name = monogram;
+			name = (persName["@ref"] ?? "missing persName").replace("corpus:", "");
 		}
 		if (name) template.resp = name;
+	} else if (
+		template.dataType === "CorpusText" &&
+		!item.teiHeader.fileDesc.sourceDesc.recordingStmt?.recording.respStmt
+	) {
+		template.resp = "Unknown";
 	}
 
 	template.person = extractPersons(item, corpusMetadata);
@@ -145,10 +151,10 @@ const extractMetadata = function (
 			categories: [],
 		};
 		corpusMetadata.encodingDesc.classDecl?.taxonomies.forEach((t) => {
-			mergedTaxonomies.categories = mergedTaxonomies.categories?.concat(t.categories!);
+			mergedTaxonomies.categories = mergedTaxonomies.categories.concat(t.categories);
 			return mergedTaxonomies;
 		});
-		const category = mergedTaxonomies.categories?.find(
+		const category = mergedTaxonomies.categories.find(
 			(cat) => cat["@id"] === categoryId?.replace("corpus:", ""),
 		);
 
@@ -185,7 +191,7 @@ function isTEIs(item: TeiCorpus | object): item is TeiCorpus {
 }
 
 function isPersName(item: PersName | object): item is PersName {
-	return Object.hasOwn(item, "@id");
+	return Object.hasOwn(item, "@ref");
 }
 
 export function useTEIHeaders() {
