@@ -16,6 +16,7 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+const { params } = toRefs(props);
 
 const { simpleItems } = useTEIHeaders();
 const openNewWindowFromAnchor = useAnchorClickHandler();
@@ -24,7 +25,9 @@ const items = computed(() => {
 	return simpleItems.value.filter((i) => props.params.dataTypes.includes(i.dataType));
 });
 
-const categories = [...new Set(items.value.map((i) => i.category))];
+const categories = [
+	...new Set(items.value.map((i) => i.category).filter((category) => category !== "")),
+];
 
 const columns = ref([
 	columnHelper.accessor((row) => row.label, {
@@ -81,13 +84,6 @@ const columns = ref([
 		footer: (props) => props.column.id,
 	}),
 
-	columnHelper.accessor((row) => row.place.region, {
-		id: "region",
-		cell: (info) => info.getValue(),
-		header: "Region",
-		footer: (props) => props.column.id,
-	}),
-
 	columnHelper.accessor((row) => row.category, {
 		id: "dataType",
 		cell: (info) => {
@@ -105,7 +101,7 @@ const columns = ref([
 	columnHelper.accessor((row) => row.place.settlement, {
 		id: "settlement",
 		cell: (info) => info.getValue(),
-		header: "Settlement",
+		header: "Location",
 		footer: (props) => props.column.id,
 	}),
 
@@ -125,7 +121,17 @@ const columns = ref([
 ]);
 
 const tables: Ref<Table<Array<simpleTEIMetadata>> | null> = ref(null);
-const columnFilters = ref<ColumnFiltersState>([]);
+const columnFilters = ref<ColumnFiltersState>(
+	props.params.filters ? props.params.filters.map((f) => ({ id: f.key, value: f.value })) : [],
+);
+
+watch(
+	() => params.value.filters,
+	() => {
+		if (!params.value.filters) return;
+		columnFilters.value = params.value.filters.map((f) => ({ id: f.key, value: f.value }));
+	},
+);
 
 const registerTable = function (table: Table<Array<simpleTEIMetadata>>) {
 	tables.value = table;

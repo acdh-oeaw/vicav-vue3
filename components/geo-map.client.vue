@@ -74,7 +74,14 @@ const ptDistanceSq = function (pt1: LeafletPoint, pt2: LeafletPoint): number {
 const addNearbyDataPopup = function (marker: LeafletMarker) {
 	const featureGroup = context.featureGroups.markers;
 	const map = context.map;
-	if (featureGroup === null || map === null) return;
+	if (
+		featureGroup === null ||
+		map === null ||
+		marker.feature!.properties!.targetType === null ||
+		marker.feature!.properties!.targetType === "" ||
+		marker.feature!.properties!.targetId
+	)
+		return;
 
 	const distance = Math.floor(2 * map.getZoom());
 	const nearbyMarkerData: Array<Feature> = [];

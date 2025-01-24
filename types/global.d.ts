@@ -218,6 +218,14 @@ export const DataTableSchema = z.object({
 	params: z
 		.object({
 			dataTypes: z.array(z.enum(["Profile", "Text", "SampleText", "Feature", "CorpusText"])),
+			filters: z
+				.array(
+					z.object({
+						key: z.string(),
+						value: z.string(),
+					}),
+				)
+				.optional(),
 		})
 		.merge(TextId.partial())
 		.merge(TeiSource.partial()),
