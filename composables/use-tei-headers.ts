@@ -151,19 +151,13 @@ const extractMetadata = function (
 					if (resp2.persName) {
 						return resp2.persName["@ref"] === resp.persName["@ref"];
 					} else {
-						return false;
+						const persName = respPerson.persName as PersName;
+						return {
+							given: persName.forename.$,
+							family: persName.surname.$,
+						};
 					}
 				});
-
-				if (!respPerson) {
-					return false;
-				} else {
-					const persName = respPerson.persName as PersName;
-					return {
-						given: persName["@forename"],
-						family: persName["@surname"],
-					};
-				}
 			});
 	}
 

@@ -21,7 +21,8 @@ const isLoading = computed(() => {
 });
 
 const author = computed(() => {
-	return header.author;
+	console.log(header);
+	return header?.author;
 });
 </script>
 
@@ -36,7 +37,8 @@ const author = computed(() => {
 		<Citation
 			:author="author"
 			:container-title="config?.projectConfig?.title"
-			:editor="config?.projectConfig?.editor"
+			:editor="config?.projectConfig?.editors"
+			:title="`${header.label} - ${header?.person.at(0).name}`"
 			type="entry"
 			:url="config?.projectConfig?.baseURIPublic"
 		></Citation>
