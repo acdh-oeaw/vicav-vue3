@@ -1,6 +1,8 @@
 <script lang="ts" setup>
 import type { FeatureWindowItem } from "@/types/global.d";
 
+const { simpleItems } = useTEIHeaders();
+
 interface Props {
 	params: FeatureWindowItem["params"];
 }
@@ -8,13 +10,18 @@ interface Props {
 const props = defineProps<Props>();
 const { params } = toRefs(props);
 const tooltip: Ref<HTMLElement | null> = ref(null);
+const { data: config } = useProjectInfo();
 
 const { data, isPending, isPlaceholderData } = useFeatureById(params);
 const openNewWindowFromAnchor = useAnchorClickHandler();
 const { showTooltip, tooltipContent, handleHoverTooltip } = useHoverTooltipHandler(tooltip);
-
+const header = simpleItems.value.find((i) => i.id === params.value.textId);
 const isLoading = computed(() => {
 	return isPending.value || isPlaceholderData.value;
+});
+
+const author = computed(() => {
+	return header.author;
 });
 </script>
 
@@ -26,6 +33,13 @@ const isLoading = computed(() => {
 		<!-- eslint-disable vue/no-v-html,
 			vuejs-accessibility/mouse-events-have-key-events,
 			vuejs-accessibility/click-events-have-key-events, vuejs-accessibility/no-static-element-interactions -->
+		<Citation
+			:author="author"
+			:container-title="config?.projectConfig?.title"
+			:editor="config?.projectConfig?.editor"
+			type="entry"
+			:url="config?.projectConfig?.baseURIPublic"
+		></Citation>
 
 		<div
 			v-if="data"

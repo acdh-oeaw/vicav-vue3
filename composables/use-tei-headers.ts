@@ -140,6 +140,33 @@ const extractMetadata = function (
 		template.resp = "Unknown";
 	}
 
+	if (
+		item.teiHeader.fileDesc.titleStmt.respStmts?.find((r) => r.persName && r.resp.$ === "author") &&
+		corpusMetadata
+	) {
+		template.author = item.teiHeader.fileDesc.titleStmt.respStmts
+			.filter((r) => r.persName && r.resp.$ === "author")
+			.map((resp) => {
+				const respPerson = corpusMetadata.fileDesc.titleStmt.respStmts?.find((resp2: RespStmt) => {
+					if (resp2.persName) {
+						return resp2.persName["@ref"] === resp.persName["@ref"];
+					} else {
+						return false;
+					}
+				});
+
+				if (!respPerson) {
+					return false;
+				} else {
+					const persName = respPerson.persName as PersName;
+					return {
+						given: persName["@forename"],
+						family: persName["@surname"],
+					};
+				}
+			});
+	}
+
 	template.person = extractPersons(item, corpusMetadata);
 	if (template.dataType === "CorpusText" && corpusMetadata) {
 		const categoryId = item.teiHeader.profileDesc?.textClass?.catRef
