@@ -45,8 +45,8 @@ watch(
 	},
 	{ deep: true },
 );
-const update = function (event) {
-	model.value = event;
+const tagsUpdated = function (value: Array<string>) {
+	model.value = value;
 };
 </script>
 
@@ -65,7 +65,7 @@ const update = function (event) {
 				class="my-2 flex w-full flex-wrap items-center gap-2 border-gray-300 bg-white px-3 py-2 shadow"
 				delimiter=" "
 				:model-value="model"
-				@update:model-value="update"
+				@update:model-value="tagsUpdated"
 			>
 				<TagsInputItem
 					v-for="item in tags"
