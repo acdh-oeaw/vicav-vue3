@@ -121,7 +121,6 @@ const extractMetadata = function (
 				return false;
 			}
 		});
-		console.log(respPerson);
 		let name;
 		if (respPerson?.persName) {
 			const persName2 = respPerson.persName as PersName;
@@ -141,11 +140,13 @@ const extractMetadata = function (
 	}
 
 	if (
-		item.teiHeader.fileDesc.titleStmt.respStmts?.find((r) => r.persName && r.resp.$ === "author") &&
+		item.teiHeader.fileDesc.titleStmt.respStmts?.find((r) =>
+			["author", "recording", "principal"].includes(r.resp.$),
+		) &&
 		corpusMetadata
 	) {
 		template.author = item.teiHeader.fileDesc.titleStmt.respStmts
-			.filter((r) => r.resp.$ === "author")
+			.filter((r) => ["author", "recording", "principal"].includes(r.resp.$))
 			.map((resp) => {
 				const respPerson = corpusMetadata.fileDesc.titleStmt.respStmts?.find((resp2: RespStmt) => {
 					if (resp2.persName) {

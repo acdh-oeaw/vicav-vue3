@@ -115,51 +115,52 @@ watch(utteranceElements.value, (value) => {
 		<div :id="params.textId" ref="utterancesWrapper" class="p-4">
 			<h2 class="m-3 text-lg">{{ props.params.label }}</h2>
 
-		<table class="m-3 border border-gray-300">
-			<thead>
-				<tr></tr>
-				<tr></tr>
-			</thead>
-			<tbody>
-				<tr>
-					<th>Contributed by:</th>
-					<td>{{ teiHeader?.resp }}</td>
-				</tr>
-				<tr>
-					<th>Speakers:</th>
+			<table class="m-3 border border-gray-300">
+				<thead>
+					<tr></tr>
+					<tr></tr>
+				</thead>
+				<tbody>
+					<tr>
+						<th>Contributed by:</th>
+						<td>{{ teiHeader?.resp }}</td>
+					</tr>
+					<tr>
+						<th>Speakers:</th>
+						<td>
+							<span v-for="(person, index) in teiHeader?.person" :key="index">
+								{{ person.name }} (age: {{ person.age }}, sex: {{ person.sex }})
+								<span v-if="index < (teiHeader?.person.length || 1) - 1">, </span>
+							</span>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+			<table>
+				<tr
+					v-for="u in utterances"
+					:id="u.id"
+					:key="u.id"
+					ref="utteranceElements"
+					class="corpus-utterance u table-row"
+				>
 					<td>
-						<span v-for="(person, index) in teiHeader?.person" :key="index">
-							{{ person.name }} (age: {{ person.age }}, sex: {{ person.sex }})
-							<span v-if="index < (teiHeader?.person.length || 1) - 1">, </span>
-						</span>
+						<a v-if="u.audio" class="play mt-1"
+							><Play class="size-4" /><span class="hidden">Play</span></a
+						>
+						<!-- eslint-disable-next-line vuejs-accessibility/media-has-caption -->
+						<audio v-if="u.audio" hidden="hidden">
+							<source :src="u.audio" />
+						</audio>
 					</td>
+					<th class="min-w-fit px-3 font-bold">
+						{{ u.id }}
+					</th>
+					<td class="table-cell" v-html="u.content"></td>
 				</tr>
-			</tbody>
-		</table>
-		<table>
-			<tr
-				v-for="u in utterances"
-				:id="u.id"
-				:key="u.id"
-				ref="utteranceElements"
-				class="corpus-utterance u table-row"
-			>
-				<td>
-					<a v-if="u.audio" class="play mt-1"
-						><Play class="size-4" /><span class="hidden">Play</span></a
-					>
-					<!-- eslint-disable-next-line vuejs-accessibility/media-has-caption -->
-					<audio v-if="u.audio" hidden="hidden">
-						<source :src="u.audio" />
-					</audio>
-				</td>
-				<th class="min-w-fit px-3 font-bold">
-					{{ u.id }}
-				</th>
-				<td class="table-cell" v-html="u.content"></td>
-			</tr>
-		</table>
-		<InfiniteLoading v-if="!scrollComplete" @infinite="handleInfiniteScroll" />
+			</table>
+			<InfiniteLoading v-if="!scrollComplete" @infinite="handleInfiniteScroll" />
+		</div>
 	</div>
 </template>
 
