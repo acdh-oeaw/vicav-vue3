@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import type { FeatureWindowItem } from "@/types/global.d";
+import type { simpleTEIMetadata } from "@/types/teiCorpus.d";
 
 const { simpleItems } = useTEIHeaders();
 
@@ -9,20 +10,16 @@ interface Props {
 
 const props = defineProps<Props>();
 const { params } = toRefs(props);
+const queryParams = computed(() => {
+	return { textId: params.value.textId };
+});
 const tooltip: Ref<HTMLElement | null> = ref(null);
-const { data: config } = useProjectInfo();
-
-const { data, isPending, isPlaceholderData } = useFeatureById(params);
+const { data, isPending, isPlaceholderData } = useFeatureById(queryParams);
 const openNewWindowFromAnchor = useAnchorClickHandler();
 const { showTooltip, tooltipContent, handleHoverTooltip } = useHoverTooltipHandler(tooltip);
-const header = simpleItems.value.find((i) => i.id === params.value.textId);
+const header = simpleItems.value.find((i: simpleTEIMetadata) => i.id === params.value.textId);
 const isLoading = computed(() => {
 	return isPending.value || isPlaceholderData.value;
-});
-
-const author = computed(() => {
-	console.log(header);
-	return header?.author;
 });
 </script>
 
@@ -31,18 +28,13 @@ const author = computed(() => {
 		class="relative isolate grid size-full overflow-auto"
 		:class="{ 'opacity-50 grayscale': isLoading }"
 	>
+		<div v-if="params.showCitation">
+			<Citation :header="header" type="entry" />
+		</div>
+
 		<!-- eslint-disable vue/no-v-html,
 			vuejs-accessibility/mouse-events-have-key-events,
 			vuejs-accessibility/click-events-have-key-events, vuejs-accessibility/no-static-element-interactions -->
-		<Citation
-			:author="author"
-			:container-title="config?.projectConfig?.title"
-			:editor="config?.projectConfig?.editors"
-			:title="`${header.label} - ${header?.person.at(0).name}`"
-			type="entry"
-			:url="config?.projectConfig?.baseURIPublic"
-		></Citation>
-
 		<div
 			v-if="data"
 			class="prose max-w-3xl p-8"

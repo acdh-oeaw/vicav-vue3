@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/consistent-type-definitions */
+import type { CSLName } from "@citation-js/core";
 import type { JsonValue } from "type-fest";
 
 type simplePerson = {
@@ -9,6 +10,8 @@ type simplePerson = {
 export type simpleTEIMetadata = {
 	id: string;
 	label: string;
+	title: string;
+	author: Array<CSLName>;
 	dataType: DataTypesEnum;
 	category: string;
 	resp: string;

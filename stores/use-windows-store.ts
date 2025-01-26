@@ -6,6 +6,7 @@ import type { QueryParamsType } from "@/lib/api-client";
 import {
 	QueryString,
 	Schema,
+	ShowCitation,
 	TeiSource,
 	TextId,
 	type WindowItem,
@@ -188,7 +189,21 @@ export const useWindowsStore = defineStore("windows", () => {
 			params,
 		} as WindowItem);
 
-		return registry.value.get(id);
+		const w = registry.value.get(id);
+		const canCite = ShowCitation.safeParse(params);
+
+		if (canCite.success) {
+			w!.winbox.addControl({
+				index: 0,
+				class: "wb-cite",
+				click: function () {
+					//@ts-expect-error TODO distill a proper type for paramName
+					w!.params.showCitation = !w.params.showCitation;
+				},
+			});
+		}
+
+		return w;
 	}
 
 	function findWindowByTypeAndParam(

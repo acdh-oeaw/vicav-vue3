@@ -4,12 +4,16 @@ import type { ProfileWindowItem } from "@/types/global.d";
 interface Props {
 	params: ProfileWindowItem["params"];
 }
+const { simpleItems } = useTEIHeaders();
 
 const props = defineProps<Props>();
 const { params } = toRefs(props);
+const queryParams = computed(() => {
+	return { textId: params.value.textId };
+});
 const content = ref(null);
 
-const { data, isPending, isPlaceholderData } = useProfileById(params);
+const { data, isPending, isPlaceholderData } = useProfileById(queryParams);
 const openNewWindowFromAnchor = useAnchorClickHandler();
 const processImageGalleries = useImageGalleryProcessor(content as unknown as Ref<HTMLDivElement>);
 
@@ -19,6 +23,7 @@ const isLoading = computed(() => {
 watch(content, () => {
 	processImageGalleries();
 });
+const header = simpleItems.value.find((i) => i.id === params.value.textId);
 </script>
 
 <template>
@@ -26,7 +31,10 @@ watch(content, () => {
 		class="relative isolate grid size-full overflow-auto"
 		:class="{ 'opacity-50 grayscale': isLoading }"
 	>
-		<!-- eslint-disable-next-line vue/no-v-html, vuejs-accessibility/click-events-have-key-events, vuejs-accessibility/no-static-element-interactions -->
+		<div v-if="params.showCitation">
+			<Citation :header="header" type="entry" />
+		</div>
+		<!-- eslint-disable vue/no-v-html, vuejs-accessibility/click-events-have-key-events, vuejs-accessibility/no-static-element-interactions -->
 		<div
 			v-if="data"
 			ref="content"

@@ -107,9 +107,13 @@ watch(utteranceElements.value, (value) => {
 </script>
 
 <template>
-	<!-- eslint-disable tailwindcss/no-custom-classname, vue/no-v-html -->
-	<div :id="params.textId" ref="utterancesWrapper" class="p-4">
-		<h2 class="m-3 text-lg">{{ props.params.label }}</h2>
+	<div>
+		<div v-if="params.showCitation">
+			<Citation :header="teiHeader" type="entry" />
+		</div>
+		<!-- eslint-disable tailwindcss/no-custom-classname, vue/no-v-html -->
+		<div :id="params.textId" ref="utterancesWrapper" class="p-4">
+			<h2 class="m-3 text-lg">{{ props.params.label }}</h2>
 
 		<table class="m-3 border border-gray-300">
 			<thead>

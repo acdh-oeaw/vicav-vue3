@@ -71,7 +71,7 @@ declare module "@citation-js/core" {
 		citationNumber?: number;
 		collectionEditor?: Array<CSLName>;
 		collectionTitle?: string;
-		"container-title": string;
+		"container-title"?: string;
 		DOI?: string;
 		edition?: string;
 		editor?: Array<CSLName>;
@@ -115,6 +115,6 @@ declare module "@citation-js/core" {
 
 	export class Cite {
 		constructor(data: CSLJSON | Array<CSLJSON>);
-		format(any);
+		format(type: string, options: Record<string, string>);
 	}
 }

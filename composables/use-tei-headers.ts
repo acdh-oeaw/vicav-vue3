@@ -200,6 +200,11 @@ const extractMetadata = function (
 				: template.place.settlement;
 		}
 	}
+	template.title = item.teiHeader.fileDesc.titleStmt.titles?.at(0)
+		? template.person.at(0)?.name
+			? `${item.teiHeader.fileDesc.titleStmt.titles[0]!.$!} – ${template.person.at(0)?.name ?? ""}`
+			: item.teiHeader.fileDesc.titleStmt.titles[0]!.$!
+		: template.label;
 
 	template["@hasTEIw"] = item["@hasTEIw"] === "true" ? "true" : "false";
 	return template;
