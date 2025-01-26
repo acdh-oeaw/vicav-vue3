@@ -189,6 +189,7 @@ export const useWindowsStore = defineStore("windows", () => {
 		} as WindowItem);
 
 		const w = registry.value.get(id);
+
 		if (
 			["ExploreSamples", "Profile", "Feature", "CorpusText", "SampleText", "Text"].includes(
 				w!.targetType,
@@ -209,7 +210,6 @@ export const useWindowsStore = defineStore("windows", () => {
 				el.title = "Show citation";
 			}
 		}
-
 		return w;
 	}
 
@@ -314,6 +314,11 @@ export const useWindowsStore = defineStore("windows", () => {
 			}
 		}
 	}
+
+	watch([() => registry.value.size, arrangement], () => {
+		arrangeWindows();
+		updateUrl();
+	});
 
 	function serializeWindowStates() {
 		const windowStates: Array<WindowState> = [];
