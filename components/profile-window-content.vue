@@ -38,7 +38,7 @@ const header = simpleItems.value.find((i) => i.id === params.value.textId);
 		<div
 			v-if="data"
 			ref="content"
-			class="prose max-w-3xl p-8"
+			class="prose max-w-3xl px-8"
 			@click="openNewWindowFromAnchor"
 			v-html="data"
 		/>

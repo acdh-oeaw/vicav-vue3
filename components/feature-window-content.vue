@@ -37,7 +37,7 @@ const isLoading = computed(() => {
 			vuejs-accessibility/click-events-have-key-events, vuejs-accessibility/no-static-element-interactions -->
 		<div
 			v-if="data"
-			class="prose max-w-3xl p-8"
+			class="prose max-w-3xl px-8"
 			@click="openNewWindowFromAnchor"
 			@mouseover="handleHoverTooltip"
 			v-html="data"

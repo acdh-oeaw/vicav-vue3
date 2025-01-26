@@ -6,7 +6,6 @@ import type { QueryParamsType } from "@/lib/api-client";
 import {
 	QueryString,
 	Schema,
-	ShowCitation,
 	TeiSource,
 	TextId,
 	type WindowItem,
@@ -190,9 +189,11 @@ export const useWindowsStore = defineStore("windows", () => {
 		} as WindowItem);
 
 		const w = registry.value.get(id);
-		const canCite = ShowCitation.safeParse(params);
-
-		if (canCite.success) {
+		if (
+			["ExploreSamples", "Profile", "Feature", "CorpusText", "SampleText", "Text"].includes(
+				w!.targetType,
+			)
+		) {
 			w!.winbox.addControl({
 				index: 0,
 				class: "wb-cite",
@@ -201,6 +202,12 @@ export const useWindowsStore = defineStore("windows", () => {
 					w!.params.showCitation = !w.params.showCitation;
 				},
 			});
+			const winboxElement = w!.winbox.dom as HTMLElement;
+			const cite = winboxElement.querySelectorAll(".wb-cite");
+			if (cite.length > 0) {
+				const el = cite[0] as HTMLSpanElement;
+				el.title = "Show citation";
+			}
 		}
 
 		return w;
@@ -307,11 +314,6 @@ export const useWindowsStore = defineStore("windows", () => {
 			}
 		}
 	}
-
-	watch([() => registry.value.size, arrangement], () => {
-		arrangeWindows();
-		updateUrl();
-	});
 
 	function serializeWindowStates() {
 		const windowStates: Array<WindowState> = [];

@@ -28,7 +28,7 @@ export const TeiSource = z.object({
 	teiSource: z.string(),
 });
 export const ShowCitation = z.object({
-	showCitation: z.boolean().default(false),
+	showCitation: z.boolean(),
 });
 export const QueryString = z.object({
 	queryString: z.string(),

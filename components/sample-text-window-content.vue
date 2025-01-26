@@ -68,8 +68,7 @@ watch(content, () => {
 		></div>
 		<div
 			v-if="data"
-			ref="content"
-			class="prose max-w-3xl p-8"
+			class="prose max-w-3xl px-8"
 			@click="openNewWindowFromAnchor"
 			@mouseover="handleHoverTooltip"
 			v-html="data"

@@ -145,19 +145,25 @@ const extractMetadata = function (
 		corpusMetadata
 	) {
 		template.author = item.teiHeader.fileDesc.titleStmt.respStmts
-			.filter((r) => r.persName && r.resp.$ === "author")
+			.filter((r) => r.resp.$ === "author")
 			.map((resp) => {
 				const respPerson = corpusMetadata.fileDesc.titleStmt.respStmts?.find((resp2: RespStmt) => {
 					if (resp2.persName) {
-						return resp2.persName["@ref"] === resp.persName["@ref"];
+						return resp.persName!["@ref"] === resp2.persName["@ref"];
 					} else {
-						const persName = respPerson.persName as PersName;
-						return {
-							given: persName.forename.$,
-							family: persName.surname.$,
-						};
+						return false;
 					}
 				});
+
+				if (!respPerson) {
+					return { family: "", given: "" };
+				} else {
+					const persName = respPerson.persName as PersName;
+					return {
+						given: persName.forename!.$,
+						family: persName.surname!.$,
+					};
+				}
 			});
 	}
 
