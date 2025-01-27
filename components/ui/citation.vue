@@ -24,13 +24,13 @@ const data = computed<CSLJSON>(() =>
 				"container-title": config.value?.projectConfig?.title as string,
 				title: props.header.title as string,
 				author: props.header.author as Array<CSLName>,
-				issued: { "date-parts": [[2025, 2, 1]] } as CSLDate,
+				issued: { "date-parts": [config.value?.projectConfig?.pubDate] } as CSLDate,
 			}
 		: {
 				type: "software",
 				editor: config.value?.projectConfig?.editors as Array<CSLName>,
 				title: config.value?.projectConfig?.title,
-				issued: { "date-parts": [[2025, 2, 1]] } as CSLDate,
+				issued: { "date-parts": [config.value?.projectConfig?.pubDate] } as CSLDate,
 			},
 );
 
