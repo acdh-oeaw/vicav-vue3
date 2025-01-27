@@ -80,4 +80,12 @@ onMounted(() => {
 	mask-size: 100%;
 	mask-repeat: no-repeat;
 }
+
+.winbox .wb-cite {
+	background-color: hsl(var(--color-on-primary));
+	mask-image: url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%2224%22%20height=%2224%22%20viewBox=%220%200%2024%2024%22%20fill=%22none%22%20stroke=%22currentColor%22%20stroke-width=%222%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22%20class=%22lucide%20lucide-quote%22%3E%3Cpath%20d=%22M16%203a2%202%200%200%200-2%202v6a2%202%200%200%200%202%202%201%201%200%200%201%201%201v1a2%202%200%200%201-2%202%201%201%200%200%200-1%201v2a1%201%200%200%200%201%201%206%206%200%200%200%206-6V5a2%202%200%200%200-2-2z%22/%3E%3Cpath%20d=%22M5%203a2%202%200%200%200-2%202v6a2%202%200%200%200%202%202%201%201%200%200%201%201%201v1a2%202%200%200%201-2%202%201%201%200%200%200-1%201v2a1%201%200%200%200%201%201%206%206%200%200%200%206-6V5a2%202%200%200%200-2-2z%22/%3E%3C/svg%3E");
+	mask-position: 50% 50%;
+	mask-size: 60%;
+	mask-repeat: no-repeat;
+}
 </style>

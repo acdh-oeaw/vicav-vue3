@@ -6,9 +6,15 @@ type simplePerson = {
 	sex: string;
 	age: string;
 };
+type Author = {
+	given: string;
+	family: string;
+};
 export type simpleTEIMetadata = {
 	id: string;
 	label: string;
+	title: string;
+	author: Array<Author>;
 	dataType: DataTypesEnum;
 	category: string;
 	resp: string;

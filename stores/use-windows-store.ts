@@ -188,7 +188,29 @@ export const useWindowsStore = defineStore("windows", () => {
 			params,
 		} as WindowItem);
 
-		return registry.value.get(id);
+		const w = registry.value.get(id);
+
+		if (
+			["ExploreSamples", "Profile", "Feature", "CorpusText", "SampleText", "Text"].includes(
+				w!.targetType,
+			)
+		) {
+			w!.winbox.addControl({
+				index: 0,
+				class: "wb-cite",
+				click: function () {
+					//@ts-expect-error TODO distill a proper type for paramName
+					w!.params.showCitation = !w.params.showCitation;
+				},
+			});
+			const winboxElement = w!.winbox.dom as HTMLElement;
+			const cite = winboxElement.querySelectorAll(".wb-cite");
+			if (cite.length > 0) {
+				const el = cite[0] as HTMLSpanElement;
+				el.title = "Show citation";
+			}
+		}
+		return w;
 	}
 
 	function findWindowByTypeAndParam(

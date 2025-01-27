@@ -156,6 +156,35 @@ const extractMetadata = function (
 		template.resp = "Unknown";
 	}
 
+	if (
+		item.teiHeader.fileDesc.titleStmt.respStmts?.find((r) =>
+			["author", "recording", "principal"].includes(r.resp.$),
+		) &&
+		corpusMetadata
+	) {
+		template.author = item.teiHeader.fileDesc.titleStmt.respStmts
+			.filter((r) => ["author", "recording", "principal"].includes(r.resp.$))
+			.map((resp) => {
+				const respPerson = corpusMetadata.fileDesc.titleStmt.respStmts?.find((resp2: RespStmt) => {
+					if (resp2.persName) {
+						return resp.persName!["@ref"] === resp2.persName["@ref"];
+					} else {
+						return false;
+					}
+				});
+
+				if (!respPerson) {
+					return { family: "", given: "" };
+				} else {
+					const persName = respPerson.persName as PersName;
+					return {
+						given: persName.forename!.$,
+						family: persName.surname!.$,
+					};
+				}
+			});
+	}
+
 	template.person = extractPersons(item, corpusMetadata);
 	if (template.dataType === "CorpusText" && corpusMetadata) {
 		const categoryId = item.teiHeader.profileDesc?.textClass?.catRef
@@ -195,6 +224,11 @@ const extractMetadata = function (
 				: template.place.settlement;
 		}
 	}
+	template.title = item.teiHeader.fileDesc.titleStmt.titles?.at(0)
+		? template.person.at(0)?.name
+			? `${item.teiHeader.fileDesc.titleStmt.titles[0]!.$!} – ${template.person.at(0)?.name ?? ""}`
+			: item.teiHeader.fileDesc.titleStmt.titles[0]!.$!
+		: template.label;
 
 	template["@hasTEIw"] = item["@hasTEIw"] === "true" ? "true" : "false";
 	return template;
