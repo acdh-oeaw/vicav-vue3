@@ -4,6 +4,7 @@ import type { Feature, Point } from "geojson";
 import {
 	circleMarker,
 	geoJSON,
+	latLng,
 	type Map as LeafletMap,
 	map as createMap,
 	type Marker as LeafletMarker,
@@ -40,17 +41,16 @@ interface ComponentPopupInfo {
 	};
 }
 
-const popupElements = ref<Array<typeof GeoMapPopupContent>>([]);
+const popupElements = ref<Map<string, globalThis.ComponentPublicInstance>>(new Map());
 const componentPopups = ref<Array<ComponentPopupInfo>>([]);
 const openedPopupId = ref<number | null>(null);
 const elementRef = ref<HTMLElement | null>(null);
 
 watchEffect(() => {
 	componentPopups.value.forEach((popup) => {
-		const element = popupElements.value.find((popupElement) => popup.id === popupElement.id);
+		const element = popupElements.value.get(popup.id);
 		const leafletMarker = context.featureGroups.markers?.getLayer(parseInt(popup.id));
 		if (leafletMarker == null || element == null) return;
-
 		leafletMarker.bindPopup(element.$el, { minWidth: 150 });
 	});
 });
@@ -69,6 +69,49 @@ const ptDistanceSq = function (pt1: LeafletPoint, pt2: LeafletPoint): number {
 	return dx * dx + dy * dy;
 };
 
+const markerGrid = computed(() => {
+	const markerGrid: Record<number, Record<number, Array<Feature<Point, MarkerProperties>>>> = {};
+	const markers = Object.values(props.markers);
+	markers.forEach((marker) => {
+		if (!marker.geometry?.coordinates || marker.geometry.coordinates.length < 2) return;
+		const lat = Math.floor(marker.geometry.coordinates[1]!);
+		const long = Math.floor(marker.geometry.coordinates[0]!);
+		if (!markerGrid[lat]) {
+			markerGrid[lat] = {};
+		}
+		if (!markerGrid[lat][long]) {
+			markerGrid[lat][long] = [];
+		}
+		markerGrid[lat][long].push(marker);
+	});
+	return markerGrid;
+});
+
+function getNearbyMarkersBasedOnGrid(marker: LeafletMarker, distance: number): Array<Feature> {
+	if (context.map === null) return [];
+	const lat = Math.floor(marker.getLatLng().lat);
+	const long = Math.floor(marker.getLatLng().lng);
+	const nearbyMarkers: Array<Feature> = [];
+	const pxSq = distance * distance;
+	const markerPt = context.map.latLngToLayerPoint(marker.getLatLng());
+	console.log(distance, lat, long);
+	for (let i = lat - distance; i <= lat + distance; i++) {
+		for (let j = long - distance; j <= long + distance; j++) {
+			if (markerGrid.value[i] && markerGrid.value[i]![j]) {
+				markerGrid.value[i]![j]?.forEach((m) => {
+					const mPt = context.map!.latLngToLayerPoint(
+						latLng(m.geometry.coordinates[1]!, m.geometry.coordinates[0]!),
+					);
+					if (ptDistanceSq(mPt, markerPt) < pxSq) {
+						nearbyMarkers.push(m);
+					}
+				});
+			}
+		}
+	}
+	return nearbyMarkers;
+}
+
 // Bind a popup listing nearby data to markers close to each other.
 // Remove existing if there are no nearby markers on the map any more.
 const addNearbyDataPopup = function (marker: LeafletMarker) {
@@ -77,20 +120,8 @@ const addNearbyDataPopup = function (marker: LeafletMarker) {
 	if (featureGroup === null || map === null) return;
 
 	const distance = Math.floor(2 * map.getZoom());
-	const nearbyMarkerData: Array<Feature> = [];
-	const pxSq = distance * distance;
-	const markerPt = map.latLngToLayerPoint(marker.getLatLng());
-
 	const id = featureGroup.getLayerId(marker);
-	featureGroup.getLayers().forEach((m) => {
-		if (map.hasLayer(m)) {
-			const marker: LeafletMarker = m as LeafletMarker;
-			const mPt = map.latLngToLayerPoint(marker.getLatLng());
-			if (ptDistanceSq(mPt, markerPt) < pxSq) {
-				nearbyMarkerData.push(marker.feature!);
-			}
-		}
-	});
+	const nearbyMarkerData = getNearbyMarkersBasedOnGrid(marker, distance);
 
 	if (nearbyMarkerData.length > 1) {
 		const markers = nearbyMarkerData.sort((a, b) => {
@@ -255,7 +286,11 @@ provide(key, context);
 		v-bind="popupInfo.props"
 		:id="popupInfo.id"
 		:key="popupInfo.id"
-		ref="popupElements"
+		:ref="
+			(el) => {
+				if (el) popupElements.set(popupInfo.id, el as globalThis.ComponentPublicInstance);
+			}
+		"
 	/>
 </template>
 
