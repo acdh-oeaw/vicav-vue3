@@ -1,17 +1,18 @@
 <script setup lang="ts">
 const env = useRuntimeConfig();
 const { data: config } = useProjectInfo();
+const funders = computed(() => config.value?.projectConfig?.funders ?? []);
 </script>
 
 <template>
 	<footer
 		class="inset-x-0 bottom-0 h-7 bg-surface text-on-surface transition duration-500"
-		onmouseleave="document.querySelector('footer').classList.remove('-translate-y-80')"
+		onmouseleave="document.querySelector('footer').style.transform = `translateY(0)`"
 	>
 		<div class="flex items-center gap-2 border px-8 py-1.5 text-xs">
 			<div
 				class="h-4 flex-1"
-				onmouseover="document.querySelector('footer').classList.add('-translate-y-80')"
+				onmouseover="document.querySelector('footer').style.transform = `translateY(-${document.querySelector('#footer-content').clientHeight}px)`"
 			></div>
 			<span class="flex gap-1">
 				<span>&copy; {{ new Date().getUTCFullYear() }}</span>
@@ -35,10 +36,10 @@ const { data: config } = useProjectInfo();
 			</span>
 			<div
 				class="h-4 flex-1"
-				onmouseover="document.querySelector('footer').classList.add('-translate-y-80')"
+				onmouseover="document.querySelector('footer').style.transform = `translateY(-${document.querySelector('#footer-content').clientHeight}px)`"
 			></div>
 		</div>
-		<div class="mb-0 w-full bg-neutral-50 px-0 text-gray-900">
+		<div id="footer-content" class="mb-0 w-full bg-neutral-50 px-0 text-gray-900">
 			<div id="footer-full-content" class="mx-auto w-full px-4" tabindex="-1">
 				<div
 					class="footer-logo-widget mb-4 flex items-center border-b pb-4 pt-2 text-sm font-semibold"
@@ -75,7 +76,14 @@ const { data: config } = useProjectInfo();
 						</div>
 					</div>
 					<!-- .footer-widget -->
-					<div class="footer-widget mt-4 w-3/4 flex-none px-4 sm:w-1/2 md:w-1/3 lg:w-1/3">
+					<div
+						class="mt-4 max-w-[33.333%] flex-none px-4"
+						:class="
+							(funders.length ?? 0) > 0
+								? 'w-auto md:w-auto lg:w-auto'
+								: 'w-3/4 sm:w-1/2 md:w-1/3 lg:w-1/3'
+						"
+					>
 						<div>
 							<p class="mb-4 mt-0 block">
 								ACDH-CH
@@ -100,7 +108,10 @@ const { data: config } = useProjectInfo();
 						</div>
 					</div>
 					<!-- .footer-widget -->
-					<div class="footer-widget ml-auto mt-4 w-full flex-none px-4 sm:w-1/3 md:w-1/3 lg:w-1/4">
+					<div
+						class="ml-auto mt-4 w-full max-w-[33.333%] flex-none shrink-0 grow-0 px-4 sm:w-1/3 md:w-1/3 lg:w-1/4"
+						:class="(funders.length ?? 0) > 0 ? 'basis-1/4' : 'basis-1/3'"
+					>
 						<h6 class="mb-2 block font-bold">HELPDESK</h6>
 						<p class="mb-4 mt-0 block">
 							ACDH-CH runs a helpdesk offering advice for questions related to various digital
@@ -114,6 +125,34 @@ const { data: config } = useProjectInfo();
 								ASK US!
 							</a>
 						</p>
+					</div>
+					<!-- .footer-widget -->
+					<div
+						v-if="(funders.length ?? 0) > 0"
+						class="ml-auto mt-4 w-full max-w-[33.333%] shrink-0 grow-0 basis-1/4 px-4 sm:w-1/3 md:w-1/3 lg:w-1/4"
+					>
+						<h6 class="sr-only mb-2 block font-bold">Funding</h6>
+						<template v-for="funder in funders" :key="funder.funderLink">
+							<img
+								:alt="funder.logoID"
+								class="mb-4 mt-2 block"
+								:src="
+									funder.logoID?.startsWith('http')
+										? funder.logoID
+										: `/assets/images/${funder.logoID}.png`
+								"
+							/>
+							<p class="mb-4 mt-0 block text-sm">
+								{{ funder.text }}
+								<a
+									class="text-[#88dbdf] transition duration-200 ease-in-out hover:brightness-75"
+									:href="funder.funderLink"
+									target="_blank"
+								>
+									{{ funder.funderLink }}
+								</a>
+							</p>
+						</template>
 					</div>
 					<!-- .footer-widget -->
 				</div>
@@ -154,11 +193,6 @@ const { data: config } = useProjectInfo();
 .footer-logo-widget {
 	flex: 0 0 8.333%;
 	max-width: 8.333%;
-}
-
-.footer-widget {
-	flex: 0 0 33.333%;
-	max-width: 33.333%;
 }
 
 @keyframes slide-in-out {
