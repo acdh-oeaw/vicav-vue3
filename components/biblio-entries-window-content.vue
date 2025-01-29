@@ -26,14 +26,12 @@ const isMapQuery: Ref<boolean> = ref(false);
 
 const isFormOpen = ref(queryString.value === "");
 
-function submitNewQuery(): void {
+function submitNewQuery(map: boolean): void {
 	if (queryString.value === "") return;
 	if (!isTextQuery.value && !isMapQuery.value) isTextQuery.value = true;
 	params.value.queryString = queryString.value;
-	if (isTextQuery.value) {
-		emit("updateQueryParam", queryString.value);
-	}
-	if (isMapQuery.value) {
+	emit("updateQueryParam", queryString.value);
+	if (map) {
 		addWindow({
 			targetType: "WMap",
 			params: {
@@ -43,6 +41,7 @@ function submitNewQuery(): void {
 			title: `Bibl. Locations for "${queryString.value}"`,
 		});
 	}
+	isFormOpen.value = false;
 }
 </script>
 
@@ -109,43 +108,14 @@ function submitNewQuery(): void {
 						/>
 					</div>
 					<div class="my-3">
-						<button class="biblQueryBtn" :disabled="!queryString" @click="submitNewQuery">
-							Query
+						<button class="biblQueryBtn" :disabled="!queryString" @click="submitNewQuery(false)">
+							Query as List
 						</button>
 					</div>
-					<div class="mb-5 mt-2 flex">
-						<div class="flex flex-1 items-start">
-							<div class="flex h-5 items-center">
-								<input
-									id="isTextQuery"
-									v-model="isTextQuery"
-									class="focus:ring-3 size-4 rounded border border-gray-300 bg-gray-50 focus:ring-blue-300 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-blue-600 dark:focus:ring-offset-gray-800"
-									type="checkbox"
-								/>
-							</div>
-							<label
-								class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300"
-								for="isTextQuery"
-							>
-								Display as text
-							</label>
-						</div>
-						<div class="flex flex-1 items-start">
-							<div class="flex h-5 items-center">
-								<input
-									id="isMapQuery"
-									v-model="isMapQuery"
-									class="focus:ring-3 size-4 rounded border border-gray-300 bg-gray-50 focus:ring-blue-300 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary dark:focus:ring-offset-gray-800"
-									type="checkbox"
-								/>
-							</div>
-							<label
-								class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300"
-								for="isMapQuery"
-							>
-								Display on map
-							</label>
-						</div>
+					<div class="my-3">
+						<button class="biblQueryBtn" :disabled="!queryString" @click="submitNewQuery(true)">
+							Query as List & Map
+						</button>
 					</div>
 					<div class="pb-4">
 						<p>
