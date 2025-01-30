@@ -43,6 +43,12 @@ function submitNewQuery(map: boolean): void {
 	}
 	isFormOpen.value = false;
 }
+
+function submitNewQueryKeyup(event: KeyboardEvent): void {
+	if (event.key === "Enter") {
+		submitNewQuery(false);
+	}
+}
 </script>
 
 <template>
@@ -104,7 +110,7 @@ function submitNewQuery(map: boolean): void {
 							class="block w-full rounded border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
 							placeholder="Search in bibliographies&hellip;"
 							type="text"
-							@keyup.enter="submitNewQuery"
+							@keyup.enter="submitNewQueryKeyup"
 						/>
 					</div>
 					<div class="my-3">
