@@ -22,11 +22,27 @@ const facets = computed(() =>
 	[...props.column.getFacetedUniqueValues()]?.sort((a, b) => b[1] - a[1]),
 );
 
-const { handleSubmit } = useForm({
+const {
+	handleSubmit,
+	setFieldValue,
+	values: formValues,
+} = useForm({
 	initialValues: {
 		items: [...((props.column.getFilterValue() as Map<string, unknown>) ?? new Map()).keys()],
 	},
 });
+
+const dialogOpen = ref(false);
+watch(
+	() => dialogOpen.value,
+	() => {
+		if (!dialogOpen.value) return;
+		setFieldValue("items", [
+			...((props.column.getFilterValue() as Map<string, unknown>) ?? new Map()).keys(),
+		]);
+	},
+	{ immediate: true },
+);
 
 const { addColorVariant, buildFeatureValueId, setColor } = useColorsStore();
 const { colors } = storeToRefs(useColorsStore());
@@ -48,7 +64,24 @@ const onChange = (facet: string, checked: boolean) => {
 	}
 };
 
-const dialogOpen = ref(false);
+const allValuesSelected = computed(() => {
+	return facets.value.length === formValues.items.length;
+});
+
+function toggleAllValues() {
+	if (allValuesSelected.value) {
+		setFieldValue("items", []);
+	} else {
+		setFieldValue(
+			"items",
+			facets.value.map((facet) => facet[0]),
+		);
+		facets.value.forEach((facet) => {
+			if (colors.value.has(buildFeatureValueId(props.column.id, facet[0]))) return;
+			addColorVariant(props.column.id, facet[0]);
+		});
+	}
+}
 </script>
 
 <template>
@@ -68,6 +101,9 @@ const dialogOpen = ref(false);
 				</DialogHeader>
 
 				<FormField class="overflow-auto" name="items">
+					<Button class="ml-auto w-fit" type="button" variant="outline" @click="toggleAllValues"
+						>{{ allValuesSelected ? "Deselect" : "Select" }} all values</Button
+					>
 					<FormItem class="overflow-auto">
 						<FormField
 							v-for="facet in facets"
