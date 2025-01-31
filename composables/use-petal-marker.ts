@@ -1,4 +1,3 @@
-import type { Column } from "@tanstack/vue-table";
 import type { Feature as GeoJsonFeature, Point } from "geojson";
 import { divIcon, type LatLng, marker } from "leaflet";
 
@@ -10,7 +9,12 @@ const { tables } = storeToRefs(GeojsonStore);
 const url = "https://raw.githubusercontent.com/wibarab/wibarab-data/main/wibarab_varieties.geojson";
 const { buildFeatureValueId } = useColorsStore();
 
-function getPetalSVG(entries: Array<Column<never>>) {
+interface PetalEntry {
+	id: string;
+	strokeOnly?: boolean;
+}
+
+function getPetalSVG(entries: Array<PetalEntry>) {
 	const div = document.createElement("div");
 	div.className = "hover:scale-150 transition origin-center relative size-6";
 	const NUM_PETALS = entries.length;
@@ -23,6 +27,11 @@ function getPetalSVG(entries: Array<Column<never>>) {
 		const petal = document.createElementNS("http://www.w3.org/2000/svg", "use");
 		petal.setAttribute("href", "#petal");
 
+		if (value.strokeOnly) {
+			petal.style.stroke = `var(--${value.id}, #cccccc)`;
+			petal.style.fillOpacity = "0.2";
+			petal.style.strokeWidth = "20px";
+		}
 		petal.style.fill = `var(--${value.id}, #cccccc)`;
 		petal.style.transformOrigin = "bottom";
 		petal.style.transform = `rotate(${String((i * 360) / NUM_PETALS)}deg)`;
@@ -38,7 +47,7 @@ function getPetalSVG(entries: Array<Column<never>>) {
 
 export function usePetalMarker(feature: GeoJsonFeature<Point, MarkerProperties>, latlng: LatLng) {
 	const table = tables.value.get(url);
-	const columns = table
+	const features = table
 		?.getVisibleLeafColumns()
 		.filter(
 			(col) =>
@@ -49,17 +58,24 @@ export function usePetalMarker(feature: GeoJsonFeature<Point, MarkerProperties>,
 
 	const featureValues = table
 		?.getVisibleLeafColumns()
-		.filter((col) => col.getIsFiltered())
+		.filter(
+			(col) =>
+				col.getIsFiltered() &&
+				col.getFilterValue() &&
+				(col.getFilterValue() as Map<string, unknown>).size > 0,
+		)
 		.flatMap((col) =>
-			[...(col.getFilterValue() as Map<string, unknown>).keys()]
-				.filter((val) => val in (feature.properties[col.id as keyof MarkerProperties] as object))
-				.map((val) => ({
-					id: buildFeatureValueId(col.id, val),
-				})),
+			Object.keys(feature.properties[col.id as keyof MarkerProperties] ?? {}).map((val) => ({
+				id: (col.getFilterValue() as Map<string, unknown>).has(val)
+					? buildFeatureValueId(col.id, val)
+					: col.id,
+				// show "empty" petals for feature values that are not in the filter
+				strokeOnly: !(col.getFilterValue() as Map<string, unknown>).has(val),
+			})),
 		);
 
 	//@ts-expect-error missing accessorFn
-	const htmlContent = getPetalSVG(columns?.concat(featureValues)).outerHTML; // Example HTML content
+	const htmlContent = getPetalSVG(features?.concat(featureValues)).outerHTML; // Example HTML content
 	const customIcon = divIcon({
 		html: htmlContent,
 		className: "custom-marker-icon size-5", // Add custom CSS class for styling

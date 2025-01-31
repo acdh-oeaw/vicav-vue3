@@ -37,10 +37,7 @@ const { buildFeatureValueId } = useColorsStore();
 			<CollapsibleContent>
 				<div v-for="feature in activeFeatures" :key="feature.id" class="my-1">
 					<div class="flex items-start gap-2">
-						<svg
-							v-if="((feature.getFilterValue() as Map<string, number>) ?? []).size <= 0"
-							class="mt-0.5 size-3.5"
-						>
+						<svg class="mt-0.5 size-3.5">
 							<use href="#petal" :style="{ fill: `var(--${feature.id})` }"></use>
 						</svg>
 						<span>{{ feature.columnDef.header }} ({{ getMatchingRowCount(feature.id) }})</span>
