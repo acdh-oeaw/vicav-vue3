@@ -1,5 +1,6 @@
 <!-- eslint-disable @typescript-eslint/sort-type-constituents -->
 <script lang="ts" setup>
+import { Volume2, VolumeX } from "lucide-vue-next";
 import type { JsonObject } from "type-fest";
 
 import type { DataListWindowItem, DataTypesEnum } from "@/types/global.d";
@@ -94,27 +95,12 @@ const debugString = debug ? JSON.stringify(groupedItems, null, 2) : "";
 									{{ item.label }}
 								</a>
 								<span v-else> {{ item.label }} </span>
-								<span
-									v-if="
-										item.teiHeader.fileDesc.sourceDesc.recordingStmt &&
-										(item.teiHeader.fileDesc.sourceDesc.recordingStmt.recording.media?.['@url'] ||
-											item.teiHeader.fileDesc.sourceDesc.recordingStmt.recording.p?.ref)
-									"
-								>
-									&nbsp; {{ item.teiHeader.fileDesc.sourceDesc.recordingStmt.recording["@type"] }}
-									<span v-if="item.teiHeader.fileDesc.sourceDesc.recordingStmt.recording.media">
-										: {{ item.teiHeader.fileDesc.sourceDesc.recordingStmt.recording.media["@url"] }}
-									</span>
-									<span v-if="item.teiHeader.fileDesc.sourceDesc.recordingStmt.recording.p?.ref">
-										:
-										{{
-											item.teiHeader.fileDesc.sourceDesc.recordingStmt.recording.p.ref["@target"]
-										}}
-									</span>
-									<span v-if="item.teiHeader.profileDesc?.settingDesc?.setting?.placeName.$">
-										:
-										{{ item.teiHeader.profileDesc.settingDesc.setting.placeName.$ }}
-									</span>
+								<span> &nbsp; </span>
+								<span v-if="item.audioAvailability === 'free'">
+									<Volume2 class="size-4" title="Audio recording is publicly available" />
+								</span>
+								<span v-else>
+									<VolumeX class="size-4" title="Audio recording is restricted" />
 								</span>
 							</li>
 						</ul>
