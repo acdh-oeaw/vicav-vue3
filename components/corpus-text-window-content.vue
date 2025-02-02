@@ -16,6 +16,8 @@ const { simpleItems } = useTEIHeaders();
 const utterances = ref<Array<CorpusTextUtterances>>([]);
 const utterancesWrapper = ref<HTMLDivElement | null>(null);
 const utteranceElements = ref<Array<Element>>([]);
+const infinite = ref<HTMLDivElement | null>(null);
+
 const currentPage = ref(1);
 const api = useApiClient();
 const scrollComplete = ref<boolean>(false);
@@ -87,13 +89,13 @@ const scrollParentToChild = function (parent: Element, child: Element) {
 	}
 };
 
-onMounted(async () => {
-	const u = utteranceElements.value.find((u) => u.id === props.params.u);
-	const window = utterancesWrapper.value?.parentElement?.parentElement;
-	if (u !== undefined) scrollParentToChild(window!, u);
-});
-
 watch(utteranceElements.value, (value) => {
+	if (props.params.u) {
+		const window = utterancesWrapper.value?.parentElement?.parentElement;
+		const u = utteranceElements.value.find((u) => u.id === props.params.u);
+		if (u) scrollParentToChild(window!, u);
+		else if (infinite.value) scrollParentToChild(window!, infinite!.value.$el);
+	}
 	if (value.length > 0) {
 		value.forEach((u) => {
 			const playButton = u.querySelector("a.play");
@@ -159,7 +161,7 @@ watch(utteranceElements.value, (value) => {
 					<td class="table-cell" v-html="u.content"></td>
 				</tr>
 			</table>
-			<InfiniteLoading v-if="!scrollComplete" @infinite="handleInfiniteScroll" />
+			<InfiniteLoading v-if="!scrollComplete" ref="infinite" @infinite="handleInfiniteScroll" />
 		</div>
 	</div>
 </template>

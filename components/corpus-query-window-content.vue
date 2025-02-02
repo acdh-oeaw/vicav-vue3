@@ -142,7 +142,7 @@ const words: Ref<Array<string>> = ref([]);
 						</a>
 					</td>
 					<td class="pl-5 text-right" v-html="hit.content?.left"></td>
-					<td class="max-w-fit bg-[beige] px-[2px] text-center" v-html="hit.content?.kwic"></td>
+					<td class="max-w-fit bg-[beige] text-center" v-html="hit.content?.kwic"></td>
 					<td class="p-0" v-html="hit.content?.right"></td>
 				</tr>
 			</table>
