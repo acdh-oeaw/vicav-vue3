@@ -16,7 +16,7 @@ const { simpleItems } = useTEIHeaders();
 const utterances = ref<Array<CorpusTextUtterances>>([]);
 const utterancesWrapper = ref<HTMLDivElement | null>(null);
 const utteranceElements = ref<Array<Element>>([]);
-const infinite = ref<HTMLDivElement | null>(null);
+const infinite = ref<typeof InfiniteLoading | null>(null);
 
 const currentPage = ref(1);
 const api = useApiClient();
@@ -124,7 +124,7 @@ watch(utteranceElements.value, (value) => {
 				</thead>
 				<tbody>
 					<tr>
-						<th>Contributed by:</th>
+						<th>Recording:</th>
 						<td>{{ teiHeader?.resp }}</td>
 					</tr>
 					<tr>
