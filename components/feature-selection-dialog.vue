@@ -24,25 +24,26 @@ const facets = computed(() =>
 
 const { handleSubmit } = useForm({
 	initialValues: {
-		items: (props.column.getFilterValue() as Array<unknown>) ?? [],
+		items: [...((props.column.getFilterValue() as Map<string, unknown>) ?? new Map()).keys()],
 	},
 });
 
-const { addColorVariant, buildFeatureValueId, setColor, colors } = useColorsStore();
+const { addColorVariant, buildFeatureValueId, setColor } = useColorsStore();
+const { colors } = storeToRefs(useColorsStore());
 
-const onSubmit = handleSubmit((values: { items: Array<unknown> }) => {
+const onSubmit = handleSubmit((values: { items: Array<string> }) => {
 	if (values.items.length > 0) props.column.toggleVisibility(true);
-	props.column.setFilterValue(values.items);
+	props.column.setFilterValue(new Map(values.items.map((item) => [item, 1])));
 	values.items.forEach((element) => {
-		if (colors.has(buildFeatureValueId(props.column.id, element as string))) return;
-		addColorVariant(props.column.id, element as string);
+		if (colors.value.has(buildFeatureValueId(props.column.id, element))) return;
+		addColorVariant(props.column.id, element);
 	});
 	dialogOpen.value = false;
 });
 
 const onChange = (facet: string, checked: boolean) => {
 	if (checked) {
-		if (colors.has(buildFeatureValueId(props.column.id, facet))) return;
+		if (colors.value.has(buildFeatureValueId(props.column.id, facet))) return;
 		addColorVariant(props.column.id, facet);
 	}
 };

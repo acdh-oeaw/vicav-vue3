@@ -43,7 +43,7 @@ export function usePetalMarker(feature: GeoJsonFeature<Point, MarkerProperties>,
 		.filter(
 			(col) =>
 				col.getCanFilter() &&
-				(col.getFilterValue() as Array<unknown>).length === 0 &&
+				(col.getFilterValue() as Map<string, unknown>).size === 0 &&
 				Object.keys(feature.properties).find((k) => k === col.id),
 		);
 
@@ -51,7 +51,7 @@ export function usePetalMarker(feature: GeoJsonFeature<Point, MarkerProperties>,
 		?.getVisibleLeafColumns()
 		.filter((col) => col.getIsFiltered())
 		.flatMap((col) =>
-			(col.getFilterValue() as Array<string>)
+			[...(col.getFilterValue() as Map<string, unknown>).keys()]
 				.filter((val) => val in (feature.properties[col.id as keyof MarkerProperties] as object))
 				.map((val) => ({
 					id: buildFeatureValueId(col.id, val),

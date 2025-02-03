@@ -38,7 +38,7 @@ const { buildFeatureValueId } = useColorsStore();
 				<div v-for="feature in activeFeatures" :key="feature.id" class="my-1">
 					<div class="flex items-start gap-2">
 						<svg
-							v-if="((feature.getFilterValue() as Array<string>) ?? []).length <= 0"
+							v-if="((feature.getFilterValue() as Map<string, number>) ?? []).size <= 0"
 							class="mt-0.5 size-3.5"
 						>
 							<use href="#petal" :style="{ fill: `var(--${feature.id})` }"></use>
@@ -46,12 +46,14 @@ const { buildFeatureValueId } = useColorsStore();
 						<span>{{ feature.columnDef.header }} ({{ getMatchingRowCount(feature.id) }})</span>
 					</div>
 					<div
-						v-if="feature.getIsFiltered() && (feature.getFilterValue() as Array<string>).length > 0"
+						v-if="
+							feature.getIsFiltered() && (feature.getFilterValue() as Map<string, number>).size > 0
+						"
 						class="ml-4"
 					>
 						<div
 							v-for="[value, count] in [...feature.getFacetedUniqueValues().entries()].filter(
-								([value, count]) => (feature.getFilterValue() as Array<string>).includes(value),
+								([value, count]) => (feature.getFilterValue() as Map<string, number>).has(value),
 							)"
 							:key="value"
 							class="flex items-center gap-2"
