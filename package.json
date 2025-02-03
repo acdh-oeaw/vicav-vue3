@@ -28,7 +28,7 @@
 		"prepare": "run-s setup generate:api-client",
 		"setup": "is-ci || simple-git-hooks",
 		"start:preview": "nuxt preview --dotenv ./.env.local",
-		"start": "NUXT_PUBLIC_CURRENT_GIT_SHA=$(git rev-parse HEAD) && node .output/server/index.mjs",
+		"start": "node .output/server/index.mjs",
 		"start:local": "dotenv -e .env.local -- pnpm run start",
 		"test": "dotenv -e .env.local -- node checkenv.mjs && pnpm playwright install && pnpm validate",
 		"test:e2e": "playwright test",
@@ -37,7 +37,8 @@
 		"test:e2e:ui": "playwright test --ui",
 		"test:unit": "vitest --run --typecheck --passWithNoTests",
 		"types:check": "nuxt typecheck",
-		"validate": "run-p format:check lint:check types:check test:unit"
+		"validate": "run-p format:check lint:check types:check test:unit",
+		"heroku-postbuild": "node heroku-postbuild-cleanup.js"
 	},
 	"dependencies": {
 		"@acdh-oeaw/lib": "^0.1.12",
