@@ -20,7 +20,7 @@ await (async () => {
 		}
 	}
 	for await (const entry of glob(".*")) {
-		if (entry === ".output") {
+		if (entry === ".output" || entry === ".heroku") {
 			continue;
 		}
 		try {
