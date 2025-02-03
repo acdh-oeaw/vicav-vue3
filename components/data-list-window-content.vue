@@ -83,7 +83,7 @@ const debugString = debug ? JSON.stringify(groupedItems, null, 2) : "";
 							{{ dataTypes[dataType]!.name }}
 						</em>
 						<ul v-for="item in items" :key="item.id">
-							<li class="text-base">
+							<li class="flex text-base">
 								<a
 									v-if="item.dataType !== 'CorpusText' || item['@hasTEIw'] === 'true'"
 									class="text-primary underline"
@@ -96,11 +96,14 @@ const debugString = debug ? JSON.stringify(groupedItems, null, 2) : "";
 								</a>
 								<span v-else> {{ item.label }} </span>
 								<span> &nbsp; </span>
-								<span v-if="item.audioAvailability === 'free'">
-									<Volume2 class="size-4" title="Audio recording is publicly available" />
+								<span
+									v-if="item.audioAvailability === 'free'"
+									title="Audio recording is publicly available"
+								>
+									<Volume2 class="mx-2 mt-[2px] size-5" />
 								</span>
-								<span v-else>
-									<VolumeX class="size-4" title="Audio recording is restricted" />
+								<span v-else title="Audio recording is restricted">
+									<VolumeX class="mx-2 mt-[2px] size-5" />
 								</span>
 							</li>
 						</ul>
