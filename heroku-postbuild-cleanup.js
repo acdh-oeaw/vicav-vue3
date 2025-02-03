@@ -14,7 +14,11 @@ if (process.env.NODE_ENV !== "production") {
 
 await (async () => {
 	for await (const entry of glob("*")) {
-		if (entry === "heroku-postbuild-cleanup.js" || entry === "package.json") {
+		if (
+			entry === "heroku-postbuild-cleanup.js" ||
+			entry === "package.json" ||
+			entry === "pnpm-lock.yaml"
+		) {
 			continue;
 		}
 		try {
