@@ -36,7 +36,7 @@ const columns = ref([
 		cell: (info) => {
 			let linked_id: string | undefined = undefined;
 			let linked_type: string | undefined = undefined;
-			if (info.row.original.category === "VICAV Sample Text") {
+			if (info.row.original.category === "VICAV Sample Texts") {
 				linked_type = "SampleText";
 			} else if (info.row.original.category === "VICAV Feature List") {
 				linked_type = "Feature";

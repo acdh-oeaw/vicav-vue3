@@ -8,7 +8,9 @@ const props = defineProps<{
 const facets = computed(() =>
 	[...props.column.getFacetedUniqueValues()]?.sort((a, b) => b[1] - a[1]),
 );
-const selectedValues = computed(() => new Set(props.column?.getFilterValue() as Array<string>));
+const selectedValues = computed(
+	() => new Map(props.column?.getFilterValue() as Map<string, number>),
+);
 </script>
 
 <template>
@@ -29,9 +31,9 @@ const selectedValues = computed(() => new Set(props.column?.getFilterValue() as 
 						if (!checked) {
 							selectedValues.delete(facet[0]);
 						} else {
-							selectedValues.add(facet[0]);
+							selectedValues.set(facet[0], facet[1]);
 						}
-						column?.setFilterValue([...selectedValues]);
+						column?.setFilterValue(selectedValues);
 					}
 				"
 			>

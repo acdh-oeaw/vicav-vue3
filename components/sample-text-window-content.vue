@@ -30,6 +30,8 @@ watch(content, () => {
 		const stopButton = content.value.querySelector("a.stop");
 		const audio = content.value.querySelector("audio");
 
+		if (!playButton) return;
+
 		playButton!.addEventListener("click", () => {
 			audio!.play();
 			playButton?.classList.add("hidden");

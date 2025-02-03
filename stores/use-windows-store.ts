@@ -147,9 +147,9 @@ export const useWindowsStore = defineStore("windows", () => {
 		const winbox = new WinBox({
 			id,
 			title,
-			index: windowState.zIndex ? windowState.zIndex : undefined,
-			x: windowState.x ? windowState.x : "center",
-			y: windowState.y ? windowState.y : "center",
+			index: windowState.zIndex ?? undefined,
+			x: windowState.x ?? "center",
+			y: windowState.y ?? "center",
 			width: windowState.width,
 			height: windowState.height,
 			onfocus() {
@@ -351,7 +351,8 @@ export const useWindowsStore = defineStore("windows", () => {
 	}
 
 	function escapeUnicode(s: string) {
-		return [...s]
+		return s
+			.split("")
 			.map((c) =>
 				/^[\x20-\x7f]$/.test(c)
 					? c

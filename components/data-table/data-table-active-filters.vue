@@ -12,17 +12,14 @@ const activeFilterColumns = computed(() =>
 		.columnFilters.filter((c: ColumnFilter) => (c.value as Array<string>).length > 0),
 );
 function removeFilters(colId: string) {
-	props.table.getColumn(colId)?.setFilterValue([]);
+	props.table.getColumn(colId)?.setFilterValue(new Map());
 }
 function removeAllFilters() {
 	props.table.resetColumnFilters();
 }
 function removeValFromColumnFilter(col: ColumnFilter, val: string) {
-	const newFilter = (col.value as Array<string>).toSpliced(
-		(col.value as Array<string>).indexOf(val),
-		1,
-	);
-	props.table.getColumn(col.id)?.setFilterValue(newFilter);
+	(col.value as Map<string, number>).delete(val);
+	props.table.getColumn(col.id)?.setFilterValue(col.value);
 }
 </script>
 

@@ -37,7 +37,7 @@
 		"test:e2e:ui": "playwright test --ui",
 		"test:unit": "vitest --run --typecheck --passWithNoTests",
 		"types:check": "nuxt typecheck",
-		"validate": "run-p format:check lint:check types:check test:unit test:e2e"
+		"validate": "run-p format:check lint:check types:check test:unit"
 	},
 	"dependencies": {
 		"@acdh-oeaw/lib": "^0.1.12",

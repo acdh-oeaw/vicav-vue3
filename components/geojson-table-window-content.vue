@@ -75,13 +75,13 @@ const columns = computed(() => {
 											] ?? {},
 										);
 									},
-									filterFn: (row, columnId, filterValue) => {
+									filterFn: (row, columnId, filterValue: Map<string, unknown>) => {
 										if (!row.getVisibleCells().find((cell) => cell.column.id === columnId)) {
 											return true;
 										}
-										if (Object.keys(filterValue).length === 0) return true;
-										const filter = Object.values(filterValue).some((val) =>
-											(row.getValue(columnId) as Array<string>).includes(String(val)),
+										if (filterValue.size === 0) return true;
+										const filter = [...filterValue.keys()].some((val) =>
+											(row.getValue(columnId) as Array<string>).includes(val),
 										);
 										return filter;
 									},
@@ -138,28 +138,27 @@ const columnVisibility = computed(() => {
 
 function filterEmptyRows(row: Row<never>) {
 	const hidableVisibleCells = row.getVisibleCells().filter((cell) => cell.column.getCanHide());
+	if (hidableVisibleCells.length === 0) return true;
 	if (
-		hidableVisibleCells.length > 0 &&
-		hidableVisibleCells.every(
-			(cell) => !cell.getValue() || (cell.getValue() as string).length === 0,
-		)
+		hidableVisibleCells.some((cell) => !cell.getValue() || (cell.getValue() as string).length > 0)
 	)
-		return false;
-	return true;
+		return true;
+	return false;
 }
 
 function applyGlobalFilter(table: Table<FeatureType>) {
 	// re-apply global filter to remove empty lines from the table
-	table.resetGlobalFilter(true);
+	// table.resetGlobalFilter(true);
 	table.setGlobalFilter(true);
 }
 
-const { colors, addColor } = useColorsStore();
+const { addColor } = useColorsStore();
+const { colors } = storeToRefs(useColorsStore());
 function onVisibilityChange(props: { table: Table<FeatureType>; col: Record<string, boolean> }) {
 	applyGlobalFilter(props.table);
 	const changedColumnKey = Object.keys(props.col)[0]!;
 	const visibilityValue = props.col[changedColumnKey]!;
-	if (visibilityValue && !colors.has(changedColumnKey)) addColor(changedColumnKey);
+	if (visibilityValue && !colors.value.has(changedColumnKey)) addColor(changedColumnKey);
 }
 function registerTable(table: Table<FeatureType>) {
 	tables.value.set(url, table);

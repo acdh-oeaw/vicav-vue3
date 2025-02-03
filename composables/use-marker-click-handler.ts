@@ -14,7 +14,7 @@ export function useMarkerClickHandler() {
 
 		// if the marker has a targetId referring to an entry in the navbar (defined in projectConfig),
 		// update the corresponding window or open it if it's not open yet
-		openOrUpdateWindow(item as unknown as WindowItem, item.name ? item.name : "");
+		openOrUpdateWindow(item as unknown as WindowItem, item.name ?? "");
 	}
 
 	return openNewWindowFromMarker;
