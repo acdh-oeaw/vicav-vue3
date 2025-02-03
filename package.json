@@ -38,7 +38,7 @@
 		"test:unit": "vitest --run --typecheck --passWithNoTests",
 		"types:check": "nuxt typecheck",
 		"validate": "run-p format:check lint:check types:check test:unit",
-		"heroku-postbuild": "node heroku-postbuild-cleanup.js"
+		"heroku-postbuild": "pnpm run build && node heroku-postbuild-cleanup.js"
 	},
 	"dependencies": {
 		"@acdh-oeaw/lib": "^0.1.12",
