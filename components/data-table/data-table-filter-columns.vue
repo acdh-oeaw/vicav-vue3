@@ -13,7 +13,7 @@ const columns = computed(() => props.table.getAllColumns().filter((column) => co
 function titleCase(s: string) {
 	return s
 		.replace(/^[-_]*(.)/, (_, c) => c.toUpperCase()) // Initial char (after -/_)
-		.replace(/[-_]+(.)/g, (_, c) => " " + c.toUpperCase()); // First char after each -/_
+		.replace(/[-_]+(.)/g, (_, c) => ` ${c.toUpperCase()}`); // First char after each -/_
 }
 
 type visibilityState = "ALL_VISIBLE" | "SOME_VISIBLE" | "NONE_VISIBLE";
@@ -37,7 +37,7 @@ function toggleCategory(category: Column<never>) {
 	}
 	category.columns.forEach((c) => {
 		if (c.getIsVisible() !== targetVisibility) {
-			c.setFilterValue([]);
+			c.setFilterValue(new Map());
 			c.toggleVisibility(targetVisibility);
 		}
 	});
@@ -135,7 +135,7 @@ const visibilityToIcon: Record<visibilityState, Component> = {
 									@update:checked="
 										(value) => {
 											column.toggleVisibility(!!value);
-											column.setFilterValue([]);
+											column.setFilterValue(new Map());
 										}
 									"
 								>

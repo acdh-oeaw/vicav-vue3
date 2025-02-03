@@ -6,14 +6,22 @@ type simplePerson = {
 	sex: string;
 	age: string;
 };
+type Author = {
+	given: string;
+	family: string;
+};
 export type simpleTEIMetadata = {
 	id: string;
 	label: string;
+	title: string;
+	author: Array<Author>;
 	dataType: DataTypesEnum;
-	secondaryDataType: string;
+	category: string;
 	resp: string;
 	pubDate: string | TeiDate;
 	recordingDate?: string | TeiDate;
+	duration?: string;
+	audioAvailability: string;
 	place: {
 		settlement: string;
 		country: string;
@@ -95,8 +103,6 @@ export type PersName = {
 	"@id": string;
 	"@full"?: string;
 	$?: string;
-	"@forename"?: string;
-	"@surname"?: string;
 	forename?: XmlTextNode;
 	surname?: XmlTextNode;
 };
@@ -165,7 +171,7 @@ export type Recording = {
 	"@dur-iso": string;
 	"@type": string;
 	date?: TeiDate;
-	respStmt: RespStmt;
+	respStmt?: RespStmt;
 	media?: Media;
 	p?: P;
 };
@@ -235,13 +241,17 @@ export type ProfileDesc = {
 };
 
 export type Taxonomy = {
-	categories?: Array<Category>;
+	categories: Array<Category>;
 };
 
 export type Category = {
 	"@id": string;
 	"@n"?: string;
-	catDesc: XmlTextNode;
+	catDesc: CatDesc;
+};
+
+export type CatDesc = {
+	name: XmlTextNode;
 };
 
 export type LangUsage = {
@@ -388,7 +398,7 @@ export type Funder = {
 };
 
 export type ClassDecl = {
-	taxonomy: Taxonomy;
+	taxonomies: Array<Taxonomy>;
 };
 
 export type StandOff = {

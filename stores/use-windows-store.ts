@@ -147,9 +147,9 @@ export const useWindowsStore = defineStore("windows", () => {
 		const winbox = new WinBox({
 			id,
 			title,
-			index: windowState.zIndex ? windowState.zIndex : undefined,
-			x: windowState.x ? windowState.x : "center",
-			y: windowState.y ? windowState.y : "center",
+			index: windowState.zIndex ?? undefined,
+			x: windowState.x ?? "center",
+			y: windowState.y ?? "center",
 			width: windowState.width,
 			height: windowState.height,
 			onfocus() {
@@ -188,7 +188,29 @@ export const useWindowsStore = defineStore("windows", () => {
 			params,
 		} as WindowItem);
 
-		return registry.value.get(id);
+		const w = registry.value.get(id);
+
+		if (
+			["ExploreSamples", "Profile", "Feature", "CorpusText", "SampleText", "Text"].includes(
+				w!.targetType,
+			)
+		) {
+			w!.winbox.addControl({
+				index: 0,
+				class: "wb-cite",
+				click: function () {
+					//@ts-expect-error TODO distill a proper type for paramName
+					w!.params.showCitation = !w.params.showCitation;
+				},
+			});
+			const winboxElement = w!.winbox.dom as HTMLElement;
+			const cite = winboxElement.querySelectorAll(".wb-cite");
+			if (cite.length > 0) {
+				const el = cite[0] as HTMLSpanElement;
+				el.title = "Show citation";
+			}
+		}
+		return w;
 	}
 
 	function findWindowByTypeAndParam(
@@ -220,8 +242,23 @@ export const useWindowsStore = defineStore("windows", () => {
 			} else {
 				return;
 			}
-
 			if (windowValue === value) {
+				foundWindow = w;
+			}
+		});
+		return foundWindow;
+	}
+
+	function findWindowByTypeAndTitle(
+		targetType: WindowItemTargetType,
+		title: string,
+	): WindowItem | null {
+		let foundWindow: WindowItem | null = null;
+		registry.value.forEach((w) => {
+			const ci = Schema.safeParse(w);
+			if (!ci.success || foundWindow !== null || w.targetType !== targetType) return;
+
+			if (w.winbox.title === title) {
 				foundWindow = w;
 			}
 		});
@@ -291,7 +328,7 @@ export const useWindowsStore = defineStore("windows", () => {
 		const viewport = rootElement.getBoundingClientRect();
 
 		function viewportPercentageWith2DigitPrecision(x: number, dir: "height" | "width") {
-			return String(Math.floor((10000 * x) / viewport[dir]) / 100) + "%";
+			return `${String(Math.floor((10000 * x) / viewport[dir]) / 100)}%`;
 		}
 
 		registry.value.forEach((w) => {
@@ -314,13 +351,14 @@ export const useWindowsStore = defineStore("windows", () => {
 	}
 
 	function escapeUnicode(s: string) {
-		return [...s]
+		return s
+			.split("")
 			.map((c) =>
 				/^[\x20-\x7f]$/.test(c)
 					? c
 					: c
 							.split("")
-							.map((a) => "\\u" + a.charCodeAt(0).toString(16).padStart(4, "0"))
+							.map((a) => `\\u${a.charCodeAt(0).toString(16).padStart(4, "0")}`)
 							.join(""),
 			)
 			.join("");
@@ -361,5 +399,6 @@ export const useWindowsStore = defineStore("windows", () => {
 		setWindowArrangement,
 		arrangeWindows,
 		findWindowByTypeAndParam,
+		findWindowByTypeAndTitle,
 	};
 });

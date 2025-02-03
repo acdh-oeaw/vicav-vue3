@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import type { Column } from "@tanstack/vue-table";
 import { ChevronDown } from "lucide-vue-next";
 
 import { useColorsStore } from "@/stores/use-colors-store";
@@ -23,7 +24,7 @@ const categories = computed(() => {
 function titleCase(s: string) {
 	return s
 		.replace(/^[-_]*(.)/, (_, c) => c.toUpperCase()) // Initial char (after -/_)
-		.replace(/[-_]+(.)/g, (_, c) => " " + c.toUpperCase()); // First char after each -/_
+		.replace(/[-_]+(.)/g, (_, c) => ` ${c.toUpperCase()}`); // First char after each -/_
 }
 const isMenuOpen = ref(categories.value!.map(() => false));
 const isCollapsibleOpen = ref(
@@ -31,8 +32,8 @@ const isCollapsibleOpen = ref(
 		categories.value!.map((category) => [category.id, category.columns.map(() => false)]),
 	),
 );
-
-const { colors, setColor } = useColorsStore();
+const { colors } = storeToRefs(useColorsStore());
+const { setColor } = useColorsStore();
 </script>
 
 <template>
@@ -91,14 +92,18 @@ const { colors, setColor } = useColorsStore();
 									@update:checked="
 										(value) => {
 											column.toggleVisibility(!!value);
-											column.setFilterValue([]);
+											column.setFilterValue(new Map());
 										}
 									"
 								>
 									<span class="flex-1">{{ column.columnDef.header }}</span>
 
 									<label
-										v-if="column.getIsVisible()"
+										v-if="
+											column.getIsVisible() &&
+											(!column.getIsFiltered() ||
+												(column.getFilterValue() as Map<string, number>).size <= 0)
+										"
 										class="ml-3 flex grow-0 basis-0 items-center p-0"
 										@click.capture.stop
 									>
@@ -123,6 +128,7 @@ const { colors, setColor } = useColorsStore();
 										/>
 										<span class="sr-only">Select color</span>
 									</label>
+									<FeatureSelectionDialog :column="column as Column<unknown>" />
 								</DropdownMenuCheckboxItem>
 							</CollapsibleContent>
 						</Collapsible>

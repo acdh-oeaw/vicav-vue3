@@ -24,7 +24,7 @@ const filterUpdated = function () {
 	} else if (female.value) {
 		model.value = ["f"];
 	} else {
-		model.value = ["m", "f"];
+		model.value = [];
 	}
 };
 </script>

@@ -5,6 +5,7 @@ import type {
 	Person,
 	RespStmt,
 	simpleTEIMetadata,
+	Taxonomy,
 	TEI,
 	TeiCorpus,
 	TeiHeader,
@@ -24,7 +25,6 @@ const extractPersons = function (item: TEI, corpusMetadata: TeiHeader | undefine
 				return (item["@sameAs"] ?? item.$ ?? "").replace("corpus:", "");
 			})
 			.filter((item: string | undefined) => item);
-
 		for (const personId of persons) {
 			const person = corpusPersons.find((item: Person) => item["@id"] === personId);
 			if (person)
@@ -47,6 +47,8 @@ const extractMetadata = function (
 	const template = {
 		id: "",
 		recordingDate: "",
+		audioAvailability: "restricted",
+		duration: "",
 		pubDate: "",
 		place: {
 			settlement: "",
@@ -62,11 +64,12 @@ const extractMetadata = function (
 		],
 		resp: "",
 		dataType: "Text",
-		secondaryDataType: "",
+		category: "",
 		label: "",
 		"@hasTEIw": "false",
 		teiHeader: item.teiHeader,
 	} as simpleTEIMetadata;
+	// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
 	template.id = item["@id"]
 		? item["@id"]
 		: item.teiHeader.fileDesc.publicationStmt.idno?.$
@@ -105,33 +108,82 @@ const extractMetadata = function (
 			template.place.region = place.region.$;
 		}
 	}
+
+	if (item.teiHeader.fileDesc.sourceDesc.recordingStmt?.recording) {
+		const duration = parseInt(
+			item.teiHeader.fileDesc.sourceDesc.recordingStmt.recording["@dur-iso"]
+				.replace("PT", "")
+				.replace(".0", ""),
+		);
+		const durHours = Math.floor(duration / 3600);
+		const durSeconds = Math.floor(duration % 60);
+		const durMinutes = Math.floor(((duration % 3600) - durSeconds) / 60);
+		template.duration = `${
+			durHours ? `${String(durHours).padStart(2, "0")}:` : ""
+		}${String(durMinutes).padStart(2, "0")}:${String(durSeconds).padStart(2, "0")}`;
+		template.audioAvailability = item.teiHeader.fileDesc.publicationStmt.availability["@status"];
+	}
+
 	if (
 		template.dataType === "CorpusText" &&
-		item.teiHeader.fileDesc.titleStmt.respStmts?.at(0)?.persName &&
+		item.teiHeader.fileDesc.sourceDesc.recordingStmt?.recording.respStmt?.persName &&
 		corpusMetadata
 	) {
-		const persName = item.teiHeader.fileDesc.titleStmt.respStmts[0]?.persName as TeiTypedTarget;
-		const monogram = (persName["@ref"] ?? "missing persName").replace("corpus:", "");
+		const persName = item.teiHeader.fileDesc.sourceDesc.recordingStmt.recording.respStmt
+			.persName as TeiTypedTarget;
+
 		const respPerson = corpusMetadata.fileDesc.titleStmt.respStmts?.find((resp: RespStmt) => {
 			if (resp.persName && isPersName(resp.persName)) {
-				const persName = resp.persName;
-				return persName["@id"] === monogram;
+				return resp.persName["@ref"] === persName["@ref"];
 			} else {
 				return false;
 			}
 		});
-
 		let name;
 		if (respPerson?.persName) {
 			const persName2 = respPerson.persName as PersName;
 			name =
-				persName2["@forename"] && persName2["@surname"]
-					? `${persName2["@forename"]} ${persName2["@surname"]}`
+				persName2.forename && persName2.surname
+					? `${persName2.forename.$} ${persName2.surname.$}`
 					: persName2.$;
 		} else {
-			name = monogram;
+			name = (persName["@ref"] ?? "missing persName").replace("corpus:", "");
 		}
 		if (name) template.resp = name;
+	} else if (
+		template.dataType === "CorpusText" &&
+		!item.teiHeader.fileDesc.sourceDesc.recordingStmt?.recording.respStmt
+	) {
+		template.resp = "Unknown";
+	}
+
+	if (
+		item.teiHeader.fileDesc.titleStmt.respStmts?.find((r) =>
+			["author", "recording", "principal"].includes(r.resp.$),
+		) &&
+		corpusMetadata
+	) {
+		template.author = item.teiHeader.fileDesc.titleStmt.respStmts
+			.filter((r) => ["author", "recording", "principal"].includes(r.resp.$))
+			.map((resp) => {
+				const respPerson = corpusMetadata.fileDesc.titleStmt.respStmts?.find((resp2: RespStmt) => {
+					if (resp2.persName) {
+						return resp.persName!["@ref"] === resp2.persName["@ref"];
+					} else {
+						return false;
+					}
+				});
+
+				if (!respPerson) {
+					return { family: "", given: "" };
+				} else {
+					const persName = respPerson.persName as PersName;
+					return {
+						given: persName.forename!.$,
+						family: persName.surname!.$,
+					};
+				}
+			});
 	}
 
 	template.person = extractPersons(item, corpusMetadata);
@@ -140,27 +192,18 @@ const extractMetadata = function (
 			? item.teiHeader.profileDesc.textClass.catRef["@target"]
 			: "";
 
-		const subtype = categoryId?.split(".").at(2);
+		const mergedTaxonomies: Taxonomy = {
+			categories: [],
+		};
+		corpusMetadata.encodingDesc.classDecl?.taxonomies.forEach((t) => {
+			mergedTaxonomies.categories = mergedTaxonomies.categories.concat(t.categories);
+			return mergedTaxonomies;
+		});
+		const category = mergedTaxonomies.categories.find(
+			(cat) => cat["@id"] === categoryId?.replace("corpus:", ""),
+		);
 
-		switch (subtype) {
-			case "ST":
-				template.secondaryDataType = "Sample Text";
-				break;
-			case "FL":
-				template.secondaryDataType = "Feature List";
-				break;
-			case "UMS":
-				template.secondaryDataType = "Unmonitored Speech";
-				break;
-			case "TUN":
-				template.secondaryDataType = "Tunocent Questionnaire";
-				break;
-			case "WAD":
-				template.secondaryDataType = "WAD Questionnaire";
-				break;
-			default:
-				break;
-		}
+		template.category = category!.catDesc.name.$;
 	}
 
 	if (!template.person.at(0)?.name) {
@@ -182,6 +225,11 @@ const extractMetadata = function (
 				: template.place.settlement;
 		}
 	}
+	template.title = item.teiHeader.fileDesc.titleStmt.titles?.at(0)
+		? template.person.at(0)?.name
+			? `${item.teiHeader.fileDesc.titleStmt.titles[0]!.$!} – ${template.person.at(0)?.name ?? ""}`
+			: item.teiHeader.fileDesc.titleStmt.titles[0]!.$!
+		: template.label;
 
 	template["@hasTEIw"] = item["@hasTEIw"] === "true" ? "true" : "false";
 	return template;
@@ -193,7 +241,7 @@ function isTEIs(item: TeiCorpus | object): item is TeiCorpus {
 }
 
 function isPersName(item: PersName | object): item is PersName {
-	return Object.hasOwn(item, "@id");
+	return Object.hasOwn(item, "@ref");
 }
 
 export function useTEIHeaders() {

@@ -13,9 +13,10 @@ const props = defineProps<{
 const attrs = useAttrs();
 const $el = ref<HTMLElement>();
 
-type LocationDataPoints = {
-	[key in DataTypesEnum]: Array<Feature<Point, MarkerProperties>>;
-};
+type LocationDataPoints = Record<
+	DataTypesEnum | "DataTable",
+	Array<Feature<Point, MarkerProperties>>
+>;
 
 const groupedMarkers = computed<Record<string, LocationDataPoints> | null>(() => {
 	if (props.groupMarkers) {
@@ -23,13 +24,17 @@ const groupedMarkers = computed<Record<string, LocationDataPoints> | null>(() =>
 		props.markers.forEach((marker) => {
 			if (!grouped[marker.properties.label])
 				grouped[marker.properties.label] = {
-					Profile: [],
+					Text: [],
+					CorpusText: [],
 					Feature: [],
 					SampleText: [],
-					CorpusText: [],
-					Text: [],
+					Profile: [],
+					DataTable: [],
 				};
-			grouped[marker.properties.label]![marker.properties.targetType as DataTypesEnum].push(marker);
+
+			grouped[marker.properties.label]![
+				marker.properties.targetType as DataTypesEnum | "DataTable"
+			].push(marker);
 		});
 		return grouped;
 	} else {
@@ -56,7 +61,7 @@ defineExpose({
 					class="text-xs"
 				>
 					<h3 v-if="markersOfType.length > 0" class="italic">
-						{{ DataTypes[contentType].contentTypeHeading }}
+						{{ DataTypes[contentType as DataTypesEnum]?.contentTypeHeading ?? contentType }}
 					</h3>
 
 					<GeoMapPopupLinks :markers="markersOfType" />

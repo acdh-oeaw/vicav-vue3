@@ -4,6 +4,7 @@ import type { Feature, Point } from "geojson";
 import {
 	circleMarker,
 	geoJSON,
+	latLng,
 	type Map as LeafletMap,
 	map as createMap,
 	type Marker as LeafletMarker,
@@ -40,17 +41,16 @@ interface ComponentPopupInfo {
 	};
 }
 
-const popupElements = ref<Array<typeof GeoMapPopupContent>>([]);
+const popupElements = ref<Map<string, globalThis.ComponentPublicInstance>>(new Map());
 const componentPopups = ref<Array<ComponentPopupInfo>>([]);
 const openedPopupId = ref<number | null>(null);
 const elementRef = ref<HTMLElement | null>(null);
 
 watchEffect(() => {
 	componentPopups.value.forEach((popup) => {
-		const element = popupElements.value.find((popupElement) => popup.id === popupElement.id);
+		const element = popupElements.value.get(popup.id);
 		const leafletMarker = context.featureGroups.markers?.getLayer(parseInt(popup.id));
 		if (leafletMarker == null || element == null) return;
-
 		leafletMarker.bindPopup(element.$el, { minWidth: 150 });
 	});
 });
@@ -69,28 +69,97 @@ const ptDistanceSq = function (pt1: LeafletPoint, pt2: LeafletPoint): number {
 	return dx * dx + dy * dy;
 };
 
+function getGridCell(lat: number, long: number) {
+	// Divides the map into a grid based on the current zoom level.
+	// The grid size is 45 degrees at zoom level 1 and halves with each zoom level.
+	// To reduce the number of computations per marker, reduce the base size (currently 45).
+	const gridSize = 45 / Math.pow(2, context.map?.getZoom() ?? 1);
+	return {
+		long: Math.floor(long / gridSize),
+		lat: Math.floor(lat / gridSize),
+	};
+}
+
+function updateDynamicGrid() {
+	const markerGrid: Record<number, Record<number, Array<Feature<Point, MarkerProperties>>>> = {};
+	const markers = Object.values(props.markers);
+
+	markers.forEach((marker) => {
+		if (!marker.geometry?.coordinates || marker.geometry.coordinates.length < 2) {
+			return;
+		}
+		const cell = getGridCell(marker.geometry.coordinates[1]!, marker.geometry.coordinates[0]!);
+		if (!markerGrid[cell.lat]) {
+			markerGrid[cell.lat] = {};
+		}
+		if (!markerGrid[cell.lat]![cell.long]) {
+			markerGrid[cell.lat]![cell.long] = [];
+		}
+		markerGrid[cell.lat]![cell.long]!.push(marker);
+	});
+
+	dynamicMarkerGrid.value = markerGrid;
+}
+
+const dynamicMarkerGrid = ref<
+	Record<number, Record<number, Array<Feature<Point, MarkerProperties>>>>
+>({});
+
+function getNearbyMarkersBasedOnDynamicGrid(
+	marker: LeafletMarker,
+	distance: number,
+): Array<Feature> {
+	if (context.map === null) return [];
+	const { lat, long } = getGridCell(
+		marker.feature?.geometry.coordinates[1] ?? 0,
+		marker.feature?.geometry.coordinates[0] ?? 0,
+	);
+	const nearbyMarkers: Array<Feature> = [];
+	const pxSq = distance * distance;
+	const markerPt = context.map.latLngToLayerPoint(marker.getLatLng());
+
+	for (let i = lat - 1; i <= lat + 1; i++) {
+		for (let j = long - 1; j <= long + 1; j++) {
+			if (dynamicMarkerGrid.value[i] && dynamicMarkerGrid.value[i]![j]) {
+				dynamicMarkerGrid.value[i]![j]?.forEach((m) => {
+					const mPt = context.map!.latLngToLayerPoint(
+						latLng(m.geometry.coordinates[1]!, m.geometry.coordinates[0]!),
+					);
+					if (ptDistanceSq(mPt, markerPt) < pxSq) {
+						nearbyMarkers.push(m);
+					}
+				});
+			} else {
+				if (lat === i && long === j)
+					console.warn(
+						"No grid entry found for marker",
+						marker,
+						{ lat, long },
+						dynamicMarkerGrid.value[i],
+					);
+			}
+		}
+	}
+	return nearbyMarkers;
+}
+
 // Bind a popup listing nearby data to markers close to each other.
 // Remove existing if there are no nearby markers on the map any more.
 const addNearbyDataPopup = function (marker: LeafletMarker) {
 	const featureGroup = context.featureGroups.markers;
 	const map = context.map;
-	if (featureGroup === null || map === null) return;
+	if (
+		featureGroup === null ||
+		map === null ||
+		marker.feature!.properties!.targetType === null ||
+		marker.feature!.properties!.targetType === "" ||
+		marker.feature!.properties!.targetId
+	)
+		return;
 
 	const distance = Math.floor(2 * map.getZoom());
-	const nearbyMarkerData: Array<Feature> = [];
-	const pxSq = distance * distance;
-	const markerPt = map.latLngToLayerPoint(marker.getLatLng());
-
 	const id = featureGroup.getLayerId(marker);
-	featureGroup.getLayers().forEach((m) => {
-		if (map.hasLayer(m)) {
-			const marker: LeafletMarker = m as LeafletMarker;
-			const mPt = map.latLngToLayerPoint(marker.getLatLng());
-			if (ptDistanceSq(mPt, markerPt) < pxSq) {
-				nearbyMarkerData.push(marker.feature!);
-			}
-		}
-	});
+	const nearbyMarkerData = getNearbyMarkersBasedOnDynamicGrid(marker, distance);
 
 	if (nearbyMarkerData.length > 1) {
 		const markers = nearbyMarkerData.sort((a, b) => {
@@ -128,6 +197,7 @@ function updateMarkers(updateViewport = true) {
 	});
 
 	if (config.nearbyMarkersPopup) {
+		updateDynamicGrid();
 		Object.values(featureGroup.getLayers()).forEach((marker) => {
 			addNearbyDataPopup(marker as LeafletMarker);
 		});
@@ -151,7 +221,6 @@ onMounted(async () => {
 	 * @see https://github.com/vuejs/core/issues/5844
 	 */
 	await nextTick();
-
 	if (elementRef.value == null) return;
 
 	context.map = createMap(elementRef.value, config.options).setView(
@@ -194,7 +263,7 @@ onMounted(async () => {
 	}).addTo(context.map);
 
 	updateMarkers();
-	context.map.on("zoomend", function () {
+	context.map.on("zoomend", () => {
 		updateMarkers(false);
 	});
 });
@@ -255,7 +324,11 @@ provide(key, context);
 		v-bind="popupInfo.props"
 		:id="popupInfo.id"
 		:key="popupInfo.id"
-		ref="popupElements"
+		:ref="
+			(el) => {
+				if (el) popupElements.set(popupInfo.id, el as globalThis.ComponentPublicInstance);
+			}
+		"
 	/>
 </template>
 

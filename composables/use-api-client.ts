@@ -10,7 +10,7 @@ let api = new Api<userPass>();
 function basicSecurityWorker(securityData: userPass | null): RequestParams | undefined {
 	if (securityData) {
 		return {
-			headers: { authorization: "Basic " + btoa(securityData.user + ":" + securityData.pass) },
+			headers: { authorization: `Basic ${btoa(`${securityData.user}:${securityData.pass}`)}` },
 		};
 	}
 	return undefined;
@@ -31,6 +31,7 @@ async function fetchWithETag(
 		: {};
 	const requestParams = {
 		method: "GET",
+		// eslint-disable-next-line @typescript-eslint/no-misused-spread
 		headers: (init ? { ...init.headers, ...ifNoneMatchHeader } : ifNoneMatchHeader) as HeadersInit,
 	};
 	// Request mit ETag im If-None-Match Header

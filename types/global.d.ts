@@ -1,7 +1,7 @@
 import type { Ref } from "vue";
 import { z } from "zod";
 
-type MaybeRef<T> = Ref<T> | T;
+type MaybeRef<T> = ComputedRef<T> | Ref<T> | T;
 
 export const DataTypesEnum = z.enum(["Profile", "Text", "SampleText", "Feature", "CorpusText"]);
 export type DataTypesEnum = z.infer<typeof DataTypesEnum>;
@@ -26,6 +26,9 @@ export const TextId = z.object({
 });
 export const TeiSource = z.object({
 	teiSource: z.string(),
+});
+export const ShowCitation = z.object({
+	showCitation: z.boolean(),
 });
 export const QueryString = z.object({
 	queryString: z.string(),
@@ -61,7 +64,7 @@ export const ExploreSamplesFormParams = z.object({
 
 export const ExploreSamplesSchema = z.object({
 	targetType: z.literal("ExploreSamples"),
-	params: ExploreSamplesQueryParams.merge(TextId.partial()).merge(TeiSource.partial()),
+	params: ExploreSamplesQueryParams.merge(TextId.partial()).merge(ShowCitation.partial()),
 });
 
 export type ExploreSamplesWindowItem = WindowItemBase & z.infer<typeof ExploreSamplesSchema>;
@@ -72,8 +75,7 @@ export const ExploreSamplesFormSchema = z.object({
 		.object({
 			dataTypes: z.array(DataTypesEnum),
 		})
-		.merge(TextId.partial())
-		.merge(TeiSource.partial()),
+		.merge(TextId.partial()),
 });
 
 export type ExploreSamplesFormWindowItem = WindowItemBase &
@@ -129,13 +131,15 @@ export const CorpusTextSchema = z.object({
 			hits: z.string().optional(),
 			u: z.string().optional(), // TODO: give this parameter a telling name
 		}),
-	),
+	)
+		.merge(ShowCitation.partial())
+		.merge(TeiSource.partial()),
 });
 export type CorpusTextWindowItem = WindowItemBase & z.infer<typeof CorpusTextSchema>;
 
 export const FeatureSchema = z.object({
 	targetType: z.literal("Feature"),
-	params: TextId.merge(TeiSource.partial()),
+	params: TextId.merge(TeiSource.partial()).merge(ShowCitation.partial()),
 });
 export type FeatureWindowItem = WindowItemBase & z.infer<typeof FeatureSchema>;
 
@@ -162,19 +166,19 @@ export const GeoMapSubnavItemSchema = z.intersection(
 
 export const ProfileSchema = z.object({
 	targetType: z.literal("Profile"),
-	params: TextId.merge(TeiSource.partial()),
+	params: TextId.merge(TeiSource.partial()).merge(ShowCitation.partial()),
 });
 export type ProfileWindowItem = WindowItemBase & z.infer<typeof ProfileSchema>;
 
 export const TextSchema = z.object({
 	targetType: z.literal("Text"),
-	params: TextId.merge(TeiSource.partial()),
+	params: TextId.merge(TeiSource.partial()).merge(ShowCitation.partial()),
 });
 export type TextWindowItem = WindowItemBase & z.infer<typeof TextSchema>;
 
 export const SampleTextSchema = z.object({
 	targetType: z.literal("SampleText"),
-	params: TextId.merge(TeiSource.partial()),
+	params: TextId.merge(TeiSource.partial()).merge(ShowCitation.partial()),
 });
 export type SampleTextWindowItem = WindowItemBase & z.infer<typeof SampleTextSchema>;
 
@@ -207,8 +211,7 @@ export const DataListSchema = z.object({
 				})
 				.optional(),
 		})
-		.merge(TextId.partial())
-		.merge(TeiSource.partial()),
+		.merge(TextId.partial()),
 });
 
 export type DataListWindowItem = WindowItemBase & z.infer<typeof DataListSchema>;
@@ -218,9 +221,18 @@ export const DataTableSchema = z.object({
 	params: z
 		.object({
 			dataTypes: z.array(z.enum(["Profile", "Text", "SampleText", "Feature", "CorpusText"])),
+			filters: z
+				.array(
+					z.object({
+						key: z.string(),
+						value: z.string(),
+					}),
+				)
+				.optional(),
 		})
 		.merge(TextId.partial())
-		.merge(TeiSource.partial()),
+		.merge(TeiSource.partial())
+		.merge(ShowCitation.partial()),
 });
 export type DataTableWindowItem = WindowItemBase & z.infer<typeof DataTableSchema>;
 

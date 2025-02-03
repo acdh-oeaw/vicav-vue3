@@ -16,6 +16,8 @@ const { simpleItems } = useTEIHeaders();
 const utterances = ref<Array<CorpusTextUtterances>>([]);
 const utterancesWrapper = ref<HTMLDivElement | null>(null);
 const utteranceElements = ref<Array<Element>>([]);
+const infinite = ref<typeof InfiniteLoading | null>(null);
+
 const currentPage = ref(1);
 const api = useApiClient();
 const scrollComplete = ref<boolean>(false);
@@ -87,13 +89,13 @@ const scrollParentToChild = function (parent: Element, child: Element) {
 	}
 };
 
-onMounted(async () => {
-	const u = utteranceElements.value.find((u) => u.id === props.params.u);
-	const window = utterancesWrapper.value?.parentElement?.parentElement;
-	if (u !== undefined) scrollParentToChild(window!, u);
-});
-
 watch(utteranceElements.value, (value) => {
+	if (props.params.u) {
+		const window = utterancesWrapper.value?.parentElement?.parentElement;
+		const u = utteranceElements.value.find((u) => u.id === props.params.u);
+		if (u) scrollParentToChild(window!, u);
+		else if (infinite.value) scrollParentToChild(window!, infinite!.value.$el);
+	}
 	if (value.length > 0) {
 		value.forEach((u) => {
 			const playButton = u.querySelector("a.play");
@@ -121,58 +123,63 @@ watch(utteranceElements.value, (value) => {
 </script>
 
 <template>
-	<!-- eslint-disable tailwindcss/no-custom-classname, vue/no-v-html -->
-	<div :id="params.textId" ref="utterancesWrapper" class="p-4">
-		<h2 class="m-3 text-lg">{{ props.params.label }}</h2>
+	<div>
+		<div v-if="params.showCitation">
+			<Citation :header="teiHeader" type="entry" />
+		</div>
+		<!-- eslint-disable tailwindcss/no-custom-classname, vue/no-v-html -->
+		<div :id="params.textId" ref="utterancesWrapper" class="p-4">
+			<h2 class="m-3 text-lg">{{ props.params.label }}</h2>
 
-		<table class="m-3 border border-gray-300">
-			<thead>
-				<tr></tr>
-				<tr></tr>
-			</thead>
-			<tbody>
-				<tr>
-					<th>Contributed by:</th>
-					<td>{{ teiHeader?.resp }}</td>
-				</tr>
-				<tr>
-					<th>Speakers:</th>
+			<table class="m-3 border border-gray-300">
+				<thead>
+					<tr></tr>
+					<tr></tr>
+				</thead>
+				<tbody>
+					<tr>
+						<th>Recording:</th>
+						<td>{{ teiHeader?.resp }}</td>
+					</tr>
+					<tr>
+						<th>Speakers:</th>
+						<td>
+							<span v-for="(person, index) in teiHeader?.person" :key="index">
+								{{ person.name }} (age: {{ person.age }}, sex: {{ person.sex }})
+								<span v-if="index < (teiHeader?.person.length || 1) - 1">, </span>
+							</span>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+			<table>
+				<tr
+					v-for="u in utterances"
+					:id="u.id"
+					:key="u.id"
+					ref="utteranceElements"
+					class="corpus-utterance u table-row"
+				>
 					<td>
-						<span v-for="(person, index) in teiHeader?.person" :key="index">
-							{{ person.name }} (age: {{ person.age }}, sex: {{ person.sex }})
-							<span v-if="index < (teiHeader?.person.length || 1) - 1">, </span>
-						</span>
+						<a v-if="u.audio" class="play mt-1"
+							><Play class="size-4" /><span class="hidden">Play</span></a
+						>
+            <a v-if="u.audio" class="stop mt-1 hidden">
+              <Pause class="size-4" /><span class="hidden">Stop</span>
+            </a>
+						<!-- eslint-disable-next-line vuejs-accessibility/media-has-caption -->
+						<audio v-if="u.audio" hidden="hidden">
+							<source :src="u.audio" />
+						</audio>
 					</td>
+					<th class="min-w-fit px-3 font-bold">
+						{{ u.id }}
+					</th>
+					<td class="table-cell" v-html="u.content"></td>
 				</tr>
-			</tbody>
-		</table>
-		<table>
-			<tr
-				v-for="u in utterances"
-				:id="u.id"
-				:key="u.id"
-				ref="utteranceElements"
-				class="corpus-utterance u table-row"
-			>
-				<td>
-					<a v-if="u.audio" class="play mt-1"
-						><Play class="size-4" /><span class="hidden">Play</span></a
-					>
-					<a v-if="u.audio" class="stop mt-1 hidden">
-						<Pause class="size-4" /><span class="hidden">Stop</span>
-					</a>
-					<!-- eslint-disable-next-line vuejs-accessibility/media-has-caption -->
-					<audio v-if="u.audio" hidden="hidden">
-						<source :src="u.audio" />
-					</audio>
-				</td>
-				<th class="min-w-fit px-3 font-bold">
-					{{ u.id }}
-				</th>
-				<td class="table-cell" v-html="u.content"></td>
-			</tr>
-		</table>
-		<InfiniteLoading v-if="!scrollComplete" @infinite="handleInfiniteScroll" />
+			</table>
+			<InfiniteLoading v-if="!scrollComplete" ref="infinite" @infinite="handleInfiniteScroll" />
+		</div>
 	</div>
 </template>
 

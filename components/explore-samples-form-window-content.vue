@@ -17,6 +17,9 @@ interface Props {
 	params: ExploreSamplesFormWindowItem["params"];
 }
 
+const { data: config } = useProjectInfo();
+const specialCharacters = config.value?.projectConfig?.specialCharacters;
+
 const props = defineProps<Props>();
 const { params } = toRefs(props);
 const { simpleItems } = useTEIHeaders();
@@ -47,13 +50,13 @@ const countries = Array.from(new Set(dataset.map((item) => item.place.country)))
 let options: Array<Tag> = [];
 
 countries.forEach((country) => {
-	options.push({ label: country + " (country)", value: "country:" + country });
+	options.push({ label: `${country} (country)`, value: `country:${country}` });
 	const countryItems = dataset.filter((item) => item.place.country === country);
 	const regions = Array.from(new Set(countryItems.map((item) => item.place.region)));
 	regions.forEach((region) => {
 		options.push({
-			label: region + " (region)",
-			value: "region:" + region,
+			label: `${region} (region)`,
+			value: `region:${region}`,
 			heading: true,
 		});
 
@@ -111,20 +114,6 @@ const personsFilter = computed(() =>
 	simpleItems.value
 		.filter((item) => {
 			if (!params.value.dataTypes.includes(item.dataType)) return false;
-			if (persons.value.length > 0) {
-				const found = item.person.map((p) => persons.value.includes(p.name));
-				if (found.includes(true)) return true;
-			}
-			if (places.value.length > 0) {
-				const found = places.value.map((place) => {
-					const p = place.split(":");
-					if (p[0] === "region" && item.place.region === p[1]) return true;
-					if (p[0] === "country" && item.place.country === p[1]) return true;
-					if (p[0] === item.place.settlement) return true;
-					return false;
-				});
-				if (found.includes(true)) return true;
-			}
 			if (sex.value.length > 0) {
 				if (
 					// If none of the participants are of the given sex
@@ -132,9 +121,27 @@ const personsFilter = computed(() =>
 				)
 					return false;
 			}
-			return item.person
-				.map((p) => age.value[0]! > parseInt(p.age) && age.value[1]! < parseInt(p.age))
+			if (
+				!item.person
+					.map((p) => age.value[0]! < parseInt(p.age) && age.value[1]! > parseInt(p.age))
+					.includes(true)
+			)
+				return false;
+
+			const matchPerson = item.person.map((p) => persons.value.includes(p.name)).includes(true);
+
+			const matchPlace = places.value
+				.map((place) => {
+					const p = place.split(":");
+					if (p[0] === "region" && item.place.region === p[1]) return true;
+					if (p[0] === "country" && item.place.country === p[1]) return true;
+					if (p[0] === item.place.settlement) return true;
+					return false;
+				})
 				.includes(true);
+
+			if (places.value.length > 0 || persons.value.length > 0) return matchPerson || matchPlace;
+			return true;
 		})
 		.map((item) => item.id),
 );
@@ -170,6 +177,24 @@ const queryParams = computed(() => {
 			| "samples"
 			| "lingfeatures",
 	});
+});
+
+const submitDisabled = computed(() => {
+	return (
+		(words.value.length === 0 &&
+			translation.value === "" &&
+			comment.value === "" &&
+			places.value.length === 0 &&
+			persons.value.length === 0 &&
+			features.value.length === 0 &&
+			sentences.value.length === 0 &&
+			age.value[0] === 0 &&
+			age.value[1] === 100 &&
+			sex.value[0] === "m" &&
+			sex.value[1] === "f") ||
+		sex.value.length === 0 ||
+		personsFilter.value.length === 0
+	);
 });
 
 /**
@@ -290,6 +315,7 @@ const openSearchResultsNewWindow = function () {
 					:filter-function="(i) => i"
 					:options="wordOptions"
 					:placeholder="`Search for words...`"
+					:special-characters="specialCharacters"
 				/>
 			</div>
 
@@ -352,17 +378,13 @@ const openSearchResultsNewWindow = function () {
 				/>
 			</div>
 
+			<div v-if="personsFilter.length === 0" class="my-4 rounded-sm border-red-600 bg-red-100 p-4">
+				No matching entries in database
+			</div>
+
 			<button
 				class="inline-block h-10 w-full whitespace-nowrap rounded border-2 border-solid border-primary bg-on-primary text-center align-middle font-bold text-primary hover:bg-primary hover:text-on-primary disabled:border-gray-400 disabled:text-gray-400 hover:disabled:bg-on-primary hover:disabled:text-gray-400"
-				:disabled="
-					words.length === 0 &&
-					translation == '' &&
-					comment == '' &&
-					places.length === 0 &&
-					persons.length === 0 &&
-					features.length === 0 &&
-					sentences.length === 0
-				"
+				:disabled="submitDisabled"
 				@click.prevent.stop="openSearchResultsWindow"
 			>
 				Query
@@ -370,15 +392,7 @@ const openSearchResultsNewWindow = function () {
 
 			<button
 				class="mt-2 inline-block h-10 w-full whitespace-nowrap rounded border-2 border-solid border-primary bg-on-primary text-center align-middle font-bold text-primary hover:bg-primary hover:text-on-primary disabled:border-gray-400 disabled:text-gray-400 hover:disabled:bg-on-primary hover:disabled:text-gray-400"
-				:disabled="
-					words.length === 0 &&
-					translation == '' &&
-					comment == '' &&
-					places.length === 0 &&
-					persons.length === 0 &&
-					features.length === 0 &&
-					sentences.length === 0
-				"
+				:disabled="submitDisabled"
 				@click.prevent.stop="openSearchResultsNewWindow"
 			>
 				Search in new window

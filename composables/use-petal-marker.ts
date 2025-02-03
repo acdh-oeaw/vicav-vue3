@@ -8,6 +8,7 @@ import { useGeojsonStore } from "@/stores/use-geojson-store.ts";
 const GeojsonStore = useGeojsonStore();
 const { tables } = storeToRefs(GeojsonStore);
 const url = "https://raw.githubusercontent.com/wibarab/wibarab-data/main/wibarab_varieties.geojson";
+const { buildFeatureValueId } = useColorsStore();
 
 function getPetalSVG(entries: Array<Column<never>>) {
 	const div = document.createElement("div");
@@ -17,7 +18,7 @@ function getPetalSVG(entries: Array<Column<never>>) {
 	svg.setAttribute("width", "12px");
 	svg.setAttribute("height", "12px");
 	svg.classList.add("overflow-visible");
-	// svg.setHTMLUnsafe(String(petal));
+
 	for (const [i, value] of entries.entries()) {
 		const petal = document.createElementNS("http://www.w3.org/2000/svg", "use");
 		petal.setAttribute("href", "#petal");
@@ -40,10 +41,25 @@ export function usePetalMarker(feature: GeoJsonFeature<Point, MarkerProperties>,
 	const columns = table
 		?.getVisibleLeafColumns()
 		.filter(
-			(col) => col.getCanFilter() && Object.keys(feature.properties).find((k) => k === col.id),
+			(col) =>
+				col.getCanFilter() &&
+				(col.getFilterValue() as Map<string, unknown>).size === 0 &&
+				Object.keys(feature.properties).find((k) => k === col.id),
 		);
+
+	const featureValues = table
+		?.getVisibleLeafColumns()
+		.filter((col) => col.getIsFiltered())
+		.flatMap((col) =>
+			[...(col.getFilterValue() as Map<string, unknown>).keys()]
+				.filter((val) => val in (feature.properties[col.id as keyof MarkerProperties] as object))
+				.map((val) => ({
+					id: buildFeatureValueId(col.id, val),
+				})),
+		);
+
 	//@ts-expect-error missing accessorFn
-	const htmlContent = getPetalSVG(columns).outerHTML; // Example HTML content
+	const htmlContent = getPetalSVG(columns?.concat(featureValues)).outerHTML; // Example HTML content
 	const customIcon = divIcon({
 		html: htmlContent,
 		className: "custom-marker-icon size-5", // Add custom CSS class for styling

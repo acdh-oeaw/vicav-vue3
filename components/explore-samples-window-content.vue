@@ -80,6 +80,9 @@ watch(isLoading, () => {
 		class="relative isolate grid size-full overflow-auto"
 		:class="{ 'opacity-50 grayscale': isLoading }"
 	>
+		<div v-if="params.showCitation">
+			<Citation type="software" />
+		</div>
 		<!-- eslint-disable vue/no-v-html,
 			vuejs-accessibility/mouse-events-have-key-events,
 			vuejs-accessibility/click-events-have-key-events,
