@@ -10,7 +10,11 @@ if (process.env.CI === undefined) {
 
 await (async () => {
 	for await (const entry of glob("*")) {
-		if (entry === "heroku-postbuild-cleanup.js" || entry === "package.json") {
+		if (
+			entry === "node_modules" ||
+			entry === "heroku-postbuild-cleanup.js" ||
+			entry === "package.json"
+		) {
 			continue;
 		}
 		try {
