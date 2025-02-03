@@ -8,13 +8,13 @@ if (process.env.CI === undefined) {
 	exit(0);
 }
 
+if (process.env.NODE_ENV !== "production") {
+	exit(0);
+}
+
 await (async () => {
 	for await (const entry of glob("*")) {
-		if (
-			entry === "node_modules" ||
-			entry === "heroku-postbuild-cleanup.js" ||
-			entry === "package.json"
-		) {
+		if (entry === "heroku-postbuild-cleanup.js" || entry === "package.json") {
 			continue;
 		}
 		try {
