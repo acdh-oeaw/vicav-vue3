@@ -12,9 +12,20 @@ const { buildFeatureValueId } = useColorsStore();
 interface PetalEntry {
 	id: string;
 	strokeOnly?: boolean;
+	type?: "feature" | "featureValue";
 }
 
-function getPetalSVG(entries: Array<PetalEntry>) {
+function getCircleSVG(fill: string) {
+	const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+	circle.setAttribute("cx", "6");
+	circle.setAttribute("cy", "12");
+	circle.setAttribute("r", "2.5");
+	circle.style.fill = fill;
+
+	return circle;
+}
+
+function getFlowerSVG(entries: Array<PetalEntry>, center?: PetalEntry) {
 	const div = document.createElement("div");
 	div.className = "hover:scale-150 transition origin-center relative size-6";
 	const NUM_PETALS = entries.length;
@@ -40,6 +51,8 @@ function getPetalSVG(entries: Array<PetalEntry>) {
 		svg.appendChild(petal);
 	}
 
+	if (center) svg.appendChild(getCircleSVG(`var(--${center.id}, #cccccc)`));
+
 	div.appendChild(svg);
 
 	return div;
@@ -50,11 +63,14 @@ export function usePetalMarker(feature: GeoJsonFeature<Point, MarkerProperties>,
 	const features = table
 		?.getVisibleLeafColumns()
 		.filter(
-			(col) =>
-				col.getCanFilter() &&
-				(col.getFilterValue() as Map<string, unknown>).size === 0 &&
-				Object.keys(feature.properties).find((k) => k === col.id),
+			(col) => col.getCanFilter() && Object.keys(feature.properties).find((k) => k === col.id),
 		);
+	let unfilteredFeatures =
+		features?.filter(
+			(col) => !col.getIsFiltered() || (col.getFilterValue() as Map<string, unknown>).size === 0,
+		) ?? [];
+	if (features?.length === 1 && unfilteredFeatures.length === 1) unfilteredFeatures = [];
+	const flowerCenter = features?.length === 1 ? features[0] : undefined;
 
 	const featureValues = table
 		?.getVisibleLeafColumns()
@@ -71,11 +87,15 @@ export function usePetalMarker(feature: GeoJsonFeature<Point, MarkerProperties>,
 					: col.id,
 				// show "empty" petals for feature values that are not in the filter
 				strokeOnly: !(col.getFilterValue() as Map<string, unknown>).has(val),
+				type: "featureValue",
 			})),
 		);
 
-	//@ts-expect-error missing accessorFn
-	const htmlContent = getPetalSVG(features?.concat(featureValues)).outerHTML; // Example HTML content
+	const htmlContent = getFlowerSVG(
+		//@ts-expect-error missing accessorFn
+		unfilteredFeatures.concat(featureValues),
+		flowerCenter,
+	).outerHTML; // Example HTML content
 	const customIcon = divIcon({
 		html: htmlContent,
 		className: "custom-marker-icon size-5", // Add custom CSS class for styling
