@@ -28,9 +28,16 @@ await (async () => {
 		}
 	}
 	for await (const entry of glob(".*")) {
-		if (entry === ".output" || entry === ".heroku") {
+		if (entry === ".output" || entry === ".heroku" || entry === ".profile.d") {
 			continue;
 		}
+		try {
+			await rm(entry, { force: true, recursive: true });
+		} catch (error) {
+			console.error(error);
+		}
+	}
+	for await (const entry of glob(".heroku/node/include")) {
 		try {
 			await rm(entry, { force: true, recursive: true });
 		} catch (error) {
