@@ -69,6 +69,7 @@ const extractMetadata = function (
 		"@hasTEIw": "false",
 		teiHeader: item.teiHeader,
 	} as simpleTEIMetadata;
+	// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
 	template.id = item["@id"]
 		? item["@id"]
 		: item.teiHeader.fileDesc.publicationStmt.idno?.$

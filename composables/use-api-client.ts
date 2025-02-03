@@ -31,6 +31,7 @@ async function fetchWithETag(
 		: {};
 	const requestParams = {
 		method: "GET",
+		// eslint-disable-next-line @typescript-eslint/no-misused-spread
 		headers: (init ? { ...init.headers, ...ifNoneMatchHeader } : ifNoneMatchHeader) as HeadersInit,
 	};
 	// Request mit ETag im If-None-Match Header
