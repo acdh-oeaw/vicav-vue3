@@ -128,6 +128,7 @@ function submitNewQueryKeyup(event: KeyboardEvent): void {
 							For details as to how to formulate meaningful queries in the bibliography
 							<a
 								class="aVicText"
+								data-label="Bibliography (Details)"
 								data-target-type="Text"
 								data-text-id="li_vicavExplanationBibliography"
 								href="/"
