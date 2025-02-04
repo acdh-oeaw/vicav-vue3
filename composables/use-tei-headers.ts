@@ -3,6 +3,7 @@ import { computed } from "vue";
 import type {
 	PersName,
 	Person,
+	Responsibility,
 	RespStmt,
 	simpleTEIMetadata,
 	Taxonomy,
@@ -69,7 +70,7 @@ const extractMetadata = function (
 		"@hasTEIw": "false",
 		teiHeader: item.teiHeader,
 	} as simpleTEIMetadata;
-	// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+
 	template.id = item["@id"]
 		? item["@id"]
 		: item.teiHeader.fileDesc.publicationStmt.idno?.$
@@ -157,33 +158,117 @@ const extractMetadata = function (
 		template.resp = "Unknown";
 	}
 
-	if (
-		item.teiHeader.fileDesc.titleStmt.respStmts?.find((r) =>
-			["author", "recording", "principal"].includes(r.resp.$),
-		) &&
-		corpusMetadata
-	) {
-		template.author = item.teiHeader.fileDesc.titleStmt.respStmts
-			.filter((r) => ["author", "recording", "principal"].includes(r.resp.$))
-			.map((resp) => {
-				const respPerson = corpusMetadata.fileDesc.titleStmt.respStmts?.find((resp2: RespStmt) => {
-					if (resp2.persName) {
-						return resp.persName!["@ref"] === resp2.persName["@ref"];
-					} else {
-						return false;
-					}
-				});
+	(
+		[
+			"author",
+			"recording",
+			"principal",
+			"transcription",
+			"transfer to ELAN",
+		] as Array<Responsibility>
+	).forEach((responsibility) => {
+		if (
+			item.teiHeader.fileDesc.titleStmt.respStmts?.find((r) => r.resp.$ === responsibility) &&
+			corpusMetadata
+		) {
+			template[responsibility as keyof simpleTEIMetadata] =
+				item.teiHeader.fileDesc.titleStmt.respStmts
+					.filter((r) => responsibility === r.resp.$)
+					.map((resp) => {
+						const respPerson = corpusMetadata.fileDesc.titleStmt.respStmts?.find(
+							(resp2: RespStmt) => {
+								if (resp2.persName) {
+									return resp.persName!["@ref"] === resp2.persName["@ref"];
+								} else {
+									return false;
+								}
+							},
+						);
 
-				if (!respPerson) {
-					return { family: "", given: "" };
-				} else {
-					const persName = respPerson.persName as PersName;
-					return {
-						given: persName.forename!.$,
-						family: persName.surname!.$,
-					};
-				}
-			});
+						if (!respPerson) {
+							return { family: "", given: "" };
+						} else {
+							const persName = respPerson.persName as PersName;
+							return {
+								given: persName.forename!.$,
+								family: persName.surname!.$,
+							};
+						}
+					});
+		}
+	});
+
+	if (item.teiHeader.fileDesc.sourceDesc.biblStruct?.["@type"] === "bookSection") {
+		template.publication = {
+			refType: "external",
+			type: "chapter",
+			bibl: {
+				"container-title": item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr.title?.$,
+				title: item.teiHeader.fileDesc.sourceDesc.biblStruct.analytic?.title.$ ?? "",
+				author: [
+					{
+						given: item.teiHeader.fileDesc.sourceDesc.biblStruct.analytic?.author.forename?.$ ?? "",
+						family: item.teiHeader.fileDesc.sourceDesc.biblStruct.analytic?.author.surname?.$ ?? "",
+					},
+				],
+				editor: [
+					{
+						given: item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr.editor?.forename?.$ ?? "",
+						family: item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr.editor?.surname?.$ ?? "",
+					},
+				],
+				issued: [item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr.imprint?.date.$ ?? ""],
+				publisherPlace: item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr.imprint?.pubPlace?.$,
+				page: item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr.imprint?.biblScope.find(
+					(s) => s["@unit"] === "page",
+				)?.$,
+			},
+		};
+	} else if (item.teiHeader.fileDesc.sourceDesc.biblStruct?.["@type"] === "journalArticle") {
+		template.publication = {
+			refType: "external",
+			type: "journalArticle",
+			bibl: {
+				"container-title": item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr.title?.$,
+				title: item.teiHeader.fileDesc.sourceDesc.biblStruct.analytic?.title.$ ?? "",
+				author: [
+					{
+						given: item.teiHeader.fileDesc.sourceDesc.biblStruct.analytic?.author.forename?.$ ?? "",
+						family: item.teiHeader.fileDesc.sourceDesc.biblStruct.analytic?.author.surname?.$ ?? "",
+					},
+				],
+				editor: [
+					{
+						given: item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr.editor?.forename?.$ ?? "",
+						family: item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr.editor?.surname?.$ ?? "",
+					},
+				],
+				issued: [item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr.imprint?.date.$ ?? ""],
+				publisherPlace: item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr.imprint?.pubPlace?.$,
+				volume: item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr.imprint?.biblScope.find(
+					(s) => s["@unit"] === "volume",
+				)?.$,
+				page: item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr.imprint?.biblScope.find(
+					(s) => s["@unit"] === "page",
+				)?.$,
+			},
+		};
+	} else if (item.teiHeader.fileDesc.sourceDesc.biblStruct?.["@type"] === "thesis") {
+		template.publication = {
+			refType: "external",
+			type: "book",
+			bibl: {
+				title: item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr.title?.$ ?? "",
+				author: [
+					{
+						given: item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr.author?.forename?.$ ?? "",
+						family: item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr.author?.surname?.$ ?? "",
+					},
+				],
+				issued: [item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr.imprint?.date.$ ?? ""],
+				publisherPlace: item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr.imprint?.pubPlace?.$,
+			},
+		};
 	}
 
 	template.person = extractPersons(item, corpusMetadata);
