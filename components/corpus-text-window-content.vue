@@ -164,9 +164,9 @@ watch(utteranceElements.value, (value) => {
 						<a v-if="u.audio" class="play mt-1"
 							><Play class="size-4" /><span class="hidden">Play</span></a
 						>
-            <a v-if="u.audio" class="stop mt-1 hidden">
-              <Pause class="size-4" /><span class="hidden">Stop</span>
-            </a>
+						<a v-if="u.audio" class="stop mt-1 hidden">
+							<Pause class="size-4" /><span class="hidden">Stop</span>
+						</a>
 						<!-- eslint-disable-next-line vuejs-accessibility/media-has-caption -->
 						<audio v-if="u.audio" hidden="hidden">
 							<source :src="u.audio" />
