@@ -22,6 +22,8 @@ const currentPage = ref(1);
 const api = useApiClient();
 const scrollComplete = ref<boolean>(false);
 const teiHeader = simpleItems.value.find((header) => header.id === props.params.textId);
+const publication = teiHeader?.publication;
+
 const loadNextPage = async function () {
 	const text = await api.vicav.getCorpusText(
 		{
@@ -117,27 +119,53 @@ watch(utteranceElements.value, (value) => {
 		<div :id="params.textId" ref="utterancesWrapper" class="p-4">
 			<h2 class="m-3 text-lg">{{ props.params.label }}</h2>
 
-			<table class="m-3 border border-gray-300">
-				<thead>
-					<tr></tr>
-					<tr></tr>
-				</thead>
-				<tbody>
-					<tr>
-						<th>Recording:</th>
-						<td>{{ teiHeader?.resp }}</td>
-					</tr>
-					<tr>
-						<th>Speakers:</th>
-						<td>
-							<span v-for="(person, index) in teiHeader?.person" :key="index">
-								{{ person.name }} (age: {{ person.age }}, sex: {{ person.sex }})
-								<span v-if="index < (teiHeader?.person.length || 1) - 1">, </span>
-							</span>
-						</td>
-					</tr>
-				</tbody>
-			</table>
+			<div class="m-3 rounded-sm border border-gray-300 bg-gray-50 p-4">
+				<table>
+					<thead>
+						<tr></tr>
+						<tr></tr>
+					</thead>
+					<tbody>
+						<tr>
+							<th class="w-44">Recording:</th>
+							<td>
+								{{ teiHeader?.recording?.map((p) => [p.given, p.family].join(" ")).join(", ") }}
+							</td>
+						</tr>
+						<tr>
+							<th>Recording date:</th>
+							<td>{{ teiHeader?.recordingDate }}</td>
+						</tr>
+						<tr>
+							<th>Transcribed by:</th>
+							<td>
+								{{ teiHeader?.transcription?.map((p) => [p.given, p.family].join(" ")).join(", ") }}
+							</td>
+						</tr>
+						<tr v-if="teiHeader?.hasOwnProperty('transfer to ELAN')">
+							<th>Transferred to ELAN:</th>
+							<td>
+								{{
+									teiHeader["transfer to ELAN"].map((p) => [p.given, p.family].join(" ")).join(", ")
+								}}
+							</td>
+						</tr>
+						<tr v-if="publication">
+							<th class="align-text-top">Published in:</th>
+							<td><Citation v-bind="publication" /></td>
+						</tr>
+						<tr>
+							<th>Speakers:</th>
+							<td>
+								<span v-for="(person, index) in teiHeader?.person" :key="index">
+									{{ person.name }} (age: {{ person.age }}, sex: {{ person.sex }})
+									<span v-if="index < (teiHeader?.person.length || 1) - 1">, </span>
+								</span>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
 			<table>
 				<tr
 					v-for="u in utterances"
