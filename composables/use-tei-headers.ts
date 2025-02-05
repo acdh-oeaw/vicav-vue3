@@ -71,11 +71,7 @@ const extractMetadata = function (
 		teiHeader: item.teiHeader,
 	} as simpleTEIMetadata;
 
-	template.id = item["@id"]
-		? item["@id"]
-		: item.teiHeader.fileDesc.publicationStmt.idno?.$
-			? item.teiHeader.fileDesc.publicationStmt.idno.$
-			: "no_id";
+	template.id = item["@id"] ?? item.teiHeader.fileDesc.publicationStmt.idno?.$ ?? "no_id";
 
 	if (item.teiHeader.fileDesc.sourceDesc.recordingStmt?.recording.date)
 		template.recordingDate =
