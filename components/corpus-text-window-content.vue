@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import "v3-infinite-loading/lib/style.css"; //required if you're not going to override default slots
 
-import { Play } from "lucide-vue-next";
+import { Pause, Play } from "lucide-vue-next";
 import InfiniteLoading from "v3-infinite-loading";
 import type { StateHandler } from "v3-infinite-loading/lib/types";
 
@@ -101,9 +101,23 @@ watch(utteranceElements.value, (value) => {
 	if (value.length > 0) {
 		value.forEach((u) => {
 			const playButton = u.querySelector("a.play");
+			const stopButton = u.querySelector("a.stop");
 			const audio = u.querySelector("audio");
 			if (playButton && audio) {
-				playButton!.addEventListener("click", (_e) => audio!.play());
+				playButton!.addEventListener("click", () => {
+					audio!.play();
+					playButton?.classList.add("hidden");
+					stopButton?.classList.remove("hidden");
+				});
+				audio!.addEventListener("ended", () => {
+					stopButton?.classList.add("hidden");
+					playButton?.classList.remove("hidden");
+				});
+				stopButton!.addEventListener("click", () => {
+					audio!.pause();
+					stopButton?.classList.add("hidden");
+					playButton?.classList.remove("hidden");
+				});
 			}
 		});
 	}
@@ -178,6 +192,9 @@ watch(utteranceElements.value, (value) => {
 						<a v-if="u.audio" class="play mt-1"
 							><Play class="size-4" /><span class="hidden">Play</span></a
 						>
+						<a v-if="u.audio" class="stop mt-1 hidden">
+							<Pause class="size-4" /><span class="hidden">Stop</span>
+						</a>
 						<!-- eslint-disable-next-line vuejs-accessibility/media-has-caption -->
 						<audio v-if="u.audio" hidden="hidden">
 							<source :src="u.audio" />
