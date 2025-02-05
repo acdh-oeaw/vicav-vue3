@@ -115,12 +115,12 @@ function submitNewQueryKeyup(event: KeyboardEvent): void {
 					</div>
 					<div class="my-3">
 						<button class="biblQueryBtn" :disabled="!queryString" @click="submitNewQuery(false)">
-							Query as List
+							Query
 						</button>
 					</div>
 					<div class="my-3">
 						<button class="biblQueryBtn" :disabled="!queryString" @click="submitNewQuery(true)">
-							Query as List & Map
+							Query & Display on Map
 						</button>
 					</div>
 					<div class="pb-4">
