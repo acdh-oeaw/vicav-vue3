@@ -215,7 +215,7 @@ const extractMetadata = function (
 				],
 				issued: [item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr.imprint?.date.$ ?? ""],
 				publisherPlace: item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr.imprint?.pubPlace?.$,
-				page: item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr.imprint?.biblScope.find(
+				page: item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr.imprint?.biblScopes.find(
 					(s) => s["@unit"] === "page",
 				)?.$,
 			},
@@ -241,10 +241,10 @@ const extractMetadata = function (
 				],
 				issued: [item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr.imprint?.date.$ ?? ""],
 				publisherPlace: item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr.imprint?.pubPlace?.$,
-				volume: item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr.imprint?.biblScope.find(
+				volume: item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr.imprint?.biblScopes.find(
 					(s) => s["@unit"] === "volume",
 				)?.$,
-				page: item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr.imprint?.biblScope.find(
+				page: item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr.imprint?.biblScopes.find(
 					(s) => s["@unit"] === "page",
 				)?.$,
 			},

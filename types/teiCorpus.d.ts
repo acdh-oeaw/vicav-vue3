@@ -199,7 +199,7 @@ export type BiblStruct = {
 		imprint?: {
 			date: XmlTextNode;
 			pubPlace?: XmlTextNode;
-			biblScope: Array<{
+			biblScopes: Array<{
 				"@unit": string;
 				$: string;
 			}>;
