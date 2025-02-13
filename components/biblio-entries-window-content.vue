@@ -1,3 +1,4 @@
+<!-- eslint-disable vue/no-v-html -->
 <script lang="ts" setup>
 import type { BibliographyEntriesWindowItem } from "@/types/global.d";
 
@@ -25,6 +26,7 @@ const isTextQuery: Ref<boolean> = ref(true);
 const isMapQuery: Ref<boolean> = ref(false);
 
 const isFormOpen = ref(queryString.value === "");
+const isListOpen = ref(false);
 
 function submitNewQuery(map: boolean): void {
 	if (queryString.value === "") return;
@@ -120,7 +122,7 @@ function submitNewQueryKeyup(event: KeyboardEvent): void {
 					</div>
 					<div class="my-3">
 						<button class="biblQueryBtn" :disabled="!queryString" @click="submitNewQuery(true)">
-							Query as List & Map
+							Show on a Map
 						</button>
 					</div>
 					<div class="pb-4">
@@ -145,7 +147,55 @@ function submitNewQueryKeyup(event: KeyboardEvent): void {
 		</Collapsible>
 
 		<!-- eslint-disable-next-line vue/no-v-html, vuejs-accessibility/click-events-have-key-events, vuejs-accessibility/no-static-element-interactions -->
-		<div v-if="data" class="prose mb-auto max-w-3xl p-8" v-html="data" />
+		<Collapsible v-model:open="isListOpen" class="prose mb-auto max-w-3xl p-8">
+			<CollapsibleTrigger class="dvStats flex w-full items-baseline">
+				{{ data ? data.stats : "" }}
+
+				<div class="relative top-1 ml-auto mr-4">
+					<div v-if="data && !isListOpen">
+						<svg
+							class="svg-icon"
+							style="
+								vertical-align: middle;
+								overflow: hidden;
+								width: 1em;
+								height: 1em;
+								fill: currentColor;
+							"
+							version="1.1"
+							viewBox="0 0 1024 1024"
+							xmlns="http://www.w3.org/2000/svg"
+						>
+							<path
+								d="M511.5 789.9 80.6 359c-22.8-22.8-22.8-59.8 0-82.6 22.8-22.8 59.8-22.8 82.6 0l348.3 348.3 348.3-348.3c22.8-22.8 59.8-22.8 82.6 0 22.8 22.8 22.8 59.8 0 82.6L511.5 789.9 511.5 789.9zM511.5 789.9"
+							/>
+						</svg>
+					</div>
+					<div v-if="data && isListOpen">
+						<svg
+							class="svg-icon"
+							style="
+								vertical-align: middle;
+								overflow: hidden;
+								width: 1em;
+								height: 1em;
+								fill: currentColor;
+							"
+							version="1.1"
+							viewBox="0 0 1024 1024"
+							xmlns="http://www.w3.org/2000/svg"
+						>
+							<path
+								d="M511.5 259.3 942.4 690.1c22.8 22.8 22.8 59.8 0 82.6-22.8 22.8-59.8 22.8-82.6 0L511.5 424.5 163.2 772.8c-22.8 22.8-59.8 22.8-82.6 0-22.8-22.8-22.8-59.8 0-82.6L511.5 259.3 511.5 259.3zM511.5 259.3"
+							/>
+						</svg>
+					</div>
+				</div>
+			</CollapsibleTrigger>
+			<CollapsibleContent>
+				<div v-if="data" v-html="data.html" />
+			</CollapsibleContent>
+		</Collapsible>
 
 		<Centered v-if="isLoading">
 			<LoadingIndicator />
