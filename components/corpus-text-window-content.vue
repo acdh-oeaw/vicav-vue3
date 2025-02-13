@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import "v3-infinite-loading/lib/style.css"; //required if you're not going to override default slots
 
-import { Play } from "lucide-vue-next";
+import { Pause, Play } from "lucide-vue-next";
 import InfiniteLoading from "v3-infinite-loading";
 import type { StateHandler } from "v3-infinite-loading/lib/types";
 
@@ -22,6 +22,8 @@ const currentPage = ref(1);
 const api = useApiClient();
 const scrollComplete = ref<boolean>(false);
 const teiHeader = simpleItems.value.find((header) => header.id === props.params.textId);
+const publication = teiHeader?.publication;
+
 const loadNextPage = async function () {
 	const text = await api.vicav.getCorpusText(
 		{
@@ -99,9 +101,23 @@ watch(utteranceElements.value, (value) => {
 	if (value.length > 0) {
 		value.forEach((u) => {
 			const playButton = u.querySelector("a.play");
+			const stopButton = u.querySelector("a.stop");
 			const audio = u.querySelector("audio");
 			if (playButton && audio) {
-				playButton!.addEventListener("click", (_e) => audio!.play());
+				playButton!.addEventListener("click", () => {
+					audio!.play();
+					playButton?.classList.add("hidden");
+					stopButton?.classList.remove("hidden");
+				});
+				audio!.addEventListener("ended", () => {
+					stopButton?.classList.add("hidden");
+					playButton?.classList.remove("hidden");
+				});
+				stopButton!.addEventListener("click", () => {
+					audio!.pause();
+					stopButton?.classList.add("hidden");
+					playButton?.classList.remove("hidden");
+				});
 			}
 		});
 	}
@@ -117,27 +133,53 @@ watch(utteranceElements.value, (value) => {
 		<div :id="params.textId" ref="utterancesWrapper" class="p-4">
 			<h2 class="m-3 text-lg">{{ props.params.label }}</h2>
 
-			<table class="m-3 border border-gray-300">
-				<thead>
-					<tr></tr>
-					<tr></tr>
-				</thead>
-				<tbody>
-					<tr>
-						<th>Recording:</th>
-						<td>{{ teiHeader?.resp }}</td>
-					</tr>
-					<tr>
-						<th>Speakers:</th>
-						<td>
-							<span v-for="(person, index) in teiHeader?.person" :key="index">
-								{{ person.name }} (age: {{ person.age }}, sex: {{ person.sex }})
-								<span v-if="index < (teiHeader?.person.length || 1) - 1">, </span>
-							</span>
-						</td>
-					</tr>
-				</tbody>
-			</table>
+			<div class="m-3 rounded-sm border border-gray-300 bg-gray-50 p-4">
+				<table>
+					<thead>
+						<tr></tr>
+						<tr></tr>
+					</thead>
+					<tbody>
+						<tr>
+							<th class="w-44">Recording:</th>
+							<td>
+								{{ teiHeader?.recording?.map((p) => [p.given, p.family].join(" ")).join(", ") }}
+							</td>
+						</tr>
+						<tr>
+							<th>Recording date:</th>
+							<td>{{ teiHeader?.recordingDate }}</td>
+						</tr>
+						<tr>
+							<th>Transcribed by:</th>
+							<td>
+								{{ teiHeader?.transcription?.map((p) => [p.given, p.family].join(" ")).join(", ") }}
+							</td>
+						</tr>
+						<tr v-if="teiHeader?.hasOwnProperty('transfer to ELAN')">
+							<th>Transferred to ELAN:</th>
+							<td>
+								{{
+									teiHeader["transfer to ELAN"].map((p) => [p.given, p.family].join(" ")).join(", ")
+								}}
+							</td>
+						</tr>
+						<tr v-if="publication">
+							<th class="align-text-top">Published in:</th>
+							<td><Citation v-bind="publication" /></td>
+						</tr>
+						<tr>
+							<th>Speakers:</th>
+							<td>
+								<span v-for="(person, index) in teiHeader?.person" :key="index">
+									{{ person.name }} (age: {{ person.age }}, sex: {{ person.sex }})
+									<span v-if="index < (teiHeader?.person.length || 1) - 1">, </span>
+								</span>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
 			<table>
 				<tr
 					v-for="u in utterances"
@@ -150,6 +192,9 @@ watch(utteranceElements.value, (value) => {
 						<a v-if="u.audio" class="play mt-1"
 							><Play class="size-4" /><span class="hidden">Play</span></a
 						>
+						<a v-if="u.audio" class="stop mt-1 hidden">
+							<Pause class="size-4" /><span class="hidden">Stop</span>
+						</a>
 						<!-- eslint-disable-next-line vuejs-accessibility/media-has-caption -->
 						<audio v-if="u.audio" hidden="hidden">
 							<source :src="u.audio" />
