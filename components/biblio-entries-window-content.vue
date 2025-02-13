@@ -1,4 +1,3 @@
-<!-- eslint-disable vue/no-v-html -->
 <script lang="ts" setup>
 import type { BibliographyEntriesWindowItem } from "@/types/global.d";
 
@@ -42,8 +41,11 @@ function submitNewQuery(map: boolean): void {
 			},
 			title: `Bibl. Locations for "${queryString.value}"`,
 		});
+		isListOpen.value = false;
+	} else {
+		isFormOpen.value = false;
+		isListOpen.value = true;
 	}
-	isFormOpen.value = false;
 }
 
 function submitNewQueryKeyup(event: KeyboardEvent): void {
@@ -61,7 +63,7 @@ function submitNewQueryKeyup(event: KeyboardEvent): void {
 		<!-- eslint-disable vuejs-accessibility/form-control-has-label, tailwindcss/no-custom-classname -->
 		<Collapsible v-model:open="isFormOpen" class="prose max-w-3xl px-8 pb-4 pt-8">
 			<CollapsibleTrigger class="dvStats flex w-full items-baseline">
-				Query:&nbsp;&nbsp;
+				{{ queryString !== "" ? "Query:&nbsp;&nbsp;" : "&nbsp;" }}
 				<span class="spQueryText">{{ queryString }}</span>
 				<div class="relative top-1 ml-auto mr-4">
 					<div v-if="!isFormOpen">
@@ -117,7 +119,7 @@ function submitNewQueryKeyup(event: KeyboardEvent): void {
 					</div>
 					<div class="my-3">
 						<button class="biblQueryBtn" :disabled="!queryString" @click="submitNewQuery(false)">
-							Query as List
+							Show as List
 						</button>
 					</div>
 					<div class="my-3">
@@ -149,7 +151,7 @@ function submitNewQueryKeyup(event: KeyboardEvent): void {
 		<!-- eslint-disable-next-line vue/no-v-html, vuejs-accessibility/click-events-have-key-events, vuejs-accessibility/no-static-element-interactions -->
 		<Collapsible v-model:open="isListOpen" class="prose mb-auto max-w-3xl p-8">
 			<CollapsibleTrigger class="dvStats flex w-full items-baseline">
-				{{ data ? data.stats : "" }}
+				{{ data ? data.stats : "&nbsp;" }}
 
 				<div class="relative top-1 ml-auto mr-4">
 					<div v-if="data && !isListOpen">
@@ -193,6 +195,7 @@ function submitNewQueryKeyup(event: KeyboardEvent): void {
 				</div>
 			</CollapsibleTrigger>
 			<CollapsibleContent>
+				<!-- eslint-disable vue/no-v-html -->
 				<div v-if="data" v-html="data.html" />
 			</CollapsibleContent>
 		</Collapsible>
