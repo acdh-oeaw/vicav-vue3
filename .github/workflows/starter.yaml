@@ -15,6 +15,7 @@ jobs:
       # or see the switch on ref_name script below
       environment: ${{ steps.get_environment_from_git_ref.outputs.environment }}
       environment_short: ${{ steps.get_environment_from_git_ref.outputs.environment_short }}
+      environment_uenc: ${{ steps.get_environment_from_git_ref.outputs.environment_uenc }}
       image_name: nuxt-vicav
       registry_root: ghcr.io/${{ github.repository }}/
       default_port: "3000"
@@ -35,6 +36,7 @@ jobs:
             echo "environment=production"
             echo "environment=production" >> $GITHUB_OUTPUT
             echo "environment_short=prod" >> $GITHUB_OUTPUT
+            echo "environment_uenc=prod" >> $GITHUB_OUTPUT
           elif [ "${{ github.ref_name }}" = "tunocent" ]; then
             echo "environment=tuncoent"
             echo "environment=tunocent" >> $GITHUB_OUTPUT
@@ -43,6 +45,7 @@ jobs:
             echo "environment=review/${{ github.ref_name }}"
             echo "environment=review/${{ github.ref_name }}" >> $GITHUB_OUTPUT
             echo "environment_short=$(echo -n ${{ github.ref_name }} | sed 's/\(feat\(ure\)\{0,1\}\|fix\|chore\|perf\|refactor\|style\|test\)[_/]//' | tr '_' '-' | tr '[:upper:]' '[:lower:]' | cut -c -48 )" >> $GITHUB_OUTPUT
+            echo "environment_uenc=$(echo -n ${{ github.ref_name }} | sed 's~/~%2F~g')" >> $GITHUB_OUTPUT
           fi
   generate_workflow_vars:
     needs: [setup_workflow_env]
@@ -69,7 +72,7 @@ jobs:
         env:
           GH_PROMPT_DISABLED: "true"
           GH_TOKEN: ${{ secrets.ENVIRONMENT_WRITE_TOKEN}}
-          ref_name: ${{ github.ref_name }}
+          ref_name: ${{ needs.setup_workflow_env.outputs.environment_uenc }}
           template_ref_name: develop
         run: |
           # This was refactored using CoPilot
@@ -132,7 +135,7 @@ jobs:
         env:
           GH_PROMPT_DISABLED: "true"
           GH_TOKEN: ${{ secrets.ENVIRONMENT_WRITE_TOKEN}}
-          ref_name: ${{ github.ref_name }}-shawi
+          ref_name: ${{ needs.setup_workflow_env.outputs.environment_uenc }}-shawi
           template_ref_name: develop-shawi
         run: |
           # This was refactored using CoPilot
@@ -195,7 +198,7 @@ jobs:
         env:
           GH_PROMPT_DISABLED: "true"
           GH_TOKEN: ${{ secrets.ENVIRONMENT_WRITE_TOKEN}}
-          ref_name: ${{ github.ref_name }}-tunocent
+          ref_name: ${{ needs.setup_workflow_env.outputs.environment_uenc }}-tunocent
           template_ref_name: develop-tunocent
         run: |
           # This was refactored using CoPilot
@@ -258,7 +261,7 @@ jobs:
         env:
           GH_PROMPT_DISABLED: "true"
           GH_TOKEN: ${{ secrets.ENVIRONMENT_WRITE_TOKEN}}
-          ref_name: ${{ github.ref_name }}-wibarab
+          ref_name: ${{ needs.setup_workflow_env.outputs.environment_uenc }}-wibarab
           template_ref_name: develop-wibarab
         run: |
           # This was refactored using CoPilot
