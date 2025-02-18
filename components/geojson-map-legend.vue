@@ -26,18 +26,24 @@ const collapsibleOpen = ref(true);
 
 const { buildFeatureValueId } = useColorsStore();
 
+type ColumnType = Column<
+	{
+		id: string;
+		type: "Feature";
+		geometry: { type: "Point"; coordinates: Array<number> };
+		properties?: unknown;
+	},
+	unknown
+>;
+
+function getActiveFilterValues(feature: ColumnType) {
+	return [...feature.getFacetedUniqueValues().entries()].filter(([value, _]) =>
+		(feature.getFilterValue() as Map<string, number>).has(value),
+	);
+}
+
 const { AND_OPERATOR } = useAdvancedQueries();
-function getCombinedFilters(
-	column: Column<
-		{
-			id: string;
-			type: "Feature";
-			geometry: { type: "Point"; coordinates: Array<number> };
-			properties?: unknown;
-		},
-		unknown
-	>,
-) {
+function getCombinedFilters(column: ColumnType) {
 	if (!column.getFilterValue()) return [];
 	return [...(column.getFilterValue() as Map<string, number>).keys()]
 		.filter((filter) => filter.includes(AND_OPERATOR))
@@ -56,7 +62,12 @@ function getCombinedFilters(
 				<div v-for="feature in activeFeatures" :key="feature.id" class="my-1">
 					<div class="flex items-start gap-2">
 						<svg class="mt-0.5 size-3.5">
-							<use href="#petal" :style="{ fill: `var(--${feature.id})` }"></use>
+							<use
+								v-if="activeFeatures!.length > 1"
+								href="#petal"
+								:style="{ fill: `var(--${feature.id})` }"
+							></use>
+							<circle v-else cx="8" cy="8" r="4" :style="{ fill: `var(--${feature.id})` }"></circle>
 						</svg>
 						<span>{{ feature.columnDef.header }} ({{ getMatchingRowCount(feature.id) }})</span>
 					</div>
@@ -75,9 +86,7 @@ function getCombinedFilters(
 						class="ml-4"
 					>
 						<div
-							v-for="[value, count] in [...feature.getFacetedUniqueValues().entries()].filter(
-								([value, count]) => (feature.getFilterValue() as Map<string, number>).has(value),
-							)"
+							v-for="[value, count] in getActiveFilterValues(feature)"
 							:key="value"
 							class="flex items-center gap-2"
 						>
@@ -88,6 +97,20 @@ function getCombinedFilters(
 								></use>
 							</svg>
 							<span>{{ value }} ({{ count }})</span>
+						</div>
+						<div v-if="getActiveFilterValues(feature).length > 0" class="flex items-center gap-2">
+							<svg class="mt-0.5 size-3.5">
+								<use
+									href="#petal"
+									:style="{
+										fill: `var(--${feature.id})`,
+										stroke: `var(--${feature.id})`,
+										strokeWidth: '20px',
+										fillOpacity: '0.2',
+									}"
+								></use>
+							</svg>
+							<span>Other feature values</span>
 						</div>
 					</div>
 				</div></CollapsibleContent
