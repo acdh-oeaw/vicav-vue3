@@ -42,6 +42,15 @@ function getActiveFilterValues(feature: ColumnType) {
 	);
 }
 
+function getAllFacetsActive(feature: ColumnType) {
+	for (const [facet, _] of feature.getFacetedUniqueValues()) {
+		if (feature.getFilterValue() && !(feature.getFilterValue() as Map<string, number>).has(facet)) {
+			return false;
+		}
+	}
+	return true;
+}
+
 const { AND_OPERATOR } = useAdvancedQueries();
 function getCombinedFilters(column: ColumnType) {
 	if (!column.getFilterValue()) return [];
@@ -61,7 +70,10 @@ function getCombinedFilters(column: ColumnType) {
 			<CollapsibleContent>
 				<div v-for="feature in activeFeatures" :key="feature.id" class="my-1">
 					<div class="flex items-start gap-2">
-						<svg class="mt-0.5 size-3.5">
+						<svg
+							v-if="getActiveFilterValues(feature).length === 0 || activeFeatures?.length === 1"
+							class="mt-0.5 size-3.5"
+						>
 							<use
 								v-if="activeFeatures!.length > 1"
 								href="#petal"
@@ -98,7 +110,14 @@ function getCombinedFilters(column: ColumnType) {
 							</svg>
 							<span>{{ value }} ({{ count }})</span>
 						</div>
-						<div v-if="getActiveFilterValues(feature).length > 0" class="flex items-center gap-2">
+						<div
+							v-if="
+								getActiveFilterValues(feature).length > 0 &&
+								getActiveFilterValues(feature) &&
+								!getAllFacetsActive(feature)
+							"
+							class="flex items-center gap-2"
+						>
 							<svg class="mt-0.5 size-3.5">
 								<use
 									href="#petal"

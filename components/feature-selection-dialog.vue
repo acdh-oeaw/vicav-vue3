@@ -172,8 +172,6 @@ function toggleAllValues() {
 					<DialogDescription>
 						Select feature values that should be visible as map markers. Click 'Save changes' when
 						you are done.
-
-						{{ selectedCombinedFilters }}
 					</DialogDescription>
 				</DialogHeader>
 
