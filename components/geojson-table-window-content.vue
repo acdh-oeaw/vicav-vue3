@@ -19,6 +19,7 @@ const { isPending } = GeojsonStore.fetchGeojson(url);
 const { fetchedData, tables } = storeToRefs(GeojsonStore);
 const { data: projectData } = useProjectInfo();
 const columnHelper = createColumnHelper();
+const { AND_OPERATOR } = useAdvancedQueries();
 
 const columns = computed(() => {
 	const columnHeadings = fetchedData.value.get(url)?.properties.column_headings;
@@ -80,9 +81,13 @@ const columns = computed(() => {
 											return true;
 										}
 										if (filterValue.size === 0) return true;
-										const filter = [...filterValue.keys()].some((val) =>
-											(row.getValue(columnId) as Array<string>).includes(val),
-										);
+										const filter = [...filterValue.keys()].some((val) => {
+											if (val.includes(AND_OPERATOR)) {
+												return val
+													.split(AND_OPERATOR)
+													.every((v) => (row.getValue(columnId) as Array<string>).includes(v));
+											} else return (row.getValue(columnId) as Array<string>).includes(val);
+										});
 										return filter;
 									},
 									enableGlobalFilter: true,

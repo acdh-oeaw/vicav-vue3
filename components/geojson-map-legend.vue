@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { Column } from "@tanstack/vue-table";
 import { ChevronDown } from "lucide-vue-next";
 
 import type { GeojsonMapSchema } from "@/types/global";
@@ -6,7 +7,6 @@ import type { GeojsonMapSchema } from "@/types/global";
 interface Props {
 	params: Zod.infer<typeof GeojsonMapSchema>["params"];
 }
-
 const props = defineProps<Props>();
 const { params } = toRefs(props);
 
@@ -25,6 +25,24 @@ function getMatchingRowCount(columnId: string) {
 const collapsibleOpen = ref(true);
 
 const { buildFeatureValueId } = useColorsStore();
+
+const { AND_OPERATOR } = useAdvancedQueries();
+function getCombinedFilters(
+	column: Column<
+		{
+			id: string;
+			type: "Feature";
+			geometry: { type: "Point"; coordinates: Array<number> };
+			properties?: unknown;
+		},
+		unknown
+	>,
+) {
+	if (!column.getFilterValue()) return [];
+	return [...(column.getFilterValue() as Map<string, number>).keys()]
+		.filter((filter) => filter.includes(AND_OPERATOR))
+		.map((filter) => filter.split(AND_OPERATOR));
+}
 </script>
 
 <template>
@@ -41,6 +59,14 @@ const { buildFeatureValueId } = useColorsStore();
 							<use href="#petal" :style="{ fill: `var(--${feature.id})` }"></use>
 						</svg>
 						<span>{{ feature.columnDef.header }} ({{ getMatchingRowCount(feature.id) }})</span>
+					</div>
+					<div v-for="filter in getCombinedFilters(feature)" :key="filter.join('')" class="ml-6">
+						<span v-for="(fv, idx) in filter" :key="fv"
+							>{{ fv
+							}}<span v-if="idx < filter.length - 1" class="font-mono font-semibold"
+								>&nbsp;and&nbsp;</span
+							>
+						</span>
 					</div>
 					<div
 						v-if="

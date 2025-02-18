@@ -4,11 +4,12 @@ import { divIcon, type LatLng, marker } from "leaflet";
 import type { MarkerProperties } from "@/lib/api-client";
 import { useGeojsonStore } from "@/stores/use-geojson-store.ts";
 
+import { useAdvancedQueries } from "./use-advanced-queries.ts";
+
 const GeojsonStore = useGeojsonStore();
 const { tables } = storeToRefs(GeojsonStore);
 const url = "https://raw.githubusercontent.com/wibarab/wibarab-data/main/wibarab_varieties.geojson";
 const { buildFeatureValueId } = useColorsStore();
-
 interface PetalEntry {
 	id: string;
 	strokeOnly?: boolean;
@@ -59,6 +60,7 @@ function getFlowerSVG(entries: Array<PetalEntry>, center?: PetalEntry) {
 }
 
 export function usePetalMarker(feature: GeoJsonFeature<Point, MarkerProperties>, latlng: LatLng) {
+	const { AND_OPERATOR } = useAdvancedQueries();
 	const table = tables.value.get(url);
 	const features = table
 		?.getVisibleLeafColumns()
@@ -81,14 +83,21 @@ export function usePetalMarker(feature: GeoJsonFeature<Point, MarkerProperties>,
 				(col.getFilterValue() as Map<string, unknown>).size > 0,
 		)
 		.flatMap((col) =>
-			Object.keys(feature.properties[col.id as keyof MarkerProperties] ?? {}).map((val) => ({
-				id: (col.getFilterValue() as Map<string, unknown>).has(val)
-					? buildFeatureValueId(col.id, val)
-					: col.id,
-				// show "empty" petals for feature values that are not in the filter
-				strokeOnly: !(col.getFilterValue() as Map<string, unknown>).has(val),
-				type: "featureValue",
-			})),
+			Object.keys(feature.properties[col.id as keyof MarkerProperties] ?? {})
+				.filter(
+					(val) =>
+						![...(col.getFilterValue() as Map<string, unknown>).keys()].find(
+							(key) => key.includes(AND_OPERATOR) && key.includes(val),
+						),
+				)
+				.map((val) => ({
+					id: (col.getFilterValue() as Map<string, unknown>).has(val)
+						? buildFeatureValueId(col.id, val)
+						: col.id,
+					// show "empty" petals for feature values that are not in the filter
+					strokeOnly: !(col.getFilterValue() as Map<string, unknown>).has(val),
+					type: "featureValue",
+				})),
 		);
 
 	const htmlContent = getFlowerSVG(
