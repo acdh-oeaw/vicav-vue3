@@ -201,6 +201,7 @@ function toggleAllValues() {
 											@update:checked="
 												(checked) => {
 													handleChange(checked);
+													onChange(filterSuggestion!.combinedValue, checked);
 													addCombinedFilter(filterSuggestion!.combinedValue, checked);
 												}
 											"

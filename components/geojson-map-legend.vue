@@ -83,12 +83,26 @@ function getCombinedFilters(column: ColumnType) {
 						</svg>
 						<span>{{ feature.columnDef.header }} ({{ getMatchingRowCount(feature.id) }})</span>
 					</div>
-					<div v-for="filter in getCombinedFilters(feature)" :key="filter.join('')" class="ml-6">
-						<span v-for="(fv, idx) in filter" :key="fv"
-							>{{ fv
-							}}<span v-if="idx < filter.length - 1" class="font-mono font-semibold"
-								>&nbsp;and&nbsp;</span
-							>
+					<div
+						v-for="filter in getCombinedFilters(feature)"
+						:key="filter.join('')"
+						class="ml-4 flex items-center gap-2"
+					>
+						<svg class="mt-0.5 size-3.5">
+							<use
+								href="#petal"
+								:style="{
+									fill: `var(--${buildFeatureValueId(feature.id, filter.join(AND_OPERATOR))})`,
+								}"
+							></use>
+						</svg>
+						<span>
+							<span v-for="(fv, idx) in filter" :key="fv"
+								>{{ fv
+								}}<span v-if="idx < filter.length - 1" class="font-mono font-semibold"
+									>&nbsp;and&nbsp;</span
+								>
+							</span>
 						</span>
 					</div>
 					<div
@@ -112,8 +126,7 @@ function getCombinedFilters(column: ColumnType) {
 						</div>
 						<div
 							v-if="
-								getActiveFilterValues(feature).length > 0 &&
-								getActiveFilterValues(feature) &&
+								(feature.getFilterValue() as Map<string, number>).size > 0 &&
 								!getAllFacetsActive(feature)
 							"
 							class="flex items-center gap-2"

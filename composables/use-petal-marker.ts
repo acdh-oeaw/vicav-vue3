@@ -88,6 +88,9 @@ export function usePetalMarker(feature: GeoJsonFeature<Point, MarkerProperties>,
 					(val) =>
 						![...(col.getFilterValue() as Map<string, unknown>).keys()].find(
 							(key) => key.includes(AND_OPERATOR) && key.includes(val),
+						) ||
+						[...(col.getFilterValue() as Map<string, unknown>).keys()].find(
+							(key) => !key.includes(AND_OPERATOR) && key.includes(val),
 						),
 				)
 				.map((val) => ({
@@ -100,9 +103,32 @@ export function usePetalMarker(feature: GeoJsonFeature<Point, MarkerProperties>,
 				})),
 		);
 
+	const combinedFilters = table
+		?.getVisibleLeafColumns()
+		.filter(
+			(col) =>
+				col.getIsFiltered() &&
+				col.getFilterValue() &&
+				(col.getFilterValue() as Map<string, unknown>).size > 0,
+		)
+		.flatMap((col) =>
+			[...(col.getFilterValue() as Map<string, unknown>).keys()]
+				.filter(
+					(key) =>
+						key.includes(AND_OPERATOR) &&
+						key
+							.split(AND_OPERATOR)
+							.every((k) => k in (feature.properties[col.id as keyof MarkerProperties] as object)),
+				)
+				.map((key) => ({
+					id: buildFeatureValueId(col.id, key),
+					type: "featureValue",
+				})),
+		);
+
 	const htmlContent = getFlowerSVG(
 		//@ts-expect-error missing accessorFn
-		unfilteredFeatures.concat(featureValues),
+		unfilteredFeatures.concat(featureValues).concat(combinedFilters),
 		flowerCenter,
 	).outerHTML; // Example HTML content
 	const customIcon = divIcon({
