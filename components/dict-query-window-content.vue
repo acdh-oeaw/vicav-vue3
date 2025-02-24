@@ -199,8 +199,7 @@ const api = useApiClient();
 				<div class="mt-4">
 					<Collapsible v-model:open="isExtendedFormOpen" class="prose max-w-3xl px-8 pb-4 pt-8">
 						<CollapsibleTrigger class="dvStats flex w-full items-baseline">
-							Extended options:
-							<span class="spQueryText">{{ queryString }}</span>
+							Extended options:s
 							<div class="relative top-1 ml-auto mr-4">
 								<div v-if="!isExtendedFormOpen">
 									<svg
@@ -212,7 +211,6 @@ const api = useApiClient();
 											height: 1em;
 											fill: currentColor;
 										"
-										version="1.1"
 										viewBox="0 0 1024 1024"
 										xmlns="http://www.w3.org/2000/svg"
 									>
@@ -231,7 +229,6 @@ const api = useApiClient();
 											height: 1em;
 											fill: currentColor;
 										"
-										version="1.1"
 										viewBox="0 0 1024 1024"
 										xmlns="http://www.w3.org/2000/svg"
 									>
