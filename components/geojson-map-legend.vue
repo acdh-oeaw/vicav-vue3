@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { Column } from "@tanstack/vue-table";
 import { ChevronDown } from "lucide-vue-next";
 
 import type { GeojsonMapSchema } from "@/types/global";
@@ -6,7 +7,6 @@ import type { GeojsonMapSchema } from "@/types/global";
 interface Props {
 	params: Zod.infer<typeof GeojsonMapSchema>["params"];
 }
-
 const props = defineProps<Props>();
 const { params } = toRefs(props);
 
@@ -25,6 +25,39 @@ function getMatchingRowCount(columnId: string) {
 const collapsibleOpen = ref(true);
 
 const { buildFeatureValueId } = useColorsStore();
+
+type ColumnType = Column<
+	{
+		id: string;
+		type: "Feature";
+		geometry: { type: "Point"; coordinates: Array<number> };
+		properties?: unknown;
+	},
+	unknown
+>;
+
+function getActiveFilterValues(feature: ColumnType) {
+	return [...feature.getFacetedUniqueValues().entries()].filter(([value, _]) =>
+		(feature.getFilterValue() as Map<string, number>).has(value),
+	);
+}
+
+function getAllFacetsActive(feature: ColumnType) {
+	for (const [facet, _] of feature.getFacetedUniqueValues()) {
+		if (feature.getFilterValue() && !(feature.getFilterValue() as Map<string, number>).has(facet)) {
+			return false;
+		}
+	}
+	return true;
+}
+
+const { AND_OPERATOR } = useAdvancedQueries();
+function getCombinedFilters(column: ColumnType) {
+	if (!column.getFilterValue()) return [];
+	return [...(column.getFilterValue() as Map<string, number>).keys()]
+		.filter((filter) => filter.includes(AND_OPERATOR))
+		.map((filter) => filter.split(AND_OPERATOR));
+}
 </script>
 
 <template>
@@ -38,12 +71,39 @@ const { buildFeatureValueId } = useColorsStore();
 				<div v-for="feature in activeFeatures" :key="feature.id" class="my-1">
 					<div class="flex items-start gap-2">
 						<svg
-							v-if="((feature.getFilterValue() as Map<string, number>) ?? []).size <= 0"
+							v-if="getActiveFilterValues(feature).length === 0 || activeFeatures?.length === 1"
 							class="mt-0.5 size-3.5"
 						>
-							<use href="#petal" :style="{ fill: `var(--${feature.id})` }"></use>
+							<use
+								v-if="activeFeatures!.length > 1"
+								href="#petal"
+								:style="{ fill: `var(--${feature.id})` }"
+							></use>
+							<circle v-else cx="8" cy="8" r="4" :style="{ fill: `var(--${feature.id})` }"></circle>
 						</svg>
 						<span>{{ feature.columnDef.header }} ({{ getMatchingRowCount(feature.id) }})</span>
+					</div>
+					<div
+						v-for="filter in getCombinedFilters(feature)"
+						:key="filter.join('')"
+						class="ml-4 flex items-center gap-2"
+					>
+						<svg class="mt-0.5 size-3.5">
+							<use
+								href="#petal"
+								:style="{
+									fill: `var(--${buildFeatureValueId(feature.id, filter.join(AND_OPERATOR))})`,
+								}"
+							></use>
+						</svg>
+						<span>
+							<span v-for="(fv, idx) in filter" :key="fv"
+								>{{ fv
+								}}<span v-if="idx < filter.length - 1" class="font-mono font-semibold"
+									>&nbsp;and&nbsp;</span
+								>
+							</span>
+						</span>
 					</div>
 					<div
 						v-if="
@@ -52,9 +112,7 @@ const { buildFeatureValueId } = useColorsStore();
 						class="ml-4"
 					>
 						<div
-							v-for="[value, count] in [...feature.getFacetedUniqueValues().entries()].filter(
-								([value, count]) => (feature.getFilterValue() as Map<string, number>).has(value),
-							)"
+							v-for="[value, count] in getActiveFilterValues(feature)"
 							:key="value"
 							class="flex items-center gap-2"
 						>
@@ -65,6 +123,26 @@ const { buildFeatureValueId } = useColorsStore();
 								></use>
 							</svg>
 							<span>{{ value }} ({{ count }})</span>
+						</div>
+						<div
+							v-if="
+								(feature.getFilterValue() as Map<string, number>).size > 0 &&
+								!getAllFacetsActive(feature)
+							"
+							class="flex items-center gap-2"
+						>
+							<svg class="mt-0.5 size-3.5">
+								<use
+									href="#petal"
+									:style="{
+										fill: `var(--${feature.id})`,
+										stroke: `var(--${feature.id})`,
+										strokeWidth: '20px',
+										fillOpacity: '0.2',
+									}"
+								></use>
+							</svg>
+							<span>Other feature values</span>
 						</div>
 					</div>
 				</div></CollapsibleContent
