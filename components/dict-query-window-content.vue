@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { Collapse, initTWE } from "tw-elements";
-
 import type { DictQuerySchema } from "@/types/global";
 
 const props = defineProps<{
@@ -119,19 +117,6 @@ const isLoading = computed(() => {
 });
 
 const isExtendedFormOpen = ref(false);
-onMounted(() => {
-	initTWE({ Collapse });
-	const formElement = document.getElementById(`${formId}_ext`);
-	formElement?.addEventListener("show.te.collapse", () => {
-		isExtendedFormOpen.value = true;
-	});
-	formElement?.addEventListener("hidden.te.collapse", () => {
-		isExtendedFormOpen.value = false;
-	});
-	new Collapse(formElement, {
-		toggle: isExtendedFormOpen.value,
-	});
-});
 
 /* pagination */
 const goToPage = (newPage: number) => {
@@ -212,114 +197,104 @@ const api = useApiClient();
 					</div>
 				</div>
 				<div class="mt-4">
-					<button
-						:aria-controls="`${formId}_ext`"
-						aria-expanded="false"
-						class="dvStats flex w-full items-baseline"
-						data-te-collapse-init
-						:data-te-target="`#${formId}_ext`"
-						tabindex="0"
-						type="button"
-					>
-						Extended options:
-						<div class="relative top-1 ml-auto mr-4">
-							<div v-if="!isExtendedFormOpen">
-								<svg
-									class="svg-icon"
-									style="
-										vertical-align: middle;
-										overflow: hidden;
-										width: 1em;
-										height: 1em;
-										fill: currentColor;
-									"
-									version="1.1"
-									viewBox="0 0 1024 1024"
-									xmlns="http://www.w3.org/2000/svg"
-								>
-									<path
-										d="M511.5 789.9 80.6 359c-22.8-22.8-22.8-59.8 0-82.6 22.8-22.8 59.8-22.8 82.6 0l348.3 348.3 348.3-348.3c22.8-22.8 59.8-22.8 82.6 0 22.8 22.8 22.8 59.8 0 82.6L511.5 789.9 511.5 789.9zM511.5 789.9"
-									/>
-								</svg>
+					<Collapsible v-model:open="isExtendedFormOpen" class="prose max-w-3xl px-8 pb-4 pt-8">
+						<CollapsibleTrigger class="dvStats flex w-full items-baseline">
+							Extended options:s
+							<div class="relative top-1 ml-auto mr-4">
+								<div v-if="!isExtendedFormOpen">
+									<svg
+										class="svg-icon"
+										style="
+											vertical-align: middle;
+											overflow: hidden;
+											width: 1em;
+											height: 1em;
+											fill: currentColor;
+										"
+										viewBox="0 0 1024 1024"
+										xmlns="http://www.w3.org/2000/svg"
+									>
+										<path
+											d="M511.5 789.9 80.6 359c-22.8-22.8-22.8-59.8 0-82.6 22.8-22.8 59.8-22.8 82.6 0l348.3 348.3 348.3-348.3c22.8-22.8 59.8-22.8 82.6 0 22.8 22.8 22.8 59.8 0 82.6L511.5 789.9 511.5 789.9zM511.5 789.9"
+										/>
+									</svg>
+								</div>
+								<div v-if="isExtendedFormOpen">
+									<svg
+										class="svg-icon"
+										style="
+											vertical-align: middle;
+											overflow: hidden;
+											width: 1em;
+											height: 1em;
+											fill: currentColor;
+										"
+										viewBox="0 0 1024 1024"
+										xmlns="http://www.w3.org/2000/svg"
+									>
+										<path
+											d="M511.5 259.3 942.4 690.1c22.8 22.8 22.8 59.8 0 82.6-22.8 22.8-59.8 22.8-82.6 0L511.5 424.5 163.2 772.8c-22.8 22.8-59.8 22.8-82.6 0-22.8-22.8-22.8-59.8 0-82.6L511.5 259.3 511.5 259.3zM511.5 259.3"
+										/>
+									</svg>
+								</div>
 							</div>
-							<div v-if="isExtendedFormOpen">
-								<svg
-									class="svg-icon"
-									style="
-										vertical-align: middle;
-										overflow: hidden;
-										width: 1em;
-										height: 1em;
-										fill: currentColor;
-									"
-									version="1.1"
-									viewBox="0 0 1024 1024"
-									xmlns="http://www.w3.org/2000/svg"
-								>
-									<path
-										d="M511.5 259.3 942.4 690.1c22.8 22.8 22.8 59.8 0 82.6-22.8 22.8-59.8 22.8-82.6 0L511.5 424.5 163.2 772.8c-22.8 22.8-59.8 22.8-82.6 0-22.8-22.8-22.8-59.8 0-82.6L511.5 259.3 511.5 259.3zM511.5 259.3"
-									/>
-								</svg>
+						</CollapsibleTrigger>
+						<CollapsibleContent>
+							<div :id="`${formId}_ext`" class="bg-gray-200 px-4">
+								<table class="w-full max-w-full table-fixed">
+									<tbody>
+										<tr>
+											<th>page</th>
+											<td>
+												<input v-model="page" class="w-full" type="number" />
+											</td>
+										</tr>
+										<tr>
+											<th>pageSize</th>
+											<td>
+												<input v-model="pageSize" class="w-full" type="number" />
+											</td>
+										</tr>
+										<tr>
+											<th>id</th>
+											<td>
+												<input v-model="id" class="w-full" type="text" />
+											</td>
+										</tr>
+										<tr>
+											<th>ids</th>
+											<td>
+												<input v-model="ids" class="w-full" type="text" />
+											</td>
+										</tr>
+										<tr>
+											<th>sort</th>
+											<td>
+												<select v-model="sort" class="w-full">
+													<option :value="null"></option>
+													<option value="none">none</option>
+													<option value="asc">asc</option>
+													<option value="desc">desc</option>
+												</select>
+											</td>
+										</tr>
+										<tr>
+											<th>altLemma</th>
+											<td>
+												<input v-model="altLemma" class="w-full" type="text" />
+											</td>
+										</tr>
+										<tr>
+											<th>format</th>
+											<td>
+												<input v-model="format" class="w-full" type="text" />
+											</td>
+										</tr>
+									</tbody>
+								</table>
 							</div>
-						</div>
-					</button>
-					<div
-						:id="`${formId}_ext`"
-						class="!visible hidden max-w-3xl bg-gray-200 px-4"
-						data-te-collapse-item
-					>
-						<table class="w-full max-w-full table-fixed">
-							<tbody>
-								<tr>
-									<th>page</th>
-									<td>
-										<input v-model="page" class="w-full" type="number" />
-									</td>
-								</tr>
-								<tr>
-									<th>pageSize</th>
-									<td>
-										<input v-model="pageSize" class="w-full" type="number" />
-									</td>
-								</tr>
-								<tr>
-									<th>id</th>
-									<td>
-										<input v-model="id" class="w-full" type="text" />
-									</td>
-								</tr>
-								<tr>
-									<th>ids</th>
-									<td>
-										<input v-model="ids" class="w-full" type="text" />
-									</td>
-								</tr>
-								<tr>
-									<th>sort</th>
-									<td>
-										<select v-model="sort" class="w-full">
-											<option :value="null"></option>
-											<option value="none">none</option>
-											<option value="asc">asc</option>
-											<option value="desc">desc</option>
-										</select>
-									</td>
-								</tr>
-								<tr>
-									<th>altLemma</th>
-									<td>
-										<input v-model="altLemma" class="w-full" type="text" />
-									</td>
-								</tr>
-								<tr>
-									<th>format</th>
-									<td>
-										<input v-model="format" class="w-full" type="text" />
-									</td>
-								</tr>
-							</tbody>
-						</table>
-					</div>
+						</CollapsibleContent>
+					</Collapsible>
 				</div>
 				<div class="mt-3">
 					<button
