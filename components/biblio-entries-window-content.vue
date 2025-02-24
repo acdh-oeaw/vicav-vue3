@@ -24,13 +24,14 @@ const queryString: Ref<string> = ref(params.value.queryString);
 const isTextQuery: Ref<boolean> = ref(true);
 const isMapQuery: Ref<boolean> = ref(false);
 
-const isFormOpen = ref(queryString.value === "");
-const isListOpen = ref(false);
+const isFormOpen = ref(queryString.value === "" || params.value.showMap);
+const isListOpen = ref(queryString.value !== "" && !params.value.showMap);
 
 function submitNewQuery(map: boolean): void {
 	if (queryString.value === "") return;
 	if (!isTextQuery.value && !isMapQuery.value) isTextQuery.value = true;
 	params.value.queryString = queryString.value;
+	params.value.showMap = map;
 	emit("updateQueryParam", queryString.value);
 	if (map) {
 		addWindow({
