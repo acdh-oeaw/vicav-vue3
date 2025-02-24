@@ -99,11 +99,7 @@ const { setColor } = useColorsStore();
 									<span class="flex-1">{{ column.columnDef.header }}</span>
 
 									<label
-										v-if="
-											column.getIsVisible() &&
-											(!column.getIsFiltered() ||
-												(column.getFilterValue() as Map<string, number>).size <= 0)
-										"
+										v-if="column.getIsVisible()"
 										class="ml-3 flex grow-0 basis-0 items-center p-0"
 										@click.capture.stop
 									>

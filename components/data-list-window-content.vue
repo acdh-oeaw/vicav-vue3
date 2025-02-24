@@ -1,5 +1,6 @@
 <!-- eslint-disable @typescript-eslint/sort-type-constituents -->
 <script lang="ts" setup>
+import { Volume2, VolumeX } from "lucide-vue-next";
 import type { JsonObject } from "type-fest";
 
 import type { DataListWindowItem, DataTypesEnum } from "@/types/global.d";
@@ -82,7 +83,7 @@ const debugString = debug ? JSON.stringify(groupedItems, null, 2) : "";
 							{{ dataTypes[dataType]!.name }}
 						</em>
 						<ul v-for="item in items" :key="item.id">
-							<li class="text-base">
+							<li class="flex text-base">
 								<a
 									v-if="item.dataType !== 'CorpusText' || item['@hasTEIw'] === 'true'"
 									class="text-primary underline"
@@ -94,27 +95,15 @@ const debugString = debug ? JSON.stringify(groupedItems, null, 2) : "";
 									{{ item.label }}
 								</a>
 								<span v-else> {{ item.label }} </span>
+								<span> &nbsp; </span>
 								<span
-									v-if="
-										item.teiHeader.fileDesc.sourceDesc.recordingStmt &&
-										(item.teiHeader.fileDesc.sourceDesc.recordingStmt.recording.media?.['@url'] ||
-											item.teiHeader.fileDesc.sourceDesc.recordingStmt.recording.p?.ref)
-									"
+									v-if="item.audioAvailability === 'free'"
+									title="Audio recording is publicly available"
 								>
-									&nbsp; {{ item.teiHeader.fileDesc.sourceDesc.recordingStmt.recording["@type"] }}
-									<span v-if="item.teiHeader.fileDesc.sourceDesc.recordingStmt.recording.media">
-										: {{ item.teiHeader.fileDesc.sourceDesc.recordingStmt.recording.media["@url"] }}
-									</span>
-									<span v-if="item.teiHeader.fileDesc.sourceDesc.recordingStmt.recording.p?.ref">
-										:
-										{{
-											item.teiHeader.fileDesc.sourceDesc.recordingStmt.recording.p.ref["@target"]
-										}}
-									</span>
-									<span v-if="item.teiHeader.profileDesc?.settingDesc?.setting?.placeName.$">
-										:
-										{{ item.teiHeader.profileDesc.settingDesc.setting.placeName.$ }}
-									</span>
+									<Volume2 class="mx-2 mt-[2px] size-5" />
+								</span>
+								<span v-else title="Audio recording is restricted">
+									<VolumeX class="mx-2 mt-[2px] size-5" />
 								</span>
 							</li>
 						</ul>

@@ -15,6 +15,10 @@ export type simpleTEIMetadata = {
 	label: string;
 	title: string;
 	author: Array<Author>;
+	recording: Array<Author>;
+	principal: Array<Author>;
+	transcription: Array<Author>;
+	"transfer to ELAN": Array<Author>;
 	dataType: DataTypesEnum;
 	category: string;
 	resp: string;
@@ -30,7 +34,28 @@ export type simpleTEIMetadata = {
 	person: Array<simplePerson>;
 	"@hasTEIw": string;
 	teiHeader: TeiHeader;
+	publication: {
+		refType: "external" | "internal";
+		type: string;
+		bibl: {
+			author: Array<Author>;
+			editor?: Array<Author>;
+			title: string;
+			"container-title"?: string;
+			issued: Array<string>;
+			page?: string;
+			volume?: string;
+			publisherPlace?: string;
+		};
+	};
 };
+
+export type Responsibility =
+	| "author"
+	| "recording"
+	| "principal"
+	| "transcription"
+	| "transfer to ELAN";
 
 // TeiCropus metadata definition
 
@@ -93,7 +118,7 @@ export type XmlTextNode = {
 
 export type RespStmt = {
 	persName?: PersName | TeiTypedTarget;
-	resp: XmlTextNode;
+	resp: { $: Responsibility };
 	name?: Author;
 	author?: Author;
 };
@@ -158,6 +183,28 @@ export type SourceDesc = {
 	p?: P;
 	listBibl?: ListBibl;
 	recordingStmt?: RecordingStmt;
+	biblStruct?: BiblStruct;
+};
+
+export type BiblStruct = {
+	"@type": string;
+	analytic?: {
+		title: XmlTextNode;
+		author: PersName;
+	};
+	monogr: {
+		title?: TeiTypedTarget;
+		author?: PersName;
+		editor?: PersName;
+		imprint?: {
+			date: XmlTextNode;
+			pubPlace?: XmlTextNode;
+			biblScopes: Array<{
+				"@unit": string;
+				$: string;
+			}>;
+		};
+	};
 };
 
 export type ListBibl = {
