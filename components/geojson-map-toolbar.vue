@@ -133,7 +133,7 @@ const { setColor } = useColorsStore();
 			</div>
 		</div>
 		<div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm font-medium text-on-surface/75">
-			<MultiValueSearchbar />
+			<MultiValueSearchbar v-if="table" :table="table" />
 		</div>
 	</div>
 </template>

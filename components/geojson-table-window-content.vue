@@ -157,13 +157,19 @@ function applyGlobalFilter(table: Table<FeatureType>) {
 	table.setGlobalFilter(true);
 }
 
-const { addColor } = useColorsStore();
+const { addColor, addColorVariant, buildFeatureValueId } = useColorsStore();
 const { colors } = storeToRefs(useColorsStore());
 function onVisibilityChange(props: { table: Table<FeatureType>; col: Record<string, boolean> }) {
 	applyGlobalFilter(props.table);
 	const changedColumnKey = Object.keys(props.col)[0]!;
 	const visibilityValue = props.col[changedColumnKey]!;
 	if (visibilityValue && !colors.value.has(changedColumnKey)) addColor(changedColumnKey);
+}
+function onColumnFilterChange(columnFilters: Array<{ id: string; value: Map<string, unknown> }>) {
+	columnFilters.forEach((column) => {
+		for (const key of column.value.keys())
+			if (!colors.value.has(buildFeatureValueId(column.id, key))) addColorVariant(column.id, key);
+	});
 }
 function registerTable(table: Table<FeatureType>) {
 	tables.value.set(url, table);
@@ -212,6 +218,7 @@ function registerTable(table: Table<FeatureType>) {
 		</div>
 		<DataTable
 			v-if="!isPending"
+			:column-filter-change-fn="onColumnFilterChange"
 			:columns="columns as unknown as Array<ColumnDef<never>>"
 			:enable-filter-on-columns="true"
 			:global-filter-fn="filterEmptyRows"

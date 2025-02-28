@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { Table } from "@tanstack/vue-table";
 import { computedWithControl } from "@vueuse/core";
 import {
 	ComboboxAnchor,
@@ -12,6 +13,12 @@ import {
 	useFilter,
 } from "reka-ui";
 import { computed, ref, watch, watchEffect } from "vue";
+
+import type { FeatureType } from "@/types/global";
+
+const props = defineProps<{
+	table: Table<FeatureType>;
+}>();
 
 const {
 	getList,
@@ -119,7 +126,7 @@ function handleSelect(ev: CustomEvent) {
 }
 
 function submitSearch() {
-	parseSearchString(value.value);
+	parseSearchString(value.value, props.table);
 }
 </script>
 
