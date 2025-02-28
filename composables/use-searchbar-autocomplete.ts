@@ -12,7 +12,7 @@ function getFeatureList() {
 	const table = tables.value.get(url);
 	if (!table) return [];
 	const features = table.getAllLeafColumns().map((column) => ({
-		value: `feature:${column.id}`,
+		value: `${column.id}:`,
 		listValue: column.columnDef.header!,
 		col: column,
 	}));
@@ -24,7 +24,7 @@ function getValueList(columns: typeof features.value) {
 	return columns
 		.map((item) =>
 			[...item.col.getFacetedUniqueValues().keys()].map((key: string) => ({
-				value: `value:"${key}"`,
+				value: `:"${key}"`,
 				listValue: key,
 				col: item.col,
 			})),
@@ -32,7 +32,7 @@ function getValueList(columns: typeof features.value) {
 		.flat();
 }
 
-function getTriggerOffset(element: HTMLTextAreaElement, triggers = defaultTriggers) {
+function getTriggerOffset(element: HTMLTextAreaElement, triggers = defaultTriggers.value) {
 	const { value, selectionStart } = element;
 	for (let i = selectionStart; i >= 0; i--) {
 		for (const trigger of triggers) {
@@ -44,7 +44,7 @@ function getTriggerOffset(element: HTMLTextAreaElement, triggers = defaultTrigge
 	return -1;
 }
 
-function getTrigger(element: HTMLTextAreaElement, triggers = defaultTriggers) {
+function getTrigger(element: HTMLTextAreaElement, triggers = defaultTriggers.value) {
 	const { value, selectionStart } = element;
 	for (const trigger of triggers) {
 		const triggerStart = selectionStart - trigger.length;
@@ -59,14 +59,14 @@ function getTrigger(element: HTMLTextAreaElement, triggers = defaultTriggers) {
 	return null;
 }
 
-function getSearchValue(element: HTMLTextAreaElement, triggers = defaultTriggers) {
+function getSearchValue(element: HTMLTextAreaElement, triggers = defaultTriggers.value) {
 	const offset = getTriggerOffset(element, triggers);
 	const trigger = getTrigger(element, triggers);
 	if (offset === -1) return "";
 	return element.value.slice(offset + (trigger?.length ?? 0), element.selectionStart);
 }
 
-function getAnchorRect(element: HTMLTextAreaElement, triggers = defaultTriggers) {
+function getAnchorRect(element: HTMLTextAreaElement, triggers = defaultTriggers.value) {
 	const offset = getTriggerOffset(element, triggers);
 	const { left, top, height } = getCaretCoordinates(element, offset + 1);
 	const { x, y } = element.getBoundingClientRect();
@@ -86,7 +86,7 @@ function replaceValue(
 ) {
 	const nextValue = `${
 		prevValue.slice(0, offset) + displayValue
-	} ${prevValue.slice(offset + triggerValue.length + searchValue.length + 1)}`;
+	}${triggerValue === ":" ? "" : " "}${prevValue.slice(offset + triggerValue.length + searchValue.length + 1)}`;
 	return nextValue;
 }
 
@@ -223,37 +223,28 @@ function handleInputLineHeight(style: CSSStyleDeclaration, computed: CSSStyleDec
 	}
 }
 
-function getActiveFeatures(inputString: string) {
-	const splitInput = inputString.split(" ");
+function getActiveFeatures(trigger: string) {
 	const matchingFeatures = features.value.filter((feature) =>
-		inputString.toLowerCase().includes(feature.value.toLowerCase()),
+		trigger.toLowerCase().includes(feature.value.toLowerCase()),
 	);
-
-	matchingFeatures.sort((a, b) => splitInput.indexOf(b.value) - splitInput.indexOf(a.value));
 	return matchingFeatures[0] ? [matchingFeatures[0]] : [];
 }
 
-const defaultTriggers = ["feature:", "value:"];
+const defaultTriggers = computed(() => [":"].concat(features.value.map((item) => item.value)));
 
-function getList(trigger: string | null, searchString: string) {
+function getList(trigger: string | null) {
 	switch (trigger) {
-		case "feature:":
+		case ":":
 			return features.value.map((item) => item.listValue);
-		case "value:":
-			return getValueList(getActiveFeatures(searchString)).map((item) => item.listValue);
-		case null:
 		default:
+			return getValueList(getActiveFeatures(trigger)).map((item) => item.listValue);
+		case null:
 			return [];
 	}
 }
 
-function getValue(listValue: string, trigger: string | null, searchString: string) {
-	const list =
-		trigger === "feature:"
-			? features.value
-			: trigger === "value:"
-				? getValueList(getActiveFeatures(searchString))
-				: [];
+function getValue(listValue: string, trigger: string | null) {
+	const list = trigger === ":" ? features.value : getValueList(getActiveFeatures(trigger ?? ""));
 	return list.find((item) => item.listValue === listValue)?.value;
 }
 

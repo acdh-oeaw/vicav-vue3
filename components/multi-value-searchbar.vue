@@ -23,6 +23,8 @@ const {
 	replaceValue,
 } = useSearchbarAutocomplete();
 
+const { parseSearchString } = useFilterParser();
+
 const { contains } = useFilter({ sensitivity: "base" });
 
 const value = ref("");
@@ -52,8 +54,7 @@ const list = computed(() => {
 	const textarea = textareaRef.value?.$el;
 	if (!textarea) return;
 
-	const offset = getTriggerOffset(textarea);
-	const _list = getList(trigger.value, value.value.slice(0, offset));
+	const _list = getList(trigger.value);
 	return _list.filter((item) => contains(String(item), searchValue.value));
 });
 
@@ -94,7 +95,7 @@ function handleSelect(ev: CustomEvent) {
 	if (!textarea) return;
 
 	const offset = getTriggerOffset(textarea);
-	const displayValue = getValue(ev.detail.value, trigger.value, value.value.slice(0, offset));
+	const displayValue = getValue(ev.detail.value, trigger.value);
 	if (!displayValue) return;
 
 	// prevent setting `ComboobxInput`
@@ -109,58 +110,68 @@ function handleSelect(ev: CustomEvent) {
 	);
 
 	trigger.value = null;
-	const nextCaretOffset = offset + displayValue.length + 1;
+	const nextCaretOffset = offset + displayValue.length;
 	caretOffset.value = nextCaretOffset;
+
+	nextTick().then(() => {
+		handleChange({ target: textarea } as InputEvent);
+	});
+}
+
+function submitSearch() {
+	parseSearchString(value.value);
 }
 </script>
 
 <template>
-	<ComboboxRoot
-		v-model:open="open"
-		class="flex w-full flex-col"
-		ignore-filter
-		:reset-search-term-on-blur="false"
-	>
-		<Label class="sr-only text-sm font-semibold" for="comment"> Comment </Label>
+	<div class="grid w-full grid-cols-[1fr_auto] gap-2">
+		<ComboboxRoot
+			v-model:open="open"
+			class="flex w-full flex-col"
+			ignore-filter
+			:reset-search-term-on-blur="false"
+		>
+			<Label class="sr-only text-sm font-semibold" for="search"> search </Label>
 
-		<ComboboxInput
-			id="comment"
-			ref="textareaRef"
-			v-model="value"
-			as="input"
-			autocomplete="off"
-			class="mt-2 w-full rounded-md border border-muted p-2"
-			placeholder="Type feature: or value:"
-			rows="5"
-			@input="handleChange"
-			@keydown.enter="
-				(ev: KeyboardEvent) => {
-					if (open) ev.preventDefault();
-				}
-			"
-			@keydown.left.right="open = false"
-			@pointerdown="open = false"
-		/>
-		<ComboboxAnchor :reference="reference" />
+			<ComboboxInput
+				id="search"
+				ref="textareaRef"
+				v-model="value"
+				as="input"
+				autocomplete="off"
+				class="w-full rounded-md border border-muted p-2"
+				placeholder="Type : to get a list of available features"
+				rows="5"
+				@input="handleChange"
+				@keydown.enter="
+					(ev: KeyboardEvent) => {
+						if (open) ev.preventDefault();
+					}
+				"
+				@keydown.left.right="open = false"
+				@pointerdown="open = false"
+			/>
+			<ComboboxAnchor :reference="reference" />
 
-		<ComboboxPortal>
-			<ComboboxContent
-				v-if="list?.length"
-				align="start"
-				class="max-h-48 max-w-80 overflow-y-auto overflow-x-hidden rounded-md border border-neutral-500/30 bg-white p-1.5"
-				position="popper"
-				side="bottom"
-			>
-				<ComboboxItem
-					v-for="item in list"
-					:key="String(item)"
-					class="flex cursor-default rounded px-2 py-1 data-[highlighted]:bg-muted"
-					:value="item"
-					@select="handleSelect"
+			<ComboboxPortal>
+				<ComboboxContent
+					v-if="list?.length"
+					align="start"
+					class="max-h-48 max-w-80 overflow-y-auto overflow-x-hidden rounded-md border border-neutral-500/30 bg-white p-1.5"
+					position="popper"
+					side="bottom"
 				>
-					<span class="truncate">{{ item }}</span>
-				</ComboboxItem>
-			</ComboboxContent>
-		</ComboboxPortal>
-	</ComboboxRoot>
+					<ComboboxItem
+						v-for="item in list"
+						:key="String(item)"
+						class="flex cursor-default rounded px-2 py-1 data-[highlighted]:bg-muted"
+						:value="item"
+						@select="handleSelect"
+					>
+						<span class="truncate">{{ item }}</span>
+					</ComboboxItem>
+				</ComboboxContent>
+			</ComboboxPortal> </ComboboxRoot
+		><Button class="self-end" variant="outline" @click="submitSearch">Search</Button>
+	</div>
 </template>
