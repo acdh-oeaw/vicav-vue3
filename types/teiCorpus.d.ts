@@ -298,7 +298,8 @@ export type Category = {
 };
 
 export type CatDesc = {
-	name: XmlTextNode;
+	name?: XmlTextNode;
+	$?: string;
 };
 
 export type LangUsage = {
