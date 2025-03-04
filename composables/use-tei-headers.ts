@@ -284,7 +284,13 @@ const extractMetadata = function (
 			(cat) => cat["@id"] === categoryId?.replace("corpus:", ""),
 		);
 
-		template.category = category!.catDesc.name.$;
+		if (category?.catDesc.name) {
+			template.category = category.catDesc.name.$;
+		} else if (category?.catDesc.$) {
+			template.category = category.catDesc.$;
+		} else {
+			template.category = "Unknown";
+		}
 	}
 
 	if (!template.person.at(0)?.name) {
