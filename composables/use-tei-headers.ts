@@ -76,7 +76,7 @@ const extractMetadata = function (
 	if (item.teiHeader.fileDesc.sourceDesc.recordingStmt?.recording.date)
 		template.recordingDate =
 			item.teiHeader.fileDesc.sourceDesc.recordingStmt.recording.date["@when"];
-	template.pubDate = item.teiHeader.fileDesc.publicationStmt.date.$ ?? "unknown";
+	template.pubDate = item.teiHeader.fileDesc.publicationStmt.date?.$ ?? "unknown";
 	const dataTypeObject = Object.values(dataTypes).find(
 		(dataTypeObject) => dataTypeObject.collection === dataType,
 	);
@@ -276,7 +276,7 @@ const extractMetadata = function (
 		const mergedTaxonomies: Taxonomy = {
 			categories: [],
 		};
-		corpusMetadata.encodingDesc.classDecl?.taxonomies.forEach((t) => {
+		corpusMetadata.encodingDesc?.classDecl?.taxonomies.forEach((t) => {
 			mergedTaxonomies.categories = mergedTaxonomies.categories.concat(t.categories);
 			return mergedTaxonomies;
 		});

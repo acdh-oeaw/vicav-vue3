@@ -79,7 +79,7 @@ export type TEI = {
 export type TeiHeader = {
 	"@id"?: string;
 	fileDesc: FileDesc;
-	encodingDesc: EncodingDesc;
+	encodingDesc?: EncodingDesc;
 	profileDesc?: ProfileDesc;
 	revisionDesc?: RevisionDesc;
 };
@@ -134,7 +134,7 @@ export type PersName = {
 
 export type PublicationStmt = {
 	pubPlace?: XmlTextNode;
-	date: TeiDate;
+	date?: TeiDate;
 	availability: Availability;
 	publishers?: Array<TeiTypedTarget>;
 	distributor?: TeiTypedTarget;
