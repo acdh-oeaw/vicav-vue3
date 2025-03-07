@@ -1,11 +1,9 @@
 import type { Table } from "@tanstack/vue-table";
 import { type LiqeQuery, parse, type TagToken } from "liqe";
 
-import type { FeatureType } from "@/types/global";
-
 const { AND_OPERATOR } = useAdvancedQueries();
 
-function parseSearchString(searchString: string, table: Table<FeatureType>) {
+function parseSearchString(searchString: string, table: Table<unknown>) {
 	const ast = parse(searchString);
 
 	table.resetColumnFilters();
@@ -13,7 +11,7 @@ function parseSearchString(searchString: string, table: Table<FeatureType>) {
 	traverseASTandApplyFilter(ast, table);
 }
 
-function setColumnFilter(columnId: string, value: string, table: Table<FeatureType>) {
+function setColumnFilter(columnId: string, value: string, table: Table<unknown>) {
 	table.getColumn(columnId)?.toggleVisibility(true);
 	if (!table.getColumn(columnId)?.getFilterValue()) {
 		table.getColumn(columnId)?.setFilterValue(new Map());
@@ -67,7 +65,7 @@ function traverseAST(ast: LiqeQuery): Array<{ column: string; value: string }> {
 	return [];
 }
 
-function traverseASTandApplyFilter(ast: LiqeQuery, table: Table<FeatureType>) {
+function traverseASTandApplyFilter(ast: LiqeQuery, table: Table<unknown>) {
 	traverseAST(ast).forEach((result) => {
 		setColumnFilter(result.column, result.value, table);
 	});
