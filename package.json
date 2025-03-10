@@ -134,7 +134,8 @@
 	"pnpm": {
 		"patchedDependencies": {
 			"winbox@0.2.82": "patches/winbox@0.2.82.patch",
-			"@types/winbox@0.2.3": "patches/@types__winbox@0.2.3.patch"
+			"@types/winbox@0.2.3": "patches/@types__winbox@0.2.3.patch",
+			"liqe": "patches/liqe.patch"
 		}
 	},
 	"browserslist": {
