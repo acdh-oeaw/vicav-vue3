@@ -1,5 +1,11 @@
 import type { Table } from "@tanstack/vue-table";
-import { type LiqeQuery, parse, type TagToken } from "liqe";
+import {
+	type LiqeQuery,
+	type LogicalExpressionToken,
+	type ParenthesizedExpressionToken,
+	parse,
+	type TagToken,
+} from "liqe";
 
 const { AND_OPERATOR } = useAdvancedQueries();
 
@@ -66,9 +72,67 @@ function traverseAST(ast: LiqeQuery): Array<{ column: string; value: string }> {
 }
 
 function traverseASTandApplyFilter(ast: LiqeQuery, table: Table<unknown>) {
-	traverseAST(ast).forEach((result) => {
+	traverseAST(normalizeASTtoDNF(ast)).forEach((result) => {
 		setColumnFilter(result.column, result.value, table);
 	});
+}
+
+function constructLocicalExpression(
+	operator: "AND" | "OR",
+	left: LiqeQuery,
+	right: LiqeQuery,
+): LogicalExpressionToken {
+	return {
+		type: "LogicalExpression",
+		operator: { type: "BooleanOperator", operator: operator, location: { start: -1, end: -1 } },
+		left: left,
+		right: right,
+		location: { start: -1, end: -1 },
+	};
+}
+
+function normalizeASTtoDNF(ast: LiqeQuery): Exclude<LiqeQuery, ParenthesizedExpressionToken> {
+	switch (ast.type) {
+		case "Tag": {
+			return ast;
+		}
+		case "ParenthesizedExpression": {
+			return normalizeASTtoDNF(ast.expression);
+		}
+		case "LogicalExpression": {
+			if (ast.operator.operator === "AND") {
+				const left = normalizeASTtoDNF(ast.left);
+				const right = normalizeASTtoDNF(ast.right);
+				if (left.type === "EmptyExpression" || right.type === "EmptyExpression") {
+					return ast;
+				}
+				if (typeof left.operator !== "string" && left.operator.operator === "OR") {
+					const newLeft = normalizeASTtoDNF(constructLocicalExpression("AND", left.left!, right));
+					const newRight = normalizeASTtoDNF(constructLocicalExpression("AND", left.right!, right));
+					return constructLocicalExpression("OR", newLeft, newRight);
+				}
+				if (typeof right.operator !== "string" && right.operator.operator === "OR") {
+					const newLeft = normalizeASTtoDNF(constructLocicalExpression("AND", left, right.left!));
+					const newRight = normalizeASTtoDNF(constructLocicalExpression("AND", left, right.right!));
+					return constructLocicalExpression("OR", newLeft, newRight);
+				}
+				return constructLocicalExpression("AND", left, right);
+			}
+			// if ast.operator.operator === "OR":
+			else {
+				return constructLocicalExpression(
+					"OR",
+					normalizeASTtoDNF(ast.left),
+					normalizeASTtoDNF(ast.right),
+				);
+			}
+		}
+		case "EmptyExpression":
+		case "UnaryOperator":
+		default: {
+			return ast;
+		}
+	}
 }
 
 export function useFilterParser() {
