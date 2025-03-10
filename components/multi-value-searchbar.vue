@@ -14,10 +14,8 @@ import {
 } from "reka-ui";
 import { computed, ref, watch, watchEffect } from "vue";
 
-import type { FeatureType } from "@/types/global";
-
 const props = defineProps<{
-	table: Table<FeatureType>;
+	table: Table<unknown>;
 }>();
 
 const {
@@ -105,7 +103,7 @@ function handleSelect(ev: CustomEvent) {
 	const displayValue = getValue(ev.detail.value, trigger.value);
 	if (!displayValue) return;
 
-	// prevent setting `ComboobxInput`
+	// prevent setting `ComboboxInput`
 	ev.preventDefault();
 
 	value.value = replaceValue(
@@ -127,6 +125,7 @@ function handleSelect(ev: CustomEvent) {
 
 function submitSearch() {
 	parseSearchString(value.value, props.table);
+	props.table.setGlobalFilter(value.value);
 }
 </script>
 

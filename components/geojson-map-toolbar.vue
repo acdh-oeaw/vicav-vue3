@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { Column } from "@tanstack/vue-table";
+import type { Column, Table } from "@tanstack/vue-table";
 import { ChevronDown } from "lucide-vue-next";
 
 import { useColorsStore } from "@/stores/use-colors-store";
@@ -133,7 +133,7 @@ const { setColor } = useColorsStore();
 			</div>
 		</div>
 		<div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm font-medium text-on-surface/75">
-			<MultiValueSearchbar v-if="table" :table="table" />
+			<MultiValueSearchbar v-if="table" :table="table as Table<unknown>" />
 		</div>
 	</div>
 </template>
