@@ -124,7 +124,11 @@ const { setColor } = useColorsStore();
 										/>
 										<span class="sr-only">Select color</span>
 									</label>
-									<FeatureSelectionDialog :column="column as Column<unknown>" />
+									<FeatureSelectionDialog
+										v-if="table"
+										:column="column as Column<unknown>"
+										:table="table as Table<unknown>"
+									/>
 								</DropdownMenuCheckboxItem>
 							</CollapsibleContent>
 						</Collapsible>

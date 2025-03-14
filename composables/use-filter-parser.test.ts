@@ -5,7 +5,7 @@ import { useFilterParser } from "./use-filter-parser";
 
 const { AND_OPERATOR } = useAdvancedQueries();
 
-const { parseSearchString } = useFilterParser();
+const { parseSearchString, isInQuery } = useFilterParser();
 
 interface TestInterface {
 	fruit: string;
@@ -127,5 +127,56 @@ describe("Expressions containing parentheses", () => {
 		parseSearchString("(fruit:apple AND fruit:banana) AND fruit:cherry", table as Table<unknown>);
 		const fruitFilter = table.getColumn("fruit")?.getFilterValue() as Map<string, unknown>;
 		expect(fruitFilter.get(`apple${AND_OPERATOR}banana${AND_OPERATOR}cherry`)).toBe(1);
+	});
+});
+
+describe("Test isInQuery function", () => {
+	test("Simple tag expression", () => {
+		expect(isInQuery("fruit:apple", "fruit:apple")).toBe(true);
+	});
+	test("Simple tag expression with different value", () => {
+		expect(isInQuery("fruit:apple", "fruit:banana")).toBe(false);
+	});
+	test("Simple tag expression with different column", () => {
+		expect(isInQuery("fruit:apple", "color:apple")).toBe(false);
+	});
+	test("Simple tag expression with different column and value", () => {
+		expect(isInQuery("fruit:apple", "color:banana")).toBe(false);
+	});
+	test("Simple tag expression with different column and same value", () => {
+		expect(isInQuery("fruit:apple", "color:apple")).toBe(false);
+	});
+
+	test("OR expression", () => {
+		expect(isInQuery("fruit:apple OR fruit:banana", "fruit:apple")).toBe(true);
+	});
+	test("OR expression with different value", () => {
+		expect(isInQuery("fruit:apple OR fruit:banana", "fruit:cherry")).toBe(false);
+	});
+
+	test("AND expression", () => {
+		expect(isInQuery("fruit:apple AND fruit:banana", "fruit:apple")).toBe(true);
+	});
+	test("AND expression with different value", () => {
+		expect(isInQuery("fruit:apple AND fruit:banana", "fruit:cherry")).toBe(false);
+	});
+
+	test("AND expression in filter", () => {
+		expect(isInQuery("fruit:apple AND fruit:banana", "fruit:apple AND fruit:banana")).toBe(true);
+	});
+	test("AND expression in reversed order", () => {
+		expect(isInQuery("fruit:apple AND fruit:banana", "fruit:banana AND fruit:apple")).toBe(true);
+	});
+	test("AND expression in filter with different value", () => {
+		expect(isInQuery("fruit:apple AND fruit:banana", "fruit:apple AND fruit:cherry")).toBe(false);
+	});
+
+	test("complex expression", () => {
+		expect(
+			isInQuery(
+				"fruit:date OR fruit:apple AND (fruit:banana OR fruit:cherry)",
+				"fruit:apple AND fruit:banana",
+			),
+		).toBe(true);
 	});
 });

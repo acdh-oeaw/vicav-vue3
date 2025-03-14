@@ -11,11 +11,14 @@ const url = "https://raw.githubusercontent.com/wibarab/wibarab-data/main/wibarab
 function getFeatureList() {
 	const table = tables.value.get(url);
 	if (!table) return [];
-	const features = table.getAllLeafColumns().map((column) => ({
-		value: `${column.id}:`,
-		listValue: column.columnDef.header!,
-		col: column,
-	}));
+	const features = table
+		.getAllLeafColumns()
+		.filter((column) => column.getCanFilter())
+		.map((column) => ({
+			value: `${column.id}:`,
+			listValue: column.columnDef.header!,
+			col: column,
+		}));
 	return features;
 }
 const features = computed(() => getFeatureList());

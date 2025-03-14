@@ -127,6 +127,16 @@ function submitSearch() {
 	parseSearchString(value.value, props.table);
 	props.table.setGlobalFilter(value.value);
 }
+
+onMounted(() => {
+	value.value = props.table.getState().globalFilter;
+});
+watch(
+	() => props.table.getState().globalFilter,
+	(newVal) => {
+		value.value = newVal;
+	},
+);
 </script>
 
 <template>

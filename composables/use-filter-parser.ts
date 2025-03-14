@@ -35,7 +35,6 @@ function getColumnAndValueFromTagExpression(ast: TagToken) {
 }
 
 function handleAndExpression(ast: LiqeQuery) {
-	// console.log("AND: ", ast.left, ast.right);
 	if (!ast.left || !ast.right) return [];
 	const left = traverseAST(ast.left);
 	const right = traverseAST(ast.right);
@@ -135,6 +134,102 @@ function normalizeASTtoDNF(ast: LiqeQuery): Exclude<LiqeQuery, ParenthesizedExpr
 	}
 }
 
+function isEqual(a: LiqeQuery, b: LiqeQuery): boolean {
+	if (a.type !== b.type) return false;
+	if (a.type === "Tag" && b.type === "Tag") {
+		const { column: colA, value: valA } = getColumnAndValueFromTagExpression(a);
+		const { column: colB, value: valB } = getColumnAndValueFromTagExpression(b);
+		return colA === colB && valA === valB;
+	}
+	if (a.type === "LogicalExpression" && b.type === "LogicalExpression") {
+		return (
+			a.operator.operator === b.operator.operator &&
+			((isEqual(a.left, b.left) && isEqual(a.right, b.right)) ||
+				(isEqual(a.left, b.right) && isEqual(a.right, b.left)))
+		);
+	}
+	return false;
+}
+
+function isInQuery(query: LiqeQuery | string, filter: LiqeQuery | string): boolean {
+	const ast = typeof query === "string" ? normalizeASTtoDNF(parse(query)) : query;
+	const filterAST = typeof filter === "string" ? normalizeASTtoDNF(parse(filter)) : filter;
+
+	if (ast.type === "ParenthesizedExpression") {
+		return isInQuery(ast.expression, filterAST);
+	}
+	if (filterAST.type === "ParenthesizedExpression") {
+		return isInQuery(ast, filterAST.expression);
+	}
+
+	if (ast.type === "Tag") {
+		return isEqual(ast, filterAST);
+	}
+	if (ast.type === "LogicalExpression") {
+		if (isEqual(ast, filterAST)) return true;
+		if (ast.operator.operator === "OR") {
+			return isInQuery(ast.left, filterAST) || isInQuery(ast.right, filterAST);
+		}
+	}
+	return false;
+}
+
+function assembleFilter(columnId: string, key: string) {
+	let assembledFilter = `${columnId}:"${key}"`;
+	if (key.includes(AND_OPERATOR)) {
+		assembledFilter = key
+			.split(AND_OPERATOR)
+			.map((k) => `${columnId}:"${k}"`)
+			.join(` ${AND_OPERATOR} `);
+		assembledFilter = `(${assembledFilter})`;
+	}
+	return assembledFilter;
+}
+
+function matchQueryStringAndFilters(query: string, filters: Array<string>) {
+	// remove leafs from query that are not in filters:
+	const normalizedAST = normalizeASTtoDNF(parse(query));
+	const filteredAST = traverseAST(normalizedAST).filter((leaf) =>
+		filters.includes(assembleFilter(leaf.column, leaf.value)),
+	);
+	let filteredQueryString = filteredAST
+		.map((leaf) => assembleFilter(leaf.column, leaf.value))
+		.join(" OR ");
+
+	// add filters that are not in query:
+	if (filters.length === 0) return filteredQueryString;
+
+	filteredQueryString = filters.reduce(
+		(acc, filter) => {
+			if (!isInQuery(acc, filter)) {
+				return `${acc} OR ${filter}`;
+			}
+			return acc;
+		},
+		filteredQueryString.length > 0 ? filteredQueryString : filters[0]!,
+	);
+
+	return filteredQueryString;
+}
+
+function syncGlobalAndColumnFilters(table: Table<unknown>) {
+	const columnFilters = table.getState().columnFilters as Array<{
+		id: string;
+		value: Map<string, unknown>;
+	}>;
+	let currentGlobalFilter = String(table.getState().globalFilter ?? "");
+	const assembledColumnFilters = columnFilters
+		.map((column) => {
+			return [...column.value.entries()].map(([key, _value]) => {
+				return assembleFilter(column.id, key);
+			});
+		})
+		.flat();
+	currentGlobalFilter = matchQueryStringAndFilters(currentGlobalFilter, assembledColumnFilters);
+	currentGlobalFilter = currentGlobalFilter.replace(/^ OR /, "").replaceAll("  ", " ");
+	table.setGlobalFilter(currentGlobalFilter);
+}
+
 export function useFilterParser() {
-	return { parseSearchString };
+	return { parseSearchString, isInQuery, matchQueryStringAndFilters, syncGlobalAndColumnFilters };
 }
