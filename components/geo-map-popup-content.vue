@@ -32,9 +32,15 @@ const groupedMarkers = computed<Record<string, LocationDataPoints> | null>(() =>
 					DataTable: [],
 				};
 
-			grouped[marker.properties.label]![
-				marker.properties.targetType as DataTypesEnum | "DataTable"
-			].push(marker);
+			if (grouped[marker.properties.label] !== undefined) {
+				const markerArray =
+					grouped[marker.properties.label]![
+						marker.properties.targetType as DataTypesEnum | "DataTable"
+					];
+				if (markerArray) {
+					markerArray.push(marker);
+				}
+			}
 		});
 		return grouped;
 	} else {
