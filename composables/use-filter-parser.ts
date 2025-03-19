@@ -170,6 +170,7 @@ function isInQuery(query: LiqeQuery | string, filter: LiqeQuery | string): boole
 		if (ast.operator.operator === "OR") {
 			return isInQuery(ast.left, filterAST) || isInQuery(ast.right, filterAST);
 		}
+		// if (ast.operator.operator === "AND"): should return false for our use case
 	}
 	return false;
 }

@@ -155,7 +155,10 @@ describe("Test isInQuery function", () => {
 	});
 
 	test("AND expression", () => {
-		expect(isInQuery("fruit:apple AND fruit:banana", "fruit:apple")).toBe(true);
+		// This seems counter intuitive at first, but the the isInQuery function is written to return
+		// false for AND expressions like this, to allow for querys such as "(A AND B) OR A". This query
+		// should create one petal for "A AND B" and another one for just "A".
+		expect(isInQuery("fruit:apple AND fruit:banana", "fruit:apple")).toBe(false);
 	});
 	test("AND expression with different value", () => {
 		expect(isInQuery("fruit:apple AND fruit:banana", "fruit:cherry")).toBe(false);
