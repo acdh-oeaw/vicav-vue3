@@ -183,12 +183,19 @@ const extractMetadata = function (
 
 						if (!respPerson) {
 							return { family: "", given: "" };
-						} else {
-							const persName = respPerson.persName as PersName;
-							return {
-								given: persName.forename!.$,
-								family: persName.surname!.$,
-							};
+						} else if (respPerson.persName && isPersName(respPerson.persName)) {
+							const persName = respPerson.persName;
+							if (persName.forename && persName.surname) {
+								return {
+									given: persName.forename.$,
+									family: persName.surname.$,
+								};
+							} else {
+								return {
+									given: persName.$,
+									family: "",
+								};
+							}
 						}
 					});
 		}
