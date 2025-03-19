@@ -181,9 +181,7 @@ const extractMetadata = function (
 							},
 						);
 
-						if (!respPerson) {
-							return { family: "", given: "" };
-						} else if (respPerson.persName && isPersName(respPerson.persName)) {
+						if (respPerson?.persName && isPersName(respPerson.persName)) {
 							const persName = respPerson.persName;
 							if (persName.forename && persName.surname) {
 								return {
@@ -197,6 +195,7 @@ const extractMetadata = function (
 								};
 							}
 						}
+						return { family: "", given: "" };
 					});
 		}
 	});
