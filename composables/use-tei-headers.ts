@@ -341,11 +341,7 @@ export function useTEIHeaders() {
 	const { data: projectData } = useProjectInfo();
 
 	const rawItems: RawTEIItems = computed(() => {
-		return (
-			projectData.value?.projectConfig?.staticData?.table
-				? projectData.value.projectConfig.staticData.table
-				: []
-		).filter(isTEIs);
+		return (projectData.value?.projectConfig?.staticData?.table ?? []).filter(isTEIs);
 	});
 
 	const simpleItems: ComputedRef<Array<simpleTEIMetadata>> = computed(() => {
