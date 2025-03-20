@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Require dependencies
 const { NodeSDK } = require("@opentelemetry/sdk-node");
 const { ConsoleSpanExporter } = require("@opentelemetry/sdk-trace-node");
