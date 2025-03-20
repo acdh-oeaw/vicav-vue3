@@ -30,7 +30,7 @@
 		"prepare": "run-s setup generate:api-client",
 		"setup": "is-ci || simple-git-hooks",
 		"start:preview": "nuxt preview --dotenv ./.env.local",
-		"start": "node --require ./.output/public/instrumentation.mjs .output/server/index.mjs",
+		"start": "node --require ./.output/public/instrumentation.cjs .output/server/index.mjs",
 		"start:local": "dotenv -e .env.local -- pnpm run start",
 		"test": "dotenv -e .env.local -- node checkenv.mjs && pnpm playwright install && run-p format:check \"lint:*:check-no-cache\" types:check test:unit test:e2e",
 		"test:e2e": "playwright test",
