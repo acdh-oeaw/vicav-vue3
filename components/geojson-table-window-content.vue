@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import {
+	type AccessorColumnDef,
 	type CellContext,
 	type ColumnDef,
 	createColumnHelper,
@@ -18,83 +19,118 @@ const url = "https://raw.githubusercontent.com/wibarab/wibarab-data/main/wibarab
 const { isPending } = GeojsonStore.fetchGeojson(url);
 const { fetchedData, tables } = storeToRefs(GeojsonStore);
 const { data: projectData } = useProjectInfo();
-const columnHelper = createColumnHelper();
+const columnHelper = createColumnHelper<FeatureType>();
 const { AND_OPERATOR } = useAdvancedQueries();
 
-const columns = computed(() => {
-	const columnHeadings = fetchedData.value.get(url)?.properties.column_headings;
+interface SimpleColumnInterface {
+	id: string;
+	header: string;
+	columns: Array<AccessorColumnDef<FeatureType> | GroupColumnDef<FeatureType>>;
+	enableHiding?: boolean;
+}
 
-	const categories = projectData.value!.projectConfig?.staticData?.table?.[1] as Record<
+function buildColumnDefRecursive(
+	col: SimpleColumnInterface,
+	featureCategories: Record<string, string>,
+	allFeatureNames: Array<Record<string, string>>,
+): SimpleColumnInterface {
+	const subCategories = Object.entries(featureCategories).filter(
+		([categoryName, _]) =>
+			categoryName.startsWith(col.id) && categoryName.lastIndexOf(".") === col.id.length,
+	);
+	let columns: Array<AccessorColumnDef<FeatureType> | GroupColumnDef<FeatureType>> = [];
+	columns = columns.concat(
+		allFeatureNames
+			.filter((heading) => heading.category === col.id)
+			.map((heading) => {
+				const accessorFn = (cell: FeatureType) => {
+					return Object.keys(
+						cell.properties[String(Object.keys(heading).find((key) => /ft_*/.test(key)) ?? "")] ??
+							{},
+					);
+				};
+				return columnHelper.accessor(accessorFn, {
+					id: Object.keys(heading).find((key) => /ft_*/.test(key)) ?? "",
+					header: heading[Object.keys(heading).find((key) => /ft_*/.test(key)) ?? ""],
+					cell: (cell: CellContext<FeatureType, unknown>) => {
+						return h(resolveComponent("GeojsonTablePropertyCell"), {
+							value: cell.row.original.properties[cell.column.columnDef.id!],
+						});
+					},
+					filterFn: (row, columnId, filterValue: Map<string, unknown>) => {
+						if (!row.getVisibleCells().find((cell) => cell.column.id === columnId)) {
+							return true;
+						}
+						if (filterValue.size === 0) return true;
+						const filter = [...filterValue.keys()].some((val) => {
+							if (val.includes(AND_OPERATOR)) {
+								return val
+									.split(AND_OPERATOR)
+									.every((v) => (row.getValue(columnId) as Array<string>).includes(v));
+							} else return (row.getValue(columnId) as Array<string>).includes(val);
+						});
+						return filter;
+					},
+					enableGlobalFilter: true,
+				}) as AccessorColumnDef<FeatureType>;
+			}),
+	);
+
+	columns = columns.concat(
+		subCategories
+			.map(([categoryName, categoryLabel]) => {
+				return columnHelper.group(
+					buildColumnDefRecursive(
+						{
+							header: featureCategories[categoryName] ?? categoryLabel,
+							id: String(categoryName),
+							columns: [],
+						},
+						featureCategories,
+						allFeatureNames,
+					),
+				) as GroupColumnDef<FeatureType>;
+			})
+			.filter((col) => (col.columns?.length ?? 0) > 0),
+	);
+
+	return { ...col, columns: columns };
+}
+
+const columns = computed(() => {
+	const allFeatureNames = fetchedData.value.get(url)?.properties.column_headings;
+
+	const featureCategories = projectData.value!.projectConfig?.staticData?.table?.[1] as Record<
 		string,
-		Record<string, unknown>
+		string
 	>;
 
-	const topLevelColumns = [
+	const topLevelColumns: Array<SimpleColumnInterface> = [
 		{
+			id: "-",
 			header: "-",
 			enableHiding: false,
-			columns: [] as Array<GroupColumnDef<unknown>>,
+			columns: [],
 		},
-		...Object.keys(categories).map((categoryName) => {
+		...[
+			...new Set(Object.keys(featureCategories).map((categoryName) => categoryName.split(".")[0]!)),
+		].map((categoryName) => {
 			return {
-				header: categoryName,
-				columns: [] as Array<GroupColumnDef<unknown>>,
+				header: featureCategories[categoryName] ?? categoryName,
+				id: categoryName,
+				columns: [],
 			};
 		}),
 	];
 
 	topLevelColumns.forEach((col) => {
 		let subcategoryColumns;
-		if (col.header in categories) {
-			subcategoryColumns = Object.entries(
-				categories[col.header]?.subcategories ?? { [col.header]: categories[col.header]?.title },
-			)
-				.filter(
-					([categoryName, _]) =>
-						columnHeadings!.filter((heading) => heading.category === categoryName).length > 0,
-				)
-				.map(([categoryName, categoryLabel]) => {
-					return columnHelper.group({
-						header: String(categoryLabel),
-						id: String(categoryName),
-						//@ts-expect-error type mismatch in accessorFn
-						columns: columnHeadings
-							.filter((heading) => heading.category === categoryName)
-							.map((heading) => {
-								return {
-									id: Object.keys(heading).find((key) => /ft_*/.test(key)) ?? "",
-									header: heading[Object.keys(heading).find((key) => /ft_*/.test(key)) ?? ""],
-									cell: (cell: CellContext<FeatureType, never>) => {
-										return h(resolveComponent("GeojsonTablePropertyCell"), {
-											value: cell.row.original.properties[cell.column.columnDef.id!],
-										});
-									},
-									accessorFn: (cell: FeatureType) => {
-										return Object.keys(
-											cell.properties[
-												String(Object.keys(heading).find((key) => /ft_*/.test(key)) ?? "")
-											] ?? {},
-										);
-									},
-									filterFn: (row, columnId, filterValue: Map<string, unknown>) => {
-										if (!row.getVisibleCells().find((cell) => cell.column.id === columnId)) {
-											return true;
-										}
-										if (filterValue.size === 0) return true;
-										const filter = [...filterValue.keys()].some((val) => {
-											if (val.includes(AND_OPERATOR)) {
-												return val
-													.split(AND_OPERATOR)
-													.every((v) => (row.getValue(columnId) as Array<string>).includes(v));
-											} else return (row.getValue(columnId) as Array<string>).includes(val);
-										});
-										return filter;
-									},
-									enableGlobalFilter: true,
-								};
-							}),
-					});
-				});
+		if (col.header !== "-") {
+			subcategoryColumns = buildColumnDefRecursive(
+				col,
+				featureCategories,
+				allFeatureNames!,
+			).columns;
 		} else {
 			subcategoryColumns = [
 				columnHelper.group({
@@ -102,7 +138,7 @@ const columns = computed(() => {
 					id: "-",
 					enableHiding: false,
 					//@ts-expect-error type mismatch in accessorFn
-					columns: columnHeadings
+					columns: allFeatureNames
 						.filter((heading) => !heading.category)
 						.map((heading) => {
 							return {
@@ -126,10 +162,10 @@ const columns = computed(() => {
 				}),
 			];
 		}
-		col.columns = subcategoryColumns as Array<GroupColumnDef<unknown>>;
+		col.columns = subcategoryColumns;
 	});
 	const groupedColumns = topLevelColumns
-		.filter((col) => col.columns.some((col) => (col.columns?.length ?? -1) > 0))
+		// .filter((col) => col.columns.some((col) => (col.columns?.length ?? -1) > 0))
 		.map((col) => columnHelper.group(col))
 		.sort((a, b) => String(a.header).localeCompare(String(b.header)));
 	return groupedColumns;
