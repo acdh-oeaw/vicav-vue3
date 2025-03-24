@@ -25,6 +25,8 @@ interface Props {
 	globalFilterFn?: FilterFn<never>;
 	// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 	visibilityChangeFn?: Function;
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+	columnFilterChangeFn?: Function;
 }
 
 const props = defineProps<Props>();
@@ -69,6 +71,9 @@ const table = useVueTable({
 		columnFilters.value =
 			typeof updaterOrValue === "function" ? updaterOrValue(columnFilters.value) : updaterOrValue;
 		emit("columnFiltersChange", columnFilters.value);
+		if (props.columnFilterChangeFn) {
+			props.columnFilterChangeFn(columnFilters.value);
+		}
 	},
 	onGlobalFilterChange: (updaterOrValue) => {
 		globalFilter.value =

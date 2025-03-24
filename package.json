@@ -66,6 +66,7 @@
 		"is-ci": "^3.0.1",
 		"leaflet": "^1.9.4",
 		"lightgallery": "^2.8.2",
+		"liqe": "^3.8.2",
 		"lucide-vue-next": "^0.289.0",
 		"nanoid": "^5.0.9",
 		"npm-run-all2": "^6.2.6",
@@ -74,6 +75,7 @@
 		"pinia": "^2.3.0",
 		"pino": "^9.6.0",
 		"radix-vue": "^1.9.12",
+		"reka-ui": "^2.0.0",
 		"swagger-typescript-api": "^13.0.23",
 		"tailwind-merge": "^2.6.0",
 		"transliteration": "^2.3.5",
@@ -137,7 +139,8 @@
 	"pnpm": {
 		"patchedDependencies": {
 			"winbox@0.2.82": "patches/winbox@0.2.82.patch",
-			"@types/winbox@0.2.3": "patches/@types__winbox@0.2.3.patch"
+			"@types/winbox@0.2.3": "patches/@types__winbox@0.2.3.patch",
+			"liqe": "patches/liqe.patch"
 		}
 	},
 	"browserslist": {

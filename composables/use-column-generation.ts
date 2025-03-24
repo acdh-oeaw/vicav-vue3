@@ -14,8 +14,6 @@ interface PatchedFeatureType extends FeatureType {
 
 const columnHelper = createColumnHelper<PatchedFeatureType>();
 
-const { AND_OPERATOR } = useAdvancedQueries();
-
 interface SimpleColumnInterface {
 	id: string;
 	header: string;
@@ -52,19 +50,11 @@ function buildColumnDefRecursive(
 							value: cell.row.original.properties[cell.column.columnDef.id!],
 						});
 					},
-					filterFn: (row, columnId, filterValue: Map<string, unknown>) => {
+					filterFn: (row, columnId, _filterValue: Map<string, unknown>) => {
 						if (!row.getVisibleCells().find((cell) => cell.column.id === columnId)) {
 							return true;
 						}
-						if (filterValue.size === 0) return true;
-						const filter = [...filterValue.keys()].some((val) => {
-							if (val.includes(AND_OPERATOR)) {
-								return val
-									.split(AND_OPERATOR)
-									.every((v) => String(row.getValue(columnId)).includes(v));
-							} else return String(row.getValue(columnId)).includes(val);
-						});
-						return filter;
+						return true;
 					},
 					enableGlobalFilter: true,
 				}) as AccessorColumnDef<PatchedFeatureType>;

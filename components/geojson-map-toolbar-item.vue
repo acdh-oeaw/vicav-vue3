@@ -1,11 +1,12 @@
 <script lang="ts" setup>
-import type { Column } from "@tanstack/vue-table";
+import type { Column, Table } from "@tanstack/vue-table";
 import { ChevronDown } from "lucide-vue-next";
 
 import { useColorsStore } from "@/stores/use-colors-store";
 
 const _props = defineProps<{
 	item: Column<unknown>;
+	table: Table<unknown>;
 }>();
 
 function titleCase(s: string) {
@@ -46,7 +47,12 @@ const { setColor } = useColorsStore();
 			</CollapsibleTrigger>
 
 			<CollapsibleContent class="">
-				<GeojsonMapToolbarItem v-for="subItem in item.columns" :key="subItem.id" :item="subItem" />
+				<GeojsonMapToolbarItem
+					v-for="subItem in item.columns"
+					:key="subItem.id"
+					:item="subItem"
+					:table="table"
+				/>
 			</CollapsibleContent>
 		</Collapsible>
 	</template>
@@ -89,7 +95,7 @@ const { setColor } = useColorsStore();
 				/>
 				<span class="sr-only">Select color</span>
 			</label>
-			<FeatureSelectionDialog :column="item as Column<unknown>" />
+			<FeatureSelectionDialog :column="item as Column<unknown>" :table="table" />
 		</DropdownMenuCheckboxItem>
 	</template>
 </template>

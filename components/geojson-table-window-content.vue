@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import type { ColumnDef, Row, Table } from "@tanstack/vue-table";
+import { parse, test } from "liqe";
 
 import { useGeojsonStore } from "@/stores/use-geojson-store.ts";
 import type { FeatureType, MarkerType } from "@/types/global";
@@ -32,29 +33,40 @@ const columnVisibility = computed(() => {
 	);
 });
 
-function filterEmptyRows(row: Row<never>) {
+function applyGlobalFilter(row: Row<FeatureType>, _colId: string, queryString: string) {
 	const hidableVisibleCells = row.getVisibleCells().filter((cell) => cell.column.getCanHide());
 	if (hidableVisibleCells.length === 0) return true;
 	if (
 		hidableVisibleCells.some((cell) => !cell.getValue() || (cell.getValue() as string).length > 0)
 	)
-		return true;
+		return applyQueryString(row, _colId, queryString);
 	return false;
 }
 
-function applyGlobalFilter(table: Table<FeatureType>) {
-	// re-apply global filter to remove empty lines from the table
-	// table.resetGlobalFilter(true);
-	table.setGlobalFilter(true);
+function applyQueryString(row: Row<FeatureType>, _colId: string, queryString: string) {
+	if (!queryString) return true;
+	const preparedRow = Object.fromEntries(
+		Object.entries(row.original.properties).map(([key, value]) => {
+			if (value && typeof value === "object") return [key, Object.keys(value)];
+			return [key, value];
+		}),
+	);
+	return test(parse(queryString), preparedRow);
 }
 
-const { addColor } = useColorsStore();
+const { addColor, addColorVariant, buildFeatureValueId } = useColorsStore();
 const { colors } = storeToRefs(useColorsStore());
 function onVisibilityChange(props: { table: Table<FeatureType>; col: Record<string, boolean> }) {
-	applyGlobalFilter(props.table);
+	// applyGlobalFilter(props.table);
 	const changedColumnKey = Object.keys(props.col)[0]!;
 	const visibilityValue = props.col[changedColumnKey]!;
 	if (visibilityValue && !colors.value.has(changedColumnKey)) addColor(changedColumnKey);
+}
+function onColumnFilterChange(columnFilters: Array<{ id: string; value: Map<string, unknown> }>) {
+	columnFilters.forEach((column) => {
+		for (const key of column.value.keys())
+			if (!colors.value.has(buildFeatureValueId(column.id, key))) addColorVariant(column.id, key);
+	});
 }
 function registerTable(table: Table<FeatureType>) {
 	tables.value.set(url, table);
@@ -103,9 +115,10 @@ function registerTable(table: Table<FeatureType>) {
 		</div>
 		<DataTable
 			v-if="!isPending"
+			:column-filter-change-fn="onColumnFilterChange"
 			:columns="columns as unknown as Array<ColumnDef<never>>"
 			:enable-filter-on-columns="true"
-			:global-filter-fn="filterEmptyRows"
+			:global-filter-fn="applyGlobalFilter"
 			:initial-column-visibility="columnVisibility"
 			:items="fetchedData.get(url)?.features as Array<never>"
 			:min-header-depth="2"
