@@ -21,7 +21,7 @@ export default defineNuxtConfig({
 	],
 
 	devtools: {
-		enabled: process.env.NODE_ENV === "development",
+		enabled: false, //process.env.NODE_ENV === "development",
 		//https://github.com/nuxt/devtools/issues/722
 		componentInspector: false,
 	},

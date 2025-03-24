@@ -86,6 +86,7 @@ export const BibliographyEntriesSchema = z.object({
 	params: QueryString.merge(
 		z.object({
 			xslt: z.string().optional(),
+			showMap: z.boolean().optional(),
 		}),
 	),
 });

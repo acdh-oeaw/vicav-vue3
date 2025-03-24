@@ -76,7 +76,7 @@ const extractMetadata = function (
 	if (item.teiHeader.fileDesc.sourceDesc.recordingStmt?.recording.date)
 		template.recordingDate =
 			item.teiHeader.fileDesc.sourceDesc.recordingStmt.recording.date["@when"];
-	template.pubDate = item.teiHeader.fileDesc.publicationStmt.date.$ ?? "unknown";
+	template.pubDate = item.teiHeader.fileDesc.publicationStmt.date?.$ ?? "unknown";
 	const dataTypeObject = Object.values(dataTypes).find(
 		(dataTypeObject) => dataTypeObject.collection === dataType,
 	);
@@ -181,15 +181,21 @@ const extractMetadata = function (
 							},
 						);
 
-						if (!respPerson) {
-							return { family: "", given: "" };
-						} else {
-							const persName = respPerson.persName as PersName;
-							return {
-								given: persName.forename!.$,
-								family: persName.surname!.$,
-							};
+						if (respPerson?.persName && isPersName(respPerson.persName)) {
+							const persName = respPerson.persName;
+							if (persName.forename && persName.surname) {
+								return {
+									given: persName.forename.$,
+									family: persName.surname.$,
+								};
+							} else {
+								return {
+									given: persName.$,
+									family: "",
+								};
+							}
 						}
+						return { family: "", given: "" };
 					});
 		}
 	});
@@ -276,7 +282,7 @@ const extractMetadata = function (
 		const mergedTaxonomies: Taxonomy = {
 			categories: [],
 		};
-		corpusMetadata.encodingDesc.classDecl?.taxonomies.forEach((t) => {
+		corpusMetadata.encodingDesc?.classDecl?.taxonomies.forEach((t) => {
 			mergedTaxonomies.categories = mergedTaxonomies.categories.concat(t.categories);
 			return mergedTaxonomies;
 		});
@@ -284,7 +290,13 @@ const extractMetadata = function (
 			(cat) => cat["@id"] === categoryId?.replace("corpus:", ""),
 		);
 
-		template.category = category!.catDesc.name.$;
+		if (category?.catDesc.name) {
+			template.category = category.catDesc.name.$;
+		} else if (category?.catDesc.$) {
+			template.category = category.catDesc.$;
+		} else {
+			template.category = "Unknown";
+		}
 	}
 
 	if (!template.person.at(0)?.name) {
@@ -329,11 +341,7 @@ export function useTEIHeaders() {
 	const { data: projectData } = useProjectInfo();
 
 	const rawItems: RawTEIItems = computed(() => {
-		return (
-			projectData.value?.projectConfig?.staticData?.table
-				? projectData.value.projectConfig.staticData.table
-				: []
-		).filter(isTEIs);
+		return (projectData.value?.projectConfig?.staticData?.table ?? []).filter(isTEIs);
 	});
 
 	const simpleItems: ComputedRef<Array<simpleTEIMetadata>> = computed(() => {
