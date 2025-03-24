@@ -2,7 +2,6 @@
 import type { Column } from "@tanstack/vue-table";
 import { ChevronDown } from "lucide-vue-next";
 
-import { useColorsStore } from "@/stores/use-colors-store";
 import { useGeojsonStore } from "@/stores/use-geojson-store.ts";
 import type { GeojsonMapSchema } from "@/types/global.d";
 
@@ -27,13 +26,6 @@ function titleCase(s: string) {
 		.replace(/[-_]+(.)/g, (_, c) => ` ${c.toUpperCase()}`); // First char after each -/_
 }
 const isMenuOpen = ref(categories.value!.map(() => false));
-const isCollapsibleOpen = ref(
-	Object.fromEntries(
-		categories.value!.map((category) => [category.id, category.columns.map(() => false)]),
-	),
-);
-const { colors } = storeToRefs(useColorsStore());
-const { setColor } = useColorsStore();
 </script>
 
 <template>
@@ -53,7 +45,12 @@ const { setColor } = useColorsStore();
 					</DropdownMenuTrigger>
 
 					<DropdownMenuContent class="">
-						<Collapsible
+						<GeojsonMapToolbarItem
+							v-for="column in group.columns"
+							:key="column.id"
+							:item="column as Column<unknown>"
+						/>
+						<!-- <Collapsible
 							v-for="(subcategory, subcatIdx) in group.columns"
 							:key="subcategory.id"
 							v-slot="{ open: subcatOpen }"
@@ -127,7 +124,7 @@ const { setColor } = useColorsStore();
 									<FeatureSelectionDialog :column="column as Column<unknown>" />
 								</DropdownMenuCheckboxItem>
 							</CollapsibleContent>
-						</Collapsible>
+						</Collapsible> -->
 					</DropdownMenuContent>
 				</DropdownMenu>
 			</div>
