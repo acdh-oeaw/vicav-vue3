@@ -102,7 +102,6 @@ export function usePetalMarker(feature: GeoJsonFeature<Point, MarkerProperties>,
 					type: "featureValue",
 				})),
 		);
-
 	const combinedFilters = table
 		?.getVisibleLeafColumns()
 		.filter(
@@ -118,7 +117,12 @@ export function usePetalMarker(feature: GeoJsonFeature<Point, MarkerProperties>,
 						key.includes(AND_OPERATOR) &&
 						key
 							.split(AND_OPERATOR)
-							.every((k) => k in (feature.properties[col.id as keyof MarkerProperties] as object)),
+							.every(
+								(k) =>
+									k in
+									((feature.properties[col.id as keyof MarkerProperties] as object | undefined) ??
+										{}),
+							),
 				)
 				.map((key) => ({
 					id: buildFeatureValueId(col.id, key),
