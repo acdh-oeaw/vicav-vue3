@@ -19,7 +19,7 @@ watch(
 	(val) => (myString.value = val),
 );
 const submit = () => {
-	emit("submit", myString);
+	emit("submit", myString.value);
 };
 
 const InsertSnippet = async (snippet: string): Promise<void> => {

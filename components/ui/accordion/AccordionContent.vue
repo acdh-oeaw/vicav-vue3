@@ -7,7 +7,7 @@ const props = withDefaults(defineProps<AccordionContentProps>(), {});
 <template>
 	<AccordionContent
 		v-bind="props"
-		class="data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down overflow-hidden text-sm transition-all"
+		class="overflow-hidden text-sm transition-all data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down"
 	>
 		<div class="pb-4 pt-0" :class="$attrs.class">
 			<slot />
