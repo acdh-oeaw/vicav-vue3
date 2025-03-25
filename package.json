@@ -16,7 +16,7 @@
 		"dev": "NUXT_PUBLIC_CURRENT_GIT_SHA=$(git describe --tags --always) && nuxt dev --dotenv ./.env.local --host 127.0.0.1 --no-fork",
 		"format:check": "prettier . --cache --check --ignore-path ./.gitignore",
 		"format:fix": "pnpm run format:check --write",
-		"generate:api-client": "swagger-typescript-api --path \"https://raw.githubusercontent.com/acdh-oeaw/vicav-app-api/master/openapi.json\" --clean-output --name index.ts --output ./lib/api-client/",
+		"generate:api-client": "swagger-typescript-api generate --path \"https://raw.githubusercontent.com/acdh-oeaw/vicav-app-api/master/openapi.json\" --clean-output --name index.ts --output ./lib/api-client/",
 		"lint:check": "run-p --continue-on-error \"lint:*:check\"",
 		"lint:fix": "run-p --continue-on-error \"lint:*:fix\"",
 		"lint:code:check": "pnpm run lint:code:check-no-cache --cache",
