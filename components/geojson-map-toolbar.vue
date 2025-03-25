@@ -1,8 +1,7 @@
 <script lang="ts" setup>
-import type { Column } from "@tanstack/vue-table";
+import type { Column, Table } from "@tanstack/vue-table";
 import { ChevronDown } from "lucide-vue-next";
 
-import { useColorsStore } from "@/stores/use-colors-store";
 import { useGeojsonStore } from "@/stores/use-geojson-store.ts";
 import type { GeojsonMapSchema } from "@/types/global.d";
 
@@ -27,13 +26,6 @@ function titleCase(s: string) {
 		.replace(/[-_]+(.)/g, (_, c) => ` ${c.toUpperCase()}`); // First char after each -/_
 }
 const isMenuOpen = ref(categories.value!.map(() => false));
-const isCollapsibleOpen = ref(
-	Object.fromEntries(
-		categories.value!.map((category) => [category.id, category.columns.map(() => false)]),
-	),
-);
-const { colors } = storeToRefs(useColorsStore());
-const { setColor } = useColorsStore();
 </script>
 
 <template>
@@ -53,84 +45,18 @@ const { setColor } = useColorsStore();
 					</DropdownMenuTrigger>
 
 					<DropdownMenuContent class="">
-						<Collapsible
-							v-for="(subcategory, subcatIdx) in group.columns"
-							:key="subcategory.id"
-							v-slot="{ open: subcatOpen }"
-							v-model:open="isCollapsibleOpen[group.id]![subcatIdx]"
-						>
-							<CollapsibleTrigger
-								class="flex w-full items-center justify-between gap-1 p-2 text-left text-sm"
-							>
-								<div>
-									<span>{{ titleCase(subcategory.id) }}</span>
-									<Badge
-										v-if="
-											subcategory.columns.length > 0 &&
-											subcategory.getLeafColumns().filter((c) => c.getIsVisible()).length
-										"
-										class="ml-2"
-										variant="outline"
-										>{{
-											subcategory.getLeafColumns().filter((c) => c.getIsVisible()).length
-										}}</Badge
-									>
-								</div>
-
-								<ChevronDown
-									class="size-4 shrink-0 grow-0"
-									:class="subcatOpen ? 'rotate-180' : ''"
-								></ChevronDown>
-							</CollapsibleTrigger>
-
-							<CollapsibleContent class="">
-								<DropdownMenuCheckboxItem
-									v-for="column in subcategory.columns"
-									:key="column.id"
-									:checked="column.getIsVisible()"
-									@select.prevent
-									@update:checked="
-										(value) => {
-											column.toggleVisibility(!!value);
-											column.setFilterValue(new Map());
-										}
-									"
-								>
-									<span class="flex-1">{{ column.columnDef.header }}</span>
-
-									<label
-										v-if="column.getIsVisible()"
-										class="ml-3 flex grow-0 basis-0 items-center p-0"
-										@click.capture.stop
-									>
-										<div
-											class="size-4 rounded"
-											:style="{
-												backgroundColor: `var(--${column.id})`,
-												stroke: `var(--${column.id})`,
-											}"
-										></div>
-										<input
-											class="size-0"
-											type="color"
-											:value="colors.get(column.id)?.colorCode || '#cccccc'"
-											@click.capture.stop
-											@input="
-												(event) => {
-													//@ts-expect-error target.value not recognized
-													setColor({ id: column.id, colorCode: event.target!.value });
-												}
-											"
-										/>
-										<span class="sr-only">Select color</span>
-									</label>
-									<FeatureSelectionDialog :column="column as Column<unknown>" />
-								</DropdownMenuCheckboxItem>
-							</CollapsibleContent>
-						</Collapsible>
+						<GeojsonMapToolbarItem
+							v-for="column in group.columns"
+							:key="column.id"
+							:item="column as Column<unknown>"
+							:table="table as Table<unknown>"
+						/>
 					</DropdownMenuContent>
 				</DropdownMenu>
 			</div>
+		</div>
+		<div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm font-medium text-on-surface/75">
+			<MultiValueSearchbar v-if="table" :table="table as Table<unknown>" />
 		</div>
 	</div>
 </template>

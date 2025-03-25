@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/vue-query";
 import type { Table } from "@tanstack/vue-table";
+import { defineStore } from "pinia";
 
 import { type FeatureCollectionType, type FeatureType, GeoFeatureSchema } from "@/types/global.d";
 
