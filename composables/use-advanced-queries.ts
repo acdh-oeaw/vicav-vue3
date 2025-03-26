@@ -6,7 +6,7 @@ interface CombinedFilter {
 	count: number;
 }
 
-const AND_OPERATOR = "<and>";
+const AND_OPERATOR = "AND";
 
 function getCombinedFilterOption(
 	column: Column<unknown>,

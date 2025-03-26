@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Column } from "@tanstack/vue-table";
+import type { Column, Table } from "@tanstack/vue-table";
 import { List } from "lucide-vue-next";
 import { Field as FormField, useForm } from "vee-validate";
 
@@ -16,9 +16,11 @@ import {
 import Checkbox from "./ui/form/Checkbox.vue";
 
 const { AND_OPERATOR, getCombinedFilterOption } = useAdvancedQueries();
+const { syncGlobalAndColumnFilters } = useFilterParser();
 
 const props = defineProps<{
 	column: Column<unknown>;
+	table: Table<unknown>;
 }>();
 const facets = toRef(
 	computed(() => [...props.column.getFacetedUniqueValues()]?.sort((a, b) => b[1] - a[1])),
@@ -102,6 +104,7 @@ const onSubmit = handleSubmit((values: { items: Array<string> }) => {
 		if (colors.value.has(buildFeatureValueId(props.column.id, element))) return;
 		addColorVariant(props.column.id, element);
 	});
+	syncGlobalAndColumnFilters(props.table);
 	dialogOpen.value = false;
 });
 

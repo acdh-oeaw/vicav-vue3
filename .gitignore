@@ -1,6 +1,7 @@
 # dependencies
 node_modules/
 .pnpm-store/
+.local/
 
 # logs
 *.log
