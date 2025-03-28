@@ -84,30 +84,39 @@ const infoOpen = ref(Object.fromEntries(Object.keys(props.value ?? {}).map((key)
 					</CollapsibleTrigger>
 					<CollapsibleContent orientation="horizontal"
 						><div class="inline-flex items-center gap-2 text-ellipsis">
-							<template v-for="personGroup in getPersonGroups(key)">
-								<Badge
-									v-for="(personGroupVal, personGroupKey) in personGroup"
-									:key="personGroupVal"
-									class="line-clamp-1 gap-0.5"
-									variant="outline"
-								>
-									<component
-										:is="getPersonGroupIcon(personGroup)!.icon"
-										v-if="getPersonGroupIcon(personGroup)"
-										class="size-3"
-									/>
-									<span :class="{ 'sr-only': getPersonGroupIcon(personGroup) }"
-										>{{ personGroupKey }}:
-									</span>
-									<span
-										class="line-clamp-1"
-										:class="{ 'sr-only': getPersonGroupIcon(personGroup)?.hideValue }"
-										>{{ trimPrefix(personGroupVal) }}</span
+							<TooltipProvider>
+								<template v-for="personGroup in getPersonGroups(key)">
+									<Tooltip
+										v-for="(personGroupVal, personGroupKey) in personGroup"
+										:key="personGroupVal"
 									>
-								</Badge>
-							</template>
-						</div></CollapsibleContent
-					>
+										<TooltipTrigger
+											><Badge class="line-clamp-1 gap-0.5" variant="outline">
+												<component
+													:is="getPersonGroupIcon(personGroup)!.icon"
+													v-if="getPersonGroupIcon(personGroup)"
+													class="size-3"
+												/>
+												<span :class="{ 'sr-only': getPersonGroupIcon(personGroup) }"
+													>{{ personGroupKey }}:
+												</span>
+												<span
+													class="line-clamp-1"
+													:class="{ 'sr-only': getPersonGroupIcon(personGroup)?.hideValue }"
+													>{{ trimPrefix(personGroupVal) }}</span
+												>
+											</Badge></TooltipTrigger
+										>
+										<TooltipContent class="bg-background"
+											><span
+												>{{ personGroupKey }}: {{ trimPrefix(personGroupVal) }}</span
+											></TooltipContent
+										>
+									</Tooltip>
+								</template></TooltipProvider
+							>
+						</div>
+					</CollapsibleContent>
 				</Collapsible>
 				<NuxtLink
 					v-for="source in getSources(key)"
