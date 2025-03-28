@@ -1,51 +1,54 @@
-@import "@fortawesome/fontawesome-free/css/solid.css";
-@import "@fortawesome/fontawesome-free/css/fontawesome.css";
-@import "lightgallery/css/lightgallery.css";
-@import "lightgallery/css/lg-thumbnail.css";
+@import "tailwindcss";
+@import "@fortawesome/fontawesome-free/css/solid.css" layer(components);
+@import "@fortawesome/fontawesome-free/css/fontawesome.css" layer(components);
+@import "lightgallery/css/lightgallery.css" layer(components);
+@import "lightgallery/css/lg-thumbnail.css" layer(components);
+@import "tailwindcss/utilities" layer(utilities);
 
-:root {
-	--color-background: 0 0% 100%;
-	--color-on-background: 222.2 84% 4.9%;
-	--color-surface: 0 0% 100%;
-	--color-on-surface: 222.2 84% 4.9%;
-	--color-overlay: 0 0% 100%;
-	--color-on-overlay: 222.2 84% 4.9%;
-	--color-muted: 210 40% 96.1%;
-	--color-on-muted: 215.4 16.3% 46.9%;
-	--color-primary: 222.2 47.4% 11.2%;
-	--color-on-primary: 210 40% 98%;
-	--color-secondary: 210 40% 96.1%;
-	--color-on-secondary: 222.2 47.4% 11.2%;
-	--color-accent: 210 40% 96.1%;
-	--color-on-accent: 222.2 47.4% 11.2%;
-	--color-header: 0 0% 100%;
-	--color-on-header: 222.2 84% 4.9%;
-	--color-negative: 0 84.2% 60.2%;
-	--color-on-negative: 210 40% 98%;
-	--color-border: 214.3 31.8% 91.4%;
-	--color-input: 214.3 31.8% 91.4%;
-	--color-ring: 222.2 84% 4.9%;
-	--radius-sm: 4px;
-	--radius-md: 6px;
-	--radius-lg: 8px;
+@config '../tailwind.config.ts';
 
-	@apply bg-background text-on-background font-body;
+@layer components {
+	:root {
+		--color-background: 0 0% 100%;
+		--color-on-background: 222.2 84% 4.9%;
+		--color-surface: 0 0% 100%;
+		--color-on-surface: 222.2 84% 4.9%;
+		--color-overlay: 0 0% 100%;
+		--color-on-overlay: 222.2 84% 4.9%;
+		--color-muted: 210 40% 96.1%;
+		--color-on-muted: 215.4 16.3% 46.9%;
+		--color-primary: 222.2 47.4% 11.2%;
+		--color-on-primary: 210 40% 98%;
+		--color-secondary: 210 40% 96.1%;
+		--color-on-secondary: 222.2 47.4% 11.2%;
+		--color-accent: 210 40% 96.1%;
+		--color-on-accent: 222.2 47.4% 11.2%;
+		--color-header: 0 0% 100%;
+		--color-on-header: 222.2 84% 4.9%;
+		--color-negative: 0 84.2% 60.2%;
+		--color-on-negative: 210 40% 98%;
+		--color-border: 214.3 31.8% 91.4%;
+		--color-input: 214.3 31.8% 91.4%;
+		--color-ring: 222.2 84% 4.9%;
+		--radius-sm: 4px;
+		--radius-md: 6px;
+		--radius-lg: 8px;
+
+		@apply bg-background text-on-background font-body;
+	}
+
+	* {
+		@apply border-border;
+	}
+
+	:root,
+	body,
+	#__nuxt {
+		overflow: hidden;
+		block-size: 100%;
+	}
+
+	#__nuxt {
+		isolation: isolate;
+	}
 }
-
-* {
-	@apply border-border;
-}
-
-:root,
-body,
-#__nuxt {
-	overflow: hidden;
-	block-size: 100%;
-}
-
-#__nuxt {
-	isolation: isolate;
-}
-
-@tailwind components;
-@tailwind utilities;

@@ -142,7 +142,7 @@ const api = useApiClient();
 					<label class="relative inline-flex cursor-pointer items-center">
 						<input v-model="isTextInputManual" class="peer sr-only" type="checkbox" />
 						<div
-							class="peer relative h-4 w-10 flex-auto shrink-0 rounded-[5px] bg-gray-500 after:absolute after:start-[2px] after:top-px after:m-0.5 after:h-3 after:w-4 after:rounded-[3px] after:border after:border-gray-500/50 after:bg-on-primary after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-primary/50 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/50 dark:border-gray-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800 rtl:peer-checked:after:-translate-x-full"
+							class="peer relative h-4 w-10 flex-auto shrink-0 rounded-[5px] bg-gray-500 after:absolute after:start-[2px] after:top-px after:m-0.5 after:h-3 after:w-4 after:rounded-[3px] after:border after:border-gray-500/50 after:bg-on-primary after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-primary/50 peer-focus:outline-hidden peer-focus:ring-4 peer-focus:ring-primary/50 dark:border-gray-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800 peer-checked:rtl:after:-translate-x-full"
 						></div>
 						<span class="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300">
 							Manual edit
@@ -368,6 +368,7 @@ const api = useApiClient();
 </template>
 
 <style>
+@reference "@/styles/index.css";
 /* stylelint-disable selector-class-pattern */
 .dvStats {
 	@apply m-0 mb-[5px] pb-[5px] pl-[5px] border border-solid border-primary bg-primary text-on-primary font-bold;
@@ -516,7 +517,7 @@ const api = useApiClient();
 
 /* InputBuilder stylesheet */
 .ib-buttons button {
-	@apply border-0 bg-primary px-[5px] text-on-primary hover:bg-opacity-50 rounded-[3px] m-0.5;
+	@apply border-0 bg-primary px-[5px] text-on-primary hover:bg-primary/50 rounded-[3px] m-0.5;
 }
 
 .ib-input-row {
@@ -524,7 +525,7 @@ const api = useApiClient();
 }
 
 .ib-textinput {
-	@apply flex-grow flex-shrink basis-20;
+	@apply grow shrink basis-20;
 }
 
 .ib-textinput input {
@@ -532,7 +533,7 @@ const api = useApiClient();
 }
 
 .ib-select {
-	@apply flex-grow flex-shrink basis-20;
+	@apply grow shrink basis-20;
 }
 
 .ib-select select {
@@ -540,10 +541,10 @@ const api = useApiClient();
 }
 
 .ib-submit {
-	@apply flex-shrink basis-6;
+	@apply shrink basis-6;
 }
 
 .ib-submit button {
-	@apply h-full border-2 border-gray-300 w-full px-[5px] text-gray-900 hover:bg-opacity-50 hover:bg-primary hover:text-on-primary rounded-[3px];
+	@apply h-full border-2 border-gray-300 w-full px-[5px] text-gray-900 hover:bg-primary/50 hover:text-on-primary rounded-[3px];
 }
 </style>

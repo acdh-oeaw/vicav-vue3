@@ -1,5 +1,7 @@
 import { fileURLToPath } from "node:url";
 
+import tailwindcss from "@tailwindcss/vite";
+
 export default defineNuxtConfig({
 	alias: {
 		"@": fileURLToPath(new URL("./", import.meta.url)),
@@ -14,7 +16,6 @@ export default defineNuxtConfig({
 
 	css: [
 		"@fontsource-variable/roboto-flex/standard.css",
-		"tailwindcss/tailwind.css",
 		"@/styles/index.css",
 		"winbox/dist/css/winbox.min.css",
 		"leaflet/dist/leaflet.css",
@@ -38,7 +39,6 @@ export default defineNuxtConfig({
 
 	postcss: {
 		plugins: {
-			tailwindcss: {},
 			autoprefixer: {},
 		},
 	},
@@ -89,6 +89,7 @@ export default defineNuxtConfig({
 				defineModel: true,
 			},
 		},
+		plugins: [tailwindcss()],
 	},
 
 	typescript: {

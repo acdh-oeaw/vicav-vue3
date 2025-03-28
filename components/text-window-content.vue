@@ -38,6 +38,7 @@ const isLoading = computed(() => {
 </template>
 
 <style>
+@reference "@/styles/index.css";
 /* stylelint-disable selector-class-pattern, block-no-empty */
 .tbHeader {
 	@apply w-full m-0;

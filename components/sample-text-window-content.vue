@@ -84,6 +84,8 @@ watch(content, () => {
 </template>
 
 <style>
+@reference "@/styles/index.css";
+
 a > svg {
 	@apply self-center;
 }

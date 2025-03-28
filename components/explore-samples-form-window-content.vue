@@ -334,13 +334,13 @@ const openSearchResultsNewWindow = function () {
 				<label for="sentence">Sentences</label>
 				<TagsInputRoot
 					v-model="sentences"
-					class="my-2 flex w-full flex-wrap items-center gap-2 bg-white px-3 py-2 shadow"
+					class="my-2 flex w-full flex-wrap items-center gap-2 bg-white px-3 py-2 shadow-sm"
 					delimiter=""
 				>
 					<TagsInputItem
 						v-for="item in sentences"
 						:key="item"
-						class="flex items-center justify-center gap-2 rounded bg-primary px-2 py-1 text-white aria-[current=true]:bg-primary"
+						class="flex items-center justify-center gap-2 rounded bg-primary px-2 py-1 text-white aria-current:bg-primary"
 						:value="item"
 					>
 						<TagsInputItemText class="text-sm">{{ item }}</TagsInputItemText>
@@ -350,7 +350,7 @@ const openSearchResultsNewWindow = function () {
 					</TagsInputItem>
 
 					<TagsInputInput
-						class="flex flex-1 gap-2 !bg-transparent px-1 focus:outline-none"
+						class="flex flex-1 gap-2 bg-transparent! px-1 focus:outline-hidden"
 						placeholder="Enter sentence numbers. Press enter key to select..."
 					/>
 				</TagsInputRoot>
@@ -362,7 +362,7 @@ const openSearchResultsNewWindow = function () {
 					id="translation"
 					v-model="translation"
 					aria-label="Translation"
-					class="my-2 flex w-full border-gray-300 px-3 py-2 shadow"
+					class="my-2 flex w-full border-gray-300 px-3 py-2 shadow-sm"
 					placeholder="Search for translation..."
 				/>
 			</div>
@@ -373,7 +373,7 @@ const openSearchResultsNewWindow = function () {
 					id="comment"
 					v-model="comment"
 					aria-label="Comment"
-					class="my-2 w-full border-gray-300 px-3 py-2 shadow"
+					class="my-2 w-full border-gray-300 px-3 py-2 shadow-sm"
 					placeholder="Search for comment..."
 				/>
 			</div>
@@ -402,6 +402,8 @@ const openSearchResultsNewWindow = function () {
 </template>
 
 <style>
+@reference "@/styles/index.css";
+
 label {
 	@apply px-3 py-2 my-2 w-28 align-baseline;
 }

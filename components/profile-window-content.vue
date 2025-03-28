@@ -50,6 +50,7 @@ const header = simpleItems.value.find((i) => i.id === params.value.textId);
 </template>
 
 <style>
+@reference "@/styles/index.css";
 /* stylelint-disable selector-class-pattern */
 /* stylelint-disable selector-type-no-unknown */
 
@@ -170,6 +171,6 @@ gallery + .pNorm {
 }
 
 .lg-item .lg-sub-html {
-	@apply bg-opacity-40 bg-black;
+	@apply bg-black/40;
 }
 </style>
