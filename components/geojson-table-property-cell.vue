@@ -64,7 +64,20 @@ function getPersonGroupIcon(personGroup: Record<string, string>) {
 function trimPrefix(str: string) {
 	return str.replace(/(#|pgr:)/, "");
 }
-const infoOpen = ref(Object.fromEntries(Object.keys(props.value ?? {}).map((key) => [key, false])));
+const { showAllDetails } = storeToRefs(useGeojsonStore());
+const infoOpen = ref(
+	Object.fromEntries(
+		Object.keys(props.value ?? {}).map((key) => [key, showAllDetails.value ?? false]),
+	),
+);
+watch(
+	() => showAllDetails.value,
+	() => {
+		infoOpen.value = Object.fromEntries(
+			Object.keys(props.value ?? {}).map((key) => [key, showAllDetails.value ?? false]),
+		);
+	},
+);
 </script>
 
 <template>

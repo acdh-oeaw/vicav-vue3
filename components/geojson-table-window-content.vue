@@ -5,12 +5,14 @@ import { parse, test } from "liqe";
 import { useGeojsonStore } from "@/stores/use-geojson-store.ts";
 import type { FeatureType, MarkerType } from "@/types/global";
 
+import { Info } from "lucide-vue-next";
+
 const GeojsonStore = useGeojsonStore();
 const { addWindow, findWindowByTypeAndParam } = useWindowsStore();
 const url = "https://raw.githubusercontent.com/wibarab/wibarab-data/main/wibarab_varieties.geojson";
 
 const { isPending } = GeojsonStore.fetchGeojson(url);
-const { fetchedData, tables } = storeToRefs(GeojsonStore);
+const { fetchedData, tables, showAllDetails } = storeToRefs(GeojsonStore);
 const { data: projectData } = useProjectInfo();
 const { createColumnDefs } = useColumnGeneration();
 
@@ -102,6 +104,10 @@ function registerTable(table: Table<FeatureType>) {
 			<DataTablePagination v-if="tableRef" :table="tableRef as unknown as Table<never>" />
 
 			<div class="flex gap-2">
+				<Toggle v-model:model-value="showAllDetails" class="h-8"
+					><Info class="size-4 stroke-neutral-800 transition-colors" />
+					<span class="text-ellipsis line-clamp-1">Show all details</span></Toggle
+				>
 				<DataTableActiveFilters
 					v-if="tableRef"
 					class="inline"
