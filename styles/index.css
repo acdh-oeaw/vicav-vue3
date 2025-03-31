@@ -5,7 +5,7 @@
 @import "lightgallery/css/lg-thumbnail.css" layer(components);
 @import "tailwindcss/utilities" layer(utilities);
 
-@config '../tailwind.config.ts';
+@config '../tailwind.config.js';
 
 @layer components {
 	:root {
