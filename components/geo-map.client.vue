@@ -198,6 +198,7 @@ function updateMarkers(updateViewport = true) {
 
 	if (config.nearbyMarkersPopup) {
 		updateDynamicGrid();
+		componentPopups.value = [];
 		Object.values(featureGroup.getLayers()).forEach((marker) => {
 			addNearbyDataPopup(marker as LeafletMarker);
 		});
@@ -303,8 +304,6 @@ watch(
 onUnmounted(() => {
 	context.map?.remove();
 });
-
-// defineExpose(context);
 
 provide(key, context);
 </script>
