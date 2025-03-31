@@ -216,11 +216,6 @@ function fitAllMarkersOnViewport() {
 }
 
 onMounted(async () => {
-	/**
-	 * @see https://github.com/nuxt/nuxt/issues/13471
-	 * @see https://github.com/vuejs/core/issues/5844
-	 */
-	await nextTick();
 	if (elementRef.value == null) return;
 
 	context.map = createMap(elementRef.value, config.options).setView(
