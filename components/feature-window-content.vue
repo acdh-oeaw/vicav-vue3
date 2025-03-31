@@ -57,6 +57,7 @@ const isLoading = computed(() => {
 </template>
 
 <style>
+@reference "@/styles/index.css";
 /* stylelint-disable selector-class-pattern */
 
 .tbFeatures {
@@ -84,7 +85,7 @@ const isLoading = computed(() => {
 }
 
 .tdFeaturesRightSource {
-	@apply align-top w-4/5 pl-[3px] border border-solid border-primary bg-primary bg-opacity-30 text-[#7f960a];
+	@apply align-top w-4/5 pl-[3px] border border-solid border-primary bg-primary/30 text-[#7f960a];
 }
 
 .tdFeaturesRightTarget {

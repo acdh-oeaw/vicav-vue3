@@ -208,6 +208,7 @@ function submitNewQueryKeyup(event: KeyboardEvent): void {
 </template>
 
 <style>
+@reference "@/styles/index.css";
 /* stylelint-disable selector-class-pattern, block-no-empty */
 .dvStats {
 	@apply mb-[5px] pb-[5px] pl-[5px] border border-solid border-primary bg-primary text-on-primary font-bold;

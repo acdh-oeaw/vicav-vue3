@@ -60,7 +60,7 @@ const words: Ref<Array<string>> = ref([]);
 		<form
 			class="block w-full rounded border border-gray-300 bg-gray-50 p-2.5 px-4 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
 		>
-			<label class="mb-2 flex !w-48 p-0 font-bold" for="word_tags">
+			<label class="mb-2 flex w-48! p-0 font-bold" for="word_tags">
 				<span class="grow">Search for exact words</span>
 				<a href="#" title="More information" @click="showHelp = true"
 					><span class="hidden">More information</span><Info class="size-4"
@@ -90,7 +90,7 @@ const words: Ref<Array<string>> = ref([]);
 				:special-characters="specialCharacters"
 			/>
 
-			<label class="mb-2 flex !w-40 p-0 font-bold" for="word_tags">
+			<label class="mb-2 flex w-40! p-0 font-bold" for="word_tags">
 				<span class="grow">Advanced search</span>
 			</label>
 			<div class="mb-2 flex items-center gap-2">

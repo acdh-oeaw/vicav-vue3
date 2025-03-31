@@ -212,6 +212,8 @@ watch(utteranceElements.value, (value) => {
 </template>
 
 <style>
+@reference "@/styles/index.css";
+
 .u {
 	.xml-id {
 		@apply min-w-fit px-3 font-bold;

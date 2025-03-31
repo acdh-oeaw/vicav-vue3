@@ -17,6 +17,7 @@ node_modules/
 
 # vercel
 .vercel
+.idea
 
 # misc
 .DS_Store

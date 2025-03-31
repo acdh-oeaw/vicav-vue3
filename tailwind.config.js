@@ -1,5 +1,4 @@
 import typographyPlugin from "@tailwindcss/typography";
-import type { Config } from "tailwindcss";
 import animatePlugin from "tailwindcss-animate";
 
 const config = {
@@ -14,14 +13,6 @@ const config = {
 	],
 	darkMode: ["class", 'data-ui-color-scheme="dark"'],
 	plugins: [animatePlugin, typographyPlugin],
-	safelist: [
-		"grid-cols-1",
-		"grid-cols-2",
-		"grid-cols-3",
-		"grid-cols-4",
-		"grid-cols-5",
-		"grid-cols-6",
-	],
 	theme: {
 		extend: {
 			borderRadius: {
@@ -81,6 +72,6 @@ const config = {
 			},
 		},
 	},
-} satisfies Config;
+};
 
 export default config;
