@@ -3,7 +3,14 @@ import { z } from "zod";
 
 type MaybeRef<T> = ComputedRef<T> | Ref<T> | T;
 
-export const DataTypesEnum = z.enum(["Profile", "Text", "SampleText", "Feature", "CorpusText"]);
+export const DataTypesEnum = z.enum([
+	"Profile",
+	"Text",
+	"SampleText",
+	"Feature",
+	"CorpusText",
+	"BiblioEntries",
+]);
 export type DataTypesEnum = z.infer<typeof DataTypesEnum>;
 
 export interface DataType {

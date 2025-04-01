@@ -30,6 +30,7 @@ const groupedMarkers = computed<Record<string, LocationDataPoints> | null>(() =>
 					SampleText: [],
 					Profile: [],
 					DataTable: [],
+					BiblioEntries: [],
 				};
 
 			if (grouped[marker.properties.label] !== undefined) {
