@@ -196,6 +196,7 @@ function updateMarkers(updateViewport = true) {
 		featureGroup.addData(marker);
 	});
 
+	if (updateViewport) fitAllMarkersOnViewport();
 	if (config.nearbyMarkersPopup) {
 		updateDynamicGrid();
 		componentPopups.value = [];
@@ -203,8 +204,6 @@ function updateMarkers(updateViewport = true) {
 			addNearbyDataPopup(marker as LeafletMarker);
 		});
 	}
-
-	if (updateViewport) fitAllMarkersOnViewport();
 }
 
 function fitAllMarkersOnViewport() {
