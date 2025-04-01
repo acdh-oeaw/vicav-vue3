@@ -249,11 +249,10 @@ onMounted(async () => {
 					layer.unbindPopup();
 					openedPopupId.value = null;
 					const id = context.featureGroups.markers?.getLayerId(layer);
-					if (config.nearbyMarkersPopup) {
-						openedPopupId.value = id ? id : null;
-						await nextTick();
-						if (popupRef.value!.$el)
-							layer.bindPopup(popupRef.value!.$el, { minWidth: 150 }).openPopup();
+					openedPopupId.value = id ? id : null;
+					await nextTick();
+					if (config.nearbyMarkersPopup && popupRef.value !== null) {
+						layer.bindPopup(popupRef.value!.$el, { minWidth: 150 }).openPopup();
 					} else {
 						emit("marker-click", feature);
 					}

@@ -5,7 +5,6 @@ import type { WindowItem } from "@/types/global";
 
 export function useMarkerClickHandler() {
 	const openOrUpdateWindow = useOpenOrUpdateWindow();
-
 	/**
 	 * Intercept anchor clicks to open window instead of navigating.
 	 */
