@@ -66,11 +66,13 @@ defineExpose({
 					:key="contentType"
 					class="text-xs"
 				>
-					<h3 v-if="markersOfType.length > 0" class="italic">
-						{{ DataTypes[contentType as DataTypesEnum]?.contentTypeHeading ?? contentType }}
-					</h3>
+					<div v-if="markersOfType.length > 0">
+						<h3 class="italic">
+							{{ DataTypes[contentType as DataTypesEnum]?.contentTypeHeading ?? contentType }}
+						</h3>
 
-					<GeoMapPopupLinks :markers="markersOfType" />
+						<GeoMapPopupLinks :markers="markersOfType" />
+					</div>
 				</div>
 			</div>
 		</template>
