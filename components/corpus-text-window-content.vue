@@ -201,7 +201,7 @@ watch(utteranceElements.value, (value) => {
 						</audio>
 					</td>
 					<th class="min-w-fit px-3 font-bold">
-						{{ u.id }}
+						{{ teiHeader?.id }}
 					</th>
 					<td class="table-cell" v-html="u.content"></td>
 				</tr>
