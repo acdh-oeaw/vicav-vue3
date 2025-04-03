@@ -91,6 +91,10 @@ const scrollParentToChild = function (parent: Element, child: Element) {
 	}
 };
 
+const hasAudio = computed(() => {
+	return utterances.value.some((u) => u.audio);
+});
+
 watch(utteranceElements.value, (value) => {
 	if (props.params.u) {
 		const window = utterancesWrapper.value?.parentElement?.parentElement;
@@ -130,7 +134,7 @@ watch(utteranceElements.value, (value) => {
 			<Citation :header="teiHeader" type="entry" />
 		</div>
 		<!-- eslint-disable tailwindcss/no-custom-classname, vue/no-v-html -->
-		<div :id="params.textId" ref="utterancesWrapper" class="p-4">
+		<div :id="params.textId" ref="utterancesWrapper" class="p-4 relative">
 			<h2 class="m-3 text-lg">{{ props.params.label }}</h2>
 
 			<div class="m-3 rounded-sm border border-gray-300 bg-gray-50 p-4">
@@ -166,7 +170,9 @@ watch(utteranceElements.value, (value) => {
 						</tr>
 						<tr v-if="publication">
 							<th class="align-text-top">Published in:</th>
-							<td><Citation v-bind="publication" /></td>
+							<td>
+								<Citation v-bind="publication" />
+							</td>
 						</tr>
 						<tr>
 							<th>Speakers:</th>
@@ -180,7 +186,14 @@ watch(utteranceElements.value, (value) => {
 					</tbody>
 				</table>
 			</div>
-			<table>
+			<table class="text-sm text-left rtl:text-right text-gray-700 max-w-full">
+				<thead class="text-xs text-gray-700 uppercase bg-accent">
+					<tr>
+						<th v-if="hasAudio" class="px-6 py-3" scope="col">Audio</th>
+						<th class="px-6 py-3" scope="col">SpeakerID</th>
+						<th class="px-6 py-3" scope="col">Utterance</th>
+					</tr>
+				</thead>
 				<tr
 					v-for="u in utterances"
 					:id="u.id"
@@ -188,22 +201,24 @@ watch(utteranceElements.value, (value) => {
 					ref="utteranceElements"
 					class="corpus-utterance u table-row"
 				>
-					<td>
-						<a v-if="u.audio" class="play mt-1"
-							><Play class="size-4" /><span class="hidden">Play</span></a
+					<td v-if="hasAudio">
+						<a v-if="u.audio" class="play mt-1">
+							<Play class="size-4" />
+							<span class="hidden">Play</span></a
 						>
 						<a v-if="u.audio" class="stop mt-1 hidden">
-							<Pause class="size-4" /><span class="hidden">Stop</span>
+							<Pause class="size-4" />
+							<span class="hidden">Stop</span>
 						</a>
 						<!-- eslint-disable-next-line vuejs-accessibility/media-has-caption -->
 						<audio v-if="u.audio" hidden="hidden">
 							<source :src="u.audio" />
 						</audio>
 					</td>
-					<th class="min-w-fit px-3 font-bold">
-						{{ u.id }}
-					</th>
-					<td class="table-cell" v-html="u.content"></td>
+					<td class="min-w-fit px-6 py-3 font-bold">
+						{{ teiHeader?.id }}
+					</td>
+					<td class="table-cell px-6 py-3 max-w-full" v-html="u.content"></td>
 				</tr>
 			</table>
 			<InfiniteLoading v-if="!scrollComplete" ref="infinite" @infinite="handleInfiniteScroll" />
@@ -228,5 +243,12 @@ watch(utteranceElements.value, (value) => {
 			@apply font-bold;
 		}
 	}
+}
+
+.c,
+.w,
+.pc,
+.media {
+	@apply hover:bg-primary/70 transition duration-300 ease-in-out hover:font-bold;
 }
 </style>
