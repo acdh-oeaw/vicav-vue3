@@ -142,6 +142,7 @@ gallery + .pNorm {
 .lg-container {
 	@apply text-white;
 
+	position: relative;
 	height: 450px;
 }
 
