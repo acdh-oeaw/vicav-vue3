@@ -86,7 +86,7 @@ const scrollParentToChild = function (parent: Element, child: Element) {
 			parent.scrollTop += scrollTop;
 		} else {
 			// we're near the bottom of the list
-			parent.scrollTop += scrollBot;
+			parent.scrollTop += scrollBot + 20;
 		}
 	}
 };
@@ -227,7 +227,9 @@ watch(
 							<source :src="u.audio" />
 						</audio>
 					</td>
-					<td class="min-w-fit px-6 py-3 font-bold">
+					<td
+						:class="'min-w-fit px-3 font-bold ' + (u.id === props.params.u ? 'text-red-800' : '')"
+					>
 						{{ teiHeader?.id }}
 					</td>
 					<td class="table-cell px-6 py-3 max-w-full" v-html="u.content"></td>
