@@ -96,14 +96,16 @@ const debugString = debug ? JSON.stringify(groupedItems, null, 2) : "";
 								</a>
 								<span v-else> {{ item.label }} </span>
 								<span> &nbsp; </span>
-								<span
-									v-if="item.audioAvailability === 'free'"
-									title="Audio recording is publicly available"
-								>
-									<Volume2 class="mx-2 mt-[2px] size-5" />
-								</span>
-								<span v-else title="Audio recording is restricted">
-									<VolumeX class="mx-2 mt-[2px] size-5" />
+								<span v-if="item.dataType !== 'Feature' && item.dataType !== 'Profile'">
+									<span
+										v-if="item.audioAvailability === 'free'"
+										title="Audio recording is publicly available"
+									>
+										<Volume2 class="mx-2 mt-[2px] size-5" />
+									</span>
+									<span v-else title="Audio recording is restricted">
+										<VolumeX class="mx-2 mt-[2px] size-5" />
+									</span>
 								</span>
 							</li>
 						</ul>
