@@ -126,6 +126,18 @@ watch(utteranceElements.value, (value) => {
 		});
 	}
 });
+
+watch(
+	() => props.params,
+	(value) => {
+		if (value.u) {
+			const window = utterancesWrapper.value?.parentElement?.parentElement;
+			const u = utteranceElements.value.find((u) => u.id === value.u);
+			if (u) scrollParentToChild(window!, u);
+			else if (infinite.value) scrollParentToChild(window!, infinite!.value.$el);
+		}
+	},
+);
 </script>
 
 <template>
