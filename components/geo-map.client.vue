@@ -41,19 +41,22 @@ interface ComponentPopupInfo {
 	};
 }
 
-const popupElements = ref<Map<string, globalThis.ComponentPublicInstance>>(new Map());
 const componentPopups = ref<Array<ComponentPopupInfo>>([]);
 const openedPopupId = ref<number | null>(null);
-const elementRef = ref<HTMLElement | null>(null);
+const mapRef = ref<HTMLElement | null>(null);
+const popupRef = ref<ComponentPublicInstance | null>(null);
+const currentPopup = computed(() =>
+	componentPopups.value.find((popup) => popup.id === openedPopupId.value?.toString()),
+);
 
-watchEffect(() => {
+/*watchEffect(() => {
 	componentPopups.value.forEach((popup) => {
 		const element = popupElements.value.get(popup.id);
 		const leafletMarker = context.featureGroups.markers?.getLayer(parseInt(popup.id));
 		if (leafletMarker == null || element == null) return;
 		leafletMarker.bindPopup(element.$el, { minWidth: 150 });
 	});
-});
+});*/
 
 const context: GeoMapContext = {
 	map: null,
@@ -144,7 +147,7 @@ function getNearbyMarkersBasedOnDynamicGrid(
 }
 
 // Bind a popup listing nearby data to markers close to each other.
-// Remove existing if there are no nearby markers on the map any more.
+// Remove existing if there are no nearby markers on the map anymore.
 const addNearbyDataPopup = function (marker: LeafletMarker) {
 	const featureGroup = context.featureGroups.markers;
 	const map = context.map;
@@ -196,14 +199,19 @@ function updateMarkers(updateViewport = true) {
 		featureGroup.addData(marker);
 	});
 
-	if (config.nearbyMarkersPopup) {
+	if (updateViewport) fitAllMarkersOnViewport();
+	updatePopups();
+}
+
+function updatePopups() {
+	if (config.nearbyMarkersPopup && context.featureGroups.markers) {
+		const featureGroup = context.featureGroups.markers;
 		updateDynamicGrid();
+		componentPopups.value = [];
 		Object.values(featureGroup.getLayers()).forEach((marker) => {
 			addNearbyDataPopup(marker as LeafletMarker);
 		});
 	}
-
-	if (updateViewport) fitAllMarkersOnViewport();
 }
 
 function fitAllMarkersOnViewport() {
@@ -216,14 +224,9 @@ function fitAllMarkersOnViewport() {
 }
 
 onMounted(async () => {
-	/**
-	 * @see https://github.com/nuxt/nuxt/issues/13471
-	 * @see https://github.com/vuejs/core/issues/5844
-	 */
-	await nextTick();
-	if (elementRef.value == null) return;
+	if (mapRef.value == null) return;
 
-	context.map = createMap(elementRef.value, config.options).setView(
+	context.map = createMap(mapRef.value, config.options).setView(
 		config.initialViewState.center,
 		config.initialViewState.zoom,
 	);
@@ -242,10 +245,14 @@ onMounted(async () => {
 			});
 
 			layer.on({
-				click() {
+				async click() {
+					layer.unbindPopup();
+					openedPopupId.value = null;
 					const id = context.featureGroups.markers?.getLayerId(layer);
-					if (layer.getPopup()) {
-						openedPopupId.value = id ? id : null;
+					openedPopupId.value = id ? id : null;
+					await nextTick();
+					if (config.nearbyMarkersPopup && popupRef.value !== null) {
+						layer.bindPopup(popupRef.value!.$el, { minWidth: 150 }).openPopup();
 					} else {
 						emit("marker-click", feature);
 					}
@@ -264,7 +271,7 @@ onMounted(async () => {
 
 	updateMarkers();
 	context.map.on("zoomend", () => {
-		updateMarkers(false);
+		updatePopups();
 	});
 });
 
@@ -309,26 +316,19 @@ onUnmounted(() => {
 	context.map?.remove();
 });
 
-// defineExpose(context);
-
 provide(key, context);
 </script>
 
 <template>
 	<SvgoPetal v-if="props.markerType === 'petal'" />
-	<div ref="elementRef" class="absolute inset-0 grid" data-geo-map />
+	<div ref="mapRef" class="absolute inset-0 grid" data-geo-map />
 	<slot :context="context" />
 	<GeoMapPopupContent
-		v-for="popupInfo in componentPopups"
-		v-show="popupInfo.id === openedPopupId?.toString()"
-		v-bind="popupInfo.props"
-		:id="popupInfo.id"
-		:key="popupInfo.id"
-		:ref="
-			(el) => {
-				if (el) popupElements.set(popupInfo.id, el as globalThis.ComponentPublicInstance);
-			}
-		"
+		v-if="currentPopup"
+		v-bind="currentPopup.props"
+		:id="currentPopup.id"
+		:key="currentPopup.id"
+		ref="popupRef"
 	/>
 </template>
 

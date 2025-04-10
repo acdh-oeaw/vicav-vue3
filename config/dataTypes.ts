@@ -38,5 +38,12 @@ const types: DataTypes = {
 		collection: "vicav_texts",
 		contentTypeHeading: "Texts",
 	},
+	BiblioEntries: {
+		name: "bibliographic entries",
+		targetType: "BiblioEntries",
+		categoryId: "biblioentries",
+		collection: "vicav_biblioentries",
+		contentTypeHeading: "Bibliographic entries",
+	},
 } as const;
 export default types;
