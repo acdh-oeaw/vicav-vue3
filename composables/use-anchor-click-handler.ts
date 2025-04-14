@@ -22,8 +22,18 @@ export function useAnchorClickHandler() {
 			if (item.targetType === "External-link") return;
 			event.preventDefault();
 
+			let itemWrapper;
+			if (!item.params) {
+				itemWrapper = {
+					targetType: item.targetType,
+					params: item,
+				};
+			} else {
+				itemWrapper = item;
+			}
+
 			openOrUpdateWindow(
-				item as unknown as WindowItem,
+				itemWrapper as WindowItem,
 				isNonEmptyString(item.label) ? item.label : element.innerText,
 			);
 		}

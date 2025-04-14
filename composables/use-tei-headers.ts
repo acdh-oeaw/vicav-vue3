@@ -118,7 +118,9 @@ const extractMetadata = function (
 		template.duration = `${
 			durHours ? `${String(durHours).padStart(2, "0")}:` : ""
 		}${String(durMinutes).padStart(2, "0")}:${String(durSeconds).padStart(2, "0")}`;
-		template.audioAvailability = item.teiHeader.fileDesc.publicationStmt.availability["@status"];
+		if (template.dataType !== "Feature" && template.dataType !== "Profile") {
+			template.audioAvailability = item.teiHeader.fileDesc.publicationStmt.availability["@status"];
+		}
 	}
 
 	if (
