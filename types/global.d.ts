@@ -26,6 +26,7 @@ export type DataTypes = Record<DataTypesEnum, DataType>;
 interface WindowItemBase {
 	id: string;
 	winbox: WinBox;
+	label: string;
 }
 
 export const TextId = z.object({
