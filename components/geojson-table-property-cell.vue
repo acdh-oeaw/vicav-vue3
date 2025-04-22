@@ -40,9 +40,18 @@ const iconMap: Record<string, Record<string, LucideIcon>> = {
 		"#default": Church,
 	},
 };
+const nonPersonGroupKeys = ["examples", "sources"];
 function getPersonGroups(featureValueEntry: unknown) {
-	const personGroups =
-		(featureValueEntry as Record<string, Array<Record<string, string>>>).person_groups ?? [];
+	const personGroups = Object.entries((featureValueEntry as Record<string, Array<string>>) ?? {})
+		.filter(([key]) => !nonPersonGroupKeys.includes(key))
+		.flatMap(([key, val]) => {
+			return val.map(
+				(entry) => {
+					return { [key]: entry };
+				},
+				{} as Record<string, string>,
+			);
+		});
 	return personGroups.toSorted(
 		(a, b) =>
 			(Object.keys(a)[0]?.localeCompare(Object.keys(b)[0] ?? "") ||
@@ -134,12 +143,13 @@ watch(
 				<NuxtLink
 					v-for="source in getSources(key)"
 					:key="source.link"
-					class="text-primary"
+					class="flex gap-1 text-primary"
 					external
 					target="_blank"
 					:to="source.link"
 				>
-					<span class="sr-only">View Source</span><ExternalLink class="size-3.5" />
+					<span>{{ source.short_cit }}</span>
+					<span class="sr-only">View Source</span><ExternalLink class="inline-block size-3.5" />
 				</NuxtLink>
 			</div>
 		</div>
