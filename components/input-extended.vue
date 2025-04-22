@@ -77,6 +77,8 @@ const restoreCursorPosition = (pos: number) => {
 </template>
 
 <style>
+@reference "@/styles/index.css";
+
 /* InputExtended stylesheet */
 .ie button {
 	@apply border-gray-300 bg-gray-200 border px-2 py-px font-bold text-gray-800 hover:bg-gray-300 rounded-sm m-px;

@@ -37,6 +37,8 @@ onMounted(() => {
 </template>
 
 <style>
+@reference "@/styles/index.css";
+
 .winbox {
 	@apply bg-primary shadow-lg border rounded overflow-hidden;
 

@@ -1,6 +1,7 @@
 # dependencies
 node_modules/
 .pnpm-store/
+.local/
 
 # logs
 *.log
@@ -16,6 +17,7 @@ node_modules/
 
 # vercel
 .vercel
+.idea
 
 # misc
 .DS_Store

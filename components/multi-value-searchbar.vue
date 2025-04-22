@@ -180,7 +180,7 @@ watch(
 					<ComboboxItem
 						v-for="item in list"
 						:key="String(item)"
-						class="flex cursor-default rounded px-2 py-1 data-[highlighted]:bg-muted"
+						class="flex cursor-default rounded px-2 py-1 data-highlighted:bg-muted"
 						:value="item"
 						@select="handleSelect"
 					>

@@ -16,7 +16,7 @@
 		"dev": "NUXT_PUBLIC_CURRENT_GIT_SHA=$(git describe --tags --always) && nuxt dev --dotenv ./.env.local --host 127.0.0.1 --no-fork",
 		"format:check": "prettier . --cache --check --ignore-path ./.gitignore",
 		"format:fix": "pnpm run format:check --write",
-		"generate:api-client": "swagger-typescript-api --path \"https://raw.githubusercontent.com/acdh-oeaw/vicav-app-api/master/openapi.json\" --clean-output --name index.ts --output ./lib/api-client/",
+		"generate:api-client": "swagger-typescript-api generate --path \"https://raw.githubusercontent.com/acdh-oeaw/vicav-app-api/master/openapi.json\" --clean-output --name index.ts --output ./lib/api-client/",
 		"lint:check": "run-p --continue-on-error \"lint:*:check\"",
 		"lint:fix": "run-p --continue-on-error \"lint:*:fix\"",
 		"lint:code:check": "pnpm run lint:code:check-no-cache --cache",
@@ -51,6 +51,7 @@
 		"@fontsource-variable/roboto-flex": "^5.1.1",
 		"@fortawesome/fontawesome-free": "^6.7.2",
 		"@iconify/vue": "^4.3.0",
+		"@nuxt/eslint": "^1.2.0",
 		"@nuxt/test-utils": "^3.17.2",
 		"@pinia/nuxt": "^0.5.5",
 		"@tanstack/vue-query": "^5.64.1",
@@ -101,6 +102,7 @@
 		"@nuxt/devtools": "2.3.0",
 		"@nuxt/eslint": "^1.2.0",
 		"@playwright/test": "^1.51.1",
+		"@tailwindcss/vite": "^4.0.15",
 		"@tailwindcss/typography": "^0.5.16",
 		"@tanstack/eslint-plugin-query": "^5.62.16",
 		"@types/color": "^4.2.0",
@@ -108,7 +110,7 @@
 		"@types/leaflet": "^1.9.16",
 		"@types/node": "^22.13.10",
 		"@types/winbox": "0.2.3",
-		"@vitest/coverage-v8": "^2.1.8",
+		"@vitest/coverage-v8": "^3.0.9",
 		"ci-info": "^3.9.0",
 		"cross-env": "^7.0.3",
 		"dotenv": "^16.4.7",
@@ -116,16 +118,16 @@
 		"dotenv-expand": "^12.0.1",
 		"eslint": "^9.22.0",
 		"eslint-config-flat-gitignore": "^2.1.0",
-		"eslint-plugin-tailwindcss": "^3.17.5",
 		"h3": "^1.13.1",
 		"happy-dom": "^15.11.7",
 		"lint-staged": "15.2.7",
 		"nitropack": "^2.10.4",
 		"prettier": "^3.4.2",
+		"prettier-plugin-tailwindcss": "^0.6.11",
 		"schema-dts": "^1.1.2",
 		"simple-git-hooks": "^2.11.1",
 		"stylelint": "^16.16.0",
-		"tailwindcss": "^3.4.17",
+		"tailwindcss": "^4.0.17",
 		"tailwindcss-animate": "^1.0.7",
 		"type-fest": "^4.32.0",
 		"typescript": "^5.8.2",
@@ -134,7 +136,7 @@
 		"vue-tsc": "^2.2.8"
 	},
 	"resolutions": {
-		"vue": "3.5.6"
+		"vue": "3.5.13"
 	},
 	"pnpm": {
 		"patchedDependencies": {
@@ -170,11 +172,6 @@
 			"prettier --cache --write"
 		],
 		"*.!(css|js|ts|vue)": "prettier --cache --ignore-unknown --write"
-	},
-	"postcss": {
-		"plugins": {
-			"tailwindcss": {}
-		}
 	},
 	"prettier": "@acdh-oeaw/prettier-config",
 	"simple-git-hooks": {

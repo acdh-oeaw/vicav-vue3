@@ -110,6 +110,7 @@ watch(isLoading, () => {
 </template>
 
 <style>
+@reference "@/styles/index.css";
 /* stylelint-disable selector-class-pattern */
 .tbFeatures {
 	@apply w-11/12 border border-solid border-[#59533c];
@@ -137,7 +138,7 @@ watch(isLoading, () => {
 
 .tdFeaturesRightSource {
 	@apply align-top w-4/5 pl-[3px] border border-solid border-primary
-	bg-primary bg-opacity-30 text-[#7f960a];
+	bg-primary/30 text-[#7f960a];
 }
 
 .tdFeaturesRightTarget {

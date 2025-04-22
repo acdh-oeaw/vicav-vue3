@@ -30,10 +30,11 @@ interface Props {
 	placeholder: string;
 	filterFunction: (list: Array<string>, searchTerm: string) => Array<string>;
 	specialCharacters?: SpecialCharacters;
+	immediateOpen?: boolean;
 }
 
 const props = defineProps<Props>();
-const { options, placeholder, filterFunction } = toRefs(props);
+const { options, placeholder, filterFunction, specialCharacters, immediateOpen } = toRefs(props);
 const model = defineModel<Array<string>>();
 const searchTerm = defineModel<string>("searchTerm", { default: "" });
 const open = ref(false);
@@ -45,6 +46,7 @@ watch(
 	},
 	{ deep: true },
 );
+
 const tagsUpdated = function (value: Array<string>) {
 	model.value = value;
 };
@@ -62,7 +64,7 @@ const tagsUpdated = function (value: Array<string>) {
 		<ComboboxAnchor class="w-full">
 			<TagsInputRoot
 				v-slot="{ modelValue: tags }"
-				class="my-2 flex w-full flex-wrap items-center gap-2 border-gray-300 bg-white px-3 py-2 shadow"
+				class="my-2 flex w-full flex-wrap items-center gap-2 border-gray-300 bg-white px-3 py-2 shadow-sm"
 				delimiter=" "
 				:model-value="model"
 				@update:model-value="tagsUpdated"
@@ -70,7 +72,7 @@ const tagsUpdated = function (value: Array<string>) {
 				<TagsInputItem
 					v-for="item in tags"
 					:key="item.toString()"
-					class="flex items-center justify-center gap-2 rounded bg-primary px-2 py-1 text-white aria-[current=true]:bg-primary"
+					class="flex items-center justify-center gap-2 rounded bg-primary px-2 py-1 text-white aria-current:bg-primary"
 					:value="item"
 				>
 					<TagsInputItemText class="text-sm">
@@ -89,7 +91,7 @@ const tagsUpdated = function (value: Array<string>) {
 					<TagsInputInput
 						v-if="specialCharacters"
 						as-child
-						class="w-full items-center gap-2 rounded !bg-transparent focus:outline-none"
+						class="w-full items-center gap-2 rounded bg-transparent! focus:outline-hidden"
 					>
 						<InputExtended
 							v-model="searchTerm"
@@ -99,8 +101,9 @@ const tagsUpdated = function (value: Array<string>) {
 					</TagsInputInput>
 					<TagsInputInput
 						v-else
-						class="flex flex-1 flex-wrap items-center gap-2 rounded !bg-transparent px-1 focus:outline-none"
+						class="flex flex-1 flex-wrap items-center gap-2 rounded bg-transparent! px-1 focus:outline-hidden"
 						:placeholder="placeholder"
+						@focus="() => (immediateOpen ? (open = true) : null)"
 					/>
 				</ComboboxInput>
 			</TagsInputRoot>
@@ -115,7 +118,7 @@ const tagsUpdated = function (value: Array<string>) {
 					<ComboboxItem
 						v-if="searchTerm"
 						:key="searchTerm"
-						class="relative flex h-[25px] select-none items-center rounded-[3px] pl-[25px] pr-[35px] text-[13px] leading-none data-[disabled]:pointer-events-none data-[highlighted]:bg-secondary data-[disabled]:text-gray-300 data-[highlighted]:outline-none"
+						class="relative flex h-[25px] select-none items-center rounded-[3px] pl-[25px] pr-[35px] text-[13px] leading-none data-disabled:pointer-events-none data-highlighted:bg-secondary data-disabled:text-gray-300 data-highlighted:outline-hidden"
 						:value="searchTerm"
 						><ComboboxItemIndicator
 							class="absolute left-0 inline-flex w-[25px] items-center justify-center"
@@ -127,7 +130,7 @@ const tagsUpdated = function (value: Array<string>) {
 					<ComboboxItem
 						v-for="(option, index) in options"
 						:key="index"
-						class="relative flex h-[25px] select-none items-center rounded-[3px] pl-[25px] pr-[35px] text-[13px] leading-none data-[disabled]:pointer-events-none data-[highlighted]:bg-secondary data-[disabled]:text-gray-300 data-[highlighted]:outline-none"
+						class="relative flex h-[25px] select-none items-center rounded-[3px] pl-[25px] pr-[35px] text-[13px] leading-none data-disabled:pointer-events-none data-highlighted:bg-secondary data-disabled:text-gray-300 data-highlighted:outline-hidden"
 						:value="option.value"
 					>
 						<ComboboxItemIndicator
