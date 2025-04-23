@@ -92,7 +92,7 @@ watch(
 <template>
 	<div>
 		<div v-for="(key, val) in props.value" :key="val" class="my-0.5 block">
-			<div class="flex flex-wrap items-center gap-2">
+			<div class="flex flex-wrap items-center gap-x-2 gap-y-0">
 				<span class="max-w-full flex-shrink-0 text-ellipsis">{{ val }}</span>
 
 				<Collapsible
@@ -148,7 +148,7 @@ watch(
 					target="_blank"
 					:to="source.link"
 				>
-					<span>{{ source.short_cit }}</span>
+					<span class="text-xs">{{ source.short_cit }}</span>
 					<span class="sr-only">View Source</span><ExternalLink class="inline-block size-3.5" />
 				</NuxtLink>
 			</div>
