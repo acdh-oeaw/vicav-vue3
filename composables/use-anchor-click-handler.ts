@@ -11,20 +11,27 @@ export function useAnchorClickHandler() {
 	function openNewWindowFromAnchor(event: MouseEvent) {
 		const element = event.target as HTMLElement;
 
-		let item: Record<string, string> | null = null;
+		let anchorDataRecord: Record<string, string> = {};
 		if (element instanceof HTMLAnchorElement) {
-			item = element.dataset as Record<string, string>;
+			anchorDataRecord = element.dataset as Record<string, string>;
 		} else if (element.parentElement instanceof HTMLAnchorElement) {
-			item = element.parentElement.dataset as Record<string, string>;
+			anchorDataRecord = element.parentElement.dataset as Record<string, string>;
 		}
 
-		if (item?.targetType) {
-			if (item.targetType === "External-link") return;
+		const anchorDataObject = jsonStringsToObject(anchorDataRecord);
+		anchorDataObject.label = isNonEmptyString(anchorDataObject.label)
+			? anchorDataObject.label
+			: element.innerText;
+		// Replacement for itemWrapper? Part of fix for #252?
+		anchorDataObject.params ??= anchorDataObject;
+
+		if (anchorDataObject.targetType) {
+			if (anchorDataObject.targetType === "External-link") return;
 			event.preventDefault();
 
 			openOrUpdateWindow(
-				item as unknown as WindowItem,
-				isNonEmptyString(item.label) ? item.label : element.innerText,
+				anchorDataObject as unknown as WindowItem, // TODO: can we safeParse this?
+				anchorDataObject.label,
 			);
 		}
 	}

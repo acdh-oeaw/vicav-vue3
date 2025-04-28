@@ -30,10 +30,11 @@ interface Props {
 	placeholder: string;
 	filterFunction: (list: Array<string>, searchTerm: string) => Array<string>;
 	specialCharacters?: SpecialCharacters;
+	immediateOpen?: boolean;
 }
 
 const props = defineProps<Props>();
-const { options, placeholder, filterFunction } = toRefs(props);
+const { options, placeholder, filterFunction, specialCharacters, immediateOpen } = toRefs(props);
 const model = defineModel<Array<string>>();
 const searchTerm = defineModel<string>("searchTerm", { default: "" });
 const open = ref(false);
@@ -45,6 +46,7 @@ watch(
 	},
 	{ deep: true },
 );
+
 const tagsUpdated = function (value: Array<string>) {
 	model.value = value;
 };
@@ -101,6 +103,7 @@ const tagsUpdated = function (value: Array<string>) {
 						v-else
 						class="flex flex-1 flex-wrap items-center gap-2 rounded bg-transparent! px-1 focus:outline-hidden"
 						:placeholder="placeholder"
+						@focus="() => (immediateOpen ? (open = true) : null)"
 					/>
 				</ComboboxInput>
 			</TagsInputRoot>

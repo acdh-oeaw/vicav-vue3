@@ -1,13 +1,4 @@
 <script lang="ts" setup>
-import { Icon } from "@iconify/vue";
-import {
-	TagsInputInput,
-	TagsInputItem,
-	TagsInputItemDelete,
-	TagsInputItemText,
-	TagsInputRoot,
-} from "radix-vue";
-
 import dataTypes from "@/config/dataTypes";
 import type { ExploreSamplesFormWindowItem, GeoMapWindowItem, WindowItem } from "@/types/global.d";
 
@@ -19,6 +10,15 @@ interface Props {
 
 const { data: config } = useProjectInfo();
 const specialCharacters = config.value?.projectConfig?.specialCharacters;
+const commentOptions = (config.value?.projectConfig?.commentOptions ?? []).map((option) => {
+	return { label: option.text, value: option.value } as Tag;
+});
+const sentenceOptions = Array.from(
+	{ length: parseInt(config.value?.projectConfig?.sampleTextSentences ?? "1") },
+	(_, index) => {
+		return { label: (index + 1).toString(), value: (index + 1).toString() } as Tag;
+	},
+);
 
 const props = defineProps<Props>();
 const { params } = toRefs(props);
@@ -41,7 +41,7 @@ const features: Ref<Array<string>> = ref([]);
 const sentences: Ref<Array<string>> = ref([]);
 
 const age: Ref<Array<number>> = ref([0, 100]);
-const comment = ref("");
+const comment = ref([]);
 const translation = ref("");
 const persons: Ref<Array<string>> = ref([]);
 
@@ -154,7 +154,7 @@ const filterFunction = function (list: Array<string>, searchTerm: string) {
 const resultParams = computed(() => {
 	return {
 		word: words.value.join(","),
-		comment: comment.value,
+		comment: comment.value.join(","),
 		features:
 			params.value.dataTypes[0] === "Feature"
 				? features.value.join(",")
@@ -183,7 +183,7 @@ const submitDisabled = computed(() => {
 	return (
 		(words.value.length === 0 &&
 			translation.value === "" &&
-			comment.value === "" &&
+			comment.value.length === 0 &&
 			places.value.length === 0 &&
 			persons.value.length === 0 &&
 			features.value.length === 0 &&
@@ -332,28 +332,14 @@ const openSearchResultsNewWindow = function () {
 
 			<div v-if="params.dataTypes.includes('SampleText')" class="flex flex-row gap-2.5">
 				<label for="sentence">Sentences</label>
-				<TagsInputRoot
+				<TagsSelect
 					v-model="sentences"
 					class="my-2 flex w-full flex-wrap items-center gap-2 bg-white px-3 py-2 shadow-sm"
-					delimiter=""
-				>
-					<TagsInputItem
-						v-for="item in sentences"
-						:key="item"
-						class="flex items-center justify-center gap-2 rounded bg-primary px-2 py-1 text-white aria-current:bg-primary"
-						:value="item"
-					>
-						<TagsInputItemText class="text-sm">{{ item }}</TagsInputItemText>
-						<TagsInputItemDelete>
-							<Icon icon="lucide:x" />
-						</TagsInputItemDelete>
-					</TagsInputItem>
-
-					<TagsInputInput
-						class="flex flex-1 gap-2 bg-transparent! px-1 focus:outline-hidden"
-						placeholder="Enter sentence numbers. Press enter key to select..."
-					/>
-				</TagsInputRoot>
+					:filter-function="(i) => i"
+					:immediate-open="true"
+					:options="sentenceOptions"
+					:placeholder="`Search for features...`"
+				/>
 			</div>
 
 			<div v-if="params.dataTypes.includes('Feature')" class="flex flex-row gap-2.5">
@@ -369,13 +355,16 @@ const openSearchResultsNewWindow = function () {
 
 			<div class="flex flex-row gap-2.5">
 				<label for="comment">Comment</label>
-				<input
+				<TagsSelect
 					id="comment"
 					v-model="comment"
-					aria-label="Comment"
 					class="my-2 w-full border-gray-300 px-3 py-2 shadow-sm"
+					:filter-function="(i) => i"
+					:immediate-open="true"
+					:options="commentOptions"
 					placeholder="Search for comment..."
-				/>
+				>
+				</TagsSelect>
 			</div>
 
 			<div v-if="personsFilter.length === 0" class="my-4 rounded-sm border-red-600 bg-red-100 p-4">
