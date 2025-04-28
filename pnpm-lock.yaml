@@ -98,8 +98,8 @@ importers:
         specifier: ^3.8.2
         version: 3.8.2(patch_hash=wwp2pn6hp2iqdlrjtfdzo2edvu)
       lucide-vue-next:
-        specifier: ^0.289.0
-        version: 0.289.0(vue@3.5.13(typescript@5.8.3))
+        specifier: ^0.483.0
+        version: 0.483.0(vue@3.5.13(typescript@5.8.3))
       nanoid:
         specifier: ^5.0.9
         version: 5.1.5
@@ -488,23 +488,6 @@ packages:
   '@bcoe/v8-coverage@1.0.2':
     resolution: {integrity: sha512-6zABk/ECA/QYSCQ1NGiVwwbQerUCZ+TQbp64Q3AgmfNvurHH0j8TtXa1qbShXA6qqkpAj4V5W8pP6mLe1mcMqA==}
     engines: {node: '>=18'}
-
-  '@biomejs/js-api@0.7.1':
-    resolution: {integrity: sha512-VFdgFFZWcyCQxZcAasyv8Enpexn4CblMdWmr6izLYHTLcbd+z9x/LuKU71qnmClABfnYqZjiY7c8DKTVri3Ajw==}
-    peerDependencies:
-      '@biomejs/wasm-bundler': ^1.9.2
-      '@biomejs/wasm-nodejs': ^1.9.2
-      '@biomejs/wasm-web': ^1.9.2
-    peerDependenciesMeta:
-      '@biomejs/wasm-bundler':
-        optional: true
-      '@biomejs/wasm-nodejs':
-        optional: true
-      '@biomejs/wasm-web':
-        optional: true
-
-  '@biomejs/wasm-nodejs@1.9.4':
-    resolution: {integrity: sha512-ZqNlhKcZW6MW1LxWIOfh9YVrBykvzyFad3bOh6JJFraDnNa3NXboRDiaI8dmrbb0ZHXCU1Tsq6WQsKV2Vpp5dw==}
 
   '@citation-js/core@0.7.18':
     resolution: {integrity: sha512-EjLuZWA5156dIFGdF7OnyPyWFBW43B8Ckje6Sn/W2RFxHDu0oACvW4/6TNgWT80jhEA4bVFm7ahrZe9MJ2B2UQ==}
@@ -6585,12 +6568,6 @@ snapshots:
 
   '@bcoe/v8-coverage@1.0.2': {}
 
-  '@biomejs/js-api@0.7.1(@biomejs/wasm-nodejs@1.9.4)':
-    optionalDependencies:
-      '@biomejs/wasm-nodejs': 1.9.4
-
-  '@biomejs/wasm-nodejs@1.9.4': {}
-
   '@citation-js/core@0.7.18':
     dependencies:
       '@citation-js/date': 0.5.1
@@ -10486,7 +10463,7 @@ snapshots:
     dependencies:
       yallist: 3.1.1
 
-  lucide-vue-next@0.289.0(vue@3.5.13(typescript@5.8.3)):
+  lucide-vue-next@0.483.0(vue@3.5.13(typescript@5.8.3)):
     dependencies:
       vue: 3.5.13(typescript@5.8.3)
 
@@ -12147,10 +12124,7 @@ snapshots:
 
   swagger-typescript-api@13.0.28:
     dependencies:
-      '@biomejs/js-api': 0.7.1(@biomejs/wasm-nodejs@1.9.4)
-      '@biomejs/wasm-nodejs': 1.9.4
       '@types/swagger-schema-official': 2.0.25
-      c12: 3.0.3(magicast@0.3.5)
       citty: 0.1.6
       consola: 3.4.2
       cosmiconfig: 9.0.0(typescript@5.8.3)
@@ -12158,14 +12132,12 @@ snapshots:
       js-yaml: 4.1.0
       lodash: 4.17.21
       nanoid: 5.1.5
+      prettier: 3.5.3
       swagger-schema-official: 2.0.0-bab6bed
       swagger2openapi: 7.0.8
       typescript: 5.8.3
     transitivePeerDependencies:
-      - '@biomejs/wasm-bundler'
-      - '@biomejs/wasm-web'
       - encoding
-      - magicast
 
   swagger2openapi@7.0.8:
     dependencies:
