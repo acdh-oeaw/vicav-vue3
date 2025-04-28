@@ -1,11 +1,10 @@
 <script lang="ts" setup>
 import type { ColumnDef, Row, Table } from "@tanstack/vue-table";
 import { parse, test } from "liqe";
+import { Info } from "lucide-vue-next";
 
 import { useGeojsonStore } from "@/stores/use-geojson-store.ts";
 import type { FeatureType, MarkerType } from "@/types/global";
-
-import { Info } from "lucide-vue-next";
 
 const GeojsonStore = useGeojsonStore();
 const { addWindow, findWindowByTypeAndParam } = useWindowsStore();

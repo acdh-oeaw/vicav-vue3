@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { twMerge } from "tailwind-merge";
 import { Toggle, type ToggleEmits, type ToggleProps, useForwardPropsEmits } from "reka-ui";
+import { twMerge } from "tailwind-merge";
 import { computed, type HTMLAttributes } from "vue";
+
 import { type ToggleVariants, toggleVariants } from ".";
 
 const props = withDefaults(
@@ -22,7 +23,7 @@ const props = withDefaults(
 const emits = defineEmits<ToggleEmits>();
 
 const delegatedProps = computed(() => {
-	const { class: _, size, variant, ...delegated } = props;
+	const { class: _, size: _size, variant: _variant, ...delegated } = props;
 
 	return delegated;
 });
