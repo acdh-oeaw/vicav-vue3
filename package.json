@@ -77,7 +77,7 @@
 		"pino": "^9.6.0",
 		"radix-vue": "^1.9.12",
 		"reka-ui": "^2.0.0",
-		"swagger-typescript-api": "^13.0.23",
+		"swagger-typescript-api": "13.0.28",
 		"tailwind-merge": "^2.6.0",
 		"transliteration": "^2.3.5",
 		"ts-error": "^1.0.6",
