@@ -46,12 +46,22 @@ function applyGlobalFilter(row: Row<FeatureType>, _colId: string, queryString: s
 
 function applyQueryString(row: Row<FeatureType>, _colId: string, queryString: string) {
 	if (!queryString) return true;
+	const metadata: Record<string, Array<string>> = {};
 	const preparedRow = Object.fromEntries(
 		Object.entries(row.original.properties).map(([key, value]) => {
-			if (value && typeof value === "object") return [key, Object.keys(value)];
+			if (value && typeof value === "object") {
+				for (const metadataObject of Object.values(value)) {
+					for (const metaKey in metadataObject) {
+						if (!(metaKey in metadata)) metadata[metaKey] = [];
+						metadata[metaKey] = metadata[metaKey]!.concat(metadataObject[metaKey]);
+					}
+				}
+				return [key, Object.keys(value)];
+			}
 			return [key, value];
 		}),
 	);
+	for (const key in metadata) preparedRow[key] = [...new Set(metadata[key])];
 	return test(parse(queryString), preparedRow);
 }
 

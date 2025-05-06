@@ -18,12 +18,15 @@ function parseSearchString(searchString: string, table: Table<unknown>) {
 }
 
 function setColumnFilter(columnId: string, value: string, table: Table<unknown>) {
+	if (!table.getAllFlatColumns().find((column) => column.id === columnId)) return;
 	table.getColumn(columnId)?.toggleVisibility(true);
 	if (!table.getColumn(columnId)?.getFilterValue()) {
 		table.getColumn(columnId)?.setFilterValue(new Map());
 	}
-	const filterValue = table.getColumn(columnId)?.getFilterValue() as Map<string, unknown>;
-	filterValue.set(value, 1);
+	const filterValue = table.getColumn(columnId)?.getFilterValue() as
+		| Map<string, unknown>
+		| undefined;
+	filterValue?.set(value, 1);
 	table.getColumn(columnId)?.setFilterValue(filterValue);
 }
 
