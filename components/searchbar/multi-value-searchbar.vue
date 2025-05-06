@@ -14,19 +14,21 @@ import {
 } from "reka-ui";
 import { computed, ref, watch, watchEffect } from "vue";
 
-const props = defineProps<{
-	table: Table<unknown>;
-}>();
-
-const {
-	getList,
-	getValue,
+import {
 	getAnchorRect,
+	getList,
 	getSearchValue,
 	getTrigger,
 	getTriggerOffset,
+	getValue,
 	replaceValue,
-} = useSearchbarAutocomplete();
+	type TriggerMap,
+} from ".";
+
+const props = defineProps<{
+	table: Table<unknown>;
+	triggers: TriggerMap;
+}>();
 
 const { parseSearchString } = useFilterParser();
 
@@ -46,7 +48,7 @@ const reference = computedWithControl(
 		({
 			getBoundingClientRect: () => {
 				if (textareaRef.value?.$el) {
-					const { x, y, height } = getAnchorRect(textareaRef.value?.$el);
+					const { x, y, height } = getAnchorRect(textareaRef.value?.$el, props.triggers);
 					return { x, y, height, top: y, left: x, width: 0 };
 				} else {
 					return null;
@@ -59,8 +61,8 @@ const list = computed(() => {
 	const textarea = textareaRef.value?.$el;
 	if (!textarea) return;
 
-	const _list = getList(trigger.value);
-	return _list.filter((item) => contains(String(item), searchValue.value));
+	const _list = getList(trigger.value, props.triggers);
+	return _list.filter((item) => contains(String(item.value), searchValue.value));
 });
 
 watch(
@@ -77,32 +79,14 @@ watchEffect(() => {
 	}
 });
 
-function handleChange(ev: InputEvent) {
+function handleChange(ev: InputEvent | PointerEvent) {
 	const target = ev.target as HTMLTextAreaElement;
-	const _trigger = getTrigger(target);
-	const _searchValue = getSearchValue(target);
-	if (_trigger) {
-		trigger.value = _trigger;
-		open.value = true;
-	} else if (!_searchValue) {
-		trigger.value = null;
-		open.value = false;
-	}
-
-	value.value = target.value;
-	searchValue.value = _searchValue;
-
-	if (!_trigger) open.value = false;
-}
-
-function handlePointerDown(ev: PointerEvent) {
-	const target = ev.target as HTMLTextAreaElement;
-	const _trigger = getTrigger(target);
-	const _searchValue = getSearchValue(target);
+	const _trigger = getTrigger(target, props.triggers);
+	const _searchValue = getSearchValue(target, props.triggers);
 	if (_trigger !== null) {
 		trigger.value = _trigger;
 		open.value = true;
-	} else if (!_searchValue) {
+	} else if (_searchValue == null) {
 		trigger.value = null;
 		open.value = false;
 	}
@@ -110,7 +94,7 @@ function handlePointerDown(ev: PointerEvent) {
 	value.value = target.value;
 	searchValue.value = _searchValue;
 
-	if (!_trigger) open.value = false;
+	if (_trigger === null) open.value = false;
 }
 
 function handleSelect(ev: CustomEvent) {
@@ -118,10 +102,10 @@ function handleSelect(ev: CustomEvent) {
 
 	if (!textarea) return;
 
-	const offset = getTriggerOffset(textarea) - 1;
-	const displayValue = getValue(ev.detail.value, trigger.value);
+	const offset = getTriggerOffset(textarea, props.triggers) - 1;
+	const selectedValue = getValue(ev.detail.value, trigger.value, props.triggers)?.value;
 
-	if (!displayValue) return;
+	if (!selectedValue) return;
 
 	// prevent setting `ComboboxInput`
 	ev.preventDefault();
@@ -130,12 +114,12 @@ function handleSelect(ev: CustomEvent) {
 		value.value,
 		offset,
 		searchValue.value,
-		displayValue,
+		selectedValue,
 		trigger.value ?? "",
 	);
 
 	trigger.value = null;
-	const nextCaretOffset = offset + displayValue.length;
+	const nextCaretOffset = offset + selectedValue.length;
 	caretOffset.value = nextCaretOffset;
 
 	nextTick().then(() => {
@@ -150,7 +134,9 @@ function submitSearch() {
 
 onMounted(() => {
 	value.value = props.table.getState().globalFilter;
+	nextTick(() => (open.value = false));
 });
+
 watch(
 	() => props.table.getState().globalFilter,
 	(newVal) => {
@@ -187,8 +173,8 @@ watch(
 				@keydown.left.right="open = false"
 				@pointerdown="
 					(e: PointerEvent) => {
-						handlePointerDown(e);
-						open = false;
+						handleChange(e);
+						// open = false;
 					}
 				"
 			/>
@@ -204,12 +190,12 @@ watch(
 				>
 					<ComboboxItem
 						v-for="item in list"
-						:key="String(item)"
+						:key="String(item.value)"
 						class="flex cursor-default rounded px-2 py-1 data-highlighted:bg-muted"
-						:value="item"
+						:value="item.value"
 						@select="handleSelect"
 					>
-						<span class="truncate">{{ item }}</span>
+						<span class="truncate">{{ item.displayValue }}</span>
 					</ComboboxItem>
 				</ComboboxContent>
 			</ComboboxPortal> </ComboboxRoot
