@@ -237,7 +237,7 @@ onMounted(async () => {
 
 	context.featureGroups.markers = geoJSON<MarkerProperties, Point>(undefined, {
 		onEachFeature(feature, layer) {
-			const tooltipContent = `${feature.properties.name} (${feature.properties.hitCount})`;
+			const tooltipContent = `${feature.properties.name}${feature.properties.hitCount ? ` (${feature.properties.hitCount})` : ""}`;
 
 			layer.bindTooltip(tooltipContent, {
 				permanent: false,
