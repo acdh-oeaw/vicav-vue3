@@ -26,6 +26,8 @@ function titleCase(s: string) {
 		.replace(/[-_]+(.)/g, (_, c) => ` ${c.toUpperCase()}`); // First char after each -/_
 }
 const isMenuOpen = ref(categories.value!.map(() => false));
+
+const { wibarabTriggers } = useWibarabTrigers();
 </script>
 
 <template>
@@ -56,7 +58,11 @@ const isMenuOpen = ref(categories.value!.map(() => false));
 			</div>
 		</div>
 		<div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm font-medium text-on-surface/75">
-			<MultiValueSearchbar v-if="table" :table="table as Table<unknown>" />
+			<MultiValueSearchbar
+				v-if="table"
+				:table="table as Table<unknown>"
+				:triggers="wibarabTriggers"
+			/>
 		</div>
 	</div>
 </template>
