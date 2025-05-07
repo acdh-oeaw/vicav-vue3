@@ -100,7 +100,7 @@ watch(
 					v-model:open="infoOpen[val]"
 					class="flex gap-2"
 				>
-					<CollapsibleTrigger
+					<CollapsibleTrigger @click.stop
 						><Info class="size-4 stroke-neutral-400 transition-colors hover:stroke-neutral-700" />
 						<span class="sr-only">Show info</span>
 					</CollapsibleTrigger>
