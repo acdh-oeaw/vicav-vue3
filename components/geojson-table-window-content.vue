@@ -102,6 +102,10 @@ function registerTable(table: Table<FeatureType>) {
 		});
 	}
 }
+
+function onRowClick(row: Row<FeatureType>) {
+	row.toggleSelected();
+}
 </script>
 
 <template>
@@ -139,6 +143,7 @@ function registerTable(table: Table<FeatureType>) {
 			:items="fetchedData.get(url)?.features as Array<never>"
 			:min-header-depth="2"
 			:visibility-change-fn="onVisibilityChange"
+			@row-click="onRowClick"
 			@table-ready="registerTable"
 		></DataTable>
 		<div class="grid justify-items-end py-2">

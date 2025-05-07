@@ -22,6 +22,7 @@ interface Props {
 	markers: Array<Feature<Point, MarkerProperties>>;
 	width: number;
 	markerType?: MarkerType;
+	selection?: [number, number];
 }
 
 const props = defineProps<Props>();
@@ -310,6 +311,13 @@ watch(
 		},
 	],
 	resize,
+);
+
+watch(
+	() => props.selection,
+	() => {
+		if (props.selection) context.map?.flyTo([props.selection[1], props.selection[0]], 10);
+	},
 );
 
 onUnmounted(() => {
