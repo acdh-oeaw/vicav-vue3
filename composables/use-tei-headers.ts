@@ -158,10 +158,10 @@ const extractMetadata = function (
 
 	(
 		[
+			"transcription",
 			"author",
 			"recording",
 			"principal",
-			"transcription",
 			"transfer to ELAN",
 		] as Array<Responsibility>
 	).forEach((responsibility) => {
