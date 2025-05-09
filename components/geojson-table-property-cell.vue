@@ -9,6 +9,7 @@ import {
 	Mars,
 	UsersRound,
 	Venus,
+	VenusAndMars,
 } from "lucide-vue-next";
 
 const props = defineProps<{
@@ -24,8 +25,11 @@ const iconMap: Record<string, Record<string, LucideIcon>> = {
 	gender: {
 		"#male": Mars,
 		"pgr:male": Mars,
+		Men: Mars,
 		"#female": Venus,
 		"pgr:female": Venus,
+		Women: Venus,
+		"#default": VenusAndMars,
 	},
 	firstLanguage: {
 		"#default": Languages,
