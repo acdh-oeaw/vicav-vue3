@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import type { ColumnDef, Row, Table } from "@tanstack/vue-table";
 import { parse, test } from "liqe";
+import { Info } from "lucide-vue-next";
 
 import { useGeojsonStore } from "@/stores/use-geojson-store.ts";
 import type { FeatureType, MarkerType } from "@/types/global";
@@ -10,7 +11,7 @@ const { addWindow, findWindowByTypeAndParam } = useWindowsStore();
 const url = "https://raw.githubusercontent.com/wibarab/wibarab-data/main/wibarab_varieties.geojson";
 
 const { isPending } = GeojsonStore.fetchGeojson(url);
-const { fetchedData, tables } = storeToRefs(GeojsonStore);
+const { fetchedData, tables, showAllDetails } = storeToRefs(GeojsonStore);
 const { data: projectData } = useProjectInfo();
 const { createColumnDefs } = useColumnGeneration();
 
@@ -68,8 +69,11 @@ function onColumnFilterChange(columnFilters: Array<{ id: string; value: Map<stri
 			if (!colors.value.has(buildFeatureValueId(column.id, key))) addColorVariant(column.id, key);
 	});
 }
+
+const tableRef = ref<Table<FeatureType>>();
 function registerTable(table: Table<FeatureType>) {
 	tables.value.set(url, table);
+	tableRef.value = table;
 	const mw = findWindowByTypeAndParam("GeojsonMap", "url", url);
 	if (mw) {
 		mw.winbox.focus();
@@ -96,20 +100,22 @@ function registerTable(table: Table<FeatureType>) {
 			<LoadingIndicator />
 		</Centered>
 		<div class="flex justify-between justify-items-end py-2">
-			<DataTablePagination
-				v-if="tables.get(url)"
-				:table="tables.get(url) as unknown as Table<never>"
-			/>
+			<DataTablePagination v-if="tableRef" :table="tableRef as unknown as Table<never>" />
+
 			<div class="flex gap-2">
+				<Toggle v-model:model-value="showAllDetails" class="h-8"
+					><Info class="size-4 stroke-neutral-800 transition-colors" />
+					<span class="text-ellipsis line-clamp-1">Show all details</span></Toggle
+				>
 				<DataTableActiveFilters
-					v-if="tables.get(url)"
+					v-if="tableRef"
 					class="inline"
-					:table="tables.get(url) as unknown as Table<never>"
+					:table="tableRef as unknown as Table<never>"
 				></DataTableActiveFilters>
 				<DataTableFilterColumns
-					v-if="tables.get(url)"
+					v-if="tableRef"
 					class="inline"
-					:table="tables.get(url) as unknown as Table<never>"
+					:table="tableRef as unknown as Table<never>"
 				/>
 			</div>
 		</div>
@@ -126,10 +132,7 @@ function registerTable(table: Table<FeatureType>) {
 			@table-ready="registerTable"
 		></DataTable>
 		<div class="grid justify-items-end py-2">
-			<DataTablePagination
-				v-if="tables.get(url)"
-				:table="tables.get(url) as unknown as Table<never>"
-			/>
+			<DataTablePagination v-if="tableRef" :table="tableRef as unknown as Table<never>" />
 		</div>
 	</div>
 </template>

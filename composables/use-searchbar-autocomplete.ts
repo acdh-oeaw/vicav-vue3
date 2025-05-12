@@ -27,7 +27,7 @@ function getValueList(columns: typeof features.value) {
 	return columns
 		.map((item) =>
 			[...item.col.getFacetedUniqueValues().keys()].map((key: string) => ({
-				value: `:"${key}"`,
+				value: `"${key}"`,
 				listValue: key,
 				col: item.col,
 			})),
@@ -53,7 +53,7 @@ function getTrigger(element: HTMLTextAreaElement, triggers = defaultTriggers.val
 		const triggerStart = selectionStart - trigger.length;
 		if (triggerStart >= 0 && value.substring(triggerStart, selectionStart) === trigger) {
 			const secondPreviousChar = value[triggerStart - 1];
-			const isIsolated = !secondPreviousChar || /\s/.test(secondPreviousChar);
+			const isIsolated = !secondPreviousChar || /\W/.test(secondPreviousChar);
 			if (isIsolated) {
 				return trigger;
 			}
@@ -89,7 +89,7 @@ function replaceValue(
 ) {
 	const nextValue = `${
 		prevValue.slice(0, offset) + displayValue
-	}${triggerValue === ":" ? "" : " "}${prevValue.slice(offset + triggerValue.length + searchValue.length + 1)}`;
+	}${triggerValue === "" ? "" : " "}${prevValue.slice(offset + triggerValue.length + searchValue.length)}`;
 	return nextValue;
 }
 
@@ -233,12 +233,19 @@ function getActiveFeatures(trigger: string) {
 	return matchingFeatures[0] ? [matchingFeatures[0]] : [];
 }
 
-const defaultTriggers = computed(() => [":"].concat(features.value.map((item) => item.value)));
+const defaultTriggers = computed(() =>
+	['" ', ") ", " "].concat(features.value.map((item) => item.value)).concat(""),
+);
+const operators = ["and", "or"];
 
 function getList(trigger: string | null) {
 	switch (trigger) {
-		case ":":
+		case "":
 			return features.value.map((item) => item.listValue);
+		case '" ':
+			return operators;
+		case ") ":
+			return operators;
 		default:
 			return getValueList(getActiveFeatures(trigger)).map((item) => item.listValue);
 		case null:
@@ -247,8 +254,9 @@ function getList(trigger: string | null) {
 }
 
 function getValue(listValue: string, trigger: string | null) {
-	const list = trigger === ":" ? features.value : getValueList(getActiveFeatures(trigger ?? ""));
-	return list.find((item) => item.listValue === listValue)?.value;
+	const list = trigger === "" ? features.value : getValueList(getActiveFeatures(trigger ?? ""));
+	const found = list.find((item) => item.listValue === listValue)?.value;
+	return found ?? operators.find((item) => item === listValue)?.toUpperCase();
 }
 
 export function useSearchbarAutocomplete() {

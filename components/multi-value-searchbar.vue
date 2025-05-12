@@ -95,12 +95,32 @@ function handleChange(ev: InputEvent) {
 	if (!_trigger) open.value = false;
 }
 
+function handlePointerDown(ev: PointerEvent) {
+	const target = ev.target as HTMLTextAreaElement;
+	const _trigger = getTrigger(target);
+	const _searchValue = getSearchValue(target);
+	if (_trigger !== null) {
+		trigger.value = _trigger;
+		open.value = true;
+	} else if (!_searchValue) {
+		trigger.value = null;
+		open.value = false;
+	}
+
+	value.value = target.value;
+	searchValue.value = _searchValue;
+
+	if (!_trigger) open.value = false;
+}
+
 function handleSelect(ev: CustomEvent) {
 	const textarea = textareaRef.value?.$el;
+
 	if (!textarea) return;
 
-	const offset = getTriggerOffset(textarea);
+	const offset = getTriggerOffset(textarea) - 1;
 	const displayValue = getValue(ev.detail.value, trigger.value);
+
 	if (!displayValue) return;
 
 	// prevent setting `ComboboxInput`
@@ -156,7 +176,7 @@ watch(
 				as="input"
 				autocomplete="off"
 				class="w-full rounded-md border border-muted p-2"
-				placeholder="Type : to get a list of available features"
+				placeholder="Click to get a list of available features"
 				rows="5"
 				@input="handleChange"
 				@keydown.enter="
@@ -165,7 +185,12 @@ watch(
 					}
 				"
 				@keydown.left.right="open = false"
-				@pointerdown="open = false"
+				@pointerdown="
+					(e: PointerEvent) => {
+						handlePointerDown(e);
+						open = false;
+					}
+				"
 			/>
 			<ComboboxAnchor :reference="reference" />
 

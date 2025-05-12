@@ -390,7 +390,7 @@ const openSearchResultsNewWindow = function () {
 	</div>
 </template>
 
-<style>
+<style scoped>
 @reference "@/styles/index.css";
 
 label {
