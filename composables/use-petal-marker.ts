@@ -26,6 +26,23 @@ function getCircleSVG(fill: string) {
 	return circle;
 }
 
+function getPetalSVG(petalValue: PetalEntry) {
+	const petal = document.createElementNS("http://www.w3.org/2000/svg", "use");
+	petal.setAttribute("href", "#petal");
+
+	if (petalValue.strokeOnly) {
+		petal.style.stroke = `var(--${petalValue.id}, #cccccc)`;
+		petal.style.fillOpacity = "0.2";
+		petal.style.strokeWidth = "20px";
+	}
+	petal.style.fill = `var(--${petalValue.id}, #cccccc)`;
+	petal.style.transformOrigin = "bottom";
+
+	petal.classList.add("size-3", "absolute", "ml-1.5");
+	petal.setAttribute("title", petalValue.id);
+	return petal;
+}
+
 function getFlowerSVG(entries: Array<PetalEntry>, center?: PetalEntry) {
 	const div = document.createElement("div");
 	div.className = "hover:scale-150 transition origin-center relative size-6";
@@ -36,19 +53,8 @@ function getFlowerSVG(entries: Array<PetalEntry>, center?: PetalEntry) {
 	svg.classList.add("overflow-visible");
 
 	for (const [i, value] of entries.entries()) {
-		const petal = document.createElementNS("http://www.w3.org/2000/svg", "use");
-		petal.setAttribute("href", "#petal");
-
-		if (value.strokeOnly) {
-			petal.style.stroke = `var(--${value.id}, #cccccc)`;
-			petal.style.fillOpacity = "0.2";
-			petal.style.strokeWidth = "20px";
-		}
-		petal.style.fill = `var(--${value.id}, #cccccc)`;
-		petal.style.transformOrigin = "bottom";
+		const petal = getPetalSVG(value);
 		petal.style.transform = `rotate(${String((i * 360) / NUM_PETALS)}deg)`;
-		petal.classList.add("size-3", "absolute", "ml-1.5");
-		petal.setAttribute("title", value.id);
 		svg.appendChild(petal);
 	}
 
@@ -59,7 +65,7 @@ function getFlowerSVG(entries: Array<PetalEntry>, center?: PetalEntry) {
 	return div;
 }
 
-export function usePetalMarker(feature: GeoJsonFeature<Point, MarkerProperties>, latlng: LatLng) {
+function getPetalMarker(feature: GeoJsonFeature<Point, MarkerProperties>, latlng: LatLng) {
 	const { AND_OPERATOR } = useAdvancedQueries();
 	const table = tables.value.get(url);
 	const features = table
@@ -145,4 +151,11 @@ export function usePetalMarker(feature: GeoJsonFeature<Point, MarkerProperties>,
 		icon: customIcon,
 	});
 	return leafletMarker;
+}
+
+export function usePetalMarker() {
+	return {
+		getPetalMarker,
+		getPetalSVG,
+	};
 }

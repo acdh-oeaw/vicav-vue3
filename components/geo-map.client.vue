@@ -17,6 +17,8 @@ import { type GeoMapContext, key, type MarkerProperties } from "@/components/geo
 import GeoMapPopupContent from "@/components/geo-map-popup-content.vue";
 import type { MarkerType } from "@/types/global";
 
+const { getPetalMarker } = usePetalMarker();
+
 interface Props {
 	height: number;
 	markers: Array<Feature<Point, MarkerProperties>>;
@@ -261,7 +263,7 @@ onMounted(async () => {
 			});
 		},
 		pointToLayer(feature, latlng) {
-			if (props.markerType === "petal") return usePetalMarker(feature, latlng);
+			if (props.markerType === "petal") return getPetalMarker(feature, latlng);
 			if (feature.properties.type === "reg") {
 				return circleMarker(latlng, config.marker.region);
 			}

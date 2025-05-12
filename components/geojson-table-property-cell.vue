@@ -14,6 +14,8 @@ import {
 
 const props = defineProps<{
 	value?: Record<string, unknown>;
+	highlightedValues?: Array<string>;
+	columnId: string;
 }>();
 
 function getSources(featureValueEntry: unknown) {
@@ -91,17 +93,55 @@ watch(
 		);
 	},
 );
+
+const { getPetalSVG } = usePetalMarker();
+const { buildFeatureValueId } = useColorsStore();
+const { AND_OPERATOR } = useAdvancedQueries();
+
+const flattenedHighlightedValues = computed(() => {
+	return props.highlightedValues?.flatMap((val) => val.split(AND_OPERATOR)) ?? [];
+});
+
+function getPetalEntry(featureValue: string) {
+	if (props.highlightedValues?.includes(featureValue))
+		// value is directly selected
+		return { id: buildFeatureValueId(props.columnId, featureValue) };
+	else {
+		// check if value is selected in combined filter ("{x} AND {y}")
+		const combined = props.highlightedValues?.find(
+			(val) => val.includes(AND_OPERATOR) && val.split(AND_OPERATOR).includes(featureValue),
+		);
+		if (combined) return { id: buildFeatureValueId(props.columnId, combined) };
+	}
+	return { id: props.columnId, strokeOnly: true };
+}
+
+const sortedValues = computed(() => {
+	return Object.entries(props.value ?? {}).toSorted(([a, _a], [b, _b]) => {
+		const indexA = flattenedHighlightedValues.value?.includes(String(a)) ? -1 : 1;
+		const indexB = flattenedHighlightedValues.value?.includes(String(b)) ? -1 : 1;
+		return indexA === indexB ? a.localeCompare(b) : indexA - indexB;
+	}) as Array<[string, string]>;
+});
 </script>
 
 <template>
 	<div>
-		<div v-for="(key, val) in props.value" :key="val" class="my-0.5 block">
+		<div v-for="[key, val] in sortedValues" :key="key" class="my-0.5 block">
 			<div class="flex flex-wrap items-center gap-x-2 gap-y-0">
-				<span class="max-w-full flex-shrink-0 text-ellipsis">{{ val }}</span>
+				<svg class="size-3.5" v-html="getPetalSVG(getPetalEntry(key)).outerHTML"></svg>
+				<span
+					class="max-w-full flex-shrink-0 text-ellipsis"
+					:class="{
+						'font-medium': flattenedHighlightedValues?.includes(key),
+						'font-light': !flattenedHighlightedValues?.includes(key),
+					}"
+					>{{ key }}</span
+				>
 
 				<Collapsible
-					v-if="getPersonGroups(key).length > 0"
-					v-model:open="infoOpen[val]"
+					v-if="getPersonGroups(val).length > 0"
+					v-model:open="infoOpen[key]"
 					class="flex gap-2"
 				>
 					<CollapsibleTrigger @click.stop
@@ -111,7 +151,7 @@ watch(
 					<CollapsibleContent orientation="horizontal"
 						><div class="inline-flex items-center gap-2 text-ellipsis">
 							<TooltipProvider>
-								<template v-for="personGroup in getPersonGroups(key)">
+								<template v-for="personGroup in getPersonGroups(val)">
 									<Tooltip
 										v-for="(personGroupVal, personGroupKey) in personGroup"
 										:key="personGroupVal"
@@ -145,7 +185,7 @@ watch(
 					</CollapsibleContent>
 				</Collapsible>
 				<NuxtLink
-					v-for="source in getSources(key)"
+					v-for="source in getSources(val)"
 					:key="source.link"
 					class="flex gap-1 text-primary"
 					external

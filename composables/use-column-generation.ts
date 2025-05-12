@@ -46,8 +46,13 @@ function buildColumnDefRecursive(
 					id: Object.keys(heading).find((key) => /ft_*/.test(key)) ?? "",
 					header: heading[Object.keys(heading).find((key) => /ft_*/.test(key)) ?? ""],
 					cell: (cell: CellContext<PatchedFeatureType, unknown>) => {
+						const highlightedValues = [
+							...(cell.column.getFilterValue() as Map<string, unknown>).keys(),
+						];
 						return h(geojsonTablePropertyCell, {
 							value: cell.row.original.properties[cell.column.columnDef.id!],
+							highlightedValues: highlightedValues,
+							columnId: cell.column.id,
 						});
 					},
 					filterFn: (row, columnId, _filterValue: Map<string, unknown>) => {
