@@ -7,6 +7,7 @@ import {
 	Languages,
 	type LucideIcon,
 	Mars,
+	MessageSquare,
 	UsersRound,
 	Venus,
 	VenusAndMars,
@@ -19,9 +20,7 @@ const props = defineProps<{
 }>();
 
 function getSources(featureValueEntry: unknown) {
-	return (
-		(featureValueEntry as Record<string, Record<string, Record<string, string>>>).sources ?? {}
-	);
+	return (featureValueEntry as Record<string, Record<string, Record<string, string>>>).sources;
 }
 const iconMap: Record<string, Record<string, LucideIcon>> = {
 	gender: {
@@ -45,8 +44,14 @@ const iconMap: Record<string, Record<string, LucideIcon>> = {
 	religion: {
 		"#default": Church,
 	},
+	source_representations: {
+		"#default": Languages,
+	},
+	examples: {
+		"#default": MessageSquare,
+	},
 };
-const nonPersonGroupKeys = ["examples", "sources"];
+const nonPersonGroupKeys = ["sources"];
 function getPersonGroups(featureValueEntry: unknown) {
 	const personGroups = Object.entries((featureValueEntry as Record<string, Array<string>>) ?? {})
 		.filter(([key]) => !nonPersonGroupKeys.includes(key))
@@ -140,7 +145,7 @@ const sortedValues = computed(() => {
 				>
 
 				<Collapsible
-					v-if="getPersonGroups(val).length > 0"
+					v-if="getPersonGroups(val).length > 0 || getSources(val)"
 					v-model:open="infoOpen[key]"
 					class="flex gap-2"
 				>
@@ -181,20 +186,21 @@ const sortedValues = computed(() => {
 									</Tooltip>
 								</template></TooltipProvider
 							>
+							<NuxtLink
+								v-for="source in getSources(val)"
+								:key="source.link"
+								class="flex gap-1 text-primary"
+								external
+								target="_blank"
+								:to="source.link"
+							>
+								<span class="text-xs">{{ source.short_cit }}</span>
+								<span class="sr-only">View Source</span
+								><ExternalLink class="inline-block size-3.5" />
+							</NuxtLink>
 						</div>
 					</CollapsibleContent>
 				</Collapsible>
-				<NuxtLink
-					v-for="source in getSources(val)"
-					:key="source.link"
-					class="flex gap-1 text-primary"
-					external
-					target="_blank"
-					:to="source.link"
-				>
-					<span class="text-xs">{{ source.short_cit }}</span>
-					<span class="sr-only">View Source</span><ExternalLink class="inline-block size-3.5" />
-				</NuxtLink>
 			</div>
 		</div>
 	</div>
