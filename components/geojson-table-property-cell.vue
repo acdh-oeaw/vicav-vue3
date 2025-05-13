@@ -52,9 +52,10 @@ const iconMap: Record<string, Record<string, LucideIcon>> = {
 	},
 };
 const nonPersonGroupKeys = ["sources"];
-function getPersonGroups(featureValueEntry: unknown) {
+function getPersonGroups(featureValueEntry: unknown, selectKey?: string) {
 	const personGroups = Object.entries((featureValueEntry as Record<string, Array<string>>) ?? {})
 		.filter(([key]) => !nonPersonGroupKeys.includes(key))
+		.filter(([key]) => (selectKey ? key === selectKey : true))
 		.flatMap(([key, val]) => {
 			return val.map(
 				(entry) => {
@@ -143,6 +144,32 @@ const sortedValues = computed(() => {
 					}"
 					>{{ key }}</span
 				>
+				<TooltipProvider>
+					<template v-for="personGroup in getPersonGroups(val, 'tribe')">
+						<Tooltip v-for="(personGroupVal, personGroupKey) in personGroup" :key="personGroupVal">
+							<TooltipTrigger
+								><Badge class="line-clamp-1 gap-0.5" variant="outline">
+									<component
+										:is="getPersonGroupIcon(personGroup)!.icon"
+										v-if="getPersonGroupIcon(personGroup)"
+										class="size-3"
+									/>
+									<span :class="{ 'sr-only': getPersonGroupIcon(personGroup) }"
+										>{{ personGroupKey }}:
+									</span>
+									<span
+										class="line-clamp-1"
+										:class="{ 'sr-only': getPersonGroupIcon(personGroup)?.hideValue }"
+										>{{ trimPrefix(personGroupVal) }}</span
+									>
+								</Badge></TooltipTrigger
+							>
+							<TooltipContent class="bg-background"
+								><span>{{ personGroupKey }}: {{ trimPrefix(personGroupVal) }}</span></TooltipContent
+							>
+						</Tooltip>
+					</template></TooltipProvider
+				>
 
 				<Collapsible
 					v-if="getPersonGroups(val).length > 0 || getSources(val)"
@@ -156,7 +183,9 @@ const sortedValues = computed(() => {
 					<CollapsibleContent orientation="horizontal"
 						><div class="inline-flex items-center gap-2 text-ellipsis">
 							<TooltipProvider>
-								<template v-for="personGroup in getPersonGroups(val)">
+								<template
+									v-for="personGroup in getPersonGroups(val).filter((group) => !group['tribe'])"
+								>
 									<Tooltip
 										v-for="(personGroupVal, personGroupKey) in personGroup"
 										:key="personGroupVal"
