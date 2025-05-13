@@ -152,7 +152,7 @@ const sortedValues = computed(() => {
 									<component
 										:is="getPersonGroupIcon(personGroup)!.icon"
 										v-if="getPersonGroupIcon(personGroup)"
-										class="size-3"
+										class="size-3 shrink-0"
 									/>
 									<span :class="{ 'sr-only': getPersonGroupIcon(personGroup) }"
 										>{{ personGroupKey }}:
@@ -195,7 +195,7 @@ const sortedValues = computed(() => {
 												<component
 													:is="getPersonGroupIcon(personGroup)!.icon"
 													v-if="getPersonGroupIcon(personGroup)"
-													class="size-3"
+													class="size-3 shrink-0"
 												/>
 												<span :class="{ 'sr-only': getPersonGroupIcon(personGroup) }"
 													>{{ personGroupKey }}:
