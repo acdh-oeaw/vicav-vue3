@@ -25,6 +25,7 @@ interface Props {
 	width: number;
 	markerType?: MarkerType;
 	selection?: [number, number];
+	displayLabels?: boolean;
 }
 
 const props = defineProps<Props>();
@@ -226,6 +227,35 @@ function fitAllMarkersOnViewport() {
 	}
 }
 
+const lastZoom = ref<number | null>(null);
+const tooltipThreshold = 9;
+function updateTooltips() {
+	if (!context.map || !props.displayLabels) return;
+	const zoom = context.map!.getZoom();
+	if (zoom < tooltipThreshold && (!lastZoom.value || lastZoom.value >= tooltipThreshold)) {
+		context.map?.eachLayer((l) => {
+			const tooltip = l.getTooltip();
+			if (tooltip) {
+				l.unbindTooltip().bindTooltip(tooltip, {
+					permanent: false,
+					sticky: true,
+				});
+			}
+		});
+	} else if (zoom >= tooltipThreshold && (!lastZoom.value || lastZoom.value < tooltipThreshold)) {
+		context.map?.eachLayer((l) => {
+			const tooltip = l.getTooltip();
+			if (tooltip) {
+				l.unbindTooltip().bindTooltip(tooltip, {
+					permanent: true,
+					sticky: false,
+				});
+			}
+		});
+	}
+	lastZoom.value = zoom;
+}
+
 onMounted(async () => {
 	if (mapRef.value == null) return;
 
@@ -275,6 +305,9 @@ onMounted(async () => {
 	updateMarkers();
 	context.map.on("zoomend", () => {
 		updatePopups();
+	});
+	context.map.on("zoom", () => {
+		updateTooltips();
 	});
 });
 

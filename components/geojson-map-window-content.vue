@@ -42,6 +42,7 @@ const selectedRowCoordinates = computed(() => {
 		>
 			<GeoMap
 				v-if="filteredMarkers"
+				:display-labels="true"
 				:height="height"
 				:marker-type="params.markerType"
 				:markers="filteredMarkers as Array<Feature<Point, MarkerProperties>>"
