@@ -45,7 +45,7 @@ function getPetalSVG(petalValue: PetalEntry) {
 
 function getFlowerSVG(entries: Array<PetalEntry>, center?: PetalEntry) {
 	const div = document.createElement("div");
-	div.className = "hover:scale-150 transition origin-center relative size-6";
+	div.className = "hover:scale-150 transition origin-center relative -translate-y-1/2";
 	const NUM_PETALS = entries.length;
 	const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
 	svg.setAttribute("width", "12px");
@@ -143,12 +143,13 @@ function getPetalMarker(feature: GeoJsonFeature<Point, MarkerProperties>, latlng
 	).outerHTML; // Example HTML content
 	const customIcon = divIcon({
 		html: htmlContent,
-		className: "custom-marker-icon size-5", // Add custom CSS class for styling
+		className: "custom-marker-icon", // Add custom CSS class for styling
 		// iconSize: [30, 30], // Adjust size as needed
 	});
 
 	const leafletMarker = marker(latlng, {
 		icon: customIcon,
+		riseOnHover: true,
 	});
 	return leafletMarker;
 }

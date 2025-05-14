@@ -25,7 +25,7 @@ interface Props {
 	width: number;
 	markerType?: MarkerType;
 	selection?: [number, number];
-	displayLabels?: boolean;
+	displayLabels?: number;
 }
 
 const props = defineProps<Props>();
@@ -203,6 +203,22 @@ function updateMarkers(updateViewport = true) {
 		featureGroup.addData(marker);
 	});
 
+	if (props.displayLabels)
+		featureGroup.eachLayer((layer) => {
+			layer.on("mouseover", () => {
+				if (props.displayLabels && (context.map?.getZoom() ?? 0) >= props.displayLabels)
+					context.map?.eachLayer((l) => {
+						if (l !== layer) l.closeTooltip();
+					});
+			});
+			layer.on("mouseout", () => {
+				if (props.displayLabels && (context.map?.getZoom() ?? 0) >= props.displayLabels)
+					context.map?.eachLayer((l) => {
+						l.openTooltip();
+					});
+			});
+		});
+
 	if (updateViewport) fitAllMarkersOnViewport();
 	updatePopups();
 }
@@ -228,27 +244,30 @@ function fitAllMarkersOnViewport() {
 }
 
 const lastZoom = ref<number | null>(null);
-const tooltipThreshold = 9;
 function updateTooltips() {
 	if (!context.map || !props.displayLabels) return;
 	const zoom = context.map!.getZoom();
-	if (zoom < tooltipThreshold && (!lastZoom.value || lastZoom.value >= tooltipThreshold)) {
+	if (zoom < props.displayLabels && (!lastZoom.value || lastZoom.value >= props.displayLabels)) {
 		context.map?.eachLayer((l) => {
 			const tooltip = l.getTooltip();
 			if (tooltip) {
-				l.unbindTooltip().bindTooltip(tooltip, {
+				l.unbindTooltip().bindTooltip(tooltip.getContent()!, {
 					permanent: false,
 					sticky: true,
 				});
 			}
 		});
-	} else if (zoom >= tooltipThreshold && (!lastZoom.value || lastZoom.value < tooltipThreshold)) {
+	} else if (
+		zoom >= props.displayLabels &&
+		(!lastZoom.value || lastZoom.value < props.displayLabels)
+	) {
 		context.map?.eachLayer((l) => {
 			const tooltip = l.getTooltip();
 			if (tooltip) {
-				l.unbindTooltip().bindTooltip(tooltip, {
+				l.unbindTooltip().bindTooltip(tooltip.getContent()!, {
 					permanent: true,
 					sticky: false,
+					offset: [12, 0],
 				});
 			}
 		});
