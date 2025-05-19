@@ -24,7 +24,7 @@ test.describe("map page", () => {
 				await page.getByRole("menuitem", { name: "Bibliographies" }).click();
 				await page.getByRole("menuitem", { name: "All Bibl. Locations on Map" }).click();
 				await expect(page.locator(".leaflet-control-container")).toBeVisible();
-				await expect(page.locator("img:nth-child(1)")).toBeVisible();
+				await expect(page.locator("img:nth-child(218)")).toBeVisible();
 				break;
 		}
 	});
