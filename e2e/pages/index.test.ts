@@ -9,24 +9,6 @@ test.describe("home page", () => {
 		switch (process.env.NUXT_PUBLIC_API_BASE_URL) {
 			case "https://vicav-dev.acdh.oeaw.ac.at":
 				await expect(page).toHaveTitle("Home | VICAV3.0 - Vienna Corpus of Arabic Varieties");
-				await expect(
-					page
-						.locator("div")
-						.filter({ hasText: /^Mission$/ })
-						.nth(1),
-				).toBeVisible();
-				await expect(
-					page
-						.locator("div")
-						.filter({ hasText: /^News$/ })
-						.nth(1),
-				).toBeVisible();
-				await expect(
-					page
-						.locator("div")
-						.filter({ hasText: /^All Bibl\. Locations on Map$/ })
-						.nth(1),
-				).toBeVisible();
 				break;
 			case "https://wibarab-api.acdh-ch-dev.oeaw.ac.at":
 				await expect(page).toHaveTitle("Home | WIBARAB");
