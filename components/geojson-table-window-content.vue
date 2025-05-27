@@ -119,7 +119,7 @@ function onRowClick(row: Row<FeatureType>) {
 			<div class="flex gap-2">
 				<Toggle v-model:model-value="showAllDetails" class="h-8"
 					><Info class="size-4 stroke-neutral-800 transition-colors" />
-					<span class="text-ellipsis line-clamp-1">Show all details</span></Toggle
+					<span class="text-ellipsis line-clamp-1">Show details</span></Toggle
 				>
 				<DataTableActiveFilters
 					v-if="tableRef"

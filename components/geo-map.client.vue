@@ -382,7 +382,6 @@ provide(key, context);
 </script>
 
 <template>
-	<SvgoPetal v-if="props.markerType === 'petal'" />
 	<div ref="mapRef" class="absolute inset-0 grid" data-geo-map />
 	<slot :context="context" />
 	<GeoMapPopupContent

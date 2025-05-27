@@ -1,9 +1,7 @@
 <script setup lang="ts">
 import {
-	Church,
 	Contact,
 	ExternalLink,
-	Info,
 	Languages,
 	type LucideIcon,
 	Mars,
@@ -12,6 +10,10 @@ import {
 	Venus,
 	VenusAndMars,
 } from "lucide-vue-next";
+import type { DefineComponent } from "vue";
+import ChurchOutlineIcon from "vue-material-design-icons/ChurchOutline.vue";
+import MosqueOutlineIcon from "vue-material-design-icons/MosqueOutline.vue";
+import SynagogueOutlineIcon from "vue-material-design-icons/SynagogueOutline.vue";
 
 const props = defineProps<{
 	value?: Record<string, unknown>;
@@ -22,7 +24,7 @@ const props = defineProps<{
 function getSources(featureValueEntry: unknown) {
 	return (featureValueEntry as Record<string, Record<string, Record<string, string>>>).sources;
 }
-const iconMap: Record<string, Record<string, LucideIcon>> = {
+const iconMap: Record<string, Record<string, LucideIcon | DefineComponent>> = {
 	gender: {
 		"#male": Mars,
 		"pgr:male": Mars,
@@ -42,7 +44,9 @@ const iconMap: Record<string, Record<string, LucideIcon>> = {
 		"#default": UsersRound,
 	},
 	religion: {
-		"#default": Church,
+		Jews: SynagogueOutlineIcon,
+		Christians: ChurchOutlineIcon,
+		"#default": MosqueOutlineIcon,
 	},
 	source_representations: {
 		"#default": Languages,
@@ -52,10 +56,12 @@ const iconMap: Record<string, Record<string, LucideIcon>> = {
 	},
 };
 const nonPersonGroupKeys = ["sources"];
-function getPersonGroups(featureValueEntry: unknown, selectKey?: string) {
+function getPersonGroups(featureValueEntry: unknown, selectKey?: string | Array<string>) {
 	const personGroups = Object.entries((featureValueEntry as Record<string, Array<string>>) ?? {})
 		.filter(([key]) => !nonPersonGroupKeys.includes(key))
-		.filter(([key]) => (selectKey ? key === selectKey : true))
+		.filter(([key]) =>
+			selectKey ? (Array.isArray(selectKey) ? selectKey.includes(key) : key === selectKey) : true,
+		)
 		.flatMap(([key, val]) => {
 			return val.map(
 				(entry) => {
@@ -132,39 +138,59 @@ const sortedValues = computed(() => {
 </script>
 
 <template>
-	<div>
-		<div v-for="[key, val] in sortedValues" :key="key" class="my-0.5 block">
-			<div class="flex flex-wrap items-center gap-x-2 gap-y-0">
-				<svg class="size-3.5" v-html="getPetalSVG(getPetalEntry(key)).outerHTML"></svg>
+	<div :class="{ 'flex flex-wrap gap-x-2': !showAllDetails, 'gap-2': showAllDetails }">
+		<div
+			v-for="[key, val] in sortedValues"
+			:key="key"
+			class="my-0.5"
+			:class="{ 'inline-block': !infoOpen[key], block: infoOpen[key] }"
+		>
+			<div
+				class="items-center gap-y-0"
+				:class="{
+					'inline-flex gap-x-0.5': !infoOpen[key],
+					'flex gap-x-2 flex-wrap': infoOpen[key],
+				}"
+			>
+				<svg class="size-3.5 shrink-0" v-html="getPetalSVG(getPetalEntry(key)).outerHTML"></svg>
 				<span
-					class="max-w-full flex-shrink-0 text-ellipsis"
+					class="flex-shrink-0 truncate"
 					:class="{
 						'font-medium': flattenedHighlightedValues?.includes(key),
 						'font-light': !flattenedHighlightedValues?.includes(key),
 					}"
-					>{{ key }}</span
+					><Ellipsis cut-words="first" :max-length="!infoOpen[key] ? 15 : 30">{{
+						key
+					}}</Ellipsis></span
 				>
 				<TooltipProvider>
-					<template v-for="personGroup in getPersonGroups(val, 'tribe')">
+					<template v-for="personGroup in getPersonGroups(val, ['tribe', 'religion'])">
 						<Tooltip v-for="(personGroupVal, personGroupKey) in personGroup" :key="personGroupVal">
 							<TooltipTrigger
-								><Badge class="line-clamp-1 gap-0.5" variant="outline">
+								><Badge
+									class="line-clamp-1 ml-0.5"
+									:class="{ 'gap-1': !getPersonGroupIcon(personGroup)?.hideValue && infoOpen[key] }"
+									variant="outline"
+								>
 									<component
 										:is="getPersonGroupIcon(personGroup)!.icon"
 										v-if="getPersonGroupIcon(personGroup)"
-										class="size-3 shrink-0"
+										class="shrink-0"
+										:size="12"
 									/>
 									<span :class="{ 'sr-only': getPersonGroupIcon(personGroup) }"
 										>{{ personGroupKey }}:
 									</span>
 									<span
 										class="line-clamp-1"
-										:class="{ 'sr-only': getPersonGroupIcon(personGroup)?.hideValue }"
+										:class="{
+											'sr-only': getPersonGroupIcon(personGroup)?.hideValue || !infoOpen[key],
+										}"
 										>{{ trimPrefix(personGroupVal) }}</span
 									>
 								</Badge></TooltipTrigger
 							>
-							<TooltipContent class="bg-background"
+							<TooltipContent class="bg-background capitalize"
 								><span>{{ personGroupKey }}: {{ trimPrefix(personGroupVal) }}</span></TooltipContent
 							>
 						</Tooltip>
@@ -172,19 +198,17 @@ const sortedValues = computed(() => {
 				>
 
 				<Collapsible
-					v-if="getPersonGroups(val).length > 0 || getSources(val)"
+					v-if="(getPersonGroups(val).length > 0 || getSources(val)) && infoOpen"
 					v-model:open="infoOpen[key]"
 					class="flex gap-2"
 				>
-					<CollapsibleTrigger @click.stop
-						><Info class="size-4 stroke-neutral-400 transition-colors hover:stroke-neutral-700" />
-						<span class="sr-only">Show info</span>
-					</CollapsibleTrigger>
 					<CollapsibleContent orientation="horizontal"
 						><div class="inline-flex items-center gap-2 text-ellipsis">
 							<TooltipProvider>
 								<template
-									v-for="personGroup in getPersonGroups(val).filter((group) => !group['tribe'])"
+									v-for="personGroup in getPersonGroups(val).filter(
+										(group) => !group['tribe'] && !group['religion'],
+									)"
 								>
 									<Tooltip
 										v-for="(personGroupVal, personGroupKey) in personGroup"
@@ -195,7 +219,8 @@ const sortedValues = computed(() => {
 												<component
 													:is="getPersonGroupIcon(personGroup)!.icon"
 													v-if="getPersonGroupIcon(personGroup)"
-													class="size-3 shrink-0"
+													class="shrink-0"
+													:size="12"
 												/>
 												<span :class="{ 'sr-only': getPersonGroupIcon(personGroup) }"
 													>{{ personGroupKey }}:
@@ -207,7 +232,7 @@ const sortedValues = computed(() => {
 												>
 											</Badge></TooltipTrigger
 										>
-										<TooltipContent class="bg-background"
+										<TooltipContent class="bg-background capitalize"
 											><span
 												>{{ personGroupKey }}: {{ trimPrefix(personGroupVal) }}</span
 											></TooltipContent
@@ -215,21 +240,20 @@ const sortedValues = computed(() => {
 									</Tooltip>
 								</template></TooltipProvider
 							>
-							<NuxtLink
-								v-for="source in getSources(val)"
-								:key="source.link"
-								class="flex gap-1 text-primary"
-								external
-								target="_blank"
-								:to="source.link"
-							>
-								<span class="text-xs">{{ source.short_cit }}</span>
-								<span class="sr-only">View Source</span
-								><ExternalLink class="inline-block size-3.5" />
-							</NuxtLink>
 						</div>
 					</CollapsibleContent>
 				</Collapsible>
+				<NuxtLink
+					v-for="source in getSources(val)"
+					:key="source.link"
+					class="flex gap-1 text-primary"
+					external
+					target="_blank"
+					:to="source.link"
+				>
+					<span class="text-xs">{{ source.short_cit }}</span>
+					<span class="sr-only">View Source</span><ExternalLink class="inline-block size-3.5" />
+				</NuxtLink>
 			</div>
 		</div>
 	</div>
