@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { Column } from "@tanstack/vue-table";
 import {
 	Contact,
 	ExternalLink,
@@ -15,10 +16,13 @@ import ChurchOutlineIcon from "vue-material-design-icons/ChurchOutline.vue";
 import MosqueOutlineIcon from "vue-material-design-icons/MosqueOutline.vue";
 import SynagogueOutlineIcon from "vue-material-design-icons/SynagogueOutline.vue";
 
+import type { WindowItem } from "@/types/global";
+
 const props = defineProps<{
 	value?: Record<string, unknown>;
 	highlightedValues?: Array<string>;
-	columnId: string;
+	column: Column<PatchedFeatureType>;
+	fullEntry: PatchedFeatureType["properties"];
 }>();
 
 function getSources(featureValueEntry: unknown) {
@@ -51,11 +55,15 @@ const iconMap: Record<string, Record<string, LucideIcon | DefineComponent>> = {
 	source_representations: {
 		"#default": Languages,
 	},
+	variety: {
+		"#default": Languages,
+	},
 	examples: {
 		"#default": MessageSquare,
 	},
 };
 const nonPersonGroupKeys = ["sources"];
+const hiddenKeys = ["remarks", "exceptions", "constraints", "source_representations"];
 function getPersonGroups(featureValueEntry: unknown, selectKey?: string | Array<string>) {
 	const personGroups = Object.entries((featureValueEntry as Record<string, Array<string>>) ?? {})
 		.filter(([key]) => !nonPersonGroupKeys.includes(key))
@@ -117,15 +125,15 @@ const flattenedHighlightedValues = computed(() => {
 function getPetalEntry(featureValue: string) {
 	if (props.highlightedValues?.includes(featureValue))
 		// value is directly selected
-		return { id: buildFeatureValueId(props.columnId, featureValue) };
+		return { id: buildFeatureValueId(props.column.id, featureValue) };
 	else {
 		// check if value is selected in combined filter ("{x} AND {y}")
 		const combined = props.highlightedValues?.find(
 			(val) => val.includes(AND_OPERATOR) && val.split(AND_OPERATOR).includes(featureValue),
 		);
-		if (combined) return { id: buildFeatureValueId(props.columnId, combined) };
+		if (combined) return { id: buildFeatureValueId(props.column.id, combined) };
 	}
-	return { id: props.columnId, strokeOnly: true };
+	return { id: props.column.id, strokeOnly: true };
 }
 
 const sortedValues = computed(() => {
@@ -133,8 +141,24 @@ const sortedValues = computed(() => {
 		const indexA = flattenedHighlightedValues.value?.includes(String(a)) ? -1 : 1;
 		const indexB = flattenedHighlightedValues.value?.includes(String(b)) ? -1 : 1;
 		return indexA === indexB ? a.localeCompare(b) : indexA - indexB;
-	}) as Array<[string, string]>;
+	}) as Array<[string, Record<string, unknown>]>;
 });
+
+const openOrUpdateWindow = useOpenOrUpdateWindow();
+function onValueClick(val: Record<string, unknown>, title: string) {
+	openOrUpdateWindow(
+		{
+			targetType: "FeatureValue",
+			params: {
+				...val,
+				title,
+				place: props.fullEntry.name,
+				feature: props.column.columnDef.header,
+			},
+		} as unknown as WindowItem,
+		`${props.column.columnDef.header}: ${title}`,
+	);
+}
 </script>
 
 <template>
@@ -153,15 +177,17 @@ const sortedValues = computed(() => {
 				}"
 			>
 				<svg class="size-3.5 shrink-0" v-html="getPetalSVG(getPetalEntry(key)).outerHTML"></svg>
-				<span
-					class="flex-shrink-0 truncate"
+				<Button
+					class="flex-shrink-0 truncate p-0 h-auto !text-black"
 					:class="{
 						'font-medium': flattenedHighlightedValues?.includes(key),
 						'font-light': !flattenedHighlightedValues?.includes(key),
 					}"
+					variant="link"
+					@click="onValueClick(val, key)"
 					><Ellipsis cut-words="first" :max-length="!infoOpen[key] ? 15 : 30">{{
 						key
-					}}</Ellipsis></span
+					}}</Ellipsis></Button
 				>
 				<TooltipProvider>
 					<template v-for="personGroup in getPersonGroups(val, ['tribe', 'religion'])">
@@ -207,7 +233,10 @@ const sortedValues = computed(() => {
 							<TooltipProvider>
 								<template
 									v-for="personGroup in getPersonGroups(val).filter(
-										(group) => !group['tribe'] && !group['religion'],
+										(group) =>
+											!group['tribe'] &&
+											!group['religion'] &&
+											Object.keys(group).every((key) => !hiddenKeys.includes(key)),
 									)"
 								>
 									<Tooltip

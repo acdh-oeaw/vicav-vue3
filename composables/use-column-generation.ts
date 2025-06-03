@@ -8,7 +8,7 @@ import {
 import geojsonTablePropertyCell from "@/components/geojson-table-property-cell.vue";
 import type { FeatureType } from "@/types/global";
 
-interface PatchedFeatureType extends FeatureType {
+export interface PatchedFeatureType extends FeatureType {
 	properties: Record<string, Record<string, unknown>>;
 }
 
@@ -52,7 +52,8 @@ function buildColumnDefRecursive(
 						return h(geojsonTablePropertyCell, {
 							value: cell.row.original.properties[cell.column.columnDef.id!],
 							highlightedValues: highlightedValues,
-							columnId: cell.column.id,
+							column: cell.column,
+							fullEntry: cell.row.original.properties,
 						});
 					},
 					filterFn: (row, columnId, _filterValue: Map<string, unknown>) => {

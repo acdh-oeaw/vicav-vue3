@@ -152,6 +152,12 @@ export const FeatureSchema = z.object({
 });
 export type FeatureWindowItem = WindowItemBase & z.infer<typeof FeatureSchema>;
 
+export const FeatureValueSchema = z.object({
+	targetType: z.literal("FeatureValue"),
+	params: z.object(),
+});
+export type FeatureValueWindowItem = WindowItemBase & z.infer<typeof FeatureValueSchema>;
+
 export const CompareMarkersParams = z.object();
 
 export const GeoMapScope = z.enum(["reg", "geo", "diaGroup"]);
@@ -251,6 +257,7 @@ export const Schema = z.discriminatedUnion("targetType", [
 	CorpusQuerySchema,
 	CorpusTextSchema,
 	FeatureSchema,
+	FeatureValueSchema,
 	GeoMapSchema,
 	ProfileSchema,
 	TextSchema,
