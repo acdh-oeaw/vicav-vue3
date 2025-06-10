@@ -14,6 +14,7 @@ const { isPending } = GeojsonStore.fetchGeojson(url);
 const { fetchedData, tables, showAllDetails } = storeToRefs(GeojsonStore);
 const { data: projectData } = useProjectInfo();
 const { createColumnDefs } = useColumnGeneration();
+const { getTraversedAST } = useFilterParser();
 
 const columns = computed(() => {
 	const allFeatureNames = fetchedData.value.get(url)?.properties.column_headings;
@@ -44,12 +45,17 @@ function applyGlobalFilter(row: Row<FeatureType>, _colId: string, queryString: s
 	return false;
 }
 
-function applyQueryString(row: Row<FeatureType>, _colId: string, queryString: string) {
+function applyQueryString(row: Row<FeatureType>, colId: string, queryString: string) {
 	if (!queryString) return true;
 	const metadata: Record<string, Array<string>> = {};
+	const affectedColumns = getTraversedAST(queryString);
 	const preparedRow = Object.fromEntries(
 		Object.entries(row.original.properties).map(([key, value]) => {
-			if (value && typeof value === "object") {
+			if (
+				affectedColumns.find((entry) => entry.column === key) &&
+				value &&
+				typeof value === "object"
+			) {
 				for (const metadataObject of Object.values(value)) {
 					for (const metaKey in metadataObject) {
 						if (!(metaKey in metadata)) metadata[metaKey] = [];
@@ -61,7 +67,9 @@ function applyQueryString(row: Row<FeatureType>, _colId: string, queryString: st
 			return [key, value];
 		}),
 	);
+
 	for (const key in metadata) preparedRow[key] = [...new Set(metadata[key])];
+
 	return test(parse(queryString), preparedRow);
 }
 
