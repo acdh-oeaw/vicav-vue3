@@ -11,7 +11,7 @@ const props = defineProps<Props>();
 const { params }: { params: Ref<Record<string, string | Array<string> | object>> } = toRefs(props);
 
 const tableContent: Array<{ key: string; displayHeader?: string; introductoryText?: string }> = [
-	{ key: "title", displayHeader: "Value" },
+	{ key: "title", displayHeader: "Feature Value" },
 	{ key: "desc" },
 	{ key: "feature" },
 	{ key: "place", introductoryText: "Attested in: {}" },
@@ -31,7 +31,7 @@ const tableContent: Array<{ key: string; displayHeader?: string; introductoryTex
 		displayHeader: "Original transcription",
 		introductoryText: "Originally transcribed as: {}",
 	},
-	{ key: "examples", introductoryText: "{} ({})" },
+	{ key: "examples", introductoryText: "{}" },
 	{ key: "note", introductoryText: "Note: {}" },
 	{ key: "remarks", introductoryText: "Remarks: {}" },
 	{ key: "constraints", introductoryText: "Constraints: {}" },
@@ -39,7 +39,6 @@ const tableContent: Array<{ key: string; displayHeader?: string; introductoryTex
 ];
 
 const tableData = computed(() => {
-	console.log(tableContent, params.value);
 	return tableContent
 		.filter((entry) => entry.key in (params.value as object))
 		.flatMap((entry) => {

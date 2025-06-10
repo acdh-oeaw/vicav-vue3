@@ -156,7 +156,7 @@ function onValueClick(val: Record<string, unknown>, title: string) {
 				feature: props.column.columnDef.header,
 			},
 		} as unknown as WindowItem,
-		`${props.column.columnDef.header}: ${title}`,
+		`${props.fullEntry.name} | ${props.column.columnDef.header} | ${title}`,
 	);
 }
 </script>
