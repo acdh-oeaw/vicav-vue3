@@ -146,6 +146,19 @@ export const CorpusTextSchema = z.object({
 });
 export type CorpusTextWindowItem = WindowItemBase & z.infer<typeof CorpusTextSchema>;
 
+export const CorpusTextJSONSchema = z.object({
+	targetType: z.literal("CorpusTextJSON"),
+	params: TextId.merge(
+		z.object({
+			hits: z.string().optional(),
+			u: z.string().optional(), // TODO: give this parameter a telling name
+		}),
+	)
+		.merge(ShowCitation.partial())
+		.merge(TeiSource.partial()),
+});
+export type CorpusTextJSONWindowItem = WindowItemBase & z.infer<typeof CorpusTextJSONSchema>;
+
 export const FeatureSchema = z.object({
 	targetType: z.literal("Feature"),
 	params: TextId.merge(TeiSource.partial()).merge(ShowCitation.partial()),
@@ -250,6 +263,7 @@ export const Schema = z.discriminatedUnion("targetType", [
 	DictQuerySchema,
 	CorpusQuerySchema,
 	CorpusTextSchema,
+	CorpusTextJSONSchema,
 	FeatureSchema,
 	GeoMapSchema,
 	ProfileSchema,

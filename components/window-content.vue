@@ -59,6 +59,10 @@ function updateQueryParam(queryString: string) {
 		v-else-if="props.item.targetType === 'CorpusText'"
 		:params="props.item.params"
 	/>
+	<CorpusTextJsonWindowContent
+		v-else-if="props.item.targetType === 'CorpusTextJSON'"
+		:params="props.item.params"
+	/>
 	<DataListWindowContent
 		v-else-if="props.item.targetType === 'DataList'"
 		:params="props.item.params"
