@@ -9,7 +9,6 @@ const props = defineProps<Props>();
 const { params } = toRefs(props);
 const content: Ref<HTMLElement | undefined> = ref();
 const tooltip: Ref<HTMLElement | null> = ref(null);
-
 const { simpleItems } = useTEIHeaders();
 
 const filters: Array<"region" | "settlement"> = ["region", "settlement"];
@@ -28,14 +27,14 @@ const ids = computed(() => {
 				})
 				.filter((item) => {
 					if (params.value.person) {
-						return params.value.person === item.person.name;
+						return item.person.map((p) => p.name).includes(params.value.person);
 					} else return true;
 				})
 				.map((item) => item.id)
 				.join(",");
 });
 
-const features: Ref<Array<string>> = ref([]);
+const features: Ref<Array<string>> = ref(params.value.features?.split(",") ?? []);
 const page: Ref<number> = ref(1);
 
 watch(params, (value) => {
@@ -81,6 +80,9 @@ watch(isLoading, () => {
 		class="relative isolate grid size-full overflow-auto"
 		:class="{ 'opacity-50 grayscale': isLoading }"
 	>
+		<div v-if="params.showCitation">
+			<Citation type="software" />
+		</div>
 		<!-- eslint-disable vue/no-v-html,
 			vuejs-accessibility/mouse-events-have-key-events,
 			vuejs-accessibility/click-events-have-key-events,
@@ -108,6 +110,7 @@ watch(isLoading, () => {
 </template>
 
 <style>
+@reference "@/styles/index.css";
 /* stylelint-disable selector-class-pattern */
 .tbFeatures {
 	@apply w-11/12 border border-solid border-[#59533c];
@@ -135,7 +138,7 @@ watch(isLoading, () => {
 
 .tdFeaturesRightSource {
 	@apply align-top w-4/5 pl-[3px] border border-solid border-primary
-	bg-primary bg-opacity-30 text-[#7f960a];
+	bg-primary/30 text-[#7f960a];
 }
 
 .tdFeaturesRightTarget {

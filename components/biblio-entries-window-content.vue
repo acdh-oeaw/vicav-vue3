@@ -24,16 +24,16 @@ const queryString: Ref<string> = ref(params.value.queryString);
 const isTextQuery: Ref<boolean> = ref(true);
 const isMapQuery: Ref<boolean> = ref(false);
 
-const isFormOpen = ref(queryString.value === "");
+const isFormOpen = ref(queryString.value === "" || params.value.showMap);
+const isListOpen = ref(queryString.value !== "" && !params.value.showMap);
 
-function submitNewQuery(): void {
+function submitNewQuery(map: boolean): void {
 	if (queryString.value === "") return;
 	if (!isTextQuery.value && !isMapQuery.value) isTextQuery.value = true;
 	params.value.queryString = queryString.value;
-	if (isTextQuery.value) {
-		emit("updateQueryParam", queryString.value);
-	}
-	if (isMapQuery.value) {
+	params.value.showMap = map;
+	emit("updateQueryParam", queryString.value);
+	if (map) {
 		addWindow({
 			targetType: "WMap",
 			params: {
@@ -42,6 +42,16 @@ function submitNewQuery(): void {
 			},
 			title: `Bibl. Locations for "${queryString.value}"`,
 		});
+		isListOpen.value = false;
+	} else {
+		isFormOpen.value = false;
+		isListOpen.value = true;
+	}
+}
+
+function submitNewQueryKeyup(event: KeyboardEvent): void {
+	if (event.key === "Enter") {
+		submitNewQuery(false);
 	}
 }
 </script>
@@ -54,7 +64,7 @@ function submitNewQuery(): void {
 		<!-- eslint-disable vuejs-accessibility/form-control-has-label, tailwindcss/no-custom-classname -->
 		<Collapsible v-model:open="isFormOpen" class="prose max-w-3xl px-8 pb-4 pt-8">
 			<CollapsibleTrigger class="dvStats flex w-full items-baseline">
-				Query:&nbsp;&nbsp;
+				{{ queryString !== "" ? "Query:&nbsp;&nbsp;" : "&nbsp;" }}
 				<span class="spQueryText">{{ queryString }}</span>
 				<div class="relative top-1 ml-auto mr-4">
 					<div v-if="!isFormOpen">
@@ -105,53 +115,25 @@ function submitNewQuery(): void {
 							class="block w-full rounded border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
 							placeholder="Search in bibliographies&hellip;"
 							type="text"
-							@keyup.enter="submitNewQuery"
+							@keyup.enter="submitNewQueryKeyup"
 						/>
 					</div>
 					<div class="my-3">
-						<button class="biblQueryBtn" :disabled="!queryString" @click="submitNewQuery">
-							Query
+						<button class="biblQueryBtn" :disabled="!queryString" @click="submitNewQuery(false)">
+							Show as List
 						</button>
 					</div>
-					<div class="mb-5 mt-2 flex">
-						<div class="flex flex-1 items-start">
-							<div class="flex h-5 items-center">
-								<input
-									id="isTextQuery"
-									v-model="isTextQuery"
-									class="focus:ring-3 size-4 rounded border border-gray-300 bg-gray-50 focus:ring-blue-300 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-blue-600 dark:focus:ring-offset-gray-800"
-									type="checkbox"
-								/>
-							</div>
-							<label
-								class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300"
-								for="isTextQuery"
-							>
-								Display as text
-							</label>
-						</div>
-						<div class="flex flex-1 items-start">
-							<div class="flex h-5 items-center">
-								<input
-									id="isMapQuery"
-									v-model="isMapQuery"
-									class="focus:ring-3 size-4 rounded border border-gray-300 bg-gray-50 focus:ring-blue-300 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary dark:focus:ring-offset-gray-800"
-									type="checkbox"
-								/>
-							</div>
-							<label
-								class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300"
-								for="isMapQuery"
-							>
-								Display on map
-							</label>
-						</div>
+					<div class="my-3">
+						<button class="biblQueryBtn" :disabled="!queryString" @click="submitNewQuery(true)">
+							Show on a Map
+						</button>
 					</div>
 					<div class="pb-4">
 						<p>
 							For details as to how to formulate meaningful queries in the bibliography
 							<a
 								class="aVicText"
+								data-label="Bibliography (Details)"
 								data-target-type="Text"
 								data-text-id="li_vicavExplanationBibliography"
 								href="/"
@@ -168,7 +150,56 @@ function submitNewQuery(): void {
 		</Collapsible>
 
 		<!-- eslint-disable-next-line vue/no-v-html, vuejs-accessibility/click-events-have-key-events, vuejs-accessibility/no-static-element-interactions -->
-		<div v-if="data" class="prose mb-auto max-w-3xl p-8" v-html="data" />
+		<Collapsible v-model:open="isListOpen" class="prose mb-auto max-w-3xl p-8">
+			<CollapsibleTrigger class="dvStats flex w-full items-baseline">
+				{{ data ? data.stats : "&nbsp;" }}
+
+				<div class="relative top-1 ml-auto mr-4">
+					<div v-if="data && !isListOpen">
+						<svg
+							class="svg-icon"
+							style="
+								vertical-align: middle;
+								overflow: hidden;
+								width: 1em;
+								height: 1em;
+								fill: currentColor;
+							"
+							version="1.1"
+							viewBox="0 0 1024 1024"
+							xmlns="http://www.w3.org/2000/svg"
+						>
+							<path
+								d="M511.5 789.9 80.6 359c-22.8-22.8-22.8-59.8 0-82.6 22.8-22.8 59.8-22.8 82.6 0l348.3 348.3 348.3-348.3c22.8-22.8 59.8-22.8 82.6 0 22.8 22.8 22.8 59.8 0 82.6L511.5 789.9 511.5 789.9zM511.5 789.9"
+							/>
+						</svg>
+					</div>
+					<div v-if="data && isListOpen">
+						<svg
+							class="svg-icon"
+							style="
+								vertical-align: middle;
+								overflow: hidden;
+								width: 1em;
+								height: 1em;
+								fill: currentColor;
+							"
+							version="1.1"
+							viewBox="0 0 1024 1024"
+							xmlns="http://www.w3.org/2000/svg"
+						>
+							<path
+								d="M511.5 259.3 942.4 690.1c22.8 22.8 22.8 59.8 0 82.6-22.8 22.8-59.8 22.8-82.6 0L511.5 424.5 163.2 772.8c-22.8 22.8-59.8 22.8-82.6 0-22.8-22.8-22.8-59.8 0-82.6L511.5 259.3 511.5 259.3zM511.5 259.3"
+							/>
+						</svg>
+					</div>
+				</div>
+			</CollapsibleTrigger>
+			<CollapsibleContent>
+				<!-- eslint-disable vue/no-v-html -->
+				<div v-if="data" v-html="data.html" />
+			</CollapsibleContent>
+		</Collapsible>
 
 		<Centered v-if="isLoading">
 			<LoadingIndicator />
@@ -177,6 +208,7 @@ function submitNewQuery(): void {
 </template>
 
 <style>
+@reference "@/styles/index.css";
 /* stylelint-disable selector-class-pattern, block-no-empty */
 .dvStats {
 	@apply mb-[5px] pb-[5px] pl-[5px] border border-solid border-primary bg-primary text-on-primary font-bold;

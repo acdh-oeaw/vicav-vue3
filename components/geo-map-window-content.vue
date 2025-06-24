@@ -7,12 +7,12 @@ import { type GeoMapSchema, GeoMapSubnavItemSchema } from "@/types/global.d";
 type ItemId = string;
 
 interface Props {
+	title?: string;
 	params: Zod.infer<typeof GeoMapSchema>["params"];
 }
 
 const props = defineProps<Props>();
-const { params } = toRefs(props);
-
+const { title, params } = toRefs(props);
 const { data: projectData } = useProjectInfo();
 
 const createId = function (params: Zod.infer<typeof GeoMapSchema>["params"]): ItemId {
@@ -20,7 +20,6 @@ const createId = function (params: Zod.infer<typeof GeoMapSchema>["params"]): It
 		queryString = params.queryString,
 		scope = params.scope?.join(",") ?? "",
 		queryParams = Object.values(params.queryParams ?? {}).join(",");
-
 	return `${endpoint}:${queryString}:${scope}:${queryParams}`;
 };
 
@@ -43,10 +42,11 @@ const itemsById = computed(() => {
 const id = createId(params.value);
 if (!itemsById.value.has(id)) {
 	itemsById.value.set(id, {
-		title: params.value.title ?? id,
+		title: params.value.title ?? title.value,
 		params: params.value,
 	} as Zod.infer<typeof GeoMapSubnavItemSchema>);
 }
+
 const selected = ref<Set<ItemId>>(new Set([id]));
 
 function onSelect(id: ItemId) {

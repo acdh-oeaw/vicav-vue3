@@ -30,7 +30,7 @@ export function useGeoMapConfig() {
 			nearbyMarkersPopup,
 			options: {
 				minZoom: 2,
-				maxZoom: 20,
+				maxZoom: 18,
 				preferCanvas: true,
 				zoomControl: false,
 			},

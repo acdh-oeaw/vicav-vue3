@@ -13,9 +13,10 @@ const props = defineProps<{
 const attrs = useAttrs();
 const $el = ref<HTMLElement>();
 
-type LocationDataPoints = {
-	[key in DataTypesEnum]: Array<Feature<Point, MarkerProperties>>;
-};
+type LocationDataPoints = Record<
+	DataTypesEnum | "DataTable",
+	Array<Feature<Point, MarkerProperties>>
+>;
 
 const groupedMarkers = computed<Record<string, LocationDataPoints> | null>(() => {
 	if (props.groupMarkers) {
@@ -23,13 +24,24 @@ const groupedMarkers = computed<Record<string, LocationDataPoints> | null>(() =>
 		props.markers.forEach((marker) => {
 			if (!grouped[marker.properties.label])
 				grouped[marker.properties.label] = {
-					Profile: [],
+					Text: [],
+					CorpusText: [],
 					Feature: [],
 					SampleText: [],
-					CorpusText: [],
-					Text: [],
+					Profile: [],
+					DataTable: [],
+					BiblioEntries: [],
 				};
-			grouped[marker.properties.label]![marker.properties.targetType as DataTypesEnum].push(marker);
+
+			if (grouped[marker.properties.label] !== undefined) {
+				const markerArray =
+					grouped[marker.properties.label]![
+						marker.properties.targetType as DataTypesEnum | "DataTable"
+					];
+				if (markerArray) {
+					markerArray.push(marker);
+				}
+			}
 		});
 		return grouped;
 	} else {
@@ -55,11 +67,13 @@ defineExpose({
 					:key="contentType"
 					class="text-xs"
 				>
-					<h3 v-if="markersOfType.length > 0" class="italic">
-						{{ DataTypes[contentType].contentTypeHeading }}
-					</h3>
+					<div v-if="markersOfType.length > 0">
+						<h3 class="italic">
+							{{ DataTypes[contentType as DataTypesEnum]?.contentTypeHeading ?? contentType }}
+						</h3>
 
-					<GeoMapPopupLinks :markers="markersOfType" />
+						<GeoMapPopupLinks :markers="markersOfType" />
+					</div>
 				</div>
 			</div>
 		</template>

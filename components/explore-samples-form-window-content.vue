@@ -1,38 +1,24 @@
 <script lang="ts" setup>
-import { Icon } from "@iconify/vue";
-import {
-	TagsInputInput,
-	TagsInputItem,
-	TagsInputItemDelete,
-	TagsInputItemText,
-	TagsInputRoot,
-} from "radix-vue";
-import { transliterate as tr } from "transliteration";
-
 import dataTypes from "@/config/dataTypes";
 import type { ExploreSamplesFormWindowItem, GeoMapWindowItem, WindowItem } from "@/types/global.d";
-
-const trOptions = {
-	replace: {
-		ᵃ: "a",
-		ᵉ: "e",
-		ⁱ: "i",
-		ᵒ: "o",
-		ᵘ: "u",
-		ᵊ: "e",
-		ʷ: "w",
-		ʸ: "y",
-		ˢ: "s",
-		ᶴ: "s",
-		q: "q",
-	},
-};
 
 const { findWindowByTypeAndParam } = useWindowsStore();
 
 interface Props {
 	params: ExploreSamplesFormWindowItem["params"];
 }
+
+const { data: config } = useProjectInfo();
+const specialCharacters = config.value?.projectConfig?.specialCharacters;
+const commentOptions = (config.value?.projectConfig?.commentOptions ?? []).map((option) => {
+	return { label: option.text, value: option.value } as Tag;
+});
+const sentenceOptions = Array.from(
+	{ length: parseInt(config.value?.projectConfig?.sampleTextSentences ?? "1") },
+	(_, index) => {
+		return { label: (index + 1).toString(), value: (index + 1).toString() } as Tag;
+	},
+);
 
 const props = defineProps<Props>();
 const { params } = toRefs(props);
@@ -55,7 +41,7 @@ const features: Ref<Array<string>> = ref([]);
 const sentences: Ref<Array<string>> = ref([]);
 
 const age: Ref<Array<number>> = ref([0, 100]);
-const comment = ref("");
+const comment = ref([]);
 const translation = ref("");
 const persons: Ref<Array<string>> = ref([]);
 
@@ -64,13 +50,13 @@ const countries = Array.from(new Set(dataset.map((item) => item.place.country)))
 let options: Array<Tag> = [];
 
 countries.forEach((country) => {
-	options.push({ label: country + " (country)", value: "country:" + country });
+	options.push({ label: `${country} (country)`, value: `country:${country}` });
 	const countryItems = dataset.filter((item) => item.place.country === country);
 	const regions = Array.from(new Set(countryItems.map((item) => item.place.region)));
 	regions.forEach((region) => {
 		options.push({
-			label: region + " (region)",
-			value: "region:" + region,
+			label: `${region} (region)`,
+			value: `region:${region}`,
 			heading: true,
 		});
 
@@ -95,27 +81,32 @@ const uniqueFilter = function (value: unknown, index: number, array: Array<unkno
 	return array.indexOf(value) === index;
 };
 const personOptions = dataset
-	.map((item) => item.person.name)
+	.map((item) => item.person.map((i) => i.name))
+	.flat()
 	.filter(uniqueFilter)
 	.map((item: string) => {
 		return { label: item, value: item };
 	});
 
+const wordSearch = ref("");
+
 const featureLabelsQuery = useFeatureLabels();
-const dataWordsQuery = useDataWords({ dataType: props.params.dataTypes[0]! });
+
+watch(wordSearch, async (value) => {
+	if (!value || value.length < 2) return;
+	await dataWordsQuery.refetch();
+});
+
+const dataWordsQuery = useDataWords(
+	{ dataType: props.params.dataTypes[0]!, query: wordSearch },
+	{ enabled: false },
+);
+
 const wordOptions = computed(() => {
-	return (dataWordsQuery.data.value ?? []).map((item) => {
+	return ((dataWordsQuery.data.value as unknown as Array<string>) ?? []).map((item) => {
 		return { label: item, value: item };
 	});
 });
-
-const wordFilter = function (list: Array<string>, searchTerm: string) {
-	const translitTerm = tr(searchTerm, trOptions);
-
-	return list.filter((item) => {
-		return tr(item, trOptions).indexOf(translitTerm) !== -1;
-	});
-};
 
 const sex = ref(["m", "f"]);
 
@@ -123,21 +114,34 @@ const personsFilter = computed(() =>
 	simpleItems.value
 		.filter((item) => {
 			if (!params.value.dataTypes.includes(item.dataType)) return false;
-			if (persons.value.length > 0) return persons.value.includes(item.person.name);
-			else if (places.value.length > 0) {
-				const found = places.value.map((place) => {
+			if (sex.value.length > 0) {
+				if (
+					// If none of the participants are of the given sex
+					!item.person.map((p) => sex.value.includes(p.sex)).includes(true)
+				)
+					return false;
+			}
+			if (
+				!item.person
+					.map((p) => age.value[0]! < parseInt(p.age) && age.value[1]! > parseInt(p.age))
+					.includes(true)
+			)
+				return false;
+
+			const matchPerson = item.person.map((p) => persons.value.includes(p.name)).includes(true);
+
+			const matchPlace = places.value
+				.map((place) => {
 					const p = place.split(":");
 					if (p[0] === "region" && item.place.region === p[1]) return true;
 					if (p[0] === "country" && item.place.country === p[1]) return true;
 					if (p[0] === item.place.settlement) return true;
 					return false;
-				});
-				if (!found.includes(true)) return false;
-			}
-			if (sex.value.length > 0 && !sex.value.includes(item.person.sex)) return false;
-			return !(
-				age.value[0]! > parseInt(item.person.age) || age.value[1]! < parseInt(item.person.age)
-			);
+				})
+				.includes(true);
+
+			if (places.value.length > 0 || persons.value.length > 0) return matchPerson || matchPlace;
+			return true;
 		})
 		.map((item) => item.id),
 );
@@ -150,7 +154,7 @@ const filterFunction = function (list: Array<string>, searchTerm: string) {
 const resultParams = computed(() => {
 	return {
 		word: words.value.join(","),
-		comment: comment.value,
+		comment: comment.value.join(","),
 		features:
 			params.value.dataTypes[0] === "Feature"
 				? features.value.join(",")
@@ -173,6 +177,24 @@ const queryParams = computed(() => {
 			| "samples"
 			| "lingfeatures",
 	});
+});
+
+const submitDisabled = computed(() => {
+	return (
+		(words.value.length === 0 &&
+			translation.value === "" &&
+			comment.value.length === 0 &&
+			places.value.length === 0 &&
+			persons.value.length === 0 &&
+			features.value.length === 0 &&
+			sentences.value.length === 0 &&
+			age.value[0] === 0 &&
+			age.value[1] === 100 &&
+			sex.value[0] === "m" &&
+			sex.value[1] === "f") ||
+		sex.value.length === 0 ||
+		personsFilter.value.length === 0
+	);
 });
 
 /**
@@ -227,6 +249,27 @@ const openSearchResultsWindow = function () {
 		}, 1000);
 	}
 };
+
+/**
+ * Open search results in new window.
+ */
+const openSearchResultsNewWindow = function () {
+	addWindow({
+		targetType: "ExploreSamples",
+		params: resultWindowParams.value,
+		title: `Search results for ${[words.value.join(","), places.value.join(",")].join(", ")}`,
+	} as WindowState)!;
+	addWindow({
+		targetType: "WMap",
+		params: {
+			title: "Search results",
+			queryString: "",
+			endpoint: "compare_markers",
+			queryParams: queryParams.value,
+		},
+		title: `${params.value.dataTypes[0]}s for ${[words.value.join(","), places.value.join(",")].join(", ")}`,
+	} as WindowState)!;
+};
 </script>
 
 <template>
@@ -267,11 +310,12 @@ const openSearchResultsWindow = function () {
 				<label for="word">Word</label>
 
 				<TagsSelect
-					v-if="wordOptions"
 					v-model="words"
-					:filter-function="wordFilter"
+					v-model:search-term="wordSearch"
+					:filter-function="(i) => i"
 					:options="wordOptions"
 					:placeholder="`Search for words...`"
+					:special-characters="specialCharacters"
 				/>
 			</div>
 
@@ -288,73 +332,67 @@ const openSearchResultsWindow = function () {
 
 			<div v-if="params.dataTypes.includes('SampleText')" class="flex flex-row gap-2.5">
 				<label for="sentence">Sentences</label>
-				<TagsInputRoot
+				<TagsSelect
 					v-model="sentences"
-					class="my-2 flex w-full flex-wrap items-center gap-2 bg-white px-3 py-2 shadow"
-					delimiter=""
-				>
-					<TagsInputItem
-						v-for="item in sentences"
-						:key="item"
-						class="flex items-center justify-center gap-2 rounded bg-primary px-2 py-1 text-white aria-[current=true]:bg-primary"
-						:value="item"
-					>
-						<TagsInputItemText class="text-sm">{{ item }}</TagsInputItemText>
-						<TagsInputItemDelete>
-							<Icon icon="lucide:x" />
-						</TagsInputItemDelete>
-					</TagsInputItem>
-
-					<TagsInputInput
-						class="flex flex-1 gap-2 !bg-transparent px-1 focus:outline-none"
-						placeholder="Enter sentence numbers. Press enter key to select..."
-					/>
-				</TagsInputRoot>
+					class="my-2 flex w-full flex-wrap items-center gap-2 bg-white px-3 py-2 shadow-sm"
+					:filter-function="(i) => i"
+					:immediate-open="true"
+					:options="sentenceOptions"
+					:placeholder="`Search for features...`"
+				/>
 			</div>
 
-			<div class="flex flex-row gap-2.5">
+			<div v-if="params.dataTypes.includes('Feature')" class="flex flex-row gap-2.5">
 				<label for="translation">Translation</label>
 				<input
 					id="translation"
 					v-model="translation"
 					aria-label="Translation"
-					class="my-2 flex w-full border-gray-300 px-3 py-2 shadow"
+					class="my-2 flex w-full border-gray-300 px-3 py-2 shadow-sm"
 					placeholder="Search for translation..."
 				/>
 			</div>
 
 			<div class="flex flex-row gap-2.5">
 				<label for="comment">Comment</label>
-				<input
+				<TagsSelect
 					id="comment"
 					v-model="comment"
-					aria-label="Comment"
-					class="my-2 w-full border-gray-300 px-3 py-2 shadow"
+					class="my-2 w-full border-gray-300 px-3 py-2 shadow-sm"
+					:filter-function="(i) => i"
+					:immediate-open="true"
+					:options="commentOptions"
 					placeholder="Search for comment..."
-				/>
+				>
+				</TagsSelect>
+			</div>
+
+			<div v-if="personsFilter.length === 0" class="my-4 rounded-sm border-red-600 bg-red-100 p-4">
+				No matching entries in database
 			</div>
 
 			<button
 				class="inline-block h-10 w-full whitespace-nowrap rounded border-2 border-solid border-primary bg-on-primary text-center align-middle font-bold text-primary hover:bg-primary hover:text-on-primary disabled:border-gray-400 disabled:text-gray-400 hover:disabled:bg-on-primary hover:disabled:text-gray-400"
-				:disabled="
-					words.length === 0 &&
-					translation == '' &&
-					comment == '' &&
-					places.length === 0 &&
-					persons.length === 0 &&
-					features.length === 0 &&
-					sentences.length === 0
-				"
+				:disabled="submitDisabled"
 				@click.prevent.stop="openSearchResultsWindow"
 			>
 				Query
 			</button>
-			<br />
+
+			<button
+				class="mt-2 inline-block h-10 w-full whitespace-nowrap rounded border-2 border-solid border-primary bg-on-primary text-center align-middle font-bold text-primary hover:bg-primary hover:text-on-primary disabled:border-gray-400 disabled:text-gray-400 hover:disabled:bg-on-primary hover:disabled:text-gray-400"
+				:disabled="submitDisabled"
+				@click.prevent.stop="openSearchResultsNewWindow"
+			>
+				Search in new window
+			</button>
 		</form>
 	</div>
 </template>
 
-<style>
+<style scoped>
+@reference "@/styles/index.css";
+
 label {
 	@apply px-3 py-2 my-2 w-28 align-baseline;
 }

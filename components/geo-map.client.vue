@@ -4,6 +4,7 @@ import type { Feature, Point } from "geojson";
 import {
 	circleMarker,
 	geoJSON,
+	latLng,
 	type Map as LeafletMap,
 	map as createMap,
 	type Marker as LeafletMarker,
@@ -14,11 +15,13 @@ import {
 
 import { type GeoMapContext, key, type MarkerProperties } from "@/components/geo-map.context";
 import GeoMapPopupContent from "@/components/geo-map-popup-content.vue";
+import type { MarkerType } from "@/types/global";
 
 interface Props {
 	height: number;
 	markers: Array<Feature<Point, MarkerProperties>>;
 	width: number;
+	markerType?: MarkerType;
 }
 
 const props = defineProps<Props>();
@@ -38,20 +41,22 @@ interface ComponentPopupInfo {
 	};
 }
 
-const popupElements = ref<Array<typeof GeoMapPopupContent>>([]);
 const componentPopups = ref<Array<ComponentPopupInfo>>([]);
 const openedPopupId = ref<number | null>(null);
-const elementRef = ref<HTMLElement | null>(null);
+const mapRef = ref<HTMLElement | null>(null);
+const popupRef = ref<ComponentPublicInstance | null>(null);
+const currentPopup = computed(() =>
+	componentPopups.value.find((popup) => popup.id === openedPopupId.value?.toString()),
+);
 
-watchEffect(() => {
+/*watchEffect(() => {
 	componentPopups.value.forEach((popup) => {
-		const element = popupElements.value.find((popupElement) => popup.id === popupElement.id);
+		const element = popupElements.value.get(popup.id);
 		const leafletMarker = context.featureGroups.markers?.getLayer(parseInt(popup.id));
 		if (leafletMarker == null || element == null) return;
-
 		leafletMarker.bindPopup(element.$el, { minWidth: 150 });
 	});
-});
+});*/
 
 const context: GeoMapContext = {
 	map: null,
@@ -67,32 +72,101 @@ const ptDistanceSq = function (pt1: LeafletPoint, pt2: LeafletPoint): number {
 	return dx * dx + dy * dy;
 };
 
+function getGridCell(lat: number, long: number) {
+	// Divides the map into a grid based on the current zoom level.
+	// The grid size is 45 degrees at zoom level 1 and halves with each zoom level.
+	// To reduce the number of computations per marker, reduce the base size (currently 45).
+	const gridSize = 45 / Math.pow(2, context.map?.getZoom() ?? 1);
+	return {
+		long: Math.floor(long / gridSize),
+		lat: Math.floor(lat / gridSize),
+	};
+}
+
+function updateDynamicGrid() {
+	const markerGrid: Record<number, Record<number, Array<Feature<Point, MarkerProperties>>>> = {};
+	const markers = Object.values(props.markers);
+
+	markers.forEach((marker) => {
+		if (!marker.geometry?.coordinates || marker.geometry.coordinates.length < 2) {
+			return;
+		}
+		const cell = getGridCell(marker.geometry.coordinates[1]!, marker.geometry.coordinates[0]!);
+		if (!markerGrid[cell.lat]) {
+			markerGrid[cell.lat] = {};
+		}
+		if (!markerGrid[cell.lat]![cell.long]) {
+			markerGrid[cell.lat]![cell.long] = [];
+		}
+		markerGrid[cell.lat]![cell.long]!.push(marker);
+	});
+
+	dynamicMarkerGrid.value = markerGrid;
+}
+
+const dynamicMarkerGrid = ref<
+	Record<number, Record<number, Array<Feature<Point, MarkerProperties>>>>
+>({});
+
+function getNearbyMarkersBasedOnDynamicGrid(
+	marker: LeafletMarker,
+	distance: number,
+): Array<Feature> {
+	if (context.map === null) return [];
+	const { lat, long } = getGridCell(
+		marker.feature?.geometry.coordinates[1] ?? 0,
+		marker.feature?.geometry.coordinates[0] ?? 0,
+	);
+	const nearbyMarkers: Array<Feature> = [];
+	const pxSq = distance * distance;
+	const markerPt = context.map.latLngToLayerPoint(marker.getLatLng());
+
+	for (let i = lat - 1; i <= lat + 1; i++) {
+		for (let j = long - 1; j <= long + 1; j++) {
+			if (dynamicMarkerGrid.value[i] && dynamicMarkerGrid.value[i]![j]) {
+				dynamicMarkerGrid.value[i]![j]?.forEach((m) => {
+					const mPt = context.map!.latLngToLayerPoint(
+						latLng(m.geometry.coordinates[1]!, m.geometry.coordinates[0]!),
+					);
+					if (ptDistanceSq(mPt, markerPt) < pxSq) {
+						nearbyMarkers.push(m);
+					}
+				});
+			} else {
+				if (lat === i && long === j)
+					console.warn(
+						"No grid entry found for marker",
+						marker,
+						{ lat, long },
+						dynamicMarkerGrid.value[i],
+					);
+			}
+		}
+	}
+	return nearbyMarkers;
+}
+
 // Bind a popup listing nearby data to markers close to each other.
-// Remove existing if there are no nearby markers on the map any more.
+// Remove existing if there are no nearby markers on the map anymore.
 const addNearbyDataPopup = function (marker: LeafletMarker) {
 	const featureGroup = context.featureGroups.markers;
 	const map = context.map;
-	if (featureGroup === null || map === null) return;
+	if (
+		featureGroup === null ||
+		map === null ||
+		marker.feature!.properties!.targetType === null ||
+		marker.feature!.properties!.targetType === "" ||
+		marker.feature!.properties!.targetId
+	)
+		return;
 
 	const distance = Math.floor(2 * map.getZoom());
-	const nearbyMarkerData: Array<Feature> = [];
-	const pxSq = distance * distance;
-	const markerPt = map.latLngToLayerPoint(marker.getLatLng());
-
 	const id = featureGroup.getLayerId(marker);
-	featureGroup.getLayers().forEach((m) => {
-		if (map.hasLayer(m)) {
-			const marker: LeafletMarker = m as LeafletMarker;
-			const mPt = map.latLngToLayerPoint(marker.getLatLng());
-			if (ptDistanceSq(mPt, markerPt) < pxSq) {
-				nearbyMarkerData.push(marker.feature!);
-			}
-		}
-	});
+	const nearbyMarkerData = getNearbyMarkersBasedOnDynamicGrid(marker, distance);
 
 	if (nearbyMarkerData.length > 1) {
 		const markers = nearbyMarkerData.sort((a, b) => {
-			return a.properties!.label.localeCompare(b.properties!.label);
+			return a.properties!.label?.localeCompare(b.properties!.label);
 		});
 
 		// @todo determine whether grouping is needed based on the number of
@@ -125,13 +199,19 @@ function updateMarkers(updateViewport = true) {
 		featureGroup.addData(marker);
 	});
 
-	if (config.nearbyMarkersPopup) {
+	if (updateViewport) fitAllMarkersOnViewport();
+	updatePopups();
+}
+
+function updatePopups() {
+	if (config.nearbyMarkersPopup && context.featureGroups.markers) {
+		const featureGroup = context.featureGroups.markers;
+		updateDynamicGrid();
+		componentPopups.value = [];
 		Object.values(featureGroup.getLayers()).forEach((marker) => {
 			addNearbyDataPopup(marker as LeafletMarker);
 		});
 	}
-
-	if (updateViewport) fitAllMarkersOnViewport();
 }
 
 function fitAllMarkersOnViewport() {
@@ -144,15 +224,9 @@ function fitAllMarkersOnViewport() {
 }
 
 onMounted(async () => {
-	/**
-	 * @see https://github.com/nuxt/nuxt/issues/13471
-	 * @see https://github.com/vuejs/core/issues/5844
-	 */
-	await nextTick();
+	if (mapRef.value == null) return;
 
-	if (elementRef.value == null) return;
-
-	context.map = createMap(elementRef.value, config.options).setView(
+	context.map = createMap(mapRef.value, config.options).setView(
 		config.initialViewState.center,
 		config.initialViewState.zoom,
 	);
@@ -171,10 +245,14 @@ onMounted(async () => {
 			});
 
 			layer.on({
-				click() {
+				async click() {
+					layer.unbindPopup();
+					openedPopupId.value = null;
 					const id = context.featureGroups.markers?.getLayerId(layer);
-					if (layer.getPopup()) {
-						openedPopupId.value = id ? id : null;
+					openedPopupId.value = id ? id : null;
+					await nextTick();
+					if (config.nearbyMarkersPopup && popupRef.value !== null) {
+						layer.bindPopup(popupRef.value!.$el, { minWidth: 150 }).openPopup();
 					} else {
 						emit("marker-click", feature);
 					}
@@ -182,6 +260,7 @@ onMounted(async () => {
 			});
 		},
 		pointToLayer(feature, latlng) {
+			if (props.markerType === "petal") return usePetalMarker(feature, latlng);
 			if (feature.properties.type === "reg") {
 				return circleMarker(latlng, config.marker.region);
 			}
@@ -191,8 +270,8 @@ onMounted(async () => {
 	}).addTo(context.map);
 
 	updateMarkers();
-	context.map.on("zoomend", function () {
-		updateMarkers(false);
+	context.map.on("zoomend", () => {
+		updatePopups();
 	});
 });
 
@@ -237,21 +316,19 @@ onUnmounted(() => {
 	context.map?.remove();
 });
 
-// defineExpose(context);
-
 provide(key, context);
 </script>
 
 <template>
-	<div ref="elementRef" class="absolute inset-0 grid" data-geo-map />
+	<SvgoPetal v-if="props.markerType === 'petal'" />
+	<div ref="mapRef" class="absolute inset-0 grid" data-geo-map />
 	<slot :context="context" />
 	<GeoMapPopupContent
-		v-for="popupInfo in componentPopups"
-		v-show="popupInfo.id === openedPopupId?.toString()"
-		v-bind="popupInfo.props"
-		:id="popupInfo.id"
-		:key="popupInfo.id"
-		ref="popupElements"
+		v-if="currentPopup"
+		v-bind="currentPopup.props"
+		:id="currentPopup.id"
+		:key="currentPopup.id"
+		ref="popupRef"
 	/>
 </template>
 

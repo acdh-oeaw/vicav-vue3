@@ -1,20 +1,52 @@
 <script lang="ts" setup>
 import type { SampleTextWindowItem } from "@/types/global.d";
+import type { simpleTEIMetadata } from "@/types/teiCorpus.d";
 
 interface Props {
 	params: SampleTextWindowItem["params"];
 }
+const { simpleItems } = useTEIHeaders();
 
 const props = defineProps<Props>();
 const { params } = toRefs(props);
 const tooltip = ref(null);
-
-const { data, isPending, isPlaceholderData } = useSampleTextById(params);
+const queryParams = computed(() => {
+	return { textId: params.value.textId };
+});
+const { data, isPending, isPlaceholderData } = useSampleTextById(queryParams);
 const openNewWindowFromAnchor = useAnchorClickHandler();
 const { showTooltip, tooltipContent, handleHoverTooltip } = useHoverTooltipHandler(tooltip);
+const header = simpleItems.value.find((i: simpleTEIMetadata) => i.id === params.value.textId);
 
 const isLoading = computed(() => {
 	return isPending.value || isPlaceholderData.value;
+});
+
+const content: Ref<HTMLDivElement | null> = ref(null);
+
+watch(content, () => {
+	if (content.value) {
+		const playButton = content.value.querySelector("a.play");
+		const stopButton = content.value.querySelector("a.stop");
+		const audio = content.value.querySelector("audio");
+
+		if (!playButton) return;
+
+		playButton!.addEventListener("click", () => {
+			audio!.play();
+			playButton?.classList.add("hidden");
+			stopButton?.classList.remove("hidden");
+		});
+		audio!.addEventListener("ended", () => {
+			stopButton?.classList.add("hidden");
+			playButton?.classList.remove("hidden");
+		});
+		stopButton!.addEventListener("click", () => {
+			audio!.pause();
+			stopButton?.classList.add("hidden");
+			playButton?.classList.remove("hidden");
+		});
+	}
 });
 </script>
 
@@ -23,6 +55,9 @@ const isLoading = computed(() => {
 		class="relative isolate grid size-full overflow-auto"
 		:class="{ 'opacity-50 grayscale': isLoading }"
 	>
+		<div v-if="params.showCitation">
+			<Citation :header="header" type="entry" />
+		</div>
 		<!-- eslint-disable vue/no-v-html,
 			vuejs-accessibility/mouse-events-have-key-events,
 			vuejs-accessibility/click-events-have-key-events, vuejs-accessibility/no-static-element-interactions -->
@@ -35,7 +70,8 @@ const isLoading = computed(() => {
 		></div>
 		<div
 			v-if="data"
-			class="prose max-w-3xl p-8"
+			ref="content"
+			class="prose max-w-3xl px-8"
 			@click="openNewWindowFromAnchor"
 			@mouseover="handleHoverTooltip"
 			v-html="data"
@@ -48,6 +84,11 @@ const isLoading = computed(() => {
 </template>
 
 <style>
+@reference "@/styles/index.css";
+
+a > svg {
+	@apply self-center;
+}
 /* stylelint-disable selector-class-pattern */
 a.word-search {
 	@apply text-inherit no-underline;

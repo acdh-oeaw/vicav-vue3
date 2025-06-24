@@ -32,7 +32,7 @@ watch(myString, (val) => {
 	emit("update:modelValue", val);
 });
 const submit = () => {
-	emit("submit", myString);
+	emit("submit", myString.value);
 };
 
 const InsertSnippet = async (snippet: string): Promise<void> => {

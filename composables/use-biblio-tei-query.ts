@@ -19,7 +19,12 @@ export function useBiblioTeiQuery(
 			const response = await api.vicav.getBiblioTei(apiParams, {
 				headers: { accept: "application/xml" },
 			});
-			return response.text();
+			const text = await response.text();
+			const doc = Document.parseHTMLUnsafe(text);
+			const stats = doc.querySelector("div.dvStats");
+			stats!.parentElement!.removeChild(stats!);
+			const s = new XMLSerializer();
+			return { stats: stats?.textContent, html: s.serializeToString(doc) };
 		},
 	});
 }

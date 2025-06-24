@@ -7,8 +7,12 @@ interface Props {
 
 const props = defineProps<Props>();
 const { params } = toRefs(props);
-
-const { data, isPending, isPlaceholderData } = useTextById(params);
+const queryParams = computed(() => {
+	return {
+		textId: params.value.textId,
+	};
+});
+const { data, isPending, isPlaceholderData } = useTextById(queryParams);
 const openNewWindowFromAnchor = useAnchorClickHandler();
 
 const isLoading = computed(() => {
@@ -21,6 +25,9 @@ const isLoading = computed(() => {
 		class="relative isolate grid size-full overflow-auto"
 		:class="{ 'opacity-50 grayscale': isLoading }"
 	>
+		<div v-if="params.showCitation">
+			<Citation type="software" />
+		</div>
 		<!-- eslint-disable-next-line vue/no-v-html, vuejs-accessibility/click-events-have-key-events, vuejs-accessibility/no-static-element-interactions -->
 		<div v-if="data" class="prose max-w-3xl p-8" @click="openNewWindowFromAnchor" v-html="data" />
 
@@ -31,6 +38,7 @@ const isLoading = computed(() => {
 </template>
 
 <style>
+@reference "@/styles/index.css";
 /* stylelint-disable selector-class-pattern, block-no-empty */
 .tbHeader {
 	@apply w-full m-0;

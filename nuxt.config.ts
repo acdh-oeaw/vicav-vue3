@@ -1,5 +1,7 @@
 import { fileURLToPath } from "node:url";
 
+import tailwindcss from "@tailwindcss/vite";
+
 export default defineNuxtConfig({
 	alias: {
 		"@": fileURLToPath(new URL("./", import.meta.url)),
@@ -14,14 +16,13 @@ export default defineNuxtConfig({
 
 	css: [
 		"@fontsource-variable/roboto-flex/standard.css",
-		"tailwindcss/tailwind.css",
 		"@/styles/index.css",
 		"winbox/dist/css/winbox.min.css",
 		"leaflet/dist/leaflet.css",
 	],
 
 	devtools: {
-		enabled: process.env.NODE_ENV === "development",
+		enabled: false, //process.env.NODE_ENV === "development",
 		//https://github.com/nuxt/devtools/issues/722
 		componentInspector: false,
 	},
@@ -33,12 +34,11 @@ export default defineNuxtConfig({
 	},
 
 	imports: { dirs: ["./config/"] },
-	modules: ["@pinia/nuxt", "@vueuse/nuxt", "@nuxt/eslint", "@nuxt/test-utils/module"],
+	modules: ["@pinia/nuxt", "@vueuse/nuxt", "@nuxt/eslint", "@nuxt/test-utils/module", "nuxt-svgo"],
 	nitro: { compressPublicAssets: true },
 
 	postcss: {
 		plugins: {
-			tailwindcss: {},
 			autoprefixer: {},
 		},
 	},
@@ -62,6 +62,24 @@ export default defineNuxtConfig({
 			teiBaseurl: process.env.NUXT_PUBLIC_TEI_BASEURL,
 			apiUser: process.env.NUXT_PUBLIC_API_USER,
 			apiPass: process.env.NUXT_PUBLIC_API_PASS,
+			currentGitSha: process.env.NUXT_PUBLIC_CURRENT_GIT_SHA,
+		},
+	},
+	svgo: {
+		defaultImport: "component",
+		autoImportPath: "./assets/svg/",
+		svgoConfig: {
+			plugins: [
+				{
+					name: "preset-default",
+					params: {
+						overrides: {
+							removeUselessDefs: false,
+							cleanupIds: false,
+						},
+					},
+				},
+			],
 		},
 	},
 
@@ -71,6 +89,7 @@ export default defineNuxtConfig({
 				defineModel: true,
 			},
 		},
+		plugins: [tailwindcss()],
 	},
 
 	typescript: {

@@ -1,11 +1,13 @@
 import { useQuery } from "@tanstack/vue-query";
 import type { Table } from "@tanstack/vue-table";
+import { defineStore } from "pinia";
 
 import { type FeatureCollectionType, type FeatureType, GeoFeatureSchema } from "@/types/global.d";
 
 export const useGeojsonStore = defineStore("geojson", () => {
 	const fetchedData = ref<Map<string, FeatureCollectionType>>(new Map());
-	const tables = ref<Map<string, Table<FeatureType>>>(new Map());
+	const tables = shallowRef<Map<string, Table<FeatureType>>>(new Map());
+	const showAllDetails = ref<boolean>(false);
 
 	const fetchGeojson = (url: string) => {
 		return useQuery({
@@ -38,5 +40,6 @@ export const useGeojsonStore = defineStore("geojson", () => {
 		fetchedData,
 		fetchGeojson,
 		tables,
+		showAllDetails,
 	};
 });

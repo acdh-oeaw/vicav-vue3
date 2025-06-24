@@ -17,6 +17,8 @@ import {
 	TagsInputRoot,
 } from "radix-vue";
 
+import type { SpecialCharacters } from "@/lib/api-client";
+
 interface Tag {
 	label: string;
 	value: string;
@@ -27,12 +29,14 @@ interface Props {
 	options: Array<Tag>;
 	placeholder: string;
 	filterFunction: (list: Array<string>, searchTerm: string) => Array<string>;
+	specialCharacters?: SpecialCharacters;
+	immediateOpen?: boolean;
 }
 
 const props = defineProps<Props>();
-const { options, placeholder, filterFunction } = toRefs(props);
-const searchTerm = ref("");
+const { options, placeholder, filterFunction, specialCharacters, immediateOpen } = toRefs(props);
 const model = defineModel<Array<string>>();
+const searchTerm = defineModel<string>("searchTerm", { default: "" });
 const open = ref(false);
 watch(
 	model,
@@ -42,6 +46,10 @@ watch(
 	},
 	{ deep: true },
 );
+
+const tagsUpdated = function (value: Array<string>) {
+	model.value = value;
+};
 </script>
 
 <template>
@@ -56,14 +64,15 @@ watch(
 		<ComboboxAnchor class="w-full">
 			<TagsInputRoot
 				v-slot="{ modelValue: tags }"
-				class="my-2 flex w-full flex-wrap items-center gap-2 border-gray-300 bg-white px-3 py-2 shadow"
-				delimiter=""
+				class="my-2 flex w-full flex-wrap items-center gap-2 border-gray-300 bg-white px-3 py-2 shadow-sm"
+				delimiter=" "
 				:model-value="model"
+				@update:model-value="tagsUpdated"
 			>
 				<TagsInputItem
 					v-for="item in tags"
 					:key="item.toString()"
-					class="flex items-center justify-center gap-2 rounded bg-primary px-2 py-1 text-white aria-[current=true]:bg-primary"
+					class="flex items-center justify-center gap-2 rounded bg-primary px-2 py-1 text-white aria-current:bg-primary"
 					:value="item"
 				>
 					<TagsInputItemText class="text-sm">
@@ -73,15 +82,28 @@ watch(
 								: item
 						}}
 					</TagsInputItemText>
-					<TagsInputItemDelete>
+					<TagsInputItemDelete as-child>
 						<Icon icon="lucide:x" />
 					</TagsInputItemDelete>
 				</TagsInputItem>
 
 				<ComboboxInput as-child>
 					<TagsInputInput
-						class="flex flex-1 flex-wrap items-center gap-2 rounded !bg-transparent px-1 focus:outline-none"
+						v-if="specialCharacters"
+						as-child
+						class="w-full items-center gap-2 rounded bg-transparent! focus:outline-hidden"
+					>
+						<InputExtended
+							v-model="searchTerm"
+							:placeholder="placeholder"
+							:special-characters="specialCharacters"
+						/>
+					</TagsInputInput>
+					<TagsInputInput
+						v-else
+						class="flex flex-1 flex-wrap items-center gap-2 rounded bg-transparent! px-1 focus:outline-hidden"
 						:placeholder="placeholder"
+						@focus="() => (immediateOpen ? (open = true) : null)"
 					/>
 				</ComboboxInput>
 			</TagsInputRoot>
@@ -96,7 +118,7 @@ watch(
 					<ComboboxItem
 						v-if="searchTerm"
 						:key="searchTerm"
-						class="relative flex h-[25px] select-none items-center rounded-[3px] pl-[25px] pr-[35px] text-[13px] leading-none data-[disabled]:pointer-events-none data-[highlighted]:bg-secondary data-[disabled]:text-gray-300 data-[highlighted]:outline-none"
+						class="relative flex h-[25px] select-none items-center rounded-[3px] pl-[25px] pr-[35px] text-[13px] leading-none data-disabled:pointer-events-none data-highlighted:bg-secondary data-disabled:text-gray-300 data-highlighted:outline-hidden"
 						:value="searchTerm"
 						><ComboboxItemIndicator
 							class="absolute left-0 inline-flex w-[25px] items-center justify-center"
@@ -108,7 +130,7 @@ watch(
 					<ComboboxItem
 						v-for="(option, index) in options"
 						:key="index"
-						class="relative flex h-[25px] select-none items-center rounded-[3px] pl-[25px] pr-[35px] text-[13px] leading-none data-[disabled]:pointer-events-none data-[highlighted]:bg-secondary data-[disabled]:text-gray-300 data-[highlighted]:outline-none"
+						class="relative flex h-[25px] select-none items-center rounded-[3px] pl-[25px] pr-[35px] text-[13px] leading-none data-disabled:pointer-events-none data-highlighted:bg-secondary data-disabled:text-gray-300 data-highlighted:outline-hidden"
 						:value="option.value"
 					>
 						<ComboboxItemIndicator

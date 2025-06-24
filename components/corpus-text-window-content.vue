@@ -1,27 +1,29 @@
 <script setup lang="ts">
-//@ts-expect-error no types available
 import "v3-infinite-loading/lib/style.css"; //required if you're not going to override default slots
 
+import { Pause, Play } from "lucide-vue-next";
 import InfiniteLoading from "v3-infinite-loading";
 import type { StateHandler } from "v3-infinite-loading/lib/types";
 
 import type { CorpusTextUtterances } from "@/lib/api-client";
 import type { CorpusTextSchema, VicavHTTPError } from "@/types/global";
 
-const openNewWindowFromAnchor = useAnchorClickHandler();
-
 const props = defineProps<{
-	params: Zod.infer<typeof CorpusTextSchema>["params"];
+	params: Zod.infer<typeof CorpusTextSchema>["params"] & { label?: string };
 }>();
 
 const { simpleItems } = useTEIHeaders();
 const utterances = ref<Array<CorpusTextUtterances>>([]);
 const utterancesWrapper = ref<HTMLDivElement | null>(null);
 const utteranceElements = ref<Array<Element>>([]);
+const infinite = ref<typeof InfiniteLoading | null>(null);
+
 const currentPage = ref(1);
 const api = useApiClient();
 const scrollComplete = ref<boolean>(false);
 const teiHeader = simpleItems.value.find((header) => header.id === props.params.textId);
+const publication = teiHeader?.publication;
+
 const loadNextPage = async function () {
 	const text = await api.vicav.getCorpusText(
 		{
@@ -84,62 +86,164 @@ const scrollParentToChild = function (parent: Element, child: Element) {
 			parent.scrollTop += scrollTop;
 		} else {
 			// we're near the bottom of the list
-			parent.scrollTop += scrollBot;
+			parent.scrollTop += scrollBot + 20;
 		}
 	}
 };
 
-onMounted(async () => {
-	const u = utteranceElements.value.find((u) => u.id === props.params.u);
-	const window = utterancesWrapper.value?.parentElement;
-	if (u !== undefined) scrollParentToChild(window!, u);
+const hasAudio = computed(() => {
+	return utterances.value.some((u) => u.audio);
 });
+
+watch(utteranceElements.value, (value) => {
+	if (props.params.u) {
+		const window = utterancesWrapper.value?.parentElement?.parentElement;
+		const u = utteranceElements.value.find((u) => u.id === props.params.u);
+		if (u) scrollParentToChild(window!, u);
+		else if (infinite.value) scrollParentToChild(window!, infinite!.value.$el);
+	}
+	if (value.length > 0) {
+		value.forEach((u) => {
+			const playButton = u.querySelector("a.play");
+			const stopButton = u.querySelector("a.stop");
+			const audio = u.querySelector("audio");
+			if (playButton && audio) {
+				playButton!.addEventListener("click", () => {
+					audio!.play();
+					playButton?.classList.add("hidden");
+					stopButton?.classList.remove("hidden");
+				});
+				audio!.addEventListener("ended", () => {
+					stopButton?.classList.add("hidden");
+					playButton?.classList.remove("hidden");
+				});
+				stopButton!.addEventListener("click", () => {
+					audio!.pause();
+					stopButton?.classList.add("hidden");
+					playButton?.classList.remove("hidden");
+				});
+			}
+		});
+	}
+});
+
+watch(
+	() => props.params,
+	(value) => {
+		if (value.u) {
+			const window = utterancesWrapper.value?.parentElement?.parentElement;
+			const u = utteranceElements.value.find((u) => u.id === value.u);
+			if (u) scrollParentToChild(window!, u);
+			else if (infinite.value) scrollParentToChild(window!, infinite!.value.$el);
+		}
+	},
+);
 </script>
 
 <template>
-	<!-- eslint-disable tailwindcss/no-custom-classname, vue/no-v-html
-			vuejs-accessibility/mouse-events-have-key-events,
-			vuejs-accessibility/click-events-have-key-events,
-			vuejs-accessibility/no-static-element-interactions -->
-	<div :id="params.textId" ref="utterancesWrapper" class="p-4">
-		<h2 class="m-3 text-lg">{{ props.params.label }}</h2>
+	<div>
+		<div v-if="params.showCitation">
+			<Citation :header="teiHeader" type="entry" />
+		</div>
+		<!-- eslint-disable tailwindcss/no-custom-classname, vue/no-v-html -->
+		<div :id="params.textId" ref="utterancesWrapper" class="p-4 relative">
+			<h2 class="m-3 text-lg">{{ props.params.label }}</h2>
 
-		<table class="m-3 border border-gray-300">
-			<thead>
-				<tr></tr>
-				<tr></tr>
-			</thead>
-			<tbody>
-				<tr>
-					<th>Contributed by:</th>
-					<td>{{ teiHeader?.resp }}</td>
-				</tr>
-				<tr>
-					<th>Speaker:</th>
-					<td>
-						{{ teiHeader?.person.name }} (age: {{ teiHeader?.person.age }}, sex:
-						{{ teiHeader?.person.sex }})
+			<div class="m-3 rounded-sm border border-gray-300 bg-gray-50 p-4">
+				<table>
+					<thead>
+						<tr></tr>
+						<tr></tr>
+					</thead>
+					<tbody>
+						<tr>
+							<th class="w-44">Recording:</th>
+							<td>
+								{{ teiHeader?.recording?.map((p) => [p.given, p.family].join(" ")).join(", ") }}
+							</td>
+						</tr>
+						<tr>
+							<th>Recording date:</th>
+							<td>{{ teiHeader?.recordingDate }}</td>
+						</tr>
+						<tr>
+							<th>Transcribed by:</th>
+							<td>
+								{{ teiHeader?.transcription?.map((p) => [p.given, p.family].join(" ")).join(", ") }}
+							</td>
+						</tr>
+						<tr v-if="teiHeader?.hasOwnProperty('transfer to ELAN')">
+							<th>Transferred to ELAN:</th>
+							<td>
+								{{
+									teiHeader["transfer to ELAN"].map((p) => [p.given, p.family].join(" ")).join(", ")
+								}}
+							</td>
+						</tr>
+						<tr v-if="publication">
+							<th class="align-text-top">Published in:</th>
+							<td>
+								<Citation v-bind="publication" />
+							</td>
+						</tr>
+						<tr>
+							<th>Speakers:</th>
+							<td>
+								<span v-for="(person, index) in teiHeader?.person" :key="index">
+									{{ person.name }} (age: {{ person.age }}, sex: {{ person.sex }})
+									<span v-if="index < (teiHeader?.person.length || 1) - 1">, </span>
+								</span>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+			<table class="text-sm text-left rtl:text-right text-gray-700 max-w-full">
+				<thead class="text-xs text-gray-700 uppercase bg-accent">
+					<tr>
+						<th v-if="hasAudio" class="px-6 py-3" scope="col">Audio</th>
+						<th class="px-6 py-3" scope="col">SpeakerID</th>
+						<th class="px-6 py-3" scope="col">Utterance</th>
+					</tr>
+				</thead>
+				<tr
+					v-for="u in utterances"
+					:id="u.id"
+					:key="u.id"
+					ref="utteranceElements"
+					class="corpus-utterance u table-row"
+				>
+					<td v-if="hasAudio">
+						<a v-if="u.audio" class="play mt-1">
+							<Play class="size-4" />
+							<span class="hidden">Play</span></a
+						>
+						<a v-if="u.audio" class="stop mt-1 hidden">
+							<Pause class="size-4" />
+							<span class="hidden">Stop</span>
+						</a>
+						<!-- eslint-disable-next-line vuejs-accessibility/media-has-caption -->
+						<audio v-if="u.audio" hidden="hidden">
+							<source :src="u.audio" />
+						</audio>
 					</td>
+					<td
+						:class="'min-w-fit px-3 font-bold ' + (u.id === props.params.u ? 'text-red-800' : '')"
+					>
+						{{ teiHeader?.id }}
+					</td>
+					<td class="table-cell px-6 py-3 max-w-full" v-html="u.content"></td>
 				</tr>
-			</tbody>
-		</table>
-		<div
-			v-for="u in utterances"
-			:id="u.id"
-			:key="u.id"
-			ref="utteranceElements"
-			class="corpus-utterance table-row"
-			@click="openNewWindowFromAnchor"
-			v-html="u.content"
-		/>
-		<InfiniteLoading v-if="!scrollComplete" @infinite="handleInfiniteScroll" />
+			</table>
+			<InfiniteLoading v-if="!scrollComplete" ref="infinite" @infinite="handleInfiniteScroll" />
+		</div>
 	</div>
 </template>
 
 <style>
-.u {
-	@apply flex gap-2;
+@reference "@/styles/index.css";
 
+.u {
 	.xml-id {
 		@apply min-w-fit px-3 font-bold;
 	}
@@ -153,25 +257,12 @@ onMounted(async () => {
 			@apply font-bold;
 		}
 	}
+}
 
-	.w,
-	.pc,
-	.c {
-		display: inline-block;
-		text-align: center;
-
-		.ana {
-			display: block;
-			font-size: small;
-
-			.sep {
-				color: #fff;
-			}
-
-			.lang {
-				display: none;
-			}
-		}
-	}
+.c,
+.w,
+.pc,
+.media {
+	@apply hover:bg-primary/70 transition duration-300 ease-in-out hover:font-bold;
 }
 </style>

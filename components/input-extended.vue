@@ -14,8 +14,12 @@ const myString = ref(`${props.modelValue}`);
 watch(myString, (val) => {
 	emit("update:modelValue", val);
 });
+watch(
+	() => props.modelValue,
+	(val) => (myString.value = val),
+);
 const submit = () => {
-	emit("submit", myString);
+	emit("submit", myString.value);
 };
 
 const InsertSnippet = async (snippet: string): Promise<void> => {
@@ -73,6 +77,8 @@ const restoreCursorPosition = (pos: number) => {
 </template>
 
 <style>
+@reference "@/styles/index.css";
+
 /* InputExtended stylesheet */
 .ie button {
 	@apply border-gray-300 bg-gray-200 border px-2 py-px font-bold text-gray-800 hover:bg-gray-300 rounded-sm m-px;

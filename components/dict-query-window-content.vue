@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { Collapse, initTWE } from "tw-elements";
-
 import type { DictQuerySchema } from "@/types/global";
 
 const props = defineProps<{
@@ -53,7 +51,7 @@ watch(
 	filterCriteria,
 	() => {
 		q.value = [...filterCriteria.value.entries()]
-			.map(function ([key, value]) {
+			.map(([key, value]) => {
 				return `${key}=${value}`;
 			})
 			.join(" & ");
@@ -119,19 +117,6 @@ const isLoading = computed(() => {
 });
 
 const isExtendedFormOpen = ref(false);
-onMounted(() => {
-	initTWE({ Collapse });
-	const formElement = document.getElementById(`${formId}_ext`);
-	formElement?.addEventListener("show.te.collapse", () => {
-		isExtendedFormOpen.value = true;
-	});
-	formElement?.addEventListener("hidden.te.collapse", () => {
-		isExtendedFormOpen.value = false;
-	});
-	new Collapse(formElement, {
-		toggle: isExtendedFormOpen.value,
-	});
-});
 
 /* pagination */
 const goToPage = (newPage: number) => {
@@ -157,7 +142,7 @@ const api = useApiClient();
 					<label class="relative inline-flex cursor-pointer items-center">
 						<input v-model="isTextInputManual" class="peer sr-only" type="checkbox" />
 						<div
-							class="peer relative h-4 w-10 flex-auto shrink-0 rounded-[5px] bg-gray-500 after:absolute after:start-[2px] after:top-px after:m-0.5 after:h-3 after:w-4 after:rounded-[3px] after:border after:border-gray-500/50 after:bg-on-primary after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-primary/50 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/50 dark:border-gray-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800 rtl:peer-checked:after:-translate-x-full"
+							class="peer relative h-4 w-10 flex-auto shrink-0 rounded-[5px] bg-gray-500 after:absolute after:start-[2px] after:top-px after:m-0.5 after:h-3 after:w-4 after:rounded-[3px] after:border after:border-gray-500/50 after:bg-on-primary after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-primary/50 peer-focus:outline-hidden peer-focus:ring-4 peer-focus:ring-primary/50 dark:border-gray-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800 peer-checked:rtl:after:-translate-x-full"
 						></div>
 						<span class="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300">
 							Manual edit
@@ -212,114 +197,104 @@ const api = useApiClient();
 					</div>
 				</div>
 				<div class="mt-4">
-					<button
-						:aria-controls="`${formId}_ext`"
-						aria-expanded="false"
-						class="dvStats flex w-full items-baseline"
-						data-te-collapse-init
-						:data-te-target="`#${formId}_ext`"
-						tabindex="0"
-						type="button"
-					>
-						Extended options:
-						<div class="relative top-1 ml-auto mr-4">
-							<div v-if="!isExtendedFormOpen">
-								<svg
-									class="svg-icon"
-									style="
-										vertical-align: middle;
-										overflow: hidden;
-										width: 1em;
-										height: 1em;
-										fill: currentColor;
-									"
-									version="1.1"
-									viewBox="0 0 1024 1024"
-									xmlns="http://www.w3.org/2000/svg"
-								>
-									<path
-										d="M511.5 789.9 80.6 359c-22.8-22.8-22.8-59.8 0-82.6 22.8-22.8 59.8-22.8 82.6 0l348.3 348.3 348.3-348.3c22.8-22.8 59.8-22.8 82.6 0 22.8 22.8 22.8 59.8 0 82.6L511.5 789.9 511.5 789.9zM511.5 789.9"
-									/>
-								</svg>
+					<Collapsible v-model:open="isExtendedFormOpen" class="prose max-w-3xl px-8 pb-4 pt-8">
+						<CollapsibleTrigger class="dvStats flex w-full items-baseline">
+							Extended options:s
+							<div class="relative top-1 ml-auto mr-4">
+								<div v-if="!isExtendedFormOpen">
+									<svg
+										class="svg-icon"
+										style="
+											vertical-align: middle;
+											overflow: hidden;
+											width: 1em;
+											height: 1em;
+											fill: currentColor;
+										"
+										viewBox="0 0 1024 1024"
+										xmlns="http://www.w3.org/2000/svg"
+									>
+										<path
+											d="M511.5 789.9 80.6 359c-22.8-22.8-22.8-59.8 0-82.6 22.8-22.8 59.8-22.8 82.6 0l348.3 348.3 348.3-348.3c22.8-22.8 59.8-22.8 82.6 0 22.8 22.8 22.8 59.8 0 82.6L511.5 789.9 511.5 789.9zM511.5 789.9"
+										/>
+									</svg>
+								</div>
+								<div v-if="isExtendedFormOpen">
+									<svg
+										class="svg-icon"
+										style="
+											vertical-align: middle;
+											overflow: hidden;
+											width: 1em;
+											height: 1em;
+											fill: currentColor;
+										"
+										viewBox="0 0 1024 1024"
+										xmlns="http://www.w3.org/2000/svg"
+									>
+										<path
+											d="M511.5 259.3 942.4 690.1c22.8 22.8 22.8 59.8 0 82.6-22.8 22.8-59.8 22.8-82.6 0L511.5 424.5 163.2 772.8c-22.8 22.8-59.8 22.8-82.6 0-22.8-22.8-22.8-59.8 0-82.6L511.5 259.3 511.5 259.3zM511.5 259.3"
+										/>
+									</svg>
+								</div>
 							</div>
-							<div v-if="isExtendedFormOpen">
-								<svg
-									class="svg-icon"
-									style="
-										vertical-align: middle;
-										overflow: hidden;
-										width: 1em;
-										height: 1em;
-										fill: currentColor;
-									"
-									version="1.1"
-									viewBox="0 0 1024 1024"
-									xmlns="http://www.w3.org/2000/svg"
-								>
-									<path
-										d="M511.5 259.3 942.4 690.1c22.8 22.8 22.8 59.8 0 82.6-22.8 22.8-59.8 22.8-82.6 0L511.5 424.5 163.2 772.8c-22.8 22.8-59.8 22.8-82.6 0-22.8-22.8-22.8-59.8 0-82.6L511.5 259.3 511.5 259.3zM511.5 259.3"
-									/>
-								</svg>
+						</CollapsibleTrigger>
+						<CollapsibleContent>
+							<div :id="`${formId}_ext`" class="bg-gray-200 px-4">
+								<table class="w-full max-w-full table-fixed">
+									<tbody>
+										<tr>
+											<th>page</th>
+											<td>
+												<input v-model="page" class="w-full" type="number" />
+											</td>
+										</tr>
+										<tr>
+											<th>pageSize</th>
+											<td>
+												<input v-model="pageSize" class="w-full" type="number" />
+											</td>
+										</tr>
+										<tr>
+											<th>id</th>
+											<td>
+												<input v-model="id" class="w-full" type="text" />
+											</td>
+										</tr>
+										<tr>
+											<th>ids</th>
+											<td>
+												<input v-model="ids" class="w-full" type="text" />
+											</td>
+										</tr>
+										<tr>
+											<th>sort</th>
+											<td>
+												<select v-model="sort" class="w-full">
+													<option :value="null"></option>
+													<option value="none">none</option>
+													<option value="asc">asc</option>
+													<option value="desc">desc</option>
+												</select>
+											</td>
+										</tr>
+										<tr>
+											<th>altLemma</th>
+											<td>
+												<input v-model="altLemma" class="w-full" type="text" />
+											</td>
+										</tr>
+										<tr>
+											<th>format</th>
+											<td>
+												<input v-model="format" class="w-full" type="text" />
+											</td>
+										</tr>
+									</tbody>
+								</table>
 							</div>
-						</div>
-					</button>
-					<div
-						:id="`${formId}_ext`"
-						class="!visible hidden max-w-3xl bg-gray-200 px-4"
-						data-te-collapse-item
-					>
-						<table class="w-full max-w-full table-fixed">
-							<tbody>
-								<tr>
-									<th>page</th>
-									<td>
-										<input v-model="page" class="w-full" type="number" />
-									</td>
-								</tr>
-								<tr>
-									<th>pageSize</th>
-									<td>
-										<input v-model="pageSize" class="w-full" type="number" />
-									</td>
-								</tr>
-								<tr>
-									<th>id</th>
-									<td>
-										<input v-model="id" class="w-full" type="text" />
-									</td>
-								</tr>
-								<tr>
-									<th>ids</th>
-									<td>
-										<input v-model="ids" class="w-full" type="text" />
-									</td>
-								</tr>
-								<tr>
-									<th>sort</th>
-									<td>
-										<select v-model="sort" class="w-full">
-											<option :value="null"></option>
-											<option value="none">none</option>
-											<option value="asc">asc</option>
-											<option value="desc">desc</option>
-										</select>
-									</td>
-								</tr>
-								<tr>
-									<th>altLemma</th>
-									<td>
-										<input v-model="altLemma" class="w-full" type="text" />
-									</td>
-								</tr>
-								<tr>
-									<th>format</th>
-									<td>
-										<input v-model="format" class="w-full" type="text" />
-									</td>
-								</tr>
-							</tbody>
-						</table>
-					</div>
+						</CollapsibleContent>
+					</Collapsible>
 				</div>
 				<div class="mt-3">
 					<button
@@ -393,6 +368,7 @@ const api = useApiClient();
 </template>
 
 <style>
+@reference "@/styles/index.css";
 /* stylelint-disable selector-class-pattern */
 .dvStats {
 	@apply m-0 mb-[5px] pb-[5px] pl-[5px] border border-solid border-primary bg-primary text-on-primary font-bold;
@@ -541,7 +517,7 @@ const api = useApiClient();
 
 /* InputBuilder stylesheet */
 .ib-buttons button {
-	@apply border-0 bg-primary px-[5px] text-on-primary hover:bg-opacity-50 rounded-[3px] m-0.5;
+	@apply border-0 bg-primary px-[5px] text-on-primary hover:bg-primary/50 rounded-[3px] m-0.5;
 }
 
 .ib-input-row {
@@ -549,7 +525,7 @@ const api = useApiClient();
 }
 
 .ib-textinput {
-	@apply flex-grow flex-shrink basis-20;
+	@apply grow shrink basis-20;
 }
 
 .ib-textinput input {
@@ -557,7 +533,7 @@ const api = useApiClient();
 }
 
 .ib-select {
-	@apply flex-grow flex-shrink basis-20;
+	@apply grow shrink basis-20;
 }
 
 .ib-select select {
@@ -565,10 +541,10 @@ const api = useApiClient();
 }
 
 .ib-submit {
-	@apply flex-shrink basis-6;
+	@apply shrink basis-6;
 }
 
 .ib-submit button {
-	@apply h-full border-2 border-gray-300 w-full px-[5px] text-gray-900 hover:bg-opacity-50 hover:bg-primary hover:text-on-primary rounded-[3px];
+	@apply h-full border-2 border-gray-300 w-full px-[5px] text-gray-900 hover:bg-primary/50 hover:text-on-primary rounded-[3px];
 }
 </style>

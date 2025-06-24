@@ -1,8 +1,9 @@
 import { isNonEmptyString } from "@acdh-oeaw/lib";
 
+import type { WindowItem } from "@/types/global";
+
 export function useAnchorClickHandler() {
-	const windowsStore = useWindowsStore();
-	const { addWindow } = windowsStore;
+	const openOrUpdateWindow = useOpenOrUpdateWindow();
 
 	/**
 	 * Intercept anchor clicks to open window instead of navigating.
@@ -10,23 +11,28 @@ export function useAnchorClickHandler() {
 	function openNewWindowFromAnchor(event: MouseEvent) {
 		const element = event.target as HTMLElement;
 
-		let item: Record<string, string> = {};
+		let anchorDataRecord: Record<string, string> = {};
 		if (element instanceof HTMLAnchorElement) {
-			item = element.dataset as Record<string, string>;
+			anchorDataRecord = element.dataset as Record<string, string>;
 		} else if (element.parentElement instanceof HTMLAnchorElement) {
-			item = element.parentElement.dataset as Record<string, string>;
+			anchorDataRecord = element.parentElement.dataset as Record<string, string>;
 		}
 
-		const params = jsonStringsToObject(item);
-		params.label = isNonEmptyString(params.label) ? params.label : element.innerText;
-		if (item.targetType) {
-			if (item.targetType === "External-link") return;
+		const anchorDataObject = jsonStringsToObject(anchorDataRecord);
+		anchorDataObject.label = isNonEmptyString(anchorDataObject.label)
+			? anchorDataObject.label
+			: element.innerText;
+		// Replacement for itemWrapper? Part of fix for #252?
+		anchorDataObject.params ??= anchorDataObject;
+
+		if (anchorDataObject.targetType) {
+			if (anchorDataObject.targetType === "External-link") return;
 			event.preventDefault();
-			addWindow({
-				targetType: params.targetType,
-				params: params,
-				title: params.label,
-			} as WindowState);
+
+			openOrUpdateWindow(
+				anchorDataObject as unknown as WindowItem, // TODO: can we safeParse this?
+				anchorDataObject.label,
+			);
 		}
 	}
 

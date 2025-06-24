@@ -4,12 +4,16 @@ import type { ProfileWindowItem } from "@/types/global.d";
 interface Props {
 	params: ProfileWindowItem["params"];
 }
+const { simpleItems } = useTEIHeaders();
 
 const props = defineProps<Props>();
 const { params } = toRefs(props);
+const queryParams = computed(() => {
+	return { textId: params.value.textId };
+});
 const content = ref(null);
 
-const { data, isPending, isPlaceholderData } = useProfileById(params);
+const { data, isPending, isPlaceholderData } = useProfileById(queryParams);
 const openNewWindowFromAnchor = useAnchorClickHandler();
 const processImageGalleries = useImageGalleryProcessor(content as unknown as Ref<HTMLDivElement>);
 
@@ -19,6 +23,7 @@ const isLoading = computed(() => {
 watch(content, () => {
 	processImageGalleries();
 });
+const header = simpleItems.value.find((i) => i.id === params.value.textId);
 </script>
 
 <template>
@@ -26,11 +31,14 @@ watch(content, () => {
 		class="relative isolate grid size-full overflow-auto"
 		:class="{ 'opacity-50 grayscale': isLoading }"
 	>
-		<!-- eslint-disable-next-line vue/no-v-html, vuejs-accessibility/click-events-have-key-events, vuejs-accessibility/no-static-element-interactions -->
+		<div v-if="params.showCitation">
+			<Citation :header="header" type="entry" />
+		</div>
+		<!-- eslint-disable vue/no-v-html, vuejs-accessibility/click-events-have-key-events, vuejs-accessibility/no-static-element-interactions -->
 		<div
 			v-if="data"
 			ref="content"
-			class="prose max-w-3xl p-8"
+			class="prose max-w-3xl px-8"
 			@click="openNewWindowFromAnchor"
 			v-html="data"
 		/>
@@ -42,7 +50,9 @@ watch(content, () => {
 </template>
 
 <style>
+@reference "@/styles/index.css";
 /* stylelint-disable selector-class-pattern */
+/* stylelint-disable selector-type-no-unknown */
 
 .profileHeader img,
 .figure img {
@@ -50,11 +60,11 @@ watch(content, () => {
 }
 
 .tbProfile {
-	@apply border border-solid border-[#59533c];
+	@apply border border-solid border-[#59533c] mt-0;
 }
 
 .tdHead {
-	@apply align-top w-[150px] pr-[5px] border-dotted border-primary border-b bg-primary text-on-primary text-right break-words;
+	@apply align-top !w-[150px] pr-[5px] border-dotted border-primary border-b bg-primary text-on-primary text-right break-words;
 }
 
 .tdProfileTableRight {
@@ -102,11 +112,19 @@ a:hover {
 }
 
 .pNorm {
-	@apply mb-[10px];
+	@apply mb-4;
+}
+
+gallery + .pNorm {
+	@apply my-6;
+}
+
+.pNorm:has(+ gallery) {
+	@apply mb-6;
 }
 
 .imgCaption {
-	@apply pb-2 italic text-xs text-center;
+	@apply p-2 italic text-[0.85rem] text-center;
 }
 
 .h3ProfileTypology {
@@ -124,7 +142,13 @@ a:hover {
 .lg-container {
 	@apply text-white;
 
+	position: relative;
 	height: 450px;
+}
+
+.pFigure,
+.lg-container {
+	@apply my-4;
 }
 
 .pFigure.fig-col-3 {
@@ -148,6 +172,6 @@ a:hover {
 }
 
 .lg-item .lg-sub-html {
-	@apply bg-opacity-40 bg-black;
+	@apply bg-black/40;
 }
 </style>

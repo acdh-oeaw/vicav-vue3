@@ -18,7 +18,7 @@ const props = defineProps<Props>();
 		class="flex size-full flex-col items-center justify-center bg-[url('/images/tlemcen.jpg')] bg-cover"
 	>
 		<div
-			class="max-w-sm overflow-hidden rounded shadow-lg backdrop-blur"
+			class="max-w-sm overflow-hidden rounded shadow-lg backdrop-blur-sm"
 			style="background-color: hsl(0deg 0% 100% / 25%)"
 		>
 			<div class="px-6 py-4">
@@ -103,7 +103,7 @@ const props = defineProps<Props>();
 			</div>
 		</div>
 		<div
-			class="mt-8 flex w-3/4 flex-col items-center justify-center p-4 text-sm backdrop-blur"
+			class="mt-8 flex w-3/4 flex-col items-center justify-center p-4 text-sm backdrop-blur-sm"
 			style="background-color: hsl(0deg 0% 100% / 50%)"
 		>
 			<div class="flex w-full flex-col">

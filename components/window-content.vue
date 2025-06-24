@@ -15,7 +15,11 @@ function updateQueryParam(queryString: string) {
 </script>
 
 <template>
-	<GeoMapWindowContent v-if="props.item.targetType === 'WMap'" :params="props.item.params" />
+	<GeoMapWindowContent
+		v-if="props.item.targetType === 'WMap'"
+		:params="props.item.params"
+		:title="props.item.winbox.title"
+	/>
 	<TextWindowContent v-else-if="props.item.targetType === 'Text'" :params="props.item.params" />
 	<SampleTextWindowContent
 		v-else-if="props.item.targetType === 'SampleText'"
@@ -53,6 +57,10 @@ function updateQueryParam(queryString: string) {
 	/>
 	<CorpusTextWindowContent
 		v-else-if="props.item.targetType === 'CorpusText'"
+		:params="props.item.params"
+	/>
+	<CorpusTextJsonWindowContent
+		v-else-if="props.item.targetType === 'CorpusTextJSON'"
 		:params="props.item.params"
 	/>
 	<DataListWindowContent

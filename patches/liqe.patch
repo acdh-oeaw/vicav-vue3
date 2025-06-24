@@ -1,0 +1,13 @@
+diff --git a/dist/src/createStringTest.js b/dist/src/createStringTest.js
+index bf7a11c8eed242461d15df7e4ed849158ed8885d..4a0484c8c0db87df6a7b1c1865b82c52d468d2d0 100644
+--- a/dist/src/createStringTest.js
++++ b/dist/src/createStringTest.js
+@@ -38,7 +38,7 @@ const createStringTest = (regexCache, ast) => {
+         return createRegexTest(regexCache, String((0, convertWildcardToRegex_1.convertWildcardToRegex)(value)) + 'ui');
+     }
+     else {
+-        return createRegexTest(regexCache, '/(' + (0, escapeRegexString_1.escapeRegexString)(value) + ')/' + (expression.quoted ? 'u' : 'ui'));
++        return createRegexTest(regexCache, '/^(' + (0, escapeRegexString_1.escapeRegexString)(value) + ')$/' + (expression.quoted ? 'u' : 'ui'));
+     }
+ };
+ exports.createStringTest = createStringTest;

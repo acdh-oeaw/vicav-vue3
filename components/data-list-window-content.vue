@@ -1,5 +1,8 @@
 <!-- eslint-disable @typescript-eslint/sort-type-constituents -->
 <script lang="ts" setup>
+import { Volume2, VolumeX } from "lucide-vue-next";
+import type { JsonObject } from "type-fest";
+
 import type { DataListWindowItem, DataTypesEnum } from "@/types/global.d";
 import type { simpleTEIMetadata } from "@/types/teiCorpus.d";
 
@@ -25,7 +28,16 @@ const groupedItems = getGroupedItems(
 	["place.country", "place.region", "place.settlement", "dataType"],
 	"dataType",
 	props.params.dataTypes,
-	"label",
+	(a: JsonObject, b: JsonObject) => {
+		const amatch = Number((a as simpleTEIMetadata).label?.match(/[a-z]+(\d+)/i)?.at(1));
+		const bmatch = Number((b as simpleTEIMetadata).label?.match(/[a-z]+(\d+)/i)?.at(1));
+
+		if (!amatch || !bmatch)
+			return !a.label || !b.label ? 0 : a.label < b.label ? -1 : a.label > b.label ? 1 : 0;
+		else {
+			return amatch < bmatch ? -1 : amatch > bmatch ? 1 : 0;
+		}
+	},
 	props.params.filterListBy,
 ) as groupedByCountry;
 const openNewWindowFromAnchor = useAnchorClickHandler();
@@ -52,7 +64,12 @@ const debugString = debug ? JSON.stringify(groupedItems, null, 2) : "";
 			</h2>
 			<h2 v-else-if="Object.keys(groupedItems).length > 1" class="text-lg">Unspecified country</h2>
 			<div v-for="(itemsByPlace, region) in itemsByRegion" :key="region" class="p-2 text-base">
-				<h4 v-if="region !== ''" class="text-lg italic">{{ region }}</h4>
+				<h4 v-if="region !== ''" class="text-lg italic">
+					{{ region }}
+					<span v-if="Object.values(itemsByPlace).flat(2).length > 1"
+						>({{ Object.values(itemsByPlace).flat(2).length }})</span
+					>
+				</h4>
 				<h4 v-else-if="Object.keys(itemsByRegion).length > 1" class="text-lg italic">
 					Unspecified region
 				</h4>
@@ -66,7 +83,7 @@ const debugString = debug ? JSON.stringify(groupedItems, null, 2) : "";
 							{{ dataTypes[dataType]!.name }}
 						</em>
 						<ul v-for="item in items" :key="item.id">
-							<li class="text-base">
+							<li class="flex text-base">
 								<a
 									v-if="item.dataType !== 'CorpusText' || item['@hasTEIw'] === 'true'"
 									class="text-primary underline"
@@ -78,26 +95,16 @@ const debugString = debug ? JSON.stringify(groupedItems, null, 2) : "";
 									{{ item.label }}
 								</a>
 								<span v-else> {{ item.label }} </span>
-								<span
-									v-if="
-										item.teiHeader.fileDesc.sourceDesc.recordingStmt &&
-										(item.teiHeader.fileDesc.sourceDesc.recordingStmt.recording.media?.['@url'] ||
-											item.teiHeader.fileDesc.sourceDesc.recordingStmt.recording.p?.ref)
-									"
-								>
-									&nbsp; {{ item.teiHeader.fileDesc.sourceDesc.recordingStmt.recording["@type"] }}
-									<span v-if="item.teiHeader.fileDesc.sourceDesc.recordingStmt.recording.media">
-										: {{ item.teiHeader.fileDesc.sourceDesc.recordingStmt.recording.media["@url"] }}
+								<span> &nbsp; </span>
+								<span v-if="item.dataType !== 'Feature' && item.dataType !== 'Profile'">
+									<span
+										v-if="item.audioAvailability === 'free'"
+										title="Audio recording is publicly available"
+									>
+										<Volume2 class="mx-2 mt-[2px] size-5" />
 									</span>
-									<span v-if="item.teiHeader.fileDesc.sourceDesc.recordingStmt.recording.p?.ref">
-										:
-										{{
-											item.teiHeader.fileDesc.sourceDesc.recordingStmt.recording.p.ref["@target"]
-										}}
-									</span>
-									<span v-if="item.teiHeader.profileDesc?.settingDesc?.setting?.placeName.$">
-										:
-										{{ item.teiHeader.profileDesc.settingDesc.setting.placeName.$ }}
+									<span v-else title="Audio recording is restricted">
+										<VolumeX class="mx-2 mt-[2px] size-5" />
 									</span>
 								</span>
 							</li>

@@ -1,27 +1,61 @@
 /* eslint-disable @typescript-eslint/consistent-type-definitions */
 import type { JsonValue } from "type-fest";
 
+type simplePerson = {
+	name: string;
+	sex: string;
+	age: string;
+};
+type Author = {
+	given: string;
+	family: string;
+};
 export type simpleTEIMetadata = {
 	id: string;
 	label: string;
+	title: string;
+	author: Array<Author>;
+	recording: Array<Author>;
+	principal: Array<Author>;
+	transcription: Array<Author>;
+	"transfer to ELAN": Array<Author>;
 	dataType: DataTypesEnum;
-	secondaryDataType: string;
+	category: string;
 	resp: string;
 	pubDate: string | TeiDate;
 	recordingDate?: string | TeiDate;
+	duration?: string;
+	audioAvailability: string;
 	place: {
 		settlement: string;
 		country: string;
 		region: string;
 	};
-	person: {
-		name: string;
-		sex: string;
-		age: string;
-	};
+	person: Array<simplePerson>;
 	"@hasTEIw": string;
 	teiHeader: TeiHeader;
+	publication: {
+		refType: "external" | "internal";
+		type: string;
+		bibl: {
+			author: Array<Author>;
+			editor?: Array<Author>;
+			title: string;
+			"container-title"?: string;
+			issued: Array<string>;
+			page?: string;
+			volume?: string;
+			publisherPlace?: string;
+		};
+	};
 };
+
+export type Responsibility =
+	| "author"
+	| "recording"
+	| "principal"
+	| "transcription"
+	| "transfer to ELAN";
 
 // TeiCropus metadata definition
 
@@ -45,7 +79,7 @@ export type TEI = {
 export type TeiHeader = {
 	"@id"?: string;
 	fileDesc: FileDesc;
-	encodingDesc: EncodingDesc;
+	encodingDesc?: EncodingDesc;
 	profileDesc?: ProfileDesc;
 	revisionDesc?: RevisionDesc;
 };
@@ -84,7 +118,7 @@ export type XmlTextNode = {
 
 export type RespStmt = {
 	persName?: PersName | TeiTypedTarget;
-	resp: XmlTextNode;
+	resp: { $: Responsibility };
 	name?: Author;
 	author?: Author;
 };
@@ -94,15 +128,13 @@ export type PersName = {
 	"@id": string;
 	"@full"?: string;
 	$?: string;
-	"@forename"?: string;
-	"@surname"?: string;
 	forename?: XmlTextNode;
 	surname?: XmlTextNode;
 };
 
 export type PublicationStmt = {
 	pubPlace?: XmlTextNode;
-	date: TeiDate;
+	date?: TeiDate;
 	availability: Availability;
 	publishers?: Array<TeiTypedTarget>;
 	distributor?: TeiTypedTarget;
@@ -151,6 +183,28 @@ export type SourceDesc = {
 	p?: P;
 	listBibl?: ListBibl;
 	recordingStmt?: RecordingStmt;
+	biblStruct?: BiblStruct;
+};
+
+export type BiblStruct = {
+	"@type": string;
+	analytic?: {
+		title: XmlTextNode;
+		author: PersName;
+	};
+	monogr: {
+		title?: TeiTypedTarget;
+		author?: PersName;
+		editor?: PersName;
+		imprint?: {
+			date: XmlTextNode;
+			pubPlace?: XmlTextNode;
+			biblScopes: Array<{
+				"@unit": string;
+				$: string;
+			}>;
+		};
+	};
 };
 
 export type ListBibl = {
@@ -164,7 +218,7 @@ export type Recording = {
 	"@dur-iso": string;
 	"@type": string;
 	date?: TeiDate;
-	respStmt: RespStmt;
+	respStmt?: RespStmt;
 	media?: Media;
 	p?: P;
 };
@@ -234,13 +288,18 @@ export type ProfileDesc = {
 };
 
 export type Taxonomy = {
-	categories?: Array<Category>;
+	categories: Array<Category>;
 };
 
 export type Category = {
 	"@id": string;
 	"@n"?: string;
-	catDesc: XmlTextNode;
+	catDesc: CatDesc;
+};
+
+export type CatDesc = {
+	name?: XmlTextNode;
+	$?: string;
 };
 
 export type LangUsage = {
@@ -387,7 +446,7 @@ export type Funder = {
 };
 
 export type ClassDecl = {
-	taxonomy: Taxonomy;
+	taxonomies: Array<Taxonomy>;
 };
 
 export type StandOff = {

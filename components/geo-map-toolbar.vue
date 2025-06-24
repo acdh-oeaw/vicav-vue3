@@ -24,7 +24,7 @@ function onClickItem(id: ItemId) {
 				v-for="[id, item] of props.options"
 				:key="id"
 				:aria-pressed="props.selected.has(id)"
-				class="cursor-default rounded-sm px-2 py-1.5 transition data-[selected]:bg-accent data-[selected]:text-on-accent"
+				class="cursor-default rounded-sm px-2 py-1.5 transition data-selected:bg-accent data-selected:text-on-accent"
 				:data-selected="props.selected.has(id) || undefined"
 				@click="
 					() => {
