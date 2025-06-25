@@ -12,6 +12,7 @@ const { params }: { params: Ref<Record<string, string | Array<string> | object>>
 
 const tableContent: Array<{ key: string; displayHeader?: string }> = [
 	{ key: "title", displayHeader: "Feature Value" },
+	{ key: "taxonomy" },
 	{ key: "desc" },
 	{ key: "feature" },
 	{ key: "place" },
@@ -38,7 +39,9 @@ const tableContent: Array<{ key: string; displayHeader?: string }> = [
 
 const tableData = computed(() => {
 	return tableContent
-		.filter((entry) => entry.key in (params.value as object))
+		.filter(
+			(entry) => entry.key in (params.value as object) && params.value[entry.key] !== undefined,
+		)
 		.flatMap((entry) => {
 			if (Array.isArray(params.value[entry.key])) {
 				return (params.value[entry.key] as Array<string>).map((val: string) => ({

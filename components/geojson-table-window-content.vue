@@ -12,6 +12,7 @@ const url = "https://raw.githubusercontent.com/wibarab/wibarab-data/main/wibarab
 
 const { isPending } = GeojsonStore.fetchGeojson(url);
 const { fetchedData, tables, showAllDetails } = storeToRefs(GeojsonStore);
+const { buildFeatureTaxonomy } = GeojsonStore;
 const { data: projectData } = useProjectInfo();
 const { createColumnDefs } = useColumnGeneration();
 const { getTraversedAST } = useFilterParser();
@@ -90,6 +91,9 @@ function onColumnFilterChange(columnFilters: Array<{ id: string; value: Map<stri
 
 const tableRef = ref<Table<FeatureType>>();
 function registerTable(table: Table<FeatureType>) {
+	buildFeatureTaxonomy(
+		projectData.value?.projectConfig?.staticData?.table?.[0] as Record<string, never>,
+	);
 	tables.value.set(url, table);
 	tableRef.value = table;
 	const mw = findWindowByTypeAndParam("GeojsonMap", "url", url);

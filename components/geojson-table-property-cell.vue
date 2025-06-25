@@ -18,6 +18,8 @@ import SynagogueOutlineIcon from "vue-material-design-icons/SynagogueOutline.vue
 
 import type { WindowItem } from "@/types/global";
 
+const { featureValueTaxonomy } = storeToRefs(useGeojsonStore());
+
 const props = defineProps<{
 	value?: Record<string, unknown>;
 	highlightedValues?: Array<string>;
@@ -154,9 +156,10 @@ function onValueClick(val: Record<string, unknown>, title: string) {
 				title,
 				place: props.fullEntry.name,
 				feature: props.column.columnDef.header,
+				taxonomy: featureValueTaxonomy.value.get(`${props.column.columnDef.id}.${title}`),
 			},
 		} as unknown as WindowItem,
-		`${props.fullEntry.name} | ${props.column.columnDef.header} | ${title}`,
+		`Feature Value Observation: ${title} | ${props.fullEntry.name}`,
 	);
 }
 </script>
