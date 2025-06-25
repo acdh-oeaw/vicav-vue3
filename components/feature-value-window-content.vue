@@ -10,32 +10,30 @@ interface Props {
 const props = defineProps<Props>();
 const { params }: { params: Ref<Record<string, string | Array<string> | object>> } = toRefs(props);
 
-const tableContent: Array<{ key: string; displayHeader?: string; introductoryText?: string }> = [
+const tableContent: Array<{ key: string; displayHeader?: string }> = [
 	{ key: "title", displayHeader: "Feature Value" },
 	{ key: "desc" },
 	{ key: "feature" },
-	{ key: "place", introductoryText: "Attested in: {}" },
-	{ key: "sources", introductoryText: "Collected from: {}" },
-	{ key: "religion", introductoryText: "Used by: {}" },
-	{ key: "ageGroup", introductoryText: "Used by: {}" },
-	{ key: "gender", introductoryText: "Used by: {}" },
-	{ key: "socio", introductoryText: "Used by: {}" },
-	{ key: "tribe", introductoryText: "Used by: {} (tribe)" },
+	{ key: "place" },
+	{ key: "sources" },
+	{ key: "religion" },
+	{ key: "ageGroup" },
+	{ key: "gender" },
+	{ key: "socio" },
+	{ key: "tribe" },
 	{
 		key: "first_language",
 		displayHeader: "First Language",
-		introductoryText: "Used by: {} (first language)",
 	},
 	{
 		key: "source_representations",
 		displayHeader: "Original transcription",
-		introductoryText: "Originally transcribed as: {}",
 	},
-	{ key: "examples", introductoryText: "{}" },
-	{ key: "note", introductoryText: "Note: {}" },
-	{ key: "remarks", introductoryText: "Remarks: {}" },
-	{ key: "constraints", introductoryText: "Constraints: {}" },
-	{ key: "exceptions", introductoryText: "Exceptions: {}" },
+	{ key: "examples" },
+	{ key: "note" },
+	{ key: "remarks" },
+	{ key: "constraints" },
+	{ key: "exceptions" },
 ];
 
 const tableData = computed(() => {
@@ -76,13 +74,7 @@ const tableData = computed(() => {
 								<span class="sr-only">View Source</span
 								><ExternalLink class="inline-block size-3.5" /> </NuxtLink
 						></template>
-						<template v-else>
-							{{
-								entry.introductoryText
-									? entry.introductoryText.replace("{}", entry.value as string)
-									: entry.value
-							}}</template
-						>
+						<template v-else> {{ entry.value }}</template>
 					</TableCell>
 				</TableRow>
 			</TableBody>

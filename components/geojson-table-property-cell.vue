@@ -210,7 +210,9 @@ function onValueClick(val: Record<string, unknown>, title: string) {
 									<span
 										class="line-clamp-1"
 										:class="{
-											'sr-only': getPersonGroupIcon(personGroup)?.hideValue || !infoOpen[key],
+											'sr-only':
+												personGroupKey !== 'tribe' &&
+												(getPersonGroupIcon(personGroup)?.hideValue || !infoOpen[key]),
 										}"
 										>{{ trimPrefix(personGroupVal) }}</span
 									>
