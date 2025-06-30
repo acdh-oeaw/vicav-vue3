@@ -57,11 +57,12 @@ function applyQueryString(row: Row<FeatureType>, colId: string, queryString: str
 				value &&
 				typeof value === "object"
 			) {
-				for (const metadataObject of Object.values(value)) {
-					for (const metaKey in metadataObject) {
-						if (!(metaKey in metadata)) metadata[metaKey] = [];
-						metadata[metaKey] = metadata[metaKey]!.concat(metadataObject[metaKey]);
-					}
+				for (const metadataObjects of Object.values(value)) {
+					for (const metadataObject of metadataObjects)
+						for (const metaKey in metadataObject) {
+							if (!(metaKey in metadata)) metadata[metaKey] = [];
+							metadata[metaKey] = metadata[metaKey]!.concat(metadataObject[metaKey]);
+						}
 				}
 				return [key, Object.keys(value)];
 			}

@@ -8,7 +8,8 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-const { params }: { params: Ref<Record<string, string | Array<string> | object>> } = toRefs(props);
+const { params }: { params: Ref<Array<Record<string, string | Array<string> | object>>> } =
+	toRefs(props);
 
 const tableContent: Array<{ key: string; displayHeader?: string }> = [
 	{ key: "title", displayHeader: "Feature Value" },
@@ -16,7 +17,8 @@ const tableContent: Array<{ key: string; displayHeader?: string }> = [
 	{ key: "desc" },
 	{ key: "feature" },
 	{ key: "place" },
-	{ key: "sources" },
+	{ key: "variety" },
+	{ key: "source" },
 	{ key: "religion" },
 	{ key: "ageGroup" },
 	{ key: "gender" },
@@ -35,26 +37,37 @@ const tableContent: Array<{ key: string; displayHeader?: string }> = [
 	{ key: "remarks" },
 	{ key: "constraints" },
 	{ key: "exceptions" },
+	{ key: "resp", displayHeader: "Entered by" },
 ];
 
 const tableData = computed(() => {
-	return tableContent
-		.filter(
-			(entry) => entry.key in (params.value as object) && params.value[entry.key] !== undefined,
-		)
+	const values = params.value;
+	const t = tableContent
+		.filter((entry) => values.find((value) => entry.key in value && value[entry.key] !== undefined))
 		.flatMap((entry) => {
-			if (Array.isArray(params.value[entry.key])) {
-				return (params.value[entry.key] as Array<string>).map((val: string) => ({
-					...entry,
-					value: val,
-				}));
-			}
 			return {
 				...entry,
-				value: params.value[entry.key] as string | Record<string, Record<string, string>>,
+				values: values.map((value) =>
+					Array.isArray(value[entry.key])
+						? entry.key === "examples"
+							? (value[entry.key] as Array<object>)
+									.map((example) => `${Object.keys(example)[0]} (${Object.values(example)[0]})`)
+									.join("; ")
+							: (value[entry.key] as Array<string>).join("; ")
+						: value[entry.key],
+				),
 			};
 		});
+	return t;
 });
+
+interface LinkType {
+	link?: string;
+	short_cit?: string;
+}
+function isLinkType(val: unknown): val is LinkType {
+	return "link" in (val as object) || "short_cit" in (val as object);
+}
 </script>
 
 <template>
@@ -63,21 +76,14 @@ const tableData = computed(() => {
 			<TableBody>
 				<TableRow v-for="entry in tableData" :key="entry.key">
 					<TableCell class="capitalize">{{ entry.displayHeader ?? entry.key }}</TableCell>
-					<TableCell>
-						<template v-if="entry.key == 'sources'">
-							<NuxtLink
-								v-for="source in entry.value as Record<string, Record<string, string>>"
-								:key="source.link"
-								class="flex gap-1"
-								external
-								target="_blank"
-								:to="source.link"
-							>
-								<span>{{ source.link ? "" : "Fieldwork campaign" }} {{ source.short_cit }}</span>
+					<TableCell v-for="value in entry.values" :key="`${entry.key}-${value}`">
+						<template v-if="entry.key == 'source' && isLinkType(value)">
+							<NuxtLink class="flex gap-1" external target="_blank" :to="value.link">
+								<span>{{ value.link ? "" : "Fieldwork campaign" }} {{ value.short_cit }}</span>
 								<span class="sr-only">View Source</span
 								><ExternalLink class="inline-block size-3.5" /> </NuxtLink
 						></template>
-						<template v-else> {{ entry.value }}</template>
+						<template v-else> {{ value }}</template>
 					</TableCell>
 				</TableRow>
 			</TableBody>

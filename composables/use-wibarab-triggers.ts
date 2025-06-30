@@ -36,25 +36,27 @@ function getValueList(columns: typeof features.value) {
 }
 
 function getMetaInfoList() {
-	const excludedMetaInfoKeys = new Set(["source_representations", "examples"]);
+	const excludedMetaInfoKeys = new Set(["source_representations", "examples", "resp"]);
 	const table = tables.value.get(url);
 	const metaInfo = new Map<string, Set<string>>();
 	if (!table) return new Map() as TriggerMap;
 	table.getCoreRowModel().rows.forEach((row) => {
 		Object.values(
-			row.original.properties as Record<string, Record<string, Record<string, unknown>>>,
+			row.original.properties as Record<string, Record<string, Array<Record<string, unknown>>>>,
 		).forEach((featureValues) => {
 			if (typeof featureValues === "string") return;
-			Object.values(featureValues).forEach((featureValueInfo) => {
-				Object.entries(featureValueInfo).forEach(([key, val]) => {
-					if (excludedMetaInfoKeys.has(key)) return;
-					if (!metaInfo.has(key)) metaInfo.set(key, new Set());
-					if (Array.isArray(val)) val.forEach((v: string) => metaInfo.get(key)?.add(v));
-					else {
-						Object.entries(val as Record<string, Record<string, string>>).forEach(([_, v]) => {
-							if ("short_cit" in v) metaInfo.get(key)?.add(v.short_cit);
-						});
-					}
+			Object.values(featureValues).forEach((featureValueInfos) => {
+				featureValueInfos.forEach((featureValueInfo) => {
+					Object.entries(featureValueInfo).forEach(([key, val]) => {
+						if (excludedMetaInfoKeys.has(key)) return;
+						if (!metaInfo.has(key)) metaInfo.set(key, new Set());
+						if (Array.isArray(val)) val.forEach((v: string) => metaInfo.get(key)?.add(v));
+						else if (typeof val === "string") metaInfo.get(key)?.add(val);
+						else {
+							if ("short_cit" in (val as Record<string, string>))
+								metaInfo.get(key)?.add((val as Record<string, string>).short_cit!);
+						}
+					});
 				});
 			});
 		});

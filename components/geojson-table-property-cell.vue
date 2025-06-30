@@ -28,7 +28,7 @@ const props = defineProps<{
 }>();
 
 function getSources(featureValueEntry: unknown) {
-	return (featureValueEntry as Record<string, Record<string, Record<string, string>>>).sources;
+	return (featureValueEntry as Record<string, Record<string, Record<string, string>>>).source;
 }
 const iconMap: Record<string, Record<string, LucideIcon | DefineComponent>> = {
 	gender: {
@@ -64,22 +64,32 @@ const iconMap: Record<string, Record<string, LucideIcon | DefineComponent>> = {
 		"#default": MessageSquare,
 	},
 };
-const nonPersonGroupKeys = ["sources"];
-const hiddenKeys = ["remarks", "exceptions", "constraints", "source_representations"];
+const nonPersonGroupKeys = ["source"];
+const hiddenKeys = ["remarks", "exceptions", "constraints", "source_representations", "resp"];
 function getPersonGroups(featureValueEntry: unknown, selectKey?: string | Array<string>) {
-	const personGroups = Object.entries((featureValueEntry as Record<string, Array<string>>) ?? {})
+	const personGroups = (featureValueEntry as Array<Record<string, Array<string>>>)
+		.flatMap((entry) => Object.entries(entry ?? {}))
 		.filter(([key]) => !nonPersonGroupKeys.includes(key))
 		.filter(([key]) =>
 			selectKey ? (Array.isArray(selectKey) ? selectKey.includes(key) : key === selectKey) : true,
 		)
 		.flatMap(([key, val]) => {
-			return val.map(
-				(entry) => {
-					return { [key]: entry };
-				},
-				{} as Record<string, string>,
-			);
-		});
+			if (Array.isArray(val))
+				return val.map(
+					(entry) => {
+						if (typeof entry === "object")
+							return Object.entries(entry).map(([example, translation]) => ({
+								[key]: `${example} (${translation})`,
+							}));
+						return { [key]: entry };
+					},
+					{} as Record<string, string>,
+				);
+			else {
+				return { [key]: val };
+			}
+		})
+		.flat();
 	return personGroups.toSorted(
 		(a, b) =>
 			(Object.keys(a)[0]?.localeCompare(Object.keys(b)[0] ?? "") ||
@@ -99,7 +109,8 @@ function getPersonGroupIcon(personGroup: Record<string, string>) {
 	return null;
 }
 function trimPrefix(str: string) {
-	return str.replace(/(#|pgr:)/, "");
+	if (typeof str === "string") return str.replace(/(#|pgr:)/, "");
+	else return str;
 }
 const { showAllDetails } = storeToRefs(useGeojsonStore());
 const infoOpen = ref(
@@ -143,21 +154,21 @@ const sortedValues = computed(() => {
 		const indexA = flattenedHighlightedValues.value?.includes(String(a)) ? -1 : 1;
 		const indexB = flattenedHighlightedValues.value?.includes(String(b)) ? -1 : 1;
 		return indexA === indexB ? a.localeCompare(b) : indexA - indexB;
-	}) as Array<[string, Record<string, unknown>]>;
+	}) as Array<[string, Array<Record<string, unknown>>]>;
 });
 
 const openOrUpdateWindow = useOpenOrUpdateWindow();
-function onValueClick(val: Record<string, unknown>, title: string) {
+function onValueClick(val: Array<Record<string, unknown>>, title: string) {
 	openOrUpdateWindow(
 		{
 			targetType: "FeatureValue",
-			params: {
-				...val,
+			params: val.map((v) => ({
+				...v,
 				title,
 				place: props.fullEntry.name,
 				feature: props.column.columnDef.header,
 				taxonomy: featureValueTaxonomy.value.get(`${props.column.columnDef.id}.${title}`),
-			},
+			})),
 		} as unknown as WindowItem,
 		`Feature Value Observation: ${title} | ${props.fullEntry.name}`,
 	);
