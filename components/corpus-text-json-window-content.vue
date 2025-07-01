@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import "v3-infinite-loading/lib/style.css";
 
-import { Pause, Play } from "lucide-vue-next";
 import InfiniteLoading from "v3-infinite-loading";
 import type { StateHandler } from "v3-infinite-loading/lib/types";
 
@@ -65,7 +64,7 @@ const handleInfiniteScroll = async function ($state: StateHandler) {
 };
 
 onMounted(async () => {
-	loadNextPage();
+	await loadNextPage();
 });
 </script>
 
@@ -162,18 +161,7 @@ onMounted(async () => {
 					class="corpus-utterance u table-row"
 				>
 					<td>
-						<a class="play mt-1">
-							<Play class="size-4" />
-							<span class="hidden">Play</span></a
-						>
-						<a class="stop mt-1 hidden">
-							<Pause class="size-4" />
-							<span class="hidden">Stop</span>
-						</a>
-						<!-- eslint-disable-next-line vuejs-accessibility/media-has-caption -->
-						<audio hidden="hidden">
-							<source src="pending" />
-						</audio>
+						<!-- audio player goes here -->
 					</td>
 					<td class="min-w-fit px-3 font-bold">
 						<div class="flex justify-center">{{ teiHeader?.id }}</div>
