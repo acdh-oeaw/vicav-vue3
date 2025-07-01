@@ -37,6 +37,7 @@ function getValueList(columns: typeof features.value) {
 
 function getMetaInfoList() {
 	const excludedMetaInfoKeys = new Set(["source_representations", "examples", "resp"]);
+
 	const table = tables.value.get(url);
 	const metaInfo = new Map<string, Set<string>>();
 	if (!table) return new Map() as TriggerMap;
