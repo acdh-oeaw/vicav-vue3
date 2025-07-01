@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/vue-query";
+import type { z } from "zod";
 
 import type { TextId } from "@/types/global.d";
 
 export function useTextById(
-	params: MaybeRef<Zod.infer<typeof TextId>>,
+	params: MaybeRef<z.infer<typeof TextId>>,
 	options?: { enabled?: boolean },
 ) {
 	const api = useApiClient();

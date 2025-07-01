@@ -1,11 +1,12 @@
 import { useQuery } from "@tanstack/vue-query";
+import type { z } from "zod";
 
 import type { ExploreSamplesQueryParams } from "@/types/global.d";
 
 import dataTypes from "../config/dataTypes";
 
 export function useExploreSamplesResult(
-	params: MaybeRef<Zod.infer<typeof ExploreSamplesQueryParams>>,
+	params: MaybeRef<z.infer<typeof ExploreSamplesQueryParams>>,
 	options?: { enabled?: boolean },
 ) {
 	const api = useApiClient();

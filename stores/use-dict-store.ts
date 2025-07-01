@@ -1,6 +1,8 @@
+import type { z } from "zod";
+
 import { Dict } from "@/types/global.d";
 
-type DictIndex = Set<Zod.infer<typeof Dict>["id"]>;
+type DictIndex = Set<z.infer<typeof Dict>["id"]>;
 
 export const useDictStore = defineStore("dict", () => {
 	const { data: dictData, suspense } = useDicts();
@@ -25,7 +27,7 @@ export const useDictStore = defineStore("dict", () => {
 		return newDictIndex;
 	});
 
-	const getDictById = async (id: Zod.infer<typeof Dict>["id"]) => {
+	const getDictById = async (id: z.infer<typeof Dict>["id"]) => {
 		if (!dictIndex.value.has(id)) {
 			return;
 		}
@@ -45,7 +47,7 @@ export const useDictStore = defineStore("dict", () => {
 			throw new Error("Missing virtual keyboard definition!");
 		}
 
-		const dict: Zod.infer<typeof Dict> = {
+		const dict: z.infer<typeof Dict> = {
 			id,
 			//TODO refine response types in API definition
 			queryTemplates: new Map(dataObject.queryTemplates!.map((e) => [e, e])),
