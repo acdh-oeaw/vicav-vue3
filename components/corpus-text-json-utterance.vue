@@ -1,7 +1,10 @@
 <script setup lang="ts">
+import type {UClass} from "@/types/corpus-as-json";
+
 const props = defineProps<{
-	utterance: Record<string, never>;
+	utterance: UClass;
 	inlineAnnotation: boolean;
+	inlineTranslation: boolean;
 }>();
 </script>
 
@@ -10,9 +13,9 @@ const props = defineProps<{
 		<TooltipProvider v-if="!inlineAnnotation" :delay-duration="0">
 			<Tooltip>
 				<TooltipTrigger>
-					<div class="flex justify-center">
+					<div class="flex justify-center text-lg">
 						{{ props.utterance.w["$"]
-						}}{{ props.utterance.w["@join"] === "right" ? "-" : "&nbsp;" }}
+						}}{{ (props.utterance.w["@join"] === "right" && props.utterance.w["@rend"] === 'withDash') ? "-" : "&nbsp;" }}
 					</div>
 				</TooltipTrigger>
 				<TooltipContent class="bg-primary" side="bottom">
@@ -21,8 +24,8 @@ const props = defineProps<{
 				</TooltipContent>
 			</Tooltip>
 		</TooltipProvider>
-		<div v-if="inlineAnnotation" class="flex justify-center">
-			{{ props.utterance.w["$"] }}{{ props.utterance.w["@join"] === "right" ? "-" : "&nbsp;" }}
+		<div v-if="inlineAnnotation" class="flex justify-center text-lg">
+			{{ props.utterance.w["$"] }}{{ (props.utterance.w["@join"] === "right" && props.utterance.w["@rend"] === 'withDash') ? "-" : "&nbsp;" }}
 		</div>
 		<div v-if="inlineAnnotation" class="flex justify-center text-xs text-gray-500">
 			{{ props.utterance.w.pos }}&nbsp;
@@ -30,6 +33,9 @@ const props = defineProps<{
 		<div v-if="inlineAnnotation" class="flex justify-center text-xs text-gray-500">
 			{{ props.utterance.w["@msd"] }}&nbsp;
 		</div>
+	</div>
+	<div v-if="props.utterance.pc" class="flex flex-col u text-lg">
+		<div>{{props.utterance.pc['$']}}</div>
 	</div>
 </template>
 
