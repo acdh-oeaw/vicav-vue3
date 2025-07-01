@@ -170,7 +170,7 @@ function onValueClick(val: Array<Record<string, unknown>>, title: string) {
 					feature: props.column.columnDef.header,
 					taxonomy: featureValueTaxonomy.value.get(`${props.column.columnDef.id}.${title}`),
 				})),
-				showCitation: true,
+				showCitation: false,
 			},
 		} as unknown as WindowItem,
 		`Feature Value Observation: ${title} | ${props.fullEntry.name}`,

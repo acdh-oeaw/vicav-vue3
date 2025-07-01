@@ -199,6 +199,7 @@ export const useWindowsStore = defineStore("windows", () => {
 				"SampleText",
 				"Text",
 				"FeatureValue",
+				"Location",
 			].includes(w!.targetType)
 		) {
 			w!.winbox.addControl({

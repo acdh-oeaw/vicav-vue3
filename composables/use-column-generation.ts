@@ -6,7 +6,8 @@ import {
 } from "@tanstack/vue-table";
 
 import geojsonTablePropertyCell from "@/components/geojson-table-property-cell.vue";
-import type { FeatureType } from "@/types/global";
+import Button from "@/components/ui/button/Button.vue";
+import type { FeatureType, WindowItem } from "@/types/global";
 
 export interface PatchedFeatureType extends FeatureType {
 	properties: Record<string, Record<string, unknown>>;
@@ -92,6 +93,7 @@ function createColumnDefs(
 	featureCategories: Record<string, string>,
 	allFeatureNames: Array<Record<string, string>>,
 ) {
+	const openOrUpdateWindow = useOpenOrUpdateWindow();
 	const topLevelColumns: Array<SimpleColumnInterface> = [
 		{
 			id: "-",
@@ -130,8 +132,20 @@ function createColumnDefs(
 								enableHiding: false,
 								cell: ({ cell }: CellContext<PatchedFeatureType, never>) => {
 									return h(
-										"span",
-										{ class: "max-w-[500px] truncate font-medium" },
+										Button,
+										{
+											class: "max-w-[500px] truncate font-medium cursor-pointer text-black",
+											variant: "link",
+											onclick: () => {
+												openOrUpdateWindow(
+													{
+														targetType: "Location",
+														params: cell.row,
+													} as unknown as WindowItem,
+													cell.row.original.properties.name as unknown as string,
+												);
+											},
+										},
 										cell.row.original.properties[cell.column.columnDef.id!],
 									);
 								},
