@@ -5,6 +5,8 @@ import { Pause, Play } from "lucide-vue-next";
 import InfiniteLoading from "v3-infinite-loading";
 import type { StateHandler } from "v3-infinite-loading/lib/types";
 
+import type { HttpResponse } from "@/lib/api-client";
+import type { AnnotationBlock, AnnotationDoc } from "@/types/corpus-as-json";
 import type { CorpusTextJSONSchema, VicavHTTPError } from "@/types/global";
 
 const props = defineProps<{
@@ -19,12 +21,13 @@ const currentPage = ref(1);
 const infinite = ref<typeof InfiniteLoading | null>(null);
 const scrollComplete = ref<boolean>(false);
 
-const annotationBlocks = ref<Array<Record<string, never>>>([]);
+const annotationBlocks = ref<Array<AnnotationBlock>>([]);
 const inlineAnnotations = ref<false | true | "indeterminate">(true);
+const inlineTranslations = ref<false | true | "indeterminate">(true);
 
 const api = useApiClient();
 const loadNextPage = async function () {
-	const text = await api.vicav.getCorpusText(
+	const text = (await api.vicav.getCorpusText(
 		{
 			id: props.params.textId,
 			hits: props.params.hits,
@@ -33,7 +36,7 @@ const loadNextPage = async function () {
 			render: "json",
 		},
 		{ headers: { Accept: "application/json" } },
-	);
+	)) as unknown as HttpResponse<AnnotationDoc, string>;
 	if (text.data.doc.annotationBlocks !== undefined) {
 		annotationBlocks.value = annotationBlocks.value.concat(text.data.doc.annotationBlocks);
 		currentPage.value = currentPage.value + 1;
@@ -45,7 +48,7 @@ const handleInfiniteScroll = async function ($state: StateHandler) {
 	try {
 		const text = await loadNextPage();
 		$state.loaded();
-		if (text.data.doc !== undefined && text.doc.annotationBlocks.length < 10) {
+		if (text.data.doc !== undefined && text.data.doc.annotationBlocks.length < 10) {
 			scrollComplete.value = true;
 			$state.complete();
 		}
@@ -76,6 +79,15 @@ onMounted(async () => {
 					@update:checked="inlineAnnotations = !inlineAnnotations"
 				/>
 				<label for="switch-annotations">&nbsp;Inline Annotations</label>
+			</div>
+			&nbsp;
+			<div>
+				<Checkbox
+					id="switch-translations"
+					:default-checked="true"
+					@update:checked="inlineTranslations = !inlineTranslations"
+				/>
+				<label for="switch-translations">&nbsp;Inline Translations</label>
 			</div>
 		</div>
 		<div v-if="params.showCitation">
@@ -150,31 +162,37 @@ onMounted(async () => {
 					class="corpus-utterance u table-row"
 				>
 					<td>
-						<a v-if="a.audio" class="play mt-1">
+						<a class="play mt-1">
 							<Play class="size-4" />
 							<span class="hidden">Play</span></a
 						>
-						<a v-if="a.audio" class="stop mt-1 hidden">
+						<a class="stop mt-1 hidden">
 							<Pause class="size-4" />
 							<span class="hidden">Stop</span>
 						</a>
 						<!-- eslint-disable-next-line vuejs-accessibility/media-has-caption -->
-						<audio v-if="a.audio" hidden="hidden">
-							<source :src="a.audio" />
+						<audio hidden="hidden">
+							<source src="pending" />
 						</audio>
 					</td>
-					<td
-						:class="'min-w-fit px-3 font-bold ' + (a.id === props.params.u ? 'text-red-800' : '')"
-					>
+					<td class="min-w-fit px-3 font-bold">
 						<div class="flex justify-center">{{ teiHeader?.id }}</div>
 					</td>
-					<td class="px-6 py-3 max-w-full flex flex-row">
-						<CorpusTextJsonUtterance
-							v-for="u in a.u['$$']"
-							:key="u['@id']"
-							:inline-annotation="inlineAnnotations"
-							:utterance="u"
-						></CorpusTextJsonUtterance>
+					<td>
+						<div class="px-6 py-3 max-w-full flex flex-row">
+							<CorpusTextJsonUtterance
+								v-for="(u, index) in a.u['$$']"
+								:key="index"
+								:inline-annotation="inlineAnnotations as boolean"
+								:inline-translation="inlineTranslations as boolean"
+								:no="index"
+								:translation="a.spanGrp.span['$']"
+								:utterance="u"
+							></CorpusTextJsonUtterance>
+						</div>
+						<div v-if="inlineTranslations" class="px-6 py-3 max-w-full flex flex-row italic">
+							{{ a.spanGrp.span["$"] }}
+						</div>
 					</td>
 				</tr>
 			</table>
