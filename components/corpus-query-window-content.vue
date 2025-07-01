@@ -131,7 +131,7 @@ const words: Ref<Array<string>> = ref([]);
 						<a
 							:data-hits="hit.docHits"
 							:data-label="hit.label"
-							data-target-type="CorpusText"
+							data-target-type="CorpusTextJSON"
 							:data-text-id="hit.doc"
 							:data-u="hit.u"
 							href="#"
