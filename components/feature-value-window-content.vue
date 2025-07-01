@@ -2,14 +2,14 @@
 import { ExternalLink } from "lucide-vue-next";
 
 import type { FeatureValueWindowItem } from "@/types/global.d";
+import type { simpleTEIMetadata } from "@/types/teiCorpus";
 
 interface Props {
 	params: FeatureValueWindowItem["params"];
 }
 
 const props = defineProps<Props>();
-const { params }: { params: Ref<Array<Record<string, string | Array<string> | object>>> } =
-	toRefs(props);
+const { params } = toRefs(props);
 
 const tableContent: Array<{ key: string; displayHeader?: string }> = [
 	{ key: "title", displayHeader: "Feature Value" },
@@ -41,7 +41,7 @@ const tableContent: Array<{ key: string; displayHeader?: string }> = [
 ];
 
 const tableData = computed(() => {
-	const values = params.value;
+	const values = params.value.values;
 	const t = tableContent
 		.filter((entry) => values.find((value) => entry.key in value && value[entry.key] !== undefined))
 		.flatMap((entry) => {
@@ -68,10 +68,23 @@ interface LinkType {
 function isLinkType(val: unknown): val is LinkType {
 	return "link" in (val as object) || "short_cit" in (val as object);
 }
+const citation = computed(() => {
+	const author = tableData.value.find((entry) => entry.key === "resp")?.values ?? [];
+	const place = tableData.value.find((entry) => entry.key === "place")?.values[0];
+	const feature = tableData.value.find((entry) => entry.key === "feature")?.values[0];
+	const value = tableData.value.find((entry) => entry.key === "title")?.values[0];
+	return {
+		author,
+		title: `${feature}: ${value} | ${place}`,
+	} as simpleTEIMetadata;
+});
 </script>
 
 <template>
 	<div class="relative isolate grid size-full overflow-auto">
+		<div v-if="params.showCitation">
+			<Citation :header="citation" type="entry" />
+		</div>
 		<Table>
 			<TableBody>
 				<TableRow v-for="entry in tableData" :key="entry.key">

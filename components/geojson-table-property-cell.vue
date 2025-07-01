@@ -162,13 +162,16 @@ function onValueClick(val: Array<Record<string, unknown>>, title: string) {
 	openOrUpdateWindow(
 		{
 			targetType: "FeatureValue",
-			params: val.map((v) => ({
-				...v,
-				title,
-				place: props.fullEntry.name,
-				feature: props.column.columnDef.header,
-				taxonomy: featureValueTaxonomy.value.get(`${props.column.columnDef.id}.${title}`),
-			})),
+			params: {
+				values: val.map((v) => ({
+					...v,
+					title,
+					place: props.fullEntry.name,
+					feature: props.column.columnDef.header,
+					taxonomy: featureValueTaxonomy.value.get(`${props.column.columnDef.id}.${title}`),
+				})),
+				showCitation: true,
+			},
 		} as unknown as WindowItem,
 		`Feature Value Observation: ${title} | ${props.fullEntry.name}`,
 	);
