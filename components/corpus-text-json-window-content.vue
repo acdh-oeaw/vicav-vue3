@@ -6,10 +6,10 @@ import type { StateHandler } from "v3-infinite-loading/lib/types";
 
 import type { HttpResponse } from "@/lib/api-client";
 import type { AnnotationBlock, AnnotationDoc } from "@/types/corpus-as-json";
-import type { CorpusTextJSONSchema, VicavHTTPError } from "@/types/global";
+import type { CorpusTextSchema, VicavHTTPError } from "@/types/global";
 
 const props = defineProps<{
-	params: Zod.infer<typeof CorpusTextJSONSchema>["params"] & { label?: string };
+	params: Zod.infer<typeof CorpusTextSchema>["params"] & { label?: string };
 }>();
 
 const { simpleItems } = useTEIHeaders();
