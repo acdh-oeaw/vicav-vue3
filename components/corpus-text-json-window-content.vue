@@ -173,8 +173,6 @@ onMounted(async () => {
 								:key="index"
 								:inline-annotation="inlineAnnotations as boolean"
 								:inline-translation="inlineTranslations as boolean"
-								:no="index"
-								:translation="a.spanGrp.span['$']"
 								:utterance="u"
 							></CorpusTextJsonUtterance>
 						</div>
