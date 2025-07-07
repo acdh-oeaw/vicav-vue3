@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { keyByToMap } from "@acdh-oeaw/lib";
+import type { z } from "zod";
 
 import type { GeoTargetTypeParameters } from "@/lib/api-client";
 import { type GeoMapSchema, GeoMapSubnavItemSchema } from "@/types/global.d";
@@ -8,14 +9,14 @@ type ItemId = string;
 
 interface Props {
 	title?: string;
-	params: Zod.infer<typeof GeoMapSchema>["params"];
+	params: z.infer<typeof GeoMapSchema>["params"];
 }
 
 const props = defineProps<Props>();
 const { title, params } = toRefs(props);
 const { data: projectData } = useProjectInfo();
 
-const createId = function (params: Zod.infer<typeof GeoMapSchema>["params"]): ItemId {
+const createId = function (params: z.infer<typeof GeoMapSchema>["params"]): ItemId {
 	const endpoint = params.endpoint,
 		queryString = params.queryString,
 		scope = params.scope?.join(",") ?? "",
@@ -25,7 +26,7 @@ const createId = function (params: Zod.infer<typeof GeoMapSchema>["params"]): It
 
 const itemsById = computed(() => {
 	const items = projectData.value?.projectConfig?.menu?.subnav?.reduce(
-		(filtered: Array<Zod.infer<typeof GeoMapSubnavItemSchema>>, item) => {
+		(filtered: Array<z.infer<typeof GeoMapSubnavItemSchema>>, item) => {
 			const safeParse = GeoMapSubnavItemSchema.safeParse(item);
 			if (safeParse.success) {
 				safeParse.data.id = createId(safeParse.data.params);
@@ -33,9 +34,9 @@ const itemsById = computed(() => {
 			}
 			return filtered;
 		},
-		[] as Array<Zod.infer<typeof GeoMapSubnavItemSchema>>,
+		[] as Array<z.infer<typeof GeoMapSubnavItemSchema>>,
 	);
-	if (items == null) return new Map<ItemId, Zod.infer<typeof GeoMapSubnavItemSchema>>();
+	if (items == null) return new Map<ItemId, z.infer<typeof GeoMapSubnavItemSchema>>();
 	return keyByToMap(items, (item) => item.id);
 });
 
@@ -44,7 +45,7 @@ if (!itemsById.value.has(id)) {
 	itemsById.value.set(id, {
 		title: params.value.title ?? title.value,
 		params: params.value,
-	} as Zod.infer<typeof GeoMapSubnavItemSchema>);
+	} as z.infer<typeof GeoMapSubnavItemSchema>);
 }
 
 const selected = ref<Set<ItemId>>(new Set([id]));

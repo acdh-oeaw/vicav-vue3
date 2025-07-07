@@ -1,8 +1,10 @@
 <script setup lang="ts">
+import type { z } from "zod";
+
 import type { DictQuerySchema } from "@/types/global";
 
 const props = defineProps<{
-	params: Zod.infer<typeof DictQuerySchema>["params"];
+	params: z.infer<typeof DictQuerySchema>["params"];
 }>();
 const { params } = toRefs(props);
 

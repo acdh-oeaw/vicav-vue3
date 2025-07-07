@@ -3,13 +3,14 @@ import "v3-infinite-loading/lib/style.css";
 
 import InfiniteLoading from "v3-infinite-loading";
 import type { StateHandler } from "v3-infinite-loading/lib/types";
+import type { z } from "zod";
 
 import type { HttpResponse } from "@/lib/api-client";
 import type { AnnotationBlock, AnnotationDoc } from "@/types/corpus-as-json";
 import type { CorpusTextSchema, VicavHTTPError } from "@/types/global";
 
 const props = defineProps<{
-	params: Zod.infer<typeof CorpusTextSchema>["params"] & { label?: string };
+	params: z.infer<typeof CorpusTextSchema>["params"] & { label?: string };
 }>();
 
 const { simpleItems } = useTEIHeaders();
