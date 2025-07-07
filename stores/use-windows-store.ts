@@ -191,9 +191,16 @@ export const useWindowsStore = defineStore("windows", () => {
 		const w = registry.value.get(id);
 
 		if (
-			["ExploreSamples", "Profile", "Feature", "CorpusText", "SampleText", "Text"].includes(
-				w!.targetType,
-			)
+			[
+				"ExploreSamples",
+				"Profile",
+				"Feature",
+				"CorpusText",
+				"SampleText",
+				"Text",
+				"FeatureValue",
+				"Location",
+			].includes(w!.targetType)
 		) {
 			w!.winbox.addControl({
 				index: 0,

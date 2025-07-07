@@ -1,31 +1,44 @@
 <script setup lang="ts">
+import type { Column } from "@tanstack/vue-table";
 import {
-	Church,
 	Contact,
 	ExternalLink,
-	Info,
 	Languages,
 	type LucideIcon,
 	Mars,
+	MessageSquare,
 	UsersRound,
 	Venus,
+	VenusAndMars,
 } from "lucide-vue-next";
+import type { DefineComponent } from "vue";
+import ChurchOutlineIcon from "vue-material-design-icons/ChurchOutline.vue";
+import MosqueOutlineIcon from "vue-material-design-icons/MosqueOutline.vue";
+import SynagogueOutlineIcon from "vue-material-design-icons/SynagogueOutline.vue";
+
+import type { WindowItem } from "@/types/global";
+
+const { featureValueTaxonomy } = storeToRefs(useGeojsonStore());
 
 const props = defineProps<{
 	value?: Record<string, unknown>;
+	highlightedValues?: Array<string>;
+	column: Column<PatchedFeatureType>;
+	fullEntry: PatchedFeatureType["properties"];
 }>();
 
 function getSources(featureValueEntry: unknown) {
-	return (
-		(featureValueEntry as Record<string, Record<string, Record<string, string>>>).sources ?? {}
-	);
+	return (featureValueEntry as Record<string, Record<string, Record<string, string>>>).source;
 }
-const iconMap: Record<string, Record<string, LucideIcon>> = {
+const iconMap: Record<string, Record<string, LucideIcon | DefineComponent>> = {
 	gender: {
 		"#male": Mars,
 		"pgr:male": Mars,
+		Men: Mars,
 		"#female": Venus,
 		"pgr:female": Venus,
+		Women: Venus,
+		"#default": VenusAndMars,
 	},
 	firstLanguage: {
 		"#default": Languages,
@@ -37,21 +50,46 @@ const iconMap: Record<string, Record<string, LucideIcon>> = {
 		"#default": UsersRound,
 	},
 	religion: {
-		"#default": Church,
+		Jews: SynagogueOutlineIcon,
+		Christians: ChurchOutlineIcon,
+		"#default": MosqueOutlineIcon,
+	},
+	source_representations: {
+		"#default": Languages,
+	},
+	variety: {
+		"#default": Languages,
+	},
+	examples: {
+		"#default": MessageSquare,
 	},
 };
-const nonPersonGroupKeys = ["examples", "sources"];
-function getPersonGroups(featureValueEntry: unknown) {
-	const personGroups = Object.entries((featureValueEntry as Record<string, Array<string>>) ?? {})
+const nonPersonGroupKeys = ["source"];
+const hiddenKeys = ["remarks", "exceptions", "constraints", "source_representations", "resp"];
+function getPersonGroups(featureValueEntry: unknown, selectKey?: string | Array<string>) {
+	const personGroups = (featureValueEntry as Array<Record<string, Array<string>>>)
+		.flatMap((entry) => Object.entries(entry ?? {}))
 		.filter(([key]) => !nonPersonGroupKeys.includes(key))
+		.filter(([key]) =>
+			selectKey ? (Array.isArray(selectKey) ? selectKey.includes(key) : key === selectKey) : true,
+		)
 		.flatMap(([key, val]) => {
-			return val.map(
-				(entry) => {
-					return { [key]: entry };
-				},
-				{} as Record<string, string>,
-			);
-		});
+			if (Array.isArray(val))
+				return val.map(
+					(entry) => {
+						if (typeof entry === "object")
+							return Object.entries(entry).map(([example, translation]) => ({
+								[key]: `${example} (${translation})`,
+							}));
+						return { [key]: entry };
+					},
+					{} as Record<string, string>,
+				);
+			else {
+				return { [key]: val };
+			}
+		})
+		.flat();
 	return personGroups.toSorted(
 		(a, b) =>
 			(Object.keys(a)[0]?.localeCompare(Object.keys(b)[0] ?? "") ||
@@ -71,7 +109,8 @@ function getPersonGroupIcon(personGroup: Record<string, string>) {
 	return null;
 }
 function trimPrefix(str: string) {
-	return str.replace(/(#|pgr:)/, "");
+	if (typeof str === "string") return str.replace(/(#|pgr:)/, "");
+	else return str;
 }
 const { showAllDetails } = storeToRefs(useGeojsonStore());
 const infoOpen = ref(
@@ -87,27 +126,138 @@ watch(
 		);
 	},
 );
+
+const { getPetalSVG } = usePetalMarker();
+const { buildFeatureValueId } = useColorsStore();
+const { AND_OPERATOR } = useAdvancedQueries();
+
+const flattenedHighlightedValues = computed(() => {
+	return props.highlightedValues?.flatMap((val) => val.split(AND_OPERATOR)) ?? [];
+});
+
+function getPetalEntry(featureValue: string) {
+	if (props.highlightedValues?.includes(featureValue))
+		// value is directly selected
+		return { id: buildFeatureValueId(props.column.id, featureValue) };
+	else {
+		// check if value is selected in combined filter ("{x} AND {y}")
+		const combined = props.highlightedValues?.find(
+			(val) => val.includes(AND_OPERATOR) && val.split(AND_OPERATOR).includes(featureValue),
+		);
+		if (combined) return { id: buildFeatureValueId(props.column.id, combined) };
+	}
+	return { id: props.column.id, strokeOnly: true };
+}
+
+const sortedValues = computed(() => {
+	return Object.entries(props.value ?? {}).toSorted(([a, _a], [b, _b]) => {
+		const indexA = flattenedHighlightedValues.value?.includes(String(a)) ? -1 : 1;
+		const indexB = flattenedHighlightedValues.value?.includes(String(b)) ? -1 : 1;
+		return indexA === indexB ? a.localeCompare(b) : indexA - indexB;
+	}) as Array<[string, Array<Record<string, unknown>>]>;
+});
+
+const openOrUpdateWindow = useOpenOrUpdateWindow();
+function onValueClick(val: Array<Record<string, unknown>>, title: string) {
+	openOrUpdateWindow(
+		{
+			targetType: "FeatureValue",
+			params: {
+				values: val.map((v) => ({
+					...v,
+					title,
+					place: props.fullEntry.name,
+					feature: props.column.columnDef.header,
+					taxonomy: featureValueTaxonomy.value.get(`${props.column.columnDef.id}.${title}`),
+				})),
+				showCitation: false,
+			},
+		} as unknown as WindowItem,
+		`Feature Value Observation: ${title} | ${props.fullEntry.name}`,
+	);
+}
 </script>
 
 <template>
-	<div>
-		<div v-for="(key, val) in props.value" :key="val" class="my-0.5 block">
-			<div class="flex flex-wrap items-center gap-x-2 gap-y-0">
-				<span class="max-w-full flex-shrink-0 text-ellipsis">{{ val }}</span>
+	<div :class="{ 'flex flex-wrap gap-x-2': !showAllDetails, 'gap-2': showAllDetails }">
+		<div
+			v-for="[key, val] in sortedValues"
+			:key="key"
+			class="my-0.5"
+			:class="{ 'inline-block': !infoOpen[key], block: infoOpen[key] }"
+		>
+			<div
+				class="items-center gap-y-0"
+				:class="{
+					'inline-flex gap-x-0.5': !infoOpen[key],
+					'flex gap-x-2 flex-wrap': infoOpen[key],
+				}"
+			>
+				<svg class="size-3.5 shrink-0" v-html="getPetalSVG(getPetalEntry(key)).outerHTML"></svg>
+				<Button
+					class="flex-shrink-0 truncate p-0 h-auto !text-black"
+					:class="{
+						'font-medium': flattenedHighlightedValues?.includes(key),
+						'font-light': !flattenedHighlightedValues?.includes(key),
+					}"
+					variant="link"
+					@click="onValueClick(val, key)"
+					><Ellipsis cut-words="first" :max-length="!infoOpen[key] ? 15 : 30">{{
+						key
+					}}</Ellipsis></Button
+				>
+				<TooltipProvider>
+					<template v-for="personGroup in getPersonGroups(val, ['tribe', 'religion'])">
+						<Tooltip v-for="(personGroupVal, personGroupKey) in personGroup" :key="personGroupVal">
+							<TooltipTrigger
+								><Badge
+									class="line-clamp-1 ml-0.5"
+									:class="{ 'gap-1': !getPersonGroupIcon(personGroup)?.hideValue && infoOpen[key] }"
+									variant="outline"
+								>
+									<component
+										:is="getPersonGroupIcon(personGroup)!.icon"
+										v-if="getPersonGroupIcon(personGroup)"
+										class="shrink-0"
+										:size="12"
+									/>
+									<span :class="{ 'sr-only': getPersonGroupIcon(personGroup) }"
+										>{{ personGroupKey }}:
+									</span>
+									<span
+										class="line-clamp-1"
+										:class="{
+											'sr-only':
+												personGroupKey !== 'tribe' &&
+												(getPersonGroupIcon(personGroup)?.hideValue || !infoOpen[key]),
+										}"
+										>{{ trimPrefix(personGroupVal) }}</span
+									>
+								</Badge></TooltipTrigger
+							>
+							<TooltipContent class="bg-background capitalize"
+								><span>{{ personGroupKey }}: {{ trimPrefix(personGroupVal) }}</span></TooltipContent
+							>
+						</Tooltip>
+					</template></TooltipProvider
+				>
 
 				<Collapsible
-					v-if="getPersonGroups(key).length > 0"
-					v-model:open="infoOpen[val]"
+					v-if="(getPersonGroups(val).length > 0 || getSources(val)) && infoOpen"
+					v-model:open="infoOpen[key]"
 					class="flex gap-2"
 				>
-					<CollapsibleTrigger
-						><Info class="size-4 stroke-neutral-400 transition-colors hover:stroke-neutral-700" />
-						<span class="sr-only">Show info</span>
-					</CollapsibleTrigger>
 					<CollapsibleContent orientation="horizontal"
 						><div class="inline-flex items-center gap-2 text-ellipsis">
 							<TooltipProvider>
-								<template v-for="personGroup in getPersonGroups(key)">
+								<template
+									v-for="personGroup in getPersonGroups(val).filter(
+										(group) =>
+											!group['tribe'] &&
+											!group['religion'] &&
+											Object.keys(group).every((key) => !hiddenKeys.includes(key)),
+									)"
+								>
 									<Tooltip
 										v-for="(personGroupVal, personGroupKey) in personGroup"
 										:key="personGroupVal"
@@ -117,7 +267,8 @@ watch(
 												<component
 													:is="getPersonGroupIcon(personGroup)!.icon"
 													v-if="getPersonGroupIcon(personGroup)"
-													class="size-3"
+													class="shrink-0"
+													:size="12"
 												/>
 												<span :class="{ 'sr-only': getPersonGroupIcon(personGroup) }"
 													>{{ personGroupKey }}:
@@ -129,7 +280,7 @@ watch(
 												>
 											</Badge></TooltipTrigger
 										>
-										<TooltipContent class="bg-background"
+										<TooltipContent class="bg-background capitalize"
 											><span
 												>{{ personGroupKey }}: {{ trimPrefix(personGroupVal) }}</span
 											></TooltipContent
@@ -141,7 +292,7 @@ watch(
 					</CollapsibleContent>
 				</Collapsible>
 				<NuxtLink
-					v-for="source in getSources(key)"
+					v-for="source in getSources(val)"
 					:key="source.link"
 					class="flex gap-1 text-primary"
 					external

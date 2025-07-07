@@ -1,3 +1,4 @@
+import type { Row } from "@tanstack/vue-table";
 import type { Ref } from "vue";
 import { z } from "zod";
 
@@ -152,6 +153,39 @@ export const FeatureSchema = z.object({
 });
 export type FeatureWindowItem = WindowItemBase & z.infer<typeof FeatureSchema>;
 
+export const FeatureValueSchema = z.object({
+	targetType: z.literal("FeatureValue"),
+	params: z.object({ values: z.array(z.any()) }).merge(ShowCitation.partial()),
+});
+export type FeatureValueWindowItem = WindowItemBase & z.infer<typeof FeatureValueSchema>;
+
+export const GeoFeatureSchema = z.object({
+	type: z.literal("Feature"),
+	id: z.string(),
+	geometry: z.object({
+		type: z.literal("Point"),
+		coordinates: z.array(z.number()),
+	}),
+	properties: z.any(),
+});
+export type FeatureType = z.infer<typeof GeoFeatureSchema>;
+
+export const FeatureCollectionSchema = z.object({
+	type: z.literal("FeatureCollection"),
+	properties: z.object({
+		name: z.string(),
+		column_headings: z.array(z.any()),
+	}),
+	features: z.array(GeoFeatureSchema),
+});
+export type FeatureCollectionType = z.infer<typeof FeatureCollectionSchema>;
+
+export const LocationSchema = z.object({
+	targetType: z.literal("Location"),
+	params: z.object<Row<FeatureType>>({}).merge(ShowCitation.partial()).passthrough(),
+});
+export type LocationWindowItem = WindowItemBase & z.infer<typeof LocationSchema>;
+
 export const CompareMarkersParams = z.object();
 
 export const GeoMapScope = z.enum(["reg", "geo", "diaGroup"]);
@@ -251,6 +285,7 @@ export const Schema = z.discriminatedUnion("targetType", [
 	CorpusQuerySchema,
 	CorpusTextSchema,
 	FeatureSchema,
+	FeatureValueSchema,
 	GeoMapSchema,
 	ProfileSchema,
 	TextSchema,
@@ -261,6 +296,7 @@ export const Schema = z.discriminatedUnion("targetType", [
 	DataTableSchema,
 	ExploreSamplesSchema,
 	ExploreSamplesFormSchema,
+	LocationSchema,
 ]);
 export type WindowItem = WindowItemBase & z.infer<typeof Schema>;
 
@@ -269,27 +305,6 @@ export type WindowItemTargetType = WindowItem["targetType"];
 export type WindowItemMap = {
 	[TargetType in WindowItemTargetType]: Extract<WindowItem, { targetType: TargetType }>;
 };
-
-export const GeoFeatureSchema = z.object({
-	type: z.literal("Feature"),
-	id: z.string(),
-	geometry: z.object({
-		type: z.literal("Point"),
-		coordinates: z.array(z.number()),
-	}),
-	properties: z.any(),
-});
-export type FeatureType = z.infer<typeof GeoFeatureSchema>;
-
-export const FeatureCollectionSchema = z.object({
-	type: z.literal("FeatureCollection"),
-	properties: z.object({
-		name: z.string(),
-		column_headings: z.array(z.any()),
-	}),
-	features: z.array(GeoFeatureSchema),
-});
-export type FeatureCollectionType = z.infer<typeof FeatureCollectionSchema>;
 
 export interface VicavHTTPError extends Error {
 	status?: number;

@@ -14,7 +14,7 @@ import {
 
 import customFacetedUniqueValues from "@/utils/customFacetedUniqueValues";
 
-const emit = defineEmits(["table-ready", "columnFiltersChange", "globalFilterChange"]);
+const emit = defineEmits(["table-ready", "columnFiltersChange", "globalFilterChange", "row-click"]);
 
 interface Props {
 	items: Array<never>;
@@ -99,6 +99,7 @@ const table = useVueTable({
 	getFacetedRowModel: getFacetedRowModel(),
 	getFacetedUniqueValues: customFacetedUniqueValues,
 	globalFilterFn: props.globalFilterFn,
+	enableMultiRowSelection: false,
 });
 
 onMounted(() => {
@@ -127,7 +128,12 @@ onMounted(() => {
 		</TableHeader>
 		<TableBody>
 			<template v-if="table.getRowModel().rows?.length">
-				<TableRow v-for="row in table.getRowModel().rows" :key="row.id">
+				<TableRow
+					v-for="row in table.getRowModel().rows"
+					:key="row.id"
+					:class="{ 'bg-secondary': row.getIsSelected() }"
+					@click="emit('row-click', row)"
+				>
 					<TableCell v-for="cell in row.getVisibleCells()" :key="cell.id">
 						<FlexRender :props="cell.getContext()" :render="cell.column.columnDef.cell" />
 					</TableCell>

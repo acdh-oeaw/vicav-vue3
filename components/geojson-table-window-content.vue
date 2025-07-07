@@ -12,8 +12,10 @@ const url = "https://raw.githubusercontent.com/wibarab/wibarab-data/main/wibarab
 
 const { isPending } = GeojsonStore.fetchGeojson(url);
 const { fetchedData, tables, showAllDetails } = storeToRefs(GeojsonStore);
+const { buildFeatureTaxonomy } = GeojsonStore;
 const { data: projectData } = useProjectInfo();
 const { createColumnDefs } = useColumnGeneration();
+const { getTraversedAST } = useFilterParser();
 
 const columns = computed(() => {
 	const allFeatureNames = fetchedData.value.get(url)?.properties.column_headings;
@@ -44,24 +46,32 @@ function applyGlobalFilter(row: Row<FeatureType>, _colId: string, queryString: s
 	return false;
 }
 
-function applyQueryString(row: Row<FeatureType>, _colId: string, queryString: string) {
+function applyQueryString(row: Row<FeatureType>, colId: string, queryString: string) {
 	if (!queryString) return true;
 	const metadata: Record<string, Array<string>> = {};
+	const affectedColumns = getTraversedAST(queryString);
 	const preparedRow = Object.fromEntries(
 		Object.entries(row.original.properties).map(([key, value]) => {
-			if (value && typeof value === "object") {
-				for (const metadataObject of Object.values(value)) {
-					for (const metaKey in metadataObject) {
-						if (!(metaKey in metadata)) metadata[metaKey] = [];
-						metadata[metaKey] = metadata[metaKey]!.concat(metadataObject[metaKey]);
-					}
+			if (
+				affectedColumns.find((entry) => entry.column === key) &&
+				value &&
+				typeof value === "object"
+			) {
+				for (const metadataObjects of Object.values(value)) {
+					for (const metadataObject of metadataObjects)
+						for (const metaKey in metadataObject) {
+							if (!(metaKey in metadata)) metadata[metaKey] = [];
+							metadata[metaKey] = metadata[metaKey]!.concat(metadataObject[metaKey]);
+						}
 				}
 				return [key, Object.keys(value)];
 			}
 			return [key, value];
 		}),
 	);
+
 	for (const key in metadata) preparedRow[key] = [...new Set(metadata[key])];
+
 	return test(parse(queryString), preparedRow);
 }
 
@@ -82,6 +92,9 @@ function onColumnFilterChange(columnFilters: Array<{ id: string; value: Map<stri
 
 const tableRef = ref<Table<FeatureType>>();
 function registerTable(table: Table<FeatureType>) {
+	buildFeatureTaxonomy(
+		projectData.value?.projectConfig?.staticData?.table?.[0] as Record<string, never>,
+	);
 	tables.value.set(url, table);
 	tableRef.value = table;
 	const mw = findWindowByTypeAndParam("GeojsonMap", "url", url);
@@ -102,6 +115,10 @@ function registerTable(table: Table<FeatureType>) {
 		});
 	}
 }
+
+function onRowClick(row: Row<FeatureType>) {
+	row.toggleSelected();
+}
 </script>
 
 <template>
@@ -115,7 +132,7 @@ function registerTable(table: Table<FeatureType>) {
 			<div class="flex gap-2">
 				<Toggle v-model:model-value="showAllDetails" class="h-8"
 					><Info class="size-4 stroke-neutral-800 transition-colors" />
-					<span class="text-ellipsis line-clamp-1">Show all details</span></Toggle
+					<span class="text-ellipsis line-clamp-1">Show details</span></Toggle
 				>
 				<DataTableActiveFilters
 					v-if="tableRef"
@@ -139,6 +156,7 @@ function registerTable(table: Table<FeatureType>) {
 			:items="fetchedData.get(url)?.features as Array<never>"
 			:min-header-depth="2"
 			:visibility-change-fn="onVisibilityChange"
+			@row-click="onRowClick"
 			@table-ready="registerTable"
 		></DataTable>
 		<div class="grid justify-items-end py-2">

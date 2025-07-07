@@ -17,11 +17,15 @@ import { type GeoMapContext, key, type MarkerProperties } from "@/components/geo
 import GeoMapPopupContent from "@/components/geo-map-popup-content.vue";
 import type { MarkerType } from "@/types/global";
 
+const { getPetalMarker } = usePetalMarker();
+
 interface Props {
 	height: number;
 	markers: Array<Feature<Point, MarkerProperties>>;
 	width: number;
 	markerType?: MarkerType;
+	selection?: [number, number];
+	displayLabels?: number;
 }
 
 const props = defineProps<Props>();
@@ -199,6 +203,22 @@ function updateMarkers(updateViewport = true) {
 		featureGroup.addData(marker);
 	});
 
+	if (props.displayLabels)
+		featureGroup.eachLayer((layer) => {
+			layer.on("mouseover", () => {
+				if (props.displayLabels && (context.map?.getZoom() ?? 0) >= props.displayLabels)
+					context.map?.eachLayer((l) => {
+						if (l !== layer) l.closeTooltip();
+					});
+			});
+			layer.on("mouseout", () => {
+				if (props.displayLabels && (context.map?.getZoom() ?? 0) >= props.displayLabels)
+					context.map?.eachLayer((l) => {
+						l.openTooltip();
+					});
+			});
+		});
+
 	if (updateViewport) fitAllMarkersOnViewport();
 	updatePopups();
 }
@@ -223,6 +243,38 @@ function fitAllMarkersOnViewport() {
 	}
 }
 
+const lastZoom = ref<number | null>(null);
+function updateTooltips() {
+	if (!context.map || !props.displayLabels) return;
+	const zoom = context.map!.getZoom();
+	if (zoom < props.displayLabels && (!lastZoom.value || lastZoom.value >= props.displayLabels)) {
+		context.map?.eachLayer((l) => {
+			const tooltip = l.getTooltip();
+			if (tooltip) {
+				l.unbindTooltip().bindTooltip(tooltip.getContent()!, {
+					permanent: false,
+					sticky: true,
+				});
+			}
+		});
+	} else if (
+		zoom >= props.displayLabels &&
+		(!lastZoom.value || lastZoom.value < props.displayLabels)
+	) {
+		context.map?.eachLayer((l) => {
+			const tooltip = l.getTooltip();
+			if (tooltip) {
+				l.unbindTooltip().bindTooltip(tooltip.getContent()!, {
+					permanent: true,
+					sticky: false,
+					offset: [12, 0],
+				});
+			}
+		});
+	}
+	lastZoom.value = zoom;
+}
+
 onMounted(async () => {
 	if (mapRef.value == null) return;
 
@@ -237,7 +289,7 @@ onMounted(async () => {
 
 	context.featureGroups.markers = geoJSON<MarkerProperties, Point>(undefined, {
 		onEachFeature(feature, layer) {
-			const tooltipContent = `${feature.properties.name} (${feature.properties.hitCount})`;
+			const tooltipContent = `${feature.properties.name}${feature.properties.hitCount ? ` (${feature.properties.hitCount})` : ""}`;
 
 			layer.bindTooltip(tooltipContent, {
 				permanent: false,
@@ -260,7 +312,7 @@ onMounted(async () => {
 			});
 		},
 		pointToLayer(feature, latlng) {
-			if (props.markerType === "petal") return usePetalMarker(feature, latlng);
+			if (props.markerType === "petal") return getPetalMarker(feature, latlng);
 			if (feature.properties.type === "reg") {
 				return circleMarker(latlng, config.marker.region);
 			}
@@ -272,6 +324,9 @@ onMounted(async () => {
 	updateMarkers();
 	context.map.on("zoomend", () => {
 		updatePopups();
+	});
+	context.map.on("zoom", () => {
+		updateTooltips();
 	});
 });
 
@@ -312,6 +367,13 @@ watch(
 	resize,
 );
 
+watch(
+	() => props.selection,
+	() => {
+		if (props.selection) context.map?.flyTo([props.selection[1], props.selection[0]], 10);
+	},
+);
+
 onUnmounted(() => {
 	context.map?.remove();
 });
@@ -320,7 +382,6 @@ provide(key, context);
 </script>
 
 <template>
-	<SvgoPetal v-if="props.markerType === 'petal'" />
 	<div ref="mapRef" class="absolute inset-0 grid" data-geo-map />
 	<slot :context="context" />
 	<GeoMapPopupContent
