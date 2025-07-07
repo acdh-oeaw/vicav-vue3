@@ -22,7 +22,7 @@ export const useGeojsonStore = defineStore("geojson", () => {
 			}
 		}
 	}
-	
+
 	const fetchGeojson = (url: string) => {
 		return useQuery({
 			enabled: true,
