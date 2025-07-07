@@ -12,7 +12,8 @@ export interface AnnotationBlock {
 	"@id": string;
 	"@start": string;
 	"@end": string;
-	u: U;
+	u?: U;
+	us?: Array<U>;
 	spanGrp: SpanGrp;
 }
 
