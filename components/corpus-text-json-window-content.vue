@@ -180,7 +180,10 @@ onMounted(async () => {
 								:utterance="uContent"
 							></CorpusTextJsonUtterance>
 						</div>
-						<div v-if="inlineTranslations" class="px-6 py-3 max-w-full flex flex-row italic">
+						<div
+							v-if="inlineTranslations && a.spanGrp"
+							class="px-6 py-3 max-w-full flex flex-row italic"
+						>
 							{{ a.spanGrp.span["$"] }}
 						</div>
 					</td>

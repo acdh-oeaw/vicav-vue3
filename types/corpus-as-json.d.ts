@@ -14,7 +14,7 @@ export interface AnnotationBlock {
 	"@end": string;
 	u?: U;
 	us?: Array<U>;
-	spanGrp: SpanGrp;
+	spanGrp?: SpanGrp;
 }
 
 export interface SpanGrp {
