@@ -6,7 +6,7 @@ const props = defineProps<{
 }>();
 const { params } = toRefs(props);
 
-defineEmits(["updateQueryParam"]);
+const emit = defineEmits(["updateQueryParam"]);
 
 const dictStore = useDictStore();
 await dictStore.initialize();
@@ -17,7 +17,7 @@ const formId = `dictQueryForm-${params.value.textId}`;
 /* data fetch parameters editing copies */
 const q = ref<string>(params.value.queryParams?.q ?? "");
 const page = ref<number>(params.value.queryParams?.page ?? 1);
-const pageSize = ref<number | undefined>(params.value.queryParams?.pageSize);
+const pageSize = ref<number | undefined | null>(params.value.queryParams?.pageSize);
 const id = ref<string | null | undefined>(params.value.queryParams?.id);
 const ids = ref<string | null | undefined>(params.value.queryParams?.ids);
 const sort = ref<"asc" | "desc" | "none" | null | undefined>(params.value.queryParams?.sort);
@@ -99,6 +99,10 @@ const updateQueryParams = () => {
 	else delete queryParams.value.altLemma;
 	if (format.value) queryParams.value.format = format.value;
 	else delete queryParams.value.format;
+	params.value.queryParams = queryParams.value;
+	// There is a label passed from the TEI description text. Can we use it?
+	params.value.queryString = `${params.value.textId ?? ""}: ${queryParams.value.q ?? ""}`;
+	emit("updateQueryParam", params.value.queryString);
 };
 updateQueryParams();
 const { data, isPending, isPlaceholderData } = useDictsEntries({
@@ -118,11 +122,11 @@ const isLoading = computed(() => {
 
 const isExtendedFormOpen = ref(false);
 
-/* pagination */
+/* pagination
 const goToPage = (newPage: number) => {
 	page.value = newPage;
 	updateQueryParams();
-};
+}; */
 
 /* TODO: only for testing; not intended for production */
 const api = useApiClient();
@@ -312,12 +316,13 @@ const api = useApiClient();
 		<div v-if="data" class="prose mb-auto max-w-3xl p-8">
 			<div v-if="data.total_items">Total items: {{ data.total_items }}</div>
 			<div v-if="data.page_count">
-				<UPagination
+				<pre>{{ JSON.stringify(data._links, null, "  ") }}</pre>
+				<!-- UPagination
 					:model-value="parseInt(data.page)"
 					:page-count="parseInt(data.page_size)"
 					:total="parseInt(data.total_items)"
 					@update:model-value="goToPage"
-				/>
+				/ -->
 			</div>
 			<div v-if="data.took">Search duration: {{ data.took }} ms</div>
 			<div v-if="data._embedded && data._embedded.entries">
