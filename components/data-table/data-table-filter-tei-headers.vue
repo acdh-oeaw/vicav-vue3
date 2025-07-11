@@ -118,16 +118,18 @@ watch(
 				</Select>
 			</div>
 			<div class="flex items-center space-x-2">
-				<p id="settlement" class="whitespace-nowrap text-sm font-medium">Place:</p>
-				<Input
+				<label class="whitespace-nowrap text-sm font-medium" for="place">Place:</label>
+				<input
+					id="place"
 					class="h-8 w-32 rounded-md border border-input"
 					:value="settlementFilter?.value"
 					@change="setSettlementFilter"
 				/>
 			</div>
 			<div class="flex items-center space-x-2">
-				<p id="settlement" class="whitespace-nowrap text-sm font-medium">Region:</p>
-				<Input
+				<label class="whitespace-nowrap text-sm font-medium" for="region">Region:</label>
+				<input
+					id="region"
 					class="h-8 w-32 rounded-md border border-input"
 					:value="regionFilter?.value"
 					@change="setRegionFilter"
@@ -136,8 +138,9 @@ watch(
 		</div>
 		<div class="flex items-center space-x-2">
 			<div class="flex items-center space-x-2">
-				<p id="name" class="whitespace-nowrap text-sm font-medium">Speaker:</p>
-				<Input
+				<label class="whitespace-nowrap text-sm font-medium" for="speaker">Speaker:</label>
+				<input
+					id="speaker"
 					class="h-8 w-32 rounded-md border border-input"
 					:value="speakerFilter?.value"
 					@change="setSpeakerFilter"

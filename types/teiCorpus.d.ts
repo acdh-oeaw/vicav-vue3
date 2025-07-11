@@ -423,7 +423,7 @@ export type PlaceName = {
 };
 
 export type TextClass = {
-	catRef?: TeiTypedTarget;
+	catRefs?: Array<TeiTypedTarget>;
 };
 
 export type RevisionDesc = {
