@@ -36,9 +36,9 @@ const filterUpdated = function () {
 			for="sex-male"
 		>
 			<CheckboxRoot
+				id="sex-male"
 				v-model:checked="male"
 				class="flex size-[20px] appearance-none items-center justify-center rounded-[4px] bg-white shadow-[0_2px_2px] shadow-gray-300 outline-hidden focus-within:shadow-[0_0_0_2px_gray]"
-				if="sex-male"
 				@update:checked="filterUpdated"
 			>
 				<CheckboxIndicator class="flex size-full items-center justify-center rounded bg-white">
