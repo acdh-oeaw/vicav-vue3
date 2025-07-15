@@ -25,14 +25,12 @@ const altLemma = ref<string | null | undefined>(params.value.queryParams?.altLem
 const format = ref<string | null | undefined>(params.value.queryParams?.format ?? "html");
 
 /* filter criteria editor */
-const isTextInputManual = ref(false);
 const textInput = ref("");
-const queryTemplate = ref("");
 const filterCriteria = ref<Map<string, string>>(new Map([]));
 
 const addFilter = () => {
 	if (textInput.value !== "") {
-		filterCriteria.value.set(queryTemplate.value, textInput.value);
+		filterCriteria.value.set(params.value.queryTemplate ?? "", textInput.value);
 	}
 };
 
@@ -42,7 +40,7 @@ const removeFilter = (key: string) => {
 
 const editFilter = (k: string, v: string): void => {
 	if (myDict?.queryTemplates.has(k)) {
-		queryTemplate.value = k;
+		params.value.queryTemplate = k;
 		textInput.value = v;
 	}
 };
@@ -82,7 +80,7 @@ const updateQueryParams = () => {
 	if (queryParams.value === undefined) return;
 	if (q.value) queryParams.value.q = q.value;
 	else delete queryParams.value.q;
-	if (isTextInputManual.value) {
+	if (params.value.isTextInputManual) {
 		updateFilterCriteria();
 	}
 	if (page.value) queryParams.value.page = page.value;
@@ -105,6 +103,7 @@ const updateQueryParams = () => {
 	emit("updateQueryParam", params.value.queryString);
 };
 updateQueryParams();
+watch(params, updateQueryParams, { deep: true });
 const { data, isPending, isPlaceholderData } = useDictsEntries({
 	dictId: String(myDict?.id),
 	queryParams: queryParams.value,
@@ -119,8 +118,6 @@ watch(data, (newData) => {
 const isLoading = computed(() => {
 	return isPending.value || isPlaceholderData.value;
 });
-
-const isExtendedFormOpen = ref(false);
 
 /* pagination
 const goToPage = (newPage: number) => {
@@ -139,12 +136,54 @@ const api = useApiClient();
 		:class="{ 'opacity-50 grayscale': isLoading }"
 	>
 		<!-- eslint-disable vuejs-accessibility/form-control-has-label, tailwindcss/no-custom-classname -->
-		<div class="prose max-w-3xl px-8 pb-4 pt-8">
-			<div class="dvStats flex w-full items-baseline">Query {{ params.textId }}:</div>
-			<div :id="formId" class="max-w-3xl bg-gray-200 p-4">
+		<Collapsible v-model:open="params.isQueryVisible" class="prose max-w-3xl px-8 pb-4 pt-8">
+			<CollapsibleTrigger class="dvStats flex w-full items-baseline">
+				<span>Query {{ params.textId }}:</span>
+				<div class="relative top-1 ml-auto mr-4">
+					<div v-if="!params.isQueryVisible">
+						<svg
+							class="svg-icon"
+							style="
+								vertical-align: middle;
+								overflow: hidden;
+								width: 1em;
+								height: 1em;
+								fill: currentColor;
+							"
+							version="1.1"
+							viewBox="0 0 1024 1024"
+							xmlns="http://www.w3.org/2000/svg"
+						>
+							<path
+								d="M511.5 789.9 80.6 359c-22.8-22.8-22.8-59.8 0-82.6 22.8-22.8 59.8-22.8 82.6 0l348.3 348.3 348.3-348.3c22.8-22.8 59.8-22.8 82.6 0 22.8 22.8 22.8 59.8 0 82.6L511.5 789.9 511.5 789.9zM511.5 789.9"
+							/>
+						</svg>
+					</div>
+					<div v-if="params.isQueryVisible">
+						<svg
+							class="svg-icon"
+							style="
+								vertical-align: middle;
+								overflow: hidden;
+								width: 1em;
+								height: 1em;
+								fill: currentColor;
+							"
+							version="1.1"
+							viewBox="0 0 1024 1024"
+							xmlns="http://www.w3.org/2000/svg"
+						>
+							<path
+								d="M511.5 259.3 942.4 690.1c22.8 22.8 22.8 59.8 0 82.6-22.8 22.8-59.8 22.8-82.6 0L511.5 424.5 163.2 772.8c-22.8 22.8-59.8 22.8-82.6 0-22.8-22.8-22.8-59.8 0-82.6L511.5 259.3 511.5 259.3zM511.5 259.3"
+							/>
+						</svg>
+					</div>
+				</div>
+			</CollapsibleTrigger>
+			<CollapsibleContent :id="formId" class="max-w-3xl bg-gray-200 p-4">
 				<div>
 					<label class="relative inline-flex cursor-pointer items-center">
-						<input v-model="isTextInputManual" class="peer sr-only" type="checkbox" />
+						<input v-model="params.isTextInputManual" class="peer sr-only" type="checkbox" />
 						<div
 							class="peer relative h-4 w-10 flex-auto shrink-0 rounded-[5px] bg-gray-500 after:absolute after:start-[2px] after:top-px after:m-0.5 after:h-3 after:w-4 after:rounded-[3px] after:border after:border-gray-500/50 after:bg-on-primary after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-primary/50 peer-focus:outline-hidden peer-focus:ring-4 peer-focus:ring-primary/50 dark:border-gray-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800 peer-checked:rtl:after:-translate-x-full"
 						></div>
@@ -153,7 +192,7 @@ const api = useApiClient();
 						</span>
 					</label>
 				</div>
-				<div v-if="isTextInputManual">
+				<div v-if="params.isTextInputManual">
 					<InputBuilder
 						v-model="q"
 						:special-characters="myDict.specialCharacters"
@@ -164,7 +203,7 @@ const api = useApiClient();
 					<div>
 						<InputBuilder
 							v-model="textInput"
-							v-model:select-value="queryTemplate"
+							v-model:select-value="params.queryTemplate"
 							aria-label="Search"
 							class="mb-3"
 							placeholder="Filter by&hellip;"
@@ -200,106 +239,6 @@ const api = useApiClient();
 						button.
 					</div>
 				</div>
-				<div class="mt-4">
-					<Collapsible v-model:open="isExtendedFormOpen" class="prose max-w-3xl px-8 pb-4 pt-8">
-						<CollapsibleTrigger class="dvStats flex w-full items-baseline">
-							Extended options:s
-							<div class="relative top-1 ml-auto mr-4">
-								<div v-if="!isExtendedFormOpen">
-									<svg
-										class="svg-icon"
-										style="
-											vertical-align: middle;
-											overflow: hidden;
-											width: 1em;
-											height: 1em;
-											fill: currentColor;
-										"
-										viewBox="0 0 1024 1024"
-										xmlns="http://www.w3.org/2000/svg"
-									>
-										<path
-											d="M511.5 789.9 80.6 359c-22.8-22.8-22.8-59.8 0-82.6 22.8-22.8 59.8-22.8 82.6 0l348.3 348.3 348.3-348.3c22.8-22.8 59.8-22.8 82.6 0 22.8 22.8 22.8 59.8 0 82.6L511.5 789.9 511.5 789.9zM511.5 789.9"
-										/>
-									</svg>
-								</div>
-								<div v-if="isExtendedFormOpen">
-									<svg
-										class="svg-icon"
-										style="
-											vertical-align: middle;
-											overflow: hidden;
-											width: 1em;
-											height: 1em;
-											fill: currentColor;
-										"
-										viewBox="0 0 1024 1024"
-										xmlns="http://www.w3.org/2000/svg"
-									>
-										<path
-											d="M511.5 259.3 942.4 690.1c22.8 22.8 22.8 59.8 0 82.6-22.8 22.8-59.8 22.8-82.6 0L511.5 424.5 163.2 772.8c-22.8 22.8-59.8 22.8-82.6 0-22.8-22.8-22.8-59.8 0-82.6L511.5 259.3 511.5 259.3zM511.5 259.3"
-										/>
-									</svg>
-								</div>
-							</div>
-						</CollapsibleTrigger>
-						<CollapsibleContent>
-							<div :id="`${formId}_ext`" class="bg-gray-200 px-4">
-								<table class="w-full max-w-full table-fixed">
-									<tbody>
-										<tr>
-											<th>page</th>
-											<td>
-												<input v-model="page" class="w-full" type="number" />
-											</td>
-										</tr>
-										<tr>
-											<th>pageSize</th>
-											<td>
-												<input v-model="pageSize" class="w-full" type="number" />
-											</td>
-										</tr>
-										<tr>
-											<th>id</th>
-											<td>
-												<input v-model="id" class="w-full" type="text" />
-											</td>
-										</tr>
-										<tr>
-											<th>ids</th>
-											<td>
-												<input v-model="ids" class="w-full" type="text" />
-											</td>
-										</tr>
-										<tr>
-											<th>sort</th>
-											<td>
-												<select v-model="sort" class="w-full">
-													<option :value="null"></option>
-													<option value="none">none</option>
-													<option value="asc">asc</option>
-													<option value="desc">desc</option>
-												</select>
-											</td>
-										</tr>
-										<tr>
-											<th>altLemma</th>
-											<td>
-												<input v-model="altLemma" class="w-full" type="text" />
-											</td>
-										</tr>
-										<tr>
-											<th>format</th>
-											<td>
-												<input v-model="format" class="w-full" type="text" />
-											</td>
-										</tr>
-									</tbody>
-								</table>
-							</div>
-						</CollapsibleContent>
-					</Collapsible>
-				</div>
 				<div class="mt-3">
 					<button
 						class="biblQueryBtn"
@@ -309,20 +248,14 @@ const api = useApiClient();
 						Query
 					</button>
 				</div>
-			</div>
-		</div>
+			</CollapsibleContent>
+		</Collapsible>
 
 		<!-- eslint-disable-next-line vue/no-v-html, vuejs-accessibility/click-events-have-key-events, vuejs-accessibility/no-static-element-interactions -->
 		<div v-if="data" class="prose mb-auto max-w-3xl p-8">
 			<div v-if="data.total_items">Total items: {{ data.total_items }}</div>
 			<div v-if="data.page_count">
 				<pre>{{ JSON.stringify(data._links, null, "  ") }}</pre>
-				<!-- UPagination
-					:model-value="parseInt(data.page)"
-					:page-count="parseInt(data.page_size)"
-					:total="parseInt(data.total_items)"
-					@update:model-value="goToPage"
-				/ -->
 			</div>
 			<div v-if="data.took">Search duration: {{ data.took }} ms</div>
 			<div v-if="data._embedded && data._embedded.entries">
