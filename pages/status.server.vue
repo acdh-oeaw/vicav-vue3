@@ -25,12 +25,12 @@ const env = useRuntimeConfig();
 <template>
 	<pre>
 Backend response:
-  ETag: {{ data?.ETag ?? "" }}
-  baseURIPublic: {{ data?.projectConfig?.baseURIPublic ?? "" }}
-  took: {{ data?.took ?? "" }}
-  version: {{ data?.projectConfig?.version?.backend ?? "" }}
+{{ "  " }}ETag: {{ data?.ETag ?? "" }}
+{{ "  " }}baseURIPublic: {{ data?.projectConfig?.baseURIPublic ?? "" }}
+{{ "  " }}took: {{ data?.took ?? "" }}
+{{ "  " }}version: {{ data?.projectConfig?.version?.backend ?? "" }}
 Frontend:
-  version: {{ env.public.currentGitSha ?? "" }}
+{{ "  " }}version: {{ env.public.currentGitSha ?? "" }}
 	</pre
 	>
 </template>
