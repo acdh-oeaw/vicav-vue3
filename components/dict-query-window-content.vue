@@ -25,12 +25,14 @@ const altLemma = ref<string | null | undefined>(params.value.queryParams?.altLem
 const format = ref<string | null | undefined>(params.value.queryParams?.format ?? "html");
 
 /* filter criteria editor */
-const textInput = ref("");
 const filterCriteria = ref<Map<string, string>>(new Map([]));
 
 const addFilter = () => {
-	if (textInput.value !== "") {
-		filterCriteria.value.set(params.value.queryTemplate ?? "", textInput.value);
+	if (
+		params.value.queryTemplateTextInput !== undefined &&
+		params.value.queryTemplateTextInput !== ""
+	) {
+		filterCriteria.value.set(params.value.queryTemplate ?? "", params.value.queryTemplateTextInput);
 	}
 };
 
@@ -41,7 +43,7 @@ const removeFilter = (key: string) => {
 const editFilter = (k: string, v: string): void => {
 	if (myDict?.queryTemplates.has(k)) {
 		params.value.queryTemplate = k;
-		textInput.value = v;
+		params.value.queryTemplateTextInput = v;
 	}
 };
 
@@ -58,7 +60,7 @@ watch(
 );
 
 const updateFilterCriteria = () => {
-	textInput.value = "";
+	params.value.queryTemplateTextInput = "";
 	filterCriteria.value =
 		q.value === undefined || q.value === ""
 			? new Map([])
@@ -82,6 +84,8 @@ const updateQueryParams = () => {
 	else delete queryParams.value.q;
 	if (params.value.isTextInputManual) {
 		updateFilterCriteria();
+	} else {
+		params.value.queryTemplateTextInput ??= "";
 	}
 	if (page.value) queryParams.value.page = page.value;
 	else delete queryParams.value.page;
@@ -202,7 +206,7 @@ const api = useApiClient();
 				<div v-else>
 					<div>
 						<InputBuilder
-							v-model="textInput"
+							v-model="params.queryTemplateTextInput"
 							v-model:select-value="params.queryTemplate"
 							aria-label="Search"
 							class="mb-3"
