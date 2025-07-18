@@ -278,7 +278,7 @@ const extractMetadata = function (
 	template.person = extractPersons(item, corpusMetadata);
 	if (template.dataType === "CorpusText" && corpusMetadata) {
 		const categoryId = item.teiHeader.profileDesc?.textClass?.catRefs
-			? item.teiHeader.profileDesc.textClass.catRefs[0]!["@target"]
+			? item.teiHeader.profileDesc.textClass.catRefs.at(0)?.["@target"]
 			: "";
 
 		const mergedTaxonomies: Taxonomy = {
