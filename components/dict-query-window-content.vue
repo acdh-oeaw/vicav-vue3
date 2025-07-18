@@ -259,38 +259,40 @@ const api = useApiClient();
 
 		<!-- eslint-disable-next-line vue/no-v-html, vuejs-accessibility/click-events-have-key-events, vuejs-accessibility/no-static-element-interactions -->
 		<div v-if="data" class="prose mb-auto max-w-3xl p-8">
-			<div v-if="data.total_items">Total items: {{ data.total_items }}</div>
-			<div v-if="data.page_count">
+			<div v-if="params.isQueryVisible && data.total_items">
+				Total items: {{ data.total_items }}
+			</div>
+			<div v-if="params.isQueryVisible && data.page_count">
 				<pre>{{ JSON.stringify(data._links, null, "  ") }}</pre>
 			</div>
-			<div v-if="data.took">Search duration: {{ data.took }} ms</div>
+			<div v-if="params.isQueryVisible && data.took">Search duration: {{ data.took }} ms</div>
 			<div v-if="data._embedded && data._embedded.entries">
 				<div v-for="(e, i) in data._embedded.entries" :key="i" class="mt-6">
-					<div v-if="typeof e.id === 'string'" class="text-sm">
+					<div v-if="params.isQueryVisible && typeof e.id === 'string'" class="text-sm">
 						<span class="font-bold">id:&nbsp;</span>
 						<span>
 							<a :href="`${api.baseUrl}${e._links?.self.href}`">{{ e.id }}</a>
 						</span>
 					</div>
-					<div v-if="typeof e.sid === 'string'" class="text-sm">
+					<div v-if="params.isQueryVisible && typeof e.sid === 'string'" class="text-sm">
 						<span class="font-bold">sid:&nbsp;</span>
 						<span>
 							{{ e.sid }}
 						</span>
 					</div>
-					<div v-if="typeof e.lemma === 'string'" class="text-sm">
+					<div v-if="params.isQueryVisible && typeof e.lemma === 'string'" class="text-sm">
 						<span class="font-bold">lemma:&nbsp;</span>
 						<span>
 							{{ e.lemma }}
 						</span>
 					</div>
-					<div v-if="typeof e.status === 'string'" class="text-sm">
+					<div v-if="params.isQueryVisible && typeof e.status === 'string'" class="text-sm">
 						<span class="font-bold">status:&nbsp;</span>
 						<span>
 							{{ e.status }}
 						</span>
 					</div>
-					<div v-if="typeof e.type === 'string'" class="text-sm">
+					<div v-if="params.isQueryVisible && typeof e.type === 'string'" class="text-sm">
 						<span class="font-bold">type:&nbsp;</span>
 						<span>
 							{{ e.type }}
