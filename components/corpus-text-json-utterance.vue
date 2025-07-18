@@ -1,5 +1,11 @@
 <script setup lang="ts">
+import { BookA } from "lucide-vue-next";
+
 import type { UClass } from "@/types/corpus-as-json";
+import { Button } from "#components";
+
+const windowsStore = useWindowsStore();
+const { addWindow } = windowsStore;
 
 const props = defineProps<{
 	utterance: UClass;
@@ -35,6 +41,29 @@ const props = defineProps<{
 					? "-"
 					: "&nbsp;"
 			}}
+		</div>
+		<div
+			v-if="inlineAnnotation && props.utterance.w['@lemmaRef']"
+			class="flex justify-center text-xs text-gray-500"
+		>
+			<Button
+				size="icon"
+				variant="secondary"
+				@click="
+					addWindow({
+						title: props.utterance.w['@lemmaRef'].replace('dict:', ''),
+						targetType: 'DictQuery',
+						params: {
+							textId: 'dc_shawi_eng',
+							queryParams: {
+								id: props.utterance.w['@lemmaRef'].replace('dict:', ''),
+							},
+						},
+					})
+				"
+			>
+				<BookA />
+			</Button>
 		</div>
 		<div v-if="inlineAnnotation" class="flex justify-center text-xs text-gray-500">
 			{{ props.utterance.w.pos }}&nbsp;
