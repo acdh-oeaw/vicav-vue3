@@ -127,5 +127,7 @@ const isWindowManagerVisible = computed(() => {
 		<AppFooter />
 		<Toaster />
 		<RouteAnnouncer />
+
+		<SvgoPetal class="sr-only" />
 	</div>
 </template>

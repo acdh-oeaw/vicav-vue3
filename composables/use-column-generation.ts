@@ -6,9 +6,10 @@ import {
 } from "@tanstack/vue-table";
 
 import geojsonTablePropertyCell from "@/components/geojson-table-property-cell.vue";
-import type { FeatureType } from "@/types/global";
+import Button from "@/components/ui/button/Button.vue";
+import type { FeatureType, WindowItem } from "@/types/global";
 
-interface PatchedFeatureType extends FeatureType {
+export interface PatchedFeatureType extends FeatureType {
 	properties: Record<string, Record<string, unknown>>;
 }
 
@@ -46,8 +47,14 @@ function buildColumnDefRecursive(
 					id: Object.keys(heading).find((key) => /ft_*/.test(key)) ?? "",
 					header: heading[Object.keys(heading).find((key) => /ft_*/.test(key)) ?? ""],
 					cell: (cell: CellContext<PatchedFeatureType, unknown>) => {
+						const highlightedValues = [
+							...(cell.column.getFilterValue() as Map<string, unknown>).keys(),
+						];
 						return h(geojsonTablePropertyCell, {
 							value: cell.row.original.properties[cell.column.columnDef.id!],
+							highlightedValues: highlightedValues,
+							column: cell.column,
+							fullEntry: cell.row.original.properties,
 						});
 					},
 					filterFn: (row, columnId, _filterValue: Map<string, unknown>) => {
@@ -86,6 +93,7 @@ function createColumnDefs(
 	featureCategories: Record<string, string>,
 	allFeatureNames: Array<Record<string, string>>,
 ) {
+	const openOrUpdateWindow = useOpenOrUpdateWindow();
 	const topLevelColumns: Array<SimpleColumnInterface> = [
 		{
 			id: "-",
@@ -124,8 +132,20 @@ function createColumnDefs(
 								enableHiding: false,
 								cell: ({ cell }: CellContext<PatchedFeatureType, never>) => {
 									return h(
-										"span",
-										{ class: "max-w-[500px] truncate font-medium" },
+										Button,
+										{
+											class: "max-w-[500px] truncate font-medium cursor-pointer text-black",
+											variant: "link",
+											onclick: () => {
+												openOrUpdateWindow(
+													{
+														targetType: "Location",
+														params: cell.row,
+													} as unknown as WindowItem,
+													cell.row.original.properties.name as unknown as string,
+												);
+											},
+										},
 										cell.row.original.properties[cell.column.columnDef.id!],
 									);
 								},

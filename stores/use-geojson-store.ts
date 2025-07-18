@@ -7,7 +7,21 @@ import { type FeatureCollectionType, type FeatureType, GeoFeatureSchema } from "
 export const useGeojsonStore = defineStore("geojson", () => {
 	const fetchedData = ref<Map<string, FeatureCollectionType>>(new Map());
 	const tables = shallowRef<Map<string, Table<FeatureType>>>(new Map());
+
 	const showAllDetails = ref<boolean>(false);
+	const featureValueTaxonomy = shallowRef<Map<string, string | undefined>>(new Map());
+	function buildFeatureTaxonomy(
+		features: Record<string, { values: Record<string, string>; taxonomy: Record<string, string> }>,
+	) {
+		for (const feature in features) {
+			for (const value in features[feature]?.values) {
+				featureValueTaxonomy.value.set(
+					`${feature}.${value}`,
+					features[feature].taxonomy[features[feature].values[value]!],
+				);
+			}
+		}
+	}
 
 	const fetchGeojson = (url: string) => {
 		return useQuery({
@@ -40,6 +54,8 @@ export const useGeojsonStore = defineStore("geojson", () => {
 		fetchedData,
 		fetchGeojson,
 		tables,
+		buildFeatureTaxonomy,
+		featureValueTaxonomy,
 		showAllDetails,
 	};
 });

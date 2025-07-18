@@ -73,7 +73,7 @@ function getCombinedFilters(column: ColumnType) {
 					<div class="flex items-start gap-2">
 						<svg
 							v-if="getActiveFilterValues(feature).length === 0 || activeFeatures?.length === 1"
-							class="mt-0.5 size-3.5"
+							class="mt-0.5 size-3.5 shrink-0"
 						>
 							<use
 								v-if="activeFeatures!.length > 1"
@@ -89,7 +89,7 @@ function getCombinedFilters(column: ColumnType) {
 						:key="filter.join('')"
 						class="ml-4 flex items-center gap-2"
 					>
-						<svg class="mt-0.5 size-3.5">
+						<svg class="mt-0.5 size-3.5 shrink-0">
 							<use
 								href="#petal"
 								:style="{
@@ -117,7 +117,7 @@ function getCombinedFilters(column: ColumnType) {
 							:key="value"
 							class="flex items-center gap-2"
 						>
-							<svg class="mt-0.5 size-3.5">
+							<svg class="mt-0.5 size-3.5 shrink-0">
 								<use
 									href="#petal"
 									:style="{ fill: `var(--${buildFeatureValueId(feature.id, value)})` }"
@@ -132,7 +132,7 @@ function getCombinedFilters(column: ColumnType) {
 							"
 							class="flex items-center gap-2"
 						>
-							<svg class="mt-0.5 size-3.5">
+							<svg class="mt-0.5 size-3.5 shrink-0">
 								<use
 									href="#petal"
 									:style="{

@@ -234,6 +234,16 @@ function syncGlobalAndColumnFilters(table: Table<unknown>) {
 	table.setGlobalFilter(currentGlobalFilter);
 }
 
+function getTraversedAST(query: string) {
+	return traverseAST(normalizeASTtoDNF(parse(query)));
+}
+
 export function useFilterParser() {
-	return { parseSearchString, isInQuery, matchQueryStringAndFilters, syncGlobalAndColumnFilters };
+	return {
+		parseSearchString,
+		isInQuery,
+		matchQueryStringAndFilters,
+		syncGlobalAndColumnFilters,
+		getTraversedAST,
+	};
 }

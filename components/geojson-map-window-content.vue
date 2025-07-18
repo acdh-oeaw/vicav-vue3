@@ -25,6 +25,13 @@ const filteredMarkers = computed(() => {
 			return row.original;
 		});
 });
+
+const selectedRowCoordinates = computed(() => {
+	const selection = tables.value.get(params.value.url)?.getSelectedRowModel();
+	return (
+		selection?.rows.map((r) => r.original.geometry.coordinates as [number, number])[0] ?? undefined
+	);
+});
 </script>
 
 <template>
@@ -36,9 +43,11 @@ const filteredMarkers = computed(() => {
 		>
 			<GeoMap
 				v-if="filteredMarkers"
+				:display-labels="10"
 				:height="height"
 				:marker-type="params.markerType"
 				:markers="filteredMarkers as Array<Feature<Point, MarkerProperties>>"
+				:selection="selectedRowCoordinates"
 				:width="width"
 			/>
 			<Centered v-if="!filteredMarkers">

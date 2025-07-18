@@ -1,3 +1,4 @@
+import type { Row } from "@tanstack/vue-table";
 import type { Ref } from "vue";
 import { z } from "zod";
 
@@ -113,16 +114,21 @@ export const DictQuerySchema = z.object({
 		textId: Dict.shape.id,
 		queryParams: z
 			.object({
-				q: z.string().optional(),
-				page: z.number().optional(),
-				pageSize: z.number().optional(),
-				id: z.string().optional(),
-				ids: z.string().optional(),
-				sort: z.enum(["asc", "desc", "none"]).optional(),
-				altLemma: z.string().optional(),
-				format: z.string().optional(),
+				q: z.string().optional().nullable(),
+				page: z.number().optional().nullable(),
+				pageSize: z.number().optional().nullable(),
+				id: z.string().optional().nullable(),
+				ids: z.string().optional().nullable(),
+				sort: z.enum(["asc", "desc", "none"]).optional().nullable(),
+				altLemma: z.string().optional().nullable(),
+				format: z.string().optional().nullable(),
 			})
 			.optional(),
+		queryString: z.string(),
+		queryTemplateTextInput: z.string().optional(),
+		queryTemplate: z.string().optional(),
+		isTextInputManual: z.boolean().optional().default(false),
+		isQueryVisible: z.boolean().optional().default(true),
 	}),
 });
 export type DictQueryWindowItem = WindowItemBase & z.infer<typeof DictQuerySchema>;
@@ -152,6 +158,39 @@ export const FeatureSchema = z.object({
 	params: TextId.merge(TeiSource.partial()).merge(ShowCitation.partial()),
 });
 export type FeatureWindowItem = WindowItemBase & z.infer<typeof FeatureSchema>;
+
+export const FeatureValueSchema = z.object({
+	targetType: z.literal("FeatureValue"),
+	params: z.object({ values: z.array(z.any()) }).merge(ShowCitation.partial()),
+});
+export type FeatureValueWindowItem = WindowItemBase & z.infer<typeof FeatureValueSchema>;
+
+export const GeoFeatureSchema = z.object({
+	type: z.literal("Feature"),
+	id: z.string(),
+	geometry: z.object({
+		type: z.literal("Point"),
+		coordinates: z.array(z.number()),
+	}),
+	properties: z.any(),
+});
+export type FeatureType = z.infer<typeof GeoFeatureSchema>;
+
+export const FeatureCollectionSchema = z.object({
+	type: z.literal("FeatureCollection"),
+	properties: z.object({
+		name: z.string(),
+		column_headings: z.array(z.any()),
+	}),
+	features: z.array(GeoFeatureSchema),
+});
+export type FeatureCollectionType = z.infer<typeof FeatureCollectionSchema>;
+
+export const LocationSchema = z.object({
+	targetType: z.literal("Location"),
+	params: z.object<Row<FeatureType>>({}).merge(ShowCitation.partial()).passthrough(),
+});
+export type LocationWindowItem = WindowItemBase & z.infer<typeof LocationSchema>;
 
 export const CompareMarkersParams = z.object();
 
@@ -252,6 +291,7 @@ export const Schema = z.discriminatedUnion("targetType", [
 	CorpusQuerySchema,
 	CorpusTextSchema,
 	FeatureSchema,
+	FeatureValueSchema,
 	GeoMapSchema,
 	ProfileSchema,
 	TextSchema,
@@ -262,6 +302,7 @@ export const Schema = z.discriminatedUnion("targetType", [
 	DataTableSchema,
 	ExploreSamplesSchema,
 	ExploreSamplesFormSchema,
+	LocationSchema,
 ]);
 export type WindowItem = WindowItemBase & z.infer<typeof Schema>;
 
@@ -270,27 +311,6 @@ export type WindowItemTargetType = WindowItem["targetType"];
 export type WindowItemMap = {
 	[TargetType in WindowItemTargetType]: Extract<WindowItem, { targetType: TargetType }>;
 };
-
-export const GeoFeatureSchema = z.object({
-	type: z.literal("Feature"),
-	id: z.string(),
-	geometry: z.object({
-		type: z.literal("Point"),
-		coordinates: z.array(z.number()),
-	}),
-	properties: z.any(),
-});
-export type FeatureType = z.infer<typeof GeoFeatureSchema>;
-
-export const FeatureCollectionSchema = z.object({
-	type: z.literal("FeatureCollection"),
-	properties: z.object({
-		name: z.string(),
-		column_headings: z.array(z.any()),
-	}),
-	features: z.array(GeoFeatureSchema),
-});
-export type FeatureCollectionType = z.infer<typeof FeatureCollectionSchema>;
 
 export interface VicavHTTPError extends Error {
 	status?: number;
