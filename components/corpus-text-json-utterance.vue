@@ -51,10 +51,13 @@ const props = defineProps<{
 				variant="secondary"
 				@click="
 					addWindow({
-						title: props.utterance.w['@lemmaRef'].replace('dict:', ''),
 						targetType: 'DictQuery',
+						title: props.utterance.w['@lemmaRef'].replace('dict:', ''),
 						params: {
+							queryString: props.utterance.w['@lemmaRef'].replace('dict:', ''),
 							textId: 'dc_shawi_eng',
+							isTextInputManual: false,
+							isQueryVisible: false,
 							queryParams: {
 								id: props.utterance.w['@lemmaRef'].replace('dict:', ''),
 							},
