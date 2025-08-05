@@ -26,6 +26,7 @@ interface Props {
 	markerType?: MarkerType;
 	selection?: [number, number];
 	displayLabels?: number;
+	useCustomClickHandler?: boolean;
 }
 
 const props = defineProps<Props>();
@@ -370,7 +371,10 @@ watch(
 watch(
 	() => props.selection,
 	() => {
-		if (props.selection) context.map?.flyTo([props.selection[1], props.selection[0]], 10);
+		if (props.selection) {
+			context.map?.closePopup();
+			context.map?.flyTo([props.selection[1], props.selection[0]], 10);
+		}
 	},
 );
 
@@ -390,6 +394,8 @@ provide(key, context);
 		:id="currentPopup.id"
 		:key="currentPopup.id"
 		ref="popupRef"
+		:use-custom-click-handler="props.useCustomClickHandler"
+		@anchor-click="(feature) => (props.useCustomClickHandler ? emit('marker-click', feature) : {})"
 	/>
 </template>
 
