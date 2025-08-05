@@ -59,6 +59,7 @@ function getFlowerSVG(entries: Array<PetalEntry>, center?: PetalEntry) {
 	}
 
 	if (center) svg.appendChild(getCircleSVG(`var(--${center.id}, #cccccc)`));
+	if (entries.length === 0 && !center) svg.appendChild(getCircleSVG(`hsl(var(--color-primary))`));
 
 	div.appendChild(svg);
 
