@@ -13,6 +13,7 @@ import {
 	DialogTrigger,
 } from "@/components/ui/dialog";
 
+import type { SelectionEntry } from "./marker-selector.vue";
 import Checkbox from "./ui/form/Checkbox.vue";
 
 const { AND_OPERATOR, getCombinedFilterOption } = useAdvancedQueries();
@@ -95,14 +96,18 @@ watch(
 
 const { addColorVariant, buildFeatureValueId, setColor } = useColorsStore();
 const { colors } = storeToRefs(useColorsStore());
+const { addDefaultMarker, setMarker } = useMarkerStore();
+const { markers } = storeToRefs(useMarkerStore());
 
 const onSubmit = handleSubmit((values: { items: Array<string> }) => {
 	if (values.items.length > 0) props.column.toggleVisibility(true);
 	const allFilters = new Map(values.items.map((item) => [item, 1]));
 	props.column.setFilterValue(allFilters);
 	values.items.forEach((element) => {
-		if (colors.value.has(buildFeatureValueId(props.column.id, element))) return;
-		addColorVariant(props.column.id, element);
+		if (!colors.value.has(buildFeatureValueId(props.column.id, element)))
+			addColorVariant(props.column.id, element);
+		if (!markers.value.has(buildFeatureValueId(props.column.id, element)))
+			addDefaultMarker(props.column.id, element);
 	});
 	syncGlobalAndColumnFilters(props.table);
 	dialogOpen.value = false;
@@ -112,6 +117,8 @@ const onChange = (facet: string, checked: boolean) => {
 	if (checked) {
 		if (!colors.value.has(buildFeatureValueId(props.column.id, facet)))
 			addColorVariant(props.column.id, facet);
+		if (!markers.value.has(buildFeatureValueId(props.column.id, facet)))
+			addDefaultMarker(props.column.id, facet);
 	}
 };
 
@@ -155,11 +162,39 @@ function toggleAllValues() {
 			facets.value.map((facet) => facet[0]),
 		);
 		facets.value.forEach((facet) => {
-			if (colors.value.has(buildFeatureValueId(props.column.id, facet[0]))) return;
-			addColorVariant(props.column.id, facet[0]);
+			if (!colors.value.has(buildFeatureValueId(props.column.id, facet[0])))
+				addColorVariant(props.column.id, facet[0]);
+			if (!markers.value.has(buildFeatureValueId(props.column.id, facet[0])))
+				addDefaultMarker(props.column.id, facet[0]);
 		});
 	}
 }
+
+function updateMarker(markerSelection: SelectionEntry) {
+	if (markerSelection.colorCode) {
+		setColor({ colorCode: markerSelection.colorCode, id: markerSelection.id });
+	}
+	if (markerSelection.iconName) {
+		setMarker({ markerSVG: markerSelection.iconName, id: markerSelection.id });
+	}
+}
+
+const markerData = computed(() => {
+	const data: Record<string, SelectionEntry> = {};
+	const ids = [filterSuggestion.value?.combinedValue]
+		.concat([...selectedCombinedFilters.value.values()].flatMap((entry) => entry.combinedValue))
+		.concat(facets.value.flatMap((entry) => entry[0]))
+		.filter((id): id is string => id !== null);
+	ids.forEach((entry: string) => {
+		const id = buildFeatureValueId(props.column.id, entry);
+		data[entry] = {
+			id,
+			colorCode: colors.value.get(id)?.colorCode,
+			iconName: markers.value.get(id)?.markerSVG,
+		};
+	});
+	return data;
+});
 </script>
 
 <template>
@@ -223,43 +258,15 @@ function toggleAllValues() {
 											filterSuggestion!.count
 										}}</Badge>
 									</FormLabel>
-									<label
-										v-if="
-											colors.has(buildFeatureValueId(column.id, filterSuggestion!.combinedValue))
-										"
-										class="ml-3 flex grow-0 basis-0 items-center self-center p-0"
-										@click.capture.stop
-									>
-										<div
-											class="size-4 rounded"
-											:style="{
-												backgroundColor: `var(--${buildFeatureValueId(column.id, filterSuggestion!.combinedValue)})`,
-												stroke: `var(--${buildFeatureValueId(column.id, filterSuggestion!.combinedValue)})`,
-											}"
-										></div>
-										<input
-											class="size-0"
-											type="color"
-											:value="
-												colors.get(buildFeatureValueId(column.id, filterSuggestion!.combinedValue))
-													?.colorCode || '#cccccc'
-											"
-											@click.capture.stop
-											@input="
-												(event) => {
-													setColor({
-														id: buildFeatureValueId(column.id, filterSuggestion!.combinedValue),
-
-														//@ts-expect-error target.value not recognized
-														colorCode: event.target!.value,
-													});
-												}
-											"
-										/>
-										<span class="sr-only">Select color</span>
-									</label>
+									<MarkerSelector
+										:icon-categories="['shapes']"
+										:model-value="markerData[filterSuggestion.combinedValue]!"
+										@update:model-value="(props) => updateMarker(props)"
+									></MarkerSelector>
 								</FormItem>
 							</FormField>
+
+							<!-- Selected combined Feature Values ("X and Y") -->
 							<template
 								v-for="facet in selectedCombinedFilters.values()"
 								:key="facet.combinedValue"
@@ -296,43 +303,17 @@ function toggleAllValues() {
 												facet!.count
 											}}</Badge>
 										</FormLabel>
-										<label
-											v-if="colors.has(buildFeatureValueId(column.id, facet!.combinedValue))"
-											class="ml-3 flex grow-0 basis-0 items-center self-center p-0"
-											@click.capture.stop
-										>
-											<div
-												class="size-4 rounded"
-												:style="{
-													backgroundColor: `var(--${buildFeatureValueId(column.id, facet!.combinedValue)})`,
-													stroke: `var(--${buildFeatureValueId(column.id, facet!.combinedValue)})`,
-												}"
-											></div>
-											<input
-												class="size-0"
-												type="color"
-												:value="
-													colors.get(buildFeatureValueId(column.id, facet!.combinedValue))
-														?.colorCode || '#cccccc'
-												"
-												@click.capture.stop
-												@input="
-													(event) => {
-														setColor({
-															id: buildFeatureValueId(column.id, facet!.combinedValue),
-
-															//@ts-expect-error target.value not recognized
-															colorCode: event.target!.value,
-														});
-													}
-												"
-											/>
-											<span class="sr-only">Select color</span>
-										</label>
+										<MarkerSelector
+											:icon-categories="['shapes']"
+											:model-value="markerData[facet.combinedValue]!"
+											@update:model-value="(props) => updateMarker(props)"
+										></MarkerSelector>
 									</FormItem>
 								</FormField>
 							</template>
 						</div>
+
+						<!-- Regular Feature Values -->
 						<template v-for="facet in facets" :key="facet[0]">
 							<FormField
 								v-slot="{ value, handleChange }"
@@ -357,38 +338,11 @@ function toggleAllValues() {
 										<span>{{ facet[0] }}</span>
 										<Badge class="ml-2" variant="outline">{{ facet[1] }}</Badge>
 									</FormLabel>
-									<label
-										v-if="colors.has(buildFeatureValueId(column.id, facet[0]))"
-										class="ml-3 flex grow-0 basis-0 items-center self-center p-0"
-										@click.capture.stop
-									>
-										<div
-											class="size-4 rounded"
-											:style="{
-												backgroundColor: `var(--${buildFeatureValueId(column.id, facet[0])})`,
-												stroke: `var(--${buildFeatureValueId(column.id, facet[0])})`,
-											}"
-										></div>
-										<input
-											class="size-0"
-											type="color"
-											:value="
-												colors.get(buildFeatureValueId(column.id, facet[0]))?.colorCode || '#cccccc'
-											"
-											@click.capture.stop
-											@input="
-												(event) => {
-													setColor({
-														id: buildFeatureValueId(column.id, facet[0]),
-
-														//@ts-expect-error target.value not recognized
-														colorCode: event.target!.value,
-													});
-												}
-											"
-										/>
-										<span class="sr-only">Select color</span>
-									</label>
+									<MarkerSelector
+										:icon-categories="['shapes']"
+										:model-value="markerData[facet[0]]!"
+										@update:model-value="(props) => updateMarker(props)"
+									></MarkerSelector>
 								</FormItem>
 							</FormField>
 						</template>
