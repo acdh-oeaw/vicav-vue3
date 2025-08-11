@@ -3,13 +3,15 @@ import { divIcon, type LatLng, marker } from "leaflet";
 
 import type { MarkerProperties } from "@/lib/api-client";
 import { useGeojsonStore } from "@/stores/use-geojson-store.ts";
+import { useMarkerStore } from "@/stores/use-marker-store.ts";
 
 import { useAdvancedQueries } from "./use-advanced-queries.ts";
 
 const GeojsonStore = useGeojsonStore();
 const { tables } = storeToRefs(GeojsonStore);
 const url = "https://raw.githubusercontent.com/wibarab/wibarab-data/main/wibarab_varieties.geojson";
-const { buildFeatureValueId } = useColorsStore();
+const { buildFeatureValueId } = useMarkerStore();
+const { markers } = storeToRefs(useMarkerStore());
 interface PetalEntry {
 	id: string;
 	strokeOnly?: boolean;
@@ -43,6 +45,28 @@ function getPetalSVG(petalValue: PetalEntry) {
 	return petal;
 }
 
+function getIconSVG(petalValue: PetalEntry) {
+	const petal = document.createElementNS("http://www.w3.org/2000/svg", "use");
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+	petal.setAttribute("href", `#${String(markers.value.get(petalValue.id)?.marker?.name ?? "")}`);
+
+	petal.style.stroke = `var(--${petalValue.id}, #cccccc)`;
+	petal.style.strokeWidth = "4px";
+	petal.style.fill = `transparent`;
+	petal.style.transformOrigin = "bottom";
+
+	petal.classList.add("size-3", "absolute", "ml-1.5");
+	petal.setAttribute("title", petalValue.id);
+	return petal;
+}
+
+function getMarkerSVG(petalValue: PetalEntry) {
+	const useLucideIcon =
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+		markers.value.has(petalValue.id) && !markers.value.get(petalValue.id)?.marker?.custom;
+	return useLucideIcon ? getIconSVG(petalValue) : getPetalSVG(petalValue);
+}
+
 function getFlowerSVG(entries: Array<PetalEntry>, center?: PetalEntry) {
 	const div = document.createElement("div");
 	div.className = "hover:scale-150 transition origin-center relative -translate-y-1/2";
@@ -53,8 +77,11 @@ function getFlowerSVG(entries: Array<PetalEntry>, center?: PetalEntry) {
 	svg.classList.add("overflow-visible");
 
 	for (const [i, value] of entries.entries()) {
-		const petal = getPetalSVG(value);
-		petal.style.transform = `rotate(${String((i * 360) / NUM_PETALS)}deg)`;
+		const useLucideIcon =
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+			markers.value.has(value.id) && !markers.value.get(value.id)?.marker?.custom;
+		const petal = getMarkerSVG(value);
+		petal.style.transform = `rotate(${String((i * 360) / NUM_PETALS)}deg) ${useLucideIcon && (entries.length > 1 || center) ? "translateY(-3px)" : ""}`;
 		svg.appendChild(petal);
 	}
 
@@ -158,6 +185,6 @@ function getPetalMarker(feature: GeoJsonFeature<Point, MarkerProperties>, latlng
 export function usePetalMarker() {
 	return {
 		getPetalMarker,
-		getPetalSVG,
+		getMarkerSVG,
 	};
 }

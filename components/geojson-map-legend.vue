@@ -4,6 +4,8 @@ import { ChevronDown } from "lucide-vue-next";
 
 import type { GeojsonMapSchema } from "@/types/global";
 
+const { getMarkerSVG } = usePetalMarker();
+
 interface Props {
 	params: Zod.infer<typeof GeojsonMapSchema>["params"];
 }
@@ -24,7 +26,7 @@ function getMatchingRowCount(columnId: string) {
 }
 const collapsibleOpen = ref(true);
 
-const { buildFeatureValueId } = useColorsStore();
+const { buildFeatureValueId } = useMarkerStore();
 
 type ColumnType = Column<
 	{
@@ -88,14 +90,21 @@ function getCombinedFilters(column: ColumnType) {
 						:key="filter.join('')"
 						class="ml-4 flex items-center gap-2"
 					>
-						<svg class="mt-0.5 size-3.5 shrink-0">
+						<!-- <svg class="mt-0.5 size-3.5 shrink-0">
 							<use
 								href="#petal"
 								:style="{
 									fill: `var(--${buildFeatureValueId(feature.id, filter.join(AND_OPERATOR))})`,
 								}"
 							></use>
-						</svg>
+						</svg> -->
+						<svg
+							class="mt-0.5 size-3.5 shrink-0"
+							v-html="
+								getMarkerSVG({ id: buildFeatureValueId(feature.id, filter.join(AND_OPERATOR)) })
+									.outerHTML
+							"
+						></svg>
 						<span>
 							<span v-for="(fv, idx) in filter" :key="fv"
 								>{{ fv
@@ -116,12 +125,17 @@ function getCombinedFilters(column: ColumnType) {
 							:key="value"
 							class="flex items-center gap-2"
 						>
-							<svg class="mt-0.5 size-3.5 shrink-0">
+							<!-- <svg class="mt-0.5 size-3.5 shrink-0">
 								<use
 									href="#petal"
 									:style="{ fill: `var(--${buildFeatureValueId(feature.id, value)})` }"
 								></use>
-							</svg>
+							</svg> -->
+
+							<svg
+								class="mt-0.5 size-3.5 shrink-0"
+								v-html="getMarkerSVG({ id: buildFeatureValueId(feature.id, value) }).outerHTML"
+							></svg>
 							<span>{{ value }} ({{ count }})</span>
 						</div>
 						<div

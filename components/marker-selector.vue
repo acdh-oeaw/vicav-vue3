@@ -1,8 +1,10 @@
 <script setup lang="ts">
+import type { IconType } from "./ui/icon-picker/IconPicker.vue";
+
 type SelectorType = "color" | "icon";
 export interface SelectionEntry {
 	colorCode?: string;
-	iconName?: string;
+	icon?: IconType;
 	id: string;
 }
 const props = withDefaults(
@@ -21,9 +23,24 @@ function updateColor(event: Event) {
 	//@ts-expect-error target.value not recognized
 	emit("update:modelValue", { ...props.modelValue, colorCode: event.target?.value ?? "" });
 }
-function updateIcon(iconName: string) {
-	emit("update:modelValue", { ...props.modelValue, iconName });
+function updateIcon(icon: IconType) {
+	emit("update:modelValue", { ...props.modelValue, icon });
 }
+
+const customIcons = [
+	{
+		name: "petal",
+		categories: ["shapes"],
+		tags: [],
+		additionalAttributes: {
+			fill: "transparent",
+			stroke: "black",
+			"stroke-width": "40",
+			height: "90%",
+			y: "5%",
+		},
+	},
+];
 </script>
 
 <template>
@@ -51,8 +68,9 @@ function updateIcon(iconName: string) {
 
 	<div v-if="props.type?.includes('icon')">
 		<IconPicker
+			:custom-icons="customIcons"
 			:limit-to-categories="iconCategories"
-			:model-value="modelValue.iconName"
+			:model-value="modelValue.icon"
 			@update:model-value="updateIcon"
 		></IconPicker>
 	</div>

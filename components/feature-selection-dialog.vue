@@ -91,11 +91,12 @@ watch(
 		) {
 			filterSuggestion.value = null;
 		}
+		computeMarkerData();
 	},
 );
 
-const { addColorVariant, buildFeatureValueId, setColor } = useColorsStore();
-const { colors } = storeToRefs(useColorsStore());
+const { addColorVariant, buildFeatureValueId, setColor } = useMarkerStore();
+const { colors } = storeToRefs(useMarkerStore());
 const { addDefaultMarker, setMarker } = useMarkerStore();
 const { markers } = storeToRefs(useMarkerStore());
 
@@ -109,6 +110,7 @@ const onSubmit = handleSubmit((values: { items: Array<string> }) => {
 		if (!markers.value.has(buildFeatureValueId(props.column.id, element)))
 			addDefaultMarker(props.column.id, element);
 	});
+	computeMarkerData();
 	syncGlobalAndColumnFilters(props.table);
 	dialogOpen.value = false;
 });
@@ -119,6 +121,7 @@ const onChange = (facet: string, checked: boolean) => {
 			addColorVariant(props.column.id, facet);
 		if (!markers.value.has(buildFeatureValueId(props.column.id, facet)))
 			addDefaultMarker(props.column.id, facet);
+		computeMarkerData();
 	}
 };
 
@@ -167,19 +170,12 @@ function toggleAllValues() {
 			if (!markers.value.has(buildFeatureValueId(props.column.id, facet[0])))
 				addDefaultMarker(props.column.id, facet[0]);
 		});
+		computeMarkerData();
 	}
 }
 
-function updateMarker(markerSelection: SelectionEntry) {
-	if (markerSelection.colorCode) {
-		setColor({ colorCode: markerSelection.colorCode, id: markerSelection.id });
-	}
-	if (markerSelection.iconName) {
-		setMarker({ markerSVG: markerSelection.iconName, id: markerSelection.id });
-	}
-}
-
-const markerData = computed(() => {
+const markerData = ref<Record<string, SelectionEntry>>({});
+function computeMarkerData() {
 	const data: Record<string, SelectionEntry> = {};
 	const ids = [filterSuggestion.value?.combinedValue]
 		.concat([...selectedCombinedFilters.value.values()].flatMap((entry) => entry.combinedValue))
@@ -190,11 +186,24 @@ const markerData = computed(() => {
 		data[entry] = {
 			id,
 			colorCode: colors.value.get(id)?.colorCode,
-			iconName: markers.value.get(id)?.markerSVG,
+			icon: markers.value.get(id)?.marker,
 		};
 	});
-	return data;
-});
+	markerData.value = data;
+}
+
+function updateMarker(markerSelection: SelectionEntry) {
+	if (markerSelection.colorCode) {
+		setColor({ colorCode: markerSelection.colorCode, id: markerSelection.id });
+	}
+	if (markerSelection.icon) {
+		setMarker({ marker: markerSelection.icon, id: markerSelection.id });
+	}
+	computeMarkerData();
+}
+
+onMounted(() => computeMarkerData());
+onUpdated(() => computeMarkerData());
 </script>
 
 <template>
@@ -259,6 +268,7 @@ const markerData = computed(() => {
 										}}</Badge>
 									</FormLabel>
 									<MarkerSelector
+										v-if="value.includes(filterSuggestion?.combinedValue)"
 										:icon-categories="['shapes']"
 										:model-value="markerData[filterSuggestion.combinedValue]!"
 										@update:model-value="(props) => updateMarker(props)"
@@ -304,6 +314,7 @@ const markerData = computed(() => {
 											}}</Badge>
 										</FormLabel>
 										<MarkerSelector
+											v-if="value.includes(facet?.combinedValue)"
 											:icon-categories="['shapes']"
 											:model-value="markerData[facet.combinedValue]!"
 											@update:model-value="(props) => updateMarker(props)"
@@ -339,6 +350,7 @@ const markerData = computed(() => {
 										<Badge class="ml-2" variant="outline">{{ facet[1] }}</Badge>
 									</FormLabel>
 									<MarkerSelector
+										v-if="value.includes(facet[0])"
 										:icon-categories="['shapes']"
 										:model-value="markerData[facet[0]]!"
 										@update:model-value="(props) => updateMarker(props)"

@@ -2,7 +2,7 @@
 import type { Column, Table } from "@tanstack/vue-table";
 import { ChevronDown } from "lucide-vue-next";
 
-import { useColorsStore } from "@/stores/use-colors-store";
+import { useMarkerStore } from "@/stores/use-marker-store";
 
 const _props = defineProps<{
 	item: Column<unknown>;
@@ -17,8 +17,8 @@ function titleCase(s: string) {
 
 const isCollapsibleOpen = ref(false);
 
-const { colors } = storeToRefs(useColorsStore());
-const { setColor } = useColorsStore();
+const { colors } = storeToRefs(useMarkerStore());
+const { setColor } = useMarkerStore();
 </script>
 
 <template>

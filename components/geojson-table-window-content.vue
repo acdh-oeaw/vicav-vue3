@@ -75,8 +75,8 @@ function applyQueryString(row: Row<FeatureType>, colId: string, queryString: str
 	return test(parse(queryString), preparedRow);
 }
 
-const { addColor, addColorVariant, buildFeatureValueId } = useColorsStore();
-const { colors } = storeToRefs(useColorsStore());
+const { addColor, addColorVariant, buildFeatureValueId } = useMarkerStore();
+const { colors } = storeToRefs(useMarkerStore());
 function onVisibilityChange(props: { table: Table<FeatureType>; col: Record<string, boolean> }) {
 	// applyGlobalFilter(props.table);
 	const changedColumnKey = Object.keys(props.col)[0]!;

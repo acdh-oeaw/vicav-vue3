@@ -1,11 +1,17 @@
 <script setup lang="ts">
 import * as LucideIcons from "lucide-vue-next";
+import type { SVGAttributes } from "vue";
 
-const props = defineProps<{
-	name: string;
-	size?: number;
-	color?: string;
-}>();
+const props = withDefaults(
+	defineProps<{
+		name: string;
+		size?: number;
+		color?: string;
+		isCustomIcon?: boolean;
+		additionalAttributes?: SVGAttributes;
+	}>(),
+	{ size: 20 },
+);
 
 const camelCasedIconName = computed(() => {
 	const name = props.name
@@ -21,5 +27,8 @@ const LucideIcon = computed(() => {
 </script>
 
 <template>
-	<component :is="LucideIcon" :color="color || 'currentColor'" :size="size || 20" />
+	<svg v-if="isCustomIcon" :height="size" :width="size">
+		<use :href="`#${name}`" v-bind="additionalAttributes"></use>
+	</svg>
+	<component :is="LucideIcon" v-else :color="color || 'currentColor'" :size="size" />
 </template>

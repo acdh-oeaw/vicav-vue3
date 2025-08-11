@@ -127,8 +127,8 @@ watch(
 	},
 );
 
-const { getPetalSVG } = usePetalMarker();
-const { buildFeatureValueId } = useColorsStore();
+const { getMarkerSVG } = usePetalMarker();
+const { buildFeatureValueId } = useMarkerStore();
 const { AND_OPERATOR } = useAdvancedQueries();
 
 const flattenedHighlightedValues = computed(() => {
@@ -193,7 +193,7 @@ function onValueClick(val: Array<Record<string, unknown>>, title: string) {
 					'flex gap-x-2 flex-wrap': infoOpen[key],
 				}"
 			>
-				<svg class="size-3.5 shrink-0" v-html="getPetalSVG(getPetalEntry(key)).outerHTML"></svg>
+				<svg class="size-3.5 shrink-0" v-html="getMarkerSVG(getPetalEntry(key)).outerHTML"></svg>
 				<Button
 					class="flex-shrink-0 truncate p-0 h-auto !text-black"
 					:class="{
