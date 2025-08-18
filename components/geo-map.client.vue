@@ -17,6 +17,7 @@ import { type GeoMapContext, key, type MarkerProperties } from "@/components/geo
 import GeoMapPopupContent from "@/components/geo-map-popup-content.vue";
 import type { MarkerType } from "@/types/global";
 
+const { markerSettings } = useMarkerStore();
 const { getPetalMarker } = usePetalMarker();
 
 interface Props {
@@ -334,6 +335,16 @@ onMounted(async () => {
 watch(
 	() => props.markers,
 	() => updateMarkers(),
+);
+
+watch(
+	() => markerSettings.triggerRepaint,
+	() => {
+		if (markerSettings.triggerRepaint) {
+			updateMarkers(false);
+			markerSettings.triggerRepaint = false;
+		}
+	},
 );
 
 const resize = debounce(() => {

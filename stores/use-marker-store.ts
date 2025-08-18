@@ -20,6 +20,9 @@ export const useMarkerStore = defineStore("markers", () => {
 	const markerSettings = ref({
 		strokeWidth: 4,
 		greyscale: false,
+		showCenter: true,
+		showOtherFeatureValues: true,
+		triggerRepaint: false,
 	});
 
 	function updateSettingVariables() {
@@ -34,7 +37,20 @@ export const useMarkerStore = defineStore("markers", () => {
 	}
 	updateSettingVariables();
 
-	watch(markerSettings, updateSettingVariables, { deep: true });
+	watch(
+		markerSettings,
+		() => {
+			updateSettingVariables();
+		},
+		{ deep: true },
+	);
+
+	watch(
+		[() => markerSettings.value.showCenter, () => markerSettings.value.showOtherFeatureValues],
+		() => {
+			markerSettings.value.triggerRepaint = true;
+		},
+	);
 
 	const refColor = ref(
 		// `hsl(${document.documentElement.style.getPropertyValue("--color-primary")})`,

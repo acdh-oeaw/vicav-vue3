@@ -42,6 +42,15 @@ function download() {
 						min="1"
 						type="number"
 				/></label>
+				<div class="w-full my-0.5 border-b-[1px]"></div>
+				<label class="flex justify-between items-center gap-2"
+					><span class="max-w-36">Show center points for single feature</span>
+					<input v-model="markerSettings.showCenter" type="checkbox"
+				/></label>
+				<label class="flex justify-between items-center gap-2"
+					><span>Show other feature values</span>
+					<input v-model="markerSettings.showOtherFeatureValues" type="checkbox"
+				/></label>
 			</PopoverContent>
 		</Popover>
 		<Popover>

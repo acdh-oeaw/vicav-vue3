@@ -4,7 +4,7 @@ import { ChevronDown } from "lucide-vue-next";
 
 import type { GeojsonMapSchema } from "@/types/global";
 
-const { getMarkerSVG } = usePetalMarker();
+const { getMarkerSVG, getCircleSVG } = usePetalMarker();
 
 interface Props {
 	params: Zod.infer<typeof GeojsonMapSchema>["params"];
@@ -75,14 +75,13 @@ function getCombinedFilters(column: ColumnType) {
 						<svg
 							v-if="getActiveFilterValues(feature).length === 0 || activeFeatures?.length === 1"
 							class="mt-0.5 size-3.5 shrink-0"
-						>
-							<use
-								v-if="activeFeatures!.length > 1"
-								href="#petal"
-								:style="{ fill: `var(--${feature.id})` }"
-							></use>
-							<circle v-else cx="8" cy="8" r="4" :style="{ fill: `var(--${feature.id})` }"></circle>
-						</svg>
+							view-box="0 0 18 18 "
+							v-html="
+								activeFeatures!.length > 1
+									? getMarkerSVG({ id: feature.id }).outerHTML
+									: getCircleSVG(`var(--${feature.id})`, true, 14).outerHTML
+							"
+						></svg>
 						<span>{{ feature.columnDef.header }} ({{ getMatchingRowCount(feature.id) }})</span>
 					</div>
 					<div
