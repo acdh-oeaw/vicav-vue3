@@ -24,6 +24,7 @@ function getCircleSVG(fill: string) {
 	circle.setAttribute("cy", "12");
 	circle.setAttribute("r", "2.5");
 	circle.style.fill = fill;
+	circle.style.filter = "var(--greyscale)";
 
 	return circle;
 }
@@ -35,10 +36,11 @@ function getPetalSVG(petalValue: PetalEntry) {
 	if (petalValue.strokeOnly) {
 		petal.style.stroke = `var(--${petalValue.id}, #cccccc)`;
 		petal.style.fillOpacity = "0.2";
-		petal.style.strokeWidth = "20px";
+		petal.style.strokeWidth = `calc(var(--strokeWidth, 4px) * 5)`;
 	}
 	petal.style.fill = `var(--${petalValue.id}, #cccccc)`;
 	petal.style.transformOrigin = "bottom";
+	petal.style.filter = "var(--greyscale)";
 
 	petal.classList.add("size-3", "absolute", "ml-1.5");
 	petal.setAttribute("title", petalValue.id);
@@ -51,9 +53,10 @@ function getIconSVG(petalValue: PetalEntry) {
 	petal.setAttribute("href", `#${String(markers.value.get(petalValue.id)?.marker?.name ?? "")}`);
 
 	petal.style.stroke = `var(--${petalValue.id}, #cccccc)`;
-	petal.style.strokeWidth = "4px";
+	petal.style.strokeWidth = `var(--strokeWidth, 4px)`;
 	petal.style.fill = `transparent`;
 	petal.style.transformOrigin = "bottom";
+	petal.style.filter = "var(--greyscale)";
 
 	petal.classList.add("size-3", "absolute", "ml-1.5");
 	petal.setAttribute("title", petalValue.id);

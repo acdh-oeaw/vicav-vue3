@@ -78,6 +78,7 @@ function onMarkerClick(feature: Feature) {
 				class="absolute bottom-0 left-0"
 				:params="params"
 			></GeojsonMapLegend>
+			<GeojsonMapControls class="absolute top-0 left-0"></GeojsonMapControls>
 		</VisualisationContainer>
 	</div>
 </template>

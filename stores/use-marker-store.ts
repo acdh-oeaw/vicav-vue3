@@ -17,6 +17,24 @@ interface MarkerInterface {
 export const useMarkerStore = defineStore("markers", () => {
 	const colors = shallowRef<Map<ColorInterface["id"], ColorInterface>>(new Map());
 	const markers = shallowRef<Map<MarkerInterface["id"], MarkerInterface>>(new Map());
+	const markerSettings = ref({
+		strokeWidth: 4,
+		greyscale: false,
+	});
+
+	function updateSettingVariables() {
+		document.documentElement.style.setProperty(
+			"--greyscale",
+			`grayscale(${String(Number(markerSettings.value.greyscale))})`,
+		);
+		document.documentElement.style.setProperty(
+			"--strokeWidth",
+			`${String(markerSettings.value.strokeWidth)}px`,
+		);
+	}
+	updateSettingVariables();
+
+	watch(markerSettings, updateSettingVariables, { deep: true });
 
 	const refColor = ref(
 		// `hsl(${document.documentElement.style.getPropertyValue("--color-primary")})`,
@@ -120,5 +138,6 @@ export const useMarkerStore = defineStore("markers", () => {
 		setMarker,
 		removeMarker,
 		markers,
+		markerSettings,
 	};
 });

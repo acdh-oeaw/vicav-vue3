@@ -63,8 +63,8 @@ function getCombinedFilters(column: ColumnType) {
 </script>
 
 <template>
-	<Collapsible v-model:open="collapsibleOpen">
-		<div class="w-48 bg-white/80 p-3 text-xs">
+	<Collapsible v-model:open="collapsibleOpen" class="w-48 bg-white/80 p-3 text-xs">
+		<div>
 			<CollapsibleTrigger class="flex w-full justify-between"
 				><b>{{ activeRows?.length }} total markers</b
 				><ChevronDown class="size-4" :class="collapsibleOpen ? '' : 'rotate-180'"></ChevronDown
@@ -90,14 +90,6 @@ function getCombinedFilters(column: ColumnType) {
 						:key="filter.join('')"
 						class="ml-4 flex items-center gap-2"
 					>
-						<!-- <svg class="mt-0.5 size-3.5 shrink-0">
-							<use
-								href="#petal"
-								:style="{
-									fill: `var(--${buildFeatureValueId(feature.id, filter.join(AND_OPERATOR))})`,
-								}"
-							></use>
-						</svg> -->
 						<svg
 							class="mt-0.5 size-3.5 shrink-0"
 							v-html="
@@ -125,13 +117,6 @@ function getCombinedFilters(column: ColumnType) {
 							:key="value"
 							class="flex items-center gap-2"
 						>
-							<!-- <svg class="mt-0.5 size-3.5 shrink-0">
-								<use
-									href="#petal"
-									:style="{ fill: `var(--${buildFeatureValueId(feature.id, value)})` }"
-								></use>
-							</svg> -->
-
 							<svg
 								class="mt-0.5 size-3.5 shrink-0"
 								v-html="getMarkerSVG({ id: buildFeatureValueId(feature.id, value) }).outerHTML"
@@ -159,8 +144,8 @@ function getCombinedFilters(column: ColumnType) {
 							<span>Other feature values</span>
 						</div>
 					</div>
-				</div></CollapsibleContent
-			>
+				</div>
+			</CollapsibleContent>
 		</div>
 	</Collapsible>
 </template>

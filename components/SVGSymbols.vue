@@ -1,6 +1,8 @@
 <script lang="ts" setup></script>
 
 <template>
-	<SvgoPetal class="sr-only" />
-	<SvgoLucideIcons class="sr-only" />
+	<div id="svg-symbols" class="sr-only">
+		<SvgoPetal />
+		<SvgoLucideIcons />
+	</div>
 </template>
