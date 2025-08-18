@@ -27,6 +27,7 @@ function getMatchingRowCount(columnId: string) {
 const collapsibleOpen = ref(true);
 
 const { buildFeatureValueId } = useMarkerStore();
+const { markerSettings } = storeToRefs(useMarkerStore());
 
 type ColumnType = Column<
 	{
@@ -73,7 +74,10 @@ function getCombinedFilters(column: ColumnType) {
 				<div v-for="feature in activeFeatures" :key="feature.id" class="my-1">
 					<div class="flex items-start gap-2">
 						<svg
-							v-if="getActiveFilterValues(feature).length === 0 || activeFeatures?.length === 1"
+							v-if="
+								getActiveFilterValues(feature).length === 0 ||
+								(activeFeatures?.length === 1 && markerSettings.showCenter)
+							"
 							class="mt-0.5 size-3.5 shrink-0"
 							view-box="0 0 18 18 "
 							v-html="
@@ -125,21 +129,15 @@ function getCombinedFilters(column: ColumnType) {
 						<div
 							v-if="
 								(feature.getFilterValue() as Map<string, number>).size > 0 &&
-								!getAllFacetsActive(feature)
+								!getAllFacetsActive(feature) &&
+								markerSettings.showOtherFeatureValues
 							"
 							class="flex items-center gap-2"
 						>
-							<svg class="mt-0.5 size-3.5 shrink-0">
-								<use
-									href="#petal"
-									:style="{
-										fill: `var(--${feature.id})`,
-										stroke: `var(--${feature.id})`,
-										strokeWidth: '20px',
-										fillOpacity: '0.2',
-									}"
-								></use>
-							</svg>
+							<svg
+								class="mt-0.5 size-3.5 shrink-0"
+								v-html="getMarkerSVG({ id: feature.id, strokeOnly: true }).outerHTML"
+							></svg>
 							<span>Other feature values</span>
 						</div>
 					</div>

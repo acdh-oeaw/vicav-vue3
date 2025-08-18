@@ -129,6 +129,7 @@ watch(
 
 const { getMarkerSVG } = usePetalMarker();
 const { buildFeatureValueId } = useMarkerStore();
+const { markerSettings } = storeToRefs(useMarkerStore());
 const { AND_OPERATOR } = useAdvancedQueries();
 
 const flattenedHighlightedValues = computed(() => {
@@ -146,7 +147,9 @@ function getPetalEntry(featureValue: string) {
 		);
 		if (combined) return { id: buildFeatureValueId(props.column.id, combined) };
 	}
-	return { id: props.column.id, strokeOnly: true };
+	if (markerSettings.value.showOtherFeatureValues && (props.highlightedValues?.length ?? 0) > 0)
+		return { id: props.column.id, strokeOnly: true };
+	else return null;
 }
 
 const sortedValues = computed(() => {
@@ -193,7 +196,11 @@ function onValueClick(val: Array<Record<string, unknown>>, title: string) {
 					'flex gap-x-2 flex-wrap': infoOpen[key],
 				}"
 			>
-				<svg class="size-3.5 shrink-0" v-html="getMarkerSVG(getPetalEntry(key)).outerHTML"></svg>
+				<svg
+					v-if="getPetalEntry(key) !== null"
+					class="size-3.5 shrink-0"
+					v-html="getMarkerSVG(getPetalEntry(key)!).outerHTML"
+				></svg>
 				<Button
 					class="flex-shrink-0 truncate p-0 h-auto !text-black"
 					:class="{
