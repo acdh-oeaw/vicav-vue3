@@ -146,7 +146,7 @@ function createColumnDefs(
 												);
 											},
 										},
-										cell.row.original.properties[cell.column.columnDef.id!],
+										() => cell.row.original.properties[cell.column.columnDef.id!],
 									);
 								},
 								accessorFn: (cell: PatchedFeatureType) => {
