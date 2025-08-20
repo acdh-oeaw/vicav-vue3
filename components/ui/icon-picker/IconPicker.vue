@@ -23,6 +23,7 @@ const props = withDefaults(
 		showTooltip?: boolean;
 		customIcons?: Array<IconType>;
 		color?: string;
+		usePopoverPortal?: boolean;
 	}>(),
 	{ searchable: true, categorized: true, showTooltip: false },
 );
@@ -92,7 +93,7 @@ watch(
 				<span v-else class="px-1">{{ triggerPlaceholder || "Select an icon" }}</span>
 			</Button>
 		</PopoverTrigger>
-		<PopoverContent class="max-w-56 p-2 bg-white text-sm">
+		<PopoverContent class="max-w-56 p-2 bg-white text-sm" :use-portal="usePopoverPortal">
 			<label class="flex grow-0 basis-0 items-center p-0" @click.capture.stop>
 				<span class="mr-2 text-neutral-800">Pick a marker color</span>
 				<div

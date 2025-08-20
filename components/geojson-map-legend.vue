@@ -4,6 +4,8 @@ import { ChevronDown } from "lucide-vue-next";
 
 import type { GeojsonMapSchema } from "@/types/global";
 
+import type { SelectionEntry } from "./marker-selector.vue";
+
 const { getMarkerSVG, getCircleSVG } = usePetalMarker();
 
 interface Props {
@@ -26,8 +28,8 @@ function getMatchingRowCount(columnId: string) {
 }
 const collapsibleOpen = ref(true);
 
-const { buildFeatureValueId } = useMarkerStore();
-const { markerSettings } = storeToRefs(useMarkerStore());
+const { buildFeatureValueId, setMarker } = useMarkerStore();
+const { markerSettings, markers } = storeToRefs(useMarkerStore());
 
 type ColumnType = Column<
 	{
@@ -61,6 +63,9 @@ function getCombinedFilters(column: ColumnType) {
 		.filter((filter) => filter.includes(AND_OPERATOR))
 		.map((filter) => filter.split(AND_OPERATOR));
 }
+function updateMarker(markerSelection: SelectionEntry) {
+	setMarker(markerSelection);
+}
 </script>
 
 <template>
@@ -74,18 +79,18 @@ function getCombinedFilters(column: ColumnType) {
 				<div v-for="feature in activeFeatures" :key="feature.id" class="my-1">
 					<div class="flex items-start gap-2">
 						<svg
-							v-if="
-								getActiveFilterValues(feature).length === 0 ||
-								(activeFeatures?.length === 1 && markerSettings.showCenter)
-							"
+							v-if="activeFeatures?.length === 1 && markerSettings.showCenter"
 							class="mt-0.5 size-3.5 shrink-0"
 							view-box="0 0 18 18 "
-							v-html="
-								activeFeatures!.length > 1
-									? getMarkerSVG({ id: feature.id }).outerHTML
-									: getCircleSVG(`var(--${feature.id})`, true, 14).outerHTML
-							"
+							v-html="getCircleSVG(`var(--${feature.id})`, true, 14).outerHTML"
 						></svg>
+						<MarkerSelector
+							v-else-if="getActiveFilterValues(feature).length === 0"
+							:icon-categories="['shapes']"
+							:model-value="markers.get(feature.id)!"
+							:use-popover-portal="true"
+							@update:model-value="(props) => updateMarker(props)"
+						></MarkerSelector>
 						<span>{{ feature.columnDef.header }} ({{ getMatchingRowCount(feature.id) }})</span>
 					</div>
 					<div
@@ -93,13 +98,21 @@ function getCombinedFilters(column: ColumnType) {
 						:key="filter.join('')"
 						class="ml-4 flex items-center gap-2"
 					>
-						<svg
+						<MarkerSelector
+							:icon-categories="['shapes']"
+							:model-value="
+								markers.get(buildFeatureValueId(feature.id, filter.join(AND_OPERATOR)))!
+							"
+							:use-popover-portal="true"
+							@update:model-value="(props) => updateMarker(props)"
+						></MarkerSelector>
+						<!-- <svg
 							class="mt-0.5 size-3.5 shrink-0"
 							v-html="
 								getMarkerSVG({ id: buildFeatureValueId(feature.id, filter.join(AND_OPERATOR)) })
 									.outerHTML
 							"
-						></svg>
+						></svg> -->
 						<span>
 							<span v-for="(fv, idx) in filter" :key="fv"
 								>{{ fv
@@ -120,10 +133,16 @@ function getCombinedFilters(column: ColumnType) {
 							:key="value"
 							class="flex items-center gap-2"
 						>
-							<svg
+							<MarkerSelector
+								:icon-categories="['shapes']"
+								:model-value="markers.get(buildFeatureValueId(feature.id, value))!"
+								:use-popover-portal="true"
+								@update:model-value="(props) => updateMarker(props)"
+							></MarkerSelector>
+							<!-- <svg
 								class="mt-0.5 size-3.5 shrink-0"
 								v-html="getMarkerSVG({ id: buildFeatureValueId(feature.id, value) }).outerHTML"
-							></svg>
+							></svg> -->
 							<span>{{ value }} ({{ count }})</span>
 						</div>
 						<div
