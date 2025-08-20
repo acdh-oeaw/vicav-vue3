@@ -50,7 +50,7 @@ function getPetalSVG(petalValue: PetalEntry) {
 function getIconSVG(petalValue: PetalEntry) {
 	const petal = document.createElementNS("http://www.w3.org/2000/svg", "use");
 	// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-	petal.setAttribute("href", `#${String(markers.value.get(petalValue.id)?.marker?.name ?? "")}`);
+	petal.setAttribute("href", `#${String(markers.value.get(petalValue.id)?.icon?.name ?? "")}`);
 
 	petal.style.stroke = `var(--${petalValue.id}, #cccccc)`;
 	petal.style.strokeWidth = `var(--strokeWidth, 4px)`;
@@ -66,7 +66,7 @@ function getIconSVG(petalValue: PetalEntry) {
 function getMarkerSVG(petalValue: PetalEntry) {
 	const useLucideIcon =
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-		markers.value.has(petalValue.id) && !markers.value.get(petalValue.id)?.marker?.custom;
+		markers.value.has(petalValue.id) && !markers.value.get(petalValue.id)?.icon?.custom;
 	return useLucideIcon ? getIconSVG(petalValue) : getPetalSVG(petalValue);
 }
 
@@ -82,7 +82,7 @@ function getFlowerSVG(entries: Array<PetalEntry>, center?: PetalEntry) {
 	for (const [i, value] of entries.entries()) {
 		const useLucideIcon =
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-			markers.value.has(value.id) && !markers.value.get(value.id)?.marker?.custom;
+			markers.value.has(value.id) && !markers.value.get(value.id)?.icon?.custom;
 		const petal = getMarkerSVG(value);
 		petal.style.transform = `rotate(${String((i * 360) / NUM_PETALS)}deg) ${useLucideIcon && (entries.length > 1 || center) ? "translateY(-3px)" : ""}`;
 		svg.appendChild(petal);

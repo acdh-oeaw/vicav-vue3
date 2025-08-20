@@ -3,8 +3,8 @@ import type { IconType } from "./ui/icon-picker/IconPicker.vue";
 
 type SelectorType = "color" | "icon";
 export interface SelectionEntry {
-	colorCode?: string;
-	icon?: IconType;
+	colorCode: string;
+	icon: IconType;
 	id: string;
 }
 const props = withDefaults(
@@ -12,6 +12,7 @@ const props = withDefaults(
 		type?: Array<SelectorType>;
 		iconCategories?: Array<string>;
 		modelValue: SelectionEntry;
+		usePopoverPortal?: boolean;
 	}>(),
 	{
 		type: () => ["color", "icon"] as Array<SelectorType>,
@@ -51,6 +52,7 @@ const customIcons = [
 		:icon="modelValue.icon"
 		:limit-to-categories="iconCategories"
 		search-placeholder="Search for an alternative icon..."
+		:use-popover-portal="usePopoverPortal"
 		@update:color="updateColor"
 		@update:icon="updateIcon"
 	></IconPicker>

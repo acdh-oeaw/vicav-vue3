@@ -17,7 +17,7 @@ function titleCase(s: string) {
 
 const isCollapsibleOpen = ref(false);
 
-const { colors } = storeToRefs(useMarkerStore());
+const { markers } = storeToRefs(useMarkerStore());
 const { setColor } = useMarkerStore();
 </script>
 
@@ -84,7 +84,7 @@ const { setColor } = useMarkerStore();
 				<input
 					class="size-0"
 					type="color"
-					:value="colors.get(item.id)?.colorCode || '#cccccc'"
+					:value="markers.get(item.id)?.colorCode || '#cccccc'"
 					@click.capture.stop
 					@input="
 						(event) => {

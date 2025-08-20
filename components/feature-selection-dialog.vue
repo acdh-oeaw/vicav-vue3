@@ -95,9 +95,7 @@ watch(
 	},
 );
 
-const { addColorVariant, buildFeatureValueId, setColor } = useMarkerStore();
-const { colors } = storeToRefs(useMarkerStore());
-const { addDefaultMarker, setMarker } = useMarkerStore();
+const { buildFeatureValueId, addDefaultMarker, setMarker } = useMarkerStore();
 const { markers } = storeToRefs(useMarkerStore());
 
 const onSubmit = handleSubmit((values: { items: Array<string> }) => {
@@ -105,8 +103,6 @@ const onSubmit = handleSubmit((values: { items: Array<string> }) => {
 	const allFilters = new Map(values.items.map((item) => [item, 1]));
 	props.column.setFilterValue(allFilters);
 	values.items.forEach((element) => {
-		if (!colors.value.has(buildFeatureValueId(props.column.id, element)))
-			addColorVariant(props.column.id, element);
 		if (!markers.value.has(buildFeatureValueId(props.column.id, element)))
 			addDefaultMarker(props.column.id, element);
 	});
@@ -117,8 +113,6 @@ const onSubmit = handleSubmit((values: { items: Array<string> }) => {
 
 const onChange = (facet: string, checked: boolean) => {
 	if (checked) {
-		if (!colors.value.has(buildFeatureValueId(props.column.id, facet)))
-			addColorVariant(props.column.id, facet);
 		if (!markers.value.has(buildFeatureValueId(props.column.id, facet)))
 			addDefaultMarker(props.column.id, facet);
 		computeMarkerData();
@@ -165,8 +159,6 @@ function toggleAllValues() {
 			facets.value.map((facet) => facet[0]),
 		);
 		facets.value.forEach((facet) => {
-			if (!colors.value.has(buildFeatureValueId(props.column.id, facet[0])))
-				addColorVariant(props.column.id, facet[0]);
 			if (!markers.value.has(buildFeatureValueId(props.column.id, facet[0])))
 				addDefaultMarker(props.column.id, facet[0]);
 		});
@@ -183,21 +175,21 @@ function computeMarkerData() {
 		.filter((id): id is string => id !== null);
 	ids.forEach((entry: string) => {
 		const id = buildFeatureValueId(props.column.id, entry);
+		if (!markers.value.has(id)) {
+			return;
+		}
 		data[entry] = {
 			id,
-			colorCode: colors.value.get(id)?.colorCode,
-			icon: markers.value.get(id)?.marker,
+			colorCode: markers.value.get(id)!.colorCode,
+			icon: markers.value.get(id)!.icon,
 		};
 	});
 	markerData.value = data;
 }
 
 function updateMarker(markerSelection: SelectionEntry) {
-	if (markerSelection.colorCode) {
-		setColor({ colorCode: markerSelection.colorCode, id: markerSelection.id });
-	}
 	if (markerSelection.icon) {
-		setMarker({ marker: markerSelection.icon, id: markerSelection.id });
+		setMarker(markerSelection);
 	}
 	computeMarkerData();
 }

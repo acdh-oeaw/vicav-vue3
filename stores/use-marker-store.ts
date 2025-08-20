@@ -10,12 +10,12 @@ interface ColorInterface {
 }
 interface MarkerInterface {
 	id: string;
-	marker: IconType;
+	icon: IconType;
+	colorCode: string;
 }
 
 export const useMarkerStore = defineStore("markers", () => {
-	const colors = shallowRef<Map<ColorInterface["id"], ColorInterface>>(new Map());
-	const markers = shallowRef<Map<MarkerInterface["id"], MarkerInterface>>(new Map());
+	const markers = ref<Map<MarkerInterface["id"], MarkerInterface>>(new Map());
 	const markerSettings = ref({
 		strokeWidth: 4,
 		greyscale: false,
@@ -24,6 +24,10 @@ export const useMarkerStore = defineStore("markers", () => {
 		triggerRepaint: false,
 	});
 
+	const buildFeatureValueId = (columnId: string, feature: string) =>
+		encodeURIComponent(`${columnId}-${feature}`).replaceAll(/%|\./g, "");
+
+	/* General Marker Settings */
 	function updateSettingVariables() {
 		document.documentElement.style.setProperty(
 			"--greyscale",
@@ -51,15 +55,15 @@ export const useMarkerStore = defineStore("markers", () => {
 		},
 	);
 
+	/* Setting and updating colors */
 	const refColor = ref(
 		// `hsl(${document.documentElement.style.getPropertyValue("--color-primary")})`,
 		`hsl(-57.76924deg 26.53061224489796% 51.9607843137255%)`,
 	);
-	const buildFeatureValueId = (columnId: string, feature: string) =>
-		encodeURIComponent(`${columnId}-${feature}`).replaceAll(/%|\./g, "");
 
 	function updateColorValue(color: ColorInterface) {
-		colors.value.set(color.id, color);
+		assert(markers.value.has(color.id), `Entry not found in markers ${color.id}`);
+		markers.value.set(color.id, { ...markers.value.get(color.id)!, colorCode: color.colorCode });
 		refColor.value = color.colorCode;
 	}
 
@@ -86,13 +90,14 @@ export const useMarkerStore = defineStore("markers", () => {
 		};
 		updateCssVariable(color);
 		updateColorValue(color);
+		return color;
 	}
 
 	function addColorVariant(baseId: ColorInterface["id"], subId: ColorInterface["id"]) {
-		if (!colors.value.has(baseId)) addColor(baseId);
-		const baseColor = colors.value.get(baseId);
+		if (!markers.value.has(baseId)) addColor(baseId);
+		const baseColor = markers.value.get(baseId)?.colorCode;
 
-		const newColor = new Color(baseColor!.colorCode).to("lch");
+		const newColor = new Color(baseColor!).to("lch");
 		newColor.l = Math.random() * 60 + 20; //lightness values from 20 to 80
 
 		const color: ColorInterface = {
@@ -105,21 +110,23 @@ export const useMarkerStore = defineStore("markers", () => {
 
 	function removeColor(id: ColorInterface["id"]) {
 		document.documentElement.style.removeProperty(`--${id}`);
-		colors.value.delete(id);
+		markers.value.delete(id);
 	}
 
-	function addDefaultMarker(baseId: MarkerInterface["id"], subId: MarkerInterface["id"]) {
+	function addDefaultMarker(baseId: MarkerInterface["id"], subId?: MarkerInterface["id"]) {
+		if (subId && !markers.value.has(baseId)) addDefaultMarker(baseId);
 		if (markers.value.get(baseId)) {
 			assert(markers.value.get(baseId) != null);
 			setMarker({
-				id: buildFeatureValueId(baseId, subId),
+				id: subId ? buildFeatureValueId(baseId, subId) : baseId,
 				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-				marker: markers.value.get(baseId)!.marker,
+				icon: markers.value.get(baseId)!.icon,
+				colorCode: "",
 			});
 		} else
 			setMarker({
-				id: buildFeatureValueId(baseId, subId),
-				marker: {
+				id: subId ? buildFeatureValueId(baseId, subId) : baseId,
+				icon: {
 					name: "petal",
 					custom: true,
 					additionalAttributes: {
@@ -128,11 +135,22 @@ export const useMarkerStore = defineStore("markers", () => {
 						y: "5%",
 					},
 				},
+				colorCode: "",
 			});
+		if (subId) addColorVariant(baseId, subId);
+		else addColor(baseId);
 	}
 
 	function setMarker(marker: MarkerInterface) {
+		let repaint = false;
+		if (markers.value.get(marker.id)?.icon !== marker.icon) repaint = true;
 		markers.value.set(marker.id, marker);
+		if (marker.colorCode !== "") {
+			setColor(marker);
+		}
+		if (repaint) {
+			markerSettings.value.triggerRepaint = true;
+		}
 	}
 
 	function removeMarker(id: MarkerInterface["id"]) {
@@ -145,7 +163,6 @@ export const useMarkerStore = defineStore("markers", () => {
 		setColor,
 		removeColor,
 		buildFeatureValueId,
-		colors,
 		addDefaultMarker,
 		setMarker,
 		removeMarker,

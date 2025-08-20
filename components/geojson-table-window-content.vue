@@ -75,18 +75,18 @@ function applyQueryString(row: Row<FeatureType>, colId: string, queryString: str
 	return test(parse(queryString), preparedRow);
 }
 
-const { addColor, addColorVariant, buildFeatureValueId } = useMarkerStore();
-const { colors } = storeToRefs(useMarkerStore());
+const { addDefaultMarker, buildFeatureValueId } = useMarkerStore();
+const { markers } = storeToRefs(useMarkerStore());
 function onVisibilityChange(props: { table: Table<FeatureType>; col: Record<string, boolean> }) {
 	// applyGlobalFilter(props.table);
 	const changedColumnKey = Object.keys(props.col)[0]!;
 	const visibilityValue = props.col[changedColumnKey]!;
-	if (visibilityValue && !colors.value.has(changedColumnKey)) addColor(changedColumnKey);
+	if (visibilityValue && !markers.value.has(changedColumnKey)) addDefaultMarker(changedColumnKey);
 }
 function onColumnFilterChange(columnFilters: Array<{ id: string; value: Map<string, unknown> }>) {
 	columnFilters.forEach((column) => {
 		for (const key of column.value.keys())
-			if (!colors.value.has(buildFeatureValueId(column.id, key))) addColorVariant(column.id, key);
+			if (!markers.value.has(buildFeatureValueId(column.id, key))) addDefaultMarker(column.id, key);
 	});
 }
 
