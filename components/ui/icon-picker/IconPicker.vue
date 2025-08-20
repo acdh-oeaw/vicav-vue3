@@ -14,7 +14,7 @@ export interface IconType {
 
 const props = withDefaults(
 	defineProps<{
-		modelValue?: IconType;
+		icon?: IconType;
 		searchPlaceholder?: string;
 		triggerPlaceholder?: string;
 		searchable?: boolean;
@@ -22,11 +22,12 @@ const props = withDefaults(
 		limitToCategories?: Array<string>;
 		showTooltip?: boolean;
 		customIcons?: Array<IconType>;
+		color?: string;
 	}>(),
 	{ searchable: true, categorized: true, showTooltip: false },
 );
 
-const emit = defineEmits(["update:modelValue"]);
+const emit = defineEmits(["update:icon", "update:color"]);
 
 const isOpen = ref(false);
 const searchRaw = ref("");
@@ -63,9 +64,17 @@ const filteredIcons = computed(() => {
 
 function selectIcon(icon: IconType) {
 	selectedIcon.value = icon;
-	emit("update:modelValue", icon);
+	emit("update:icon", icon);
 	isOpen.value = false;
 }
+
+const localColor = ref(props.color ?? "#cccccc");
+watch(
+	() => localColor.value,
+	(newColor) => {
+		emit("update:color", newColor);
+	},
+);
 </script>
 
 <template>
@@ -73,17 +82,31 @@ function selectIcon(icon: IconType) {
 		<PopoverTrigger as-child>
 			<Button class="p-0.5 h-auto" variant="outline">
 				<Icon
-					v-if="modelValue"
-					:additional-attributes="modelValue.additionalAttributes"
-					:is-custom-icon="modelValue.custom"
-					:name="modelValue?.name ?? ''"
-					:size="13"
+					v-if="icon"
+					:additional-attributes="icon.additionalAttributes"
+					:is-custom-icon="icon.custom"
+					:name="icon?.name ?? ''"
+					:size="12"
+					:style="{ stroke: localColor, fill: icon.custom ? localColor : null }"
 				/>
 				<span v-else class="px-1">{{ triggerPlaceholder || "Select an icon" }}</span>
 			</Button>
 		</PopoverTrigger>
-		<PopoverContent class="w-64 p-2 bg-white">
-			<div class="w-full">
+		<PopoverContent class="max-w-56 p-2 bg-white text-sm">
+			<label class="flex grow-0 basis-0 items-center p-0" @click.capture.stop>
+				<span class="mr-2 text-neutral-800">Pick a marker color</span>
+				<div
+					class="size-4 rounded"
+					:style="{
+						backgroundColor: localColor,
+						stroke: localColor,
+					}"
+				></div>
+				<input v-model="localColor" class="size-0" type="color" @click.capture.stop />
+				<span class="sr-only">Select color</span>
+			</label>
+			<div class="h-[1px] my-2 bg-neutral-200 w-full"></div>
+			<div class="w-full mt-0.5">
 				<label
 					><input
 						v-if="searchable !== false"
@@ -93,10 +116,6 @@ function selectIcon(icon: IconType) {
 						type="text"
 				/></label>
 			</div>
-			<!--
-			<div v-if="props.categorized">
-				<Badge v-for="cat in categories" :key="cat" variant="outline">{{ cat }}</Badge>
-			</div> -->
 			<div class="grid grid-cols-5 gap-2 max-h-60 overflow-auto">
 				<TooltipProvider v-if="props.showTooltip">
 					<Tooltip v-for="icon in filteredIcons" :key="icon.name">
@@ -112,7 +131,7 @@ function selectIcon(icon: IconType) {
 					v-for="icon in filteredIcons"
 					v-else
 					:key="icon.name"
-					class="p-2 border rounded-md hover:bg-gray-100 flex items-center justify-center"
+					class="p-1 border rounded-md hover:bg-gray-100 flex items-center justify-center aspect-square h-auto"
 					variant="outline"
 					@click.prevent.stop="selectIcon(icon)"
 				>
@@ -120,6 +139,8 @@ function selectIcon(icon: IconType) {
 						:additional-attributes="icon.additionalAttributes"
 						:is-custom-icon="icon.custom"
 						:name="icon.name"
+						:size="16"
+						:style="{ stroke: localColor, fill: icon.custom ? localColor : null }"
 					/>
 				</Button>
 			</div>

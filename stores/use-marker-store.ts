@@ -10,7 +10,6 @@ interface ColorInterface {
 }
 interface MarkerInterface {
 	id: string;
-	markerSVG?: string;
 	marker: IconType;
 }
 
@@ -114,7 +113,6 @@ export const useMarkerStore = defineStore("markers", () => {
 			assert(markers.value.get(baseId) != null);
 			setMarker({
 				id: buildFeatureValueId(baseId, subId),
-				markerSVG: markers.value.get(baseId)!.markerSVG,
 				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 				marker: markers.value.get(baseId)!.marker,
 			});
@@ -125,8 +123,6 @@ export const useMarkerStore = defineStore("markers", () => {
 					name: "petal",
 					custom: true,
 					additionalAttributes: {
-						fill: "transparent",
-						stroke: "black",
 						"stroke-width": "40",
 						height: "90%",
 						y: "5%",

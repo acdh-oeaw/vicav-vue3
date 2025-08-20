@@ -19,9 +19,8 @@ const props = withDefaults(
 );
 
 const emit = defineEmits(["update:modelValue"]);
-function updateColor(event: Event) {
-	//@ts-expect-error target.value not recognized
-	emit("update:modelValue", { ...props.modelValue, colorCode: event.target?.value ?? "" });
+function updateColor(color: string) {
+	emit("update:modelValue", { ...props.modelValue, colorCode: color });
 }
 function updateIcon(icon: IconType) {
 	emit("update:modelValue", { ...props.modelValue, icon });
@@ -33,8 +32,8 @@ const customIcons = [
 		categories: ["shapes"],
 		tags: [],
 		additionalAttributes: {
-			fill: "transparent",
-			stroke: "black",
+			// fill: "transparent",
+			// stroke: "black",
 			"stroke-width": "40",
 			height: "90%",
 			y: "5%",
@@ -44,34 +43,15 @@ const customIcons = [
 </script>
 
 <template>
-	<label
-		v-if="props.type?.includes('color')"
-		class="ml-3 flex grow-0 basis-0 items-center self-center p-0"
-		@click.capture.stop
-	>
-		<div
-			class="size-4 rounded"
-			:style="{
-				backgroundColor: `var(--${modelValue.id})`,
-				stroke: `var(--${modelValue.id})`,
-			}"
-		></div>
-		<input
-			class="size-0"
-			type="color"
-			:value="modelValue.colorCode || '#cccccc'"
-			@click.capture.stop
-			@input="updateColor"
-		/>
-		<span class="sr-only">Select color</span>
-	</label>
-
-	<div v-if="props.type?.includes('icon')">
-		<IconPicker
-			:custom-icons="customIcons"
-			:limit-to-categories="iconCategories"
-			:model-value="modelValue.icon"
-			@update:model-value="updateIcon"
-		></IconPicker>
-	</div>
+	<IconPicker
+		v-if="props.type?.includes('icon')"
+		:id="modelValue.id"
+		:color="modelValue.colorCode"
+		:custom-icons="customIcons"
+		:icon="modelValue.icon"
+		:limit-to-categories="iconCategories"
+		search-placeholder="Search for an alternative icon..."
+		@update:color="updateColor"
+		@update:icon="updateIcon"
+	></IconPicker>
 </template>
