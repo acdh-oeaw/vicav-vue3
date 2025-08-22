@@ -4,7 +4,7 @@ import { ChevronDown } from "lucide-vue-next";
 
 import { useMarkerStore } from "@/stores/use-marker-store";
 
-const _props = defineProps<{
+const props = defineProps<{
 	item: Column<unknown>;
 	table: Table<unknown>;
 }>();
@@ -19,6 +19,10 @@ const isCollapsibleOpen = ref(false);
 
 const { markers } = storeToRefs(useMarkerStore());
 const { setMarker } = useMarkerStore();
+
+const activeFeatures = computed(() =>
+	props.table?.getVisibleLeafColumns().filter((col) => col.getCanHide()),
+);
 </script>
 
 <template>
@@ -70,11 +74,11 @@ const { setMarker } = useMarkerStore();
 		>
 			<span class="flex-1">{{ item.columnDef.header }}</span>
 
-			<div @click.stop>
+			<div v-if="item.getIsVisible()" @click.stop>
 				<MarkerSelector
-					v-if="item.getIsVisible()"
 					:icon-categories="['shapes']"
 					:model-value="markers.get(item.id)!"
+					:type="activeFeatures?.length === 1 ? ['color'] : ['icon']"
 					:use-popover-modal="true"
 					@click.capture.stop
 					@update:model-value="(props) => setMarker(props)"

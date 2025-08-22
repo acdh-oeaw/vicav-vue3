@@ -76,11 +76,17 @@ function applyQueryString(row: Row<FeatureType>, colId: string, queryString: str
 }
 
 const { addDefaultMarker, buildFeatureValueId } = useMarkerStore();
-const { markers } = storeToRefs(useMarkerStore());
+const { markers, markerSettings } = storeToRefs(useMarkerStore());
 function onVisibilityChange(props: { table: Table<FeatureType>; col: Record<string, boolean> }) {
 	// applyGlobalFilter(props.table);
 	const changedColumnKey = Object.keys(props.col)[0]!;
 	const visibilityValue = props.col[changedColumnKey]!;
+	const hidableVisibleColumns = props.table
+		.getVisibleLeafColumns()
+		.filter((col) => col.getCanHide());
+	if (hidableVisibleColumns.length === 1)
+		markerSettings.value.flowerCenterId = hidableVisibleColumns[0]?.id ?? null;
+	else markerSettings.value.flowerCenterId = null;
 	if (visibilityValue && !markers.value.has(changedColumnKey)) addDefaultMarker(changedColumnKey);
 }
 function onColumnFilterChange(columnFilters: Array<{ id: string; value: Map<string, unknown> }>) {

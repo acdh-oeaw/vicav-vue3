@@ -17,12 +17,28 @@ interface MarkerInterface {
 export const useMarkerStore = defineStore("markers", () => {
 	const markers = ref<Map<MarkerInterface["id"], MarkerInterface>>(new Map());
 	const markerSettings = ref({
+		flowerCenterId: null as string | null,
 		strokeWidth: 4,
 		greyscale: false,
 		showCenter: true,
 		showOtherFeatureValues: true,
 		triggerRepaint: false,
 	});
+	const defaultMarkers = {
+		circle: {
+			name: "circle-small",
+			custom: true,
+		},
+		petal: {
+			name: "petal",
+			custom: true,
+			additionalAttributes: {
+				"stroke-width": "40",
+				height: "90%",
+				y: "5%",
+			},
+		},
+	};
 
 	const buildFeatureValueId = (columnId: string, feature: string) =>
 		encodeURIComponent(`${columnId}-${feature}`).replaceAll(/%|\./g, "");
@@ -49,7 +65,11 @@ export const useMarkerStore = defineStore("markers", () => {
 	);
 
 	watch(
-		[() => markerSettings.value.showCenter, () => markerSettings.value.showOtherFeatureValues],
+		[
+			() => markerSettings.value.showCenter,
+			() => markerSettings.value.showOtherFeatureValues,
+			() => markerSettings.value.flowerCenterId,
+		],
 		() => {
 			markerSettings.value.triggerRepaint = true;
 		},
@@ -126,15 +146,7 @@ export const useMarkerStore = defineStore("markers", () => {
 		} else
 			setMarker({
 				id: subId ? buildFeatureValueId(baseId, subId) : baseId,
-				icon: {
-					name: "petal",
-					custom: true,
-					additionalAttributes: {
-						"stroke-width": "40",
-						height: "90%",
-						y: "5%",
-					},
-				},
+				icon: defaultMarkers.petal,
 				colorCode: "",
 			});
 		if (subId) addColorVariant(baseId, subId);
@@ -168,5 +180,6 @@ export const useMarkerStore = defineStore("markers", () => {
 		removeMarker,
 		markers,
 		markerSettings,
+		defaultMarkers,
 	};
 });

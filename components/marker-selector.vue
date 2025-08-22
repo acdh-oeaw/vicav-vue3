@@ -28,18 +28,29 @@ function updateIcon(icon: IconType) {
 	emit("update:modelValue", { ...props.modelValue, icon });
 }
 
+const localColor = ref(props.modelValue.colorCode ?? "#cccccc");
+watch(
+	() => localColor.value,
+	(newColor) => {
+		emit("update:modelValue", { ...props.modelValue, colorCode: newColor });
+	},
+);
+
 const customIcons = [
 	{
 		name: "petal",
 		categories: ["shapes"],
 		tags: [],
 		additionalAttributes: {
-			// fill: "transparent",
-			// stroke: "black",
 			"stroke-width": "40",
 			height: "90%",
 			y: "5%",
 		},
+	},
+	{
+		name: "circle-small",
+		categories: ["shapes"],
+		tags: [],
 	},
 ];
 </script>
@@ -58,4 +69,20 @@ const customIcons = [
 		@update:color="updateColor"
 		@update:icon="updateIcon"
 	></IconPicker>
+	<label
+		v-else-if="props.type.includes('color')"
+		class="flex grow-0 basis-0 items-center p-0"
+		@click.capture.stop
+	>
+		<span class="mr-2 text-neutral-800 sr-only">Pick a marker color</span>
+		<div
+			class="size-4 rounded"
+			:style="{
+				backgroundColor: localColor,
+				stroke: localColor,
+			}"
+		></div>
+		<input v-model="localColor" class="size-0" type="color" @click.capture.stop />
+		<span class="sr-only">Select color</span>
+	</label>
 </template>
