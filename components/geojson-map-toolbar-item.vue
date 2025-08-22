@@ -18,7 +18,7 @@ function titleCase(s: string) {
 const isCollapsibleOpen = ref(false);
 
 const { markers } = storeToRefs(useMarkerStore());
-const { setColor } = useMarkerStore();
+const { setMarker } = useMarkerStore();
 </script>
 
 <template>
@@ -59,6 +59,7 @@ const { setColor } = useMarkerStore();
 	<template v-else>
 		<DropdownMenuCheckboxItem
 			:checked="item.getIsVisible()"
+			@mouseover.prevent
 			@select.prevent
 			@update:checked="
 				(value) => {
@@ -69,32 +70,16 @@ const { setColor } = useMarkerStore();
 		>
 			<span class="flex-1">{{ item.columnDef.header }}</span>
 
-			<label
-				v-if="item.getIsVisible()"
-				class="ml-3 flex grow-0 basis-0 items-center p-0"
-				@click.capture.stop
-			>
-				<div
-					class="size-4 rounded"
-					:style="{
-						backgroundColor: `var(--${item.id})`,
-						stroke: `var(--${item.id})`,
-					}"
-				></div>
-				<input
-					class="size-0"
-					type="color"
-					:value="markers.get(item.id)?.colorCode || '#cccccc'"
+			<div @click.stop>
+				<MarkerSelector
+					v-if="item.getIsVisible()"
+					:icon-categories="['shapes']"
+					:model-value="markers.get(item.id)!"
+					:use-popover-modal="true"
 					@click.capture.stop
-					@input="
-						(event) => {
-							//@ts-expect-error target.value not recognized
-							setColor({ id: item.id, colorCode: event.target!.value });
-						}
-					"
-				/>
-				<span class="sr-only">Select color</span>
-			</label>
+					@update:model-value="(props) => setMarker(props)"
+				></MarkerSelector>
+			</div>
 			<FeatureSelectionDialog :column="item as Column<unknown>" :table="table" />
 		</DropdownMenuCheckboxItem>
 	</template>

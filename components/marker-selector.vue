@@ -13,6 +13,7 @@ const props = withDefaults(
 		iconCategories?: Array<string>;
 		modelValue: SelectionEntry;
 		usePopoverPortal?: boolean;
+		usePopoverModal?: boolean;
 	}>(),
 	{
 		type: () => ["color", "icon"] as Array<SelectorType>,
@@ -52,6 +53,7 @@ const customIcons = [
 		:icon="modelValue.icon"
 		:limit-to-categories="iconCategories"
 		search-placeholder="Search for an alternative icon..."
+		:use-popover-modal="usePopoverModal"
 		:use-popover-portal="usePopoverPortal"
 		@update:color="updateColor"
 		@update:icon="updateIcon"

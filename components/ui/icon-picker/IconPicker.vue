@@ -24,8 +24,9 @@ const props = withDefaults(
 		customIcons?: Array<IconType>;
 		color?: string;
 		usePopoverPortal?: boolean;
+		usePopoverModal?: boolean;
 	}>(),
-	{ searchable: true, categorized: true, showTooltip: false },
+	{ searchable: true, categorized: true, showTooltip: false, usePopoverModal: false },
 );
 
 const emit = defineEmits(["update:icon", "update:color"]);
@@ -79,7 +80,7 @@ watch(
 </script>
 
 <template>
-	<Popover v-model:open="isOpen">
+	<Popover v-model:open="isOpen" :modal="usePopoverModal">
 		<PopoverTrigger as-child>
 			<Button class="p-0.5 h-auto" variant="outline">
 				<Icon
