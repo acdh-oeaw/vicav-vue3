@@ -40,8 +40,10 @@ export const useMarkerStore = defineStore("markers", () => {
 		},
 	};
 
-	const buildFeatureValueId = (columnId: string, feature: string) =>
-		encodeURIComponent(`${columnId}-${feature}`).replaceAll(/%|\./g, "");
+	const buildFeatureValueId = (columnId: string, feature?: string) =>
+		encodeURIComponent(
+			`${columnId}-${(feature ?? "").replaceAll(/[`~!@#$%^&*()_|+\-=?;:'",.<>{}[\]\\/]/g, "")}`,
+		).replaceAll(/[()%\\]/g, "");
 
 	/* General Marker Settings */
 	function updateSettingVariables() {
