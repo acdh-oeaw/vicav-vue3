@@ -9,6 +9,7 @@ import type { DataTypesEnum } from "@/types/global";
 const props = defineProps<{
 	markers: Array<Feature<Point, MarkerProperties>>;
 	groupMarkers: boolean;
+	useCustomClickHandler?: boolean;
 }>();
 const attrs = useAttrs();
 const $el = ref<HTMLElement>();
@@ -53,6 +54,10 @@ defineExpose({
 	$el,
 	id: attrs.id,
 });
+
+const emit = defineEmits<{
+	(event: "anchor-click", feature: Feature<Point, MarkerProperties>): void;
+}>();
 </script>
 
 <template>
@@ -72,12 +77,21 @@ defineExpose({
 							{{ DataTypes[contentType as DataTypesEnum]?.contentTypeHeading ?? contentType }}
 						</h3>
 
-						<GeoMapPopupLinks :markers="markersOfType" />
+						<GeoMapPopupLinks
+							:markers="markersOfType"
+							:use-custom-click-handler="props.useCustomClickHandler"
+							@anchor-click="(marker) => emit('anchor-click', marker)"
+						/>
 					</div>
 				</div>
 			</div>
 		</template>
-		<GeoMapPopupLinks v-if="!groupedMarkers" :markers="markers" />
+		<GeoMapPopupLinks
+			v-if="!groupedMarkers"
+			:markers="markers"
+			:use-custom-click-handler="props.useCustomClickHandler"
+			@anchor-click="(marker) => emit('anchor-click', marker)"
+		/>
 	</div>
 </template>
 
