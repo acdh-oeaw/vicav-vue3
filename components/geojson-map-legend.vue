@@ -5,6 +5,10 @@ import type { z } from "zod";
 
 import type { GeojsonMapSchema } from "@/types/global";
 
+import type { SelectionEntry } from "./marker-selector.vue";
+
+const { getMarkerSVG, getCircleSVG } = usePetalMarker();
+
 interface Props {
 	params: z.infer<typeof GeojsonMapSchema>["params"];
 }
@@ -25,7 +29,8 @@ function getMatchingRowCount(columnId: string) {
 }
 const collapsibleOpen = ref(true);
 
-const { buildFeatureValueId } = useColorsStore();
+const { buildFeatureValueId, setMarker } = useMarkerStore();
+const { markerSettings, markers } = storeToRefs(useMarkerStore());
 
 type ColumnType = Column<
 	{
@@ -59,11 +64,14 @@ function getCombinedFilters(column: ColumnType) {
 		.filter((filter) => filter.includes(AND_OPERATOR))
 		.map((filter) => filter.split(AND_OPERATOR));
 }
+function updateMarker(markerSelection: SelectionEntry) {
+	setMarker(markerSelection);
+}
 </script>
 
 <template>
-	<Collapsible v-model:open="collapsibleOpen">
-		<div class="w-48 bg-white/80 p-3 text-xs">
+	<Collapsible v-model:open="collapsibleOpen" class="w-48 bg-white/80 p-3 text-xs">
+		<div>
 			<CollapsibleTrigger class="flex w-full justify-between"
 				><b>{{ activeRows?.length }} total markers</b
 				><ChevronDown class="size-4" :class="collapsibleOpen ? '' : 'rotate-180'"></ChevronDown
@@ -72,16 +80,18 @@ function getCombinedFilters(column: ColumnType) {
 				<div v-for="feature in activeFeatures" :key="feature.id" class="my-1">
 					<div class="flex items-start gap-2">
 						<svg
-							v-if="getActiveFilterValues(feature).length === 0 || activeFeatures?.length === 1"
+							v-if="activeFeatures?.length === 1 && markerSettings.showCenter"
 							class="mt-0.5 size-3.5 shrink-0"
-						>
-							<use
-								v-if="activeFeatures!.length > 1"
-								href="#petal"
-								:style="{ fill: `var(--${feature.id})` }"
-							></use>
-							<circle v-else cx="8" cy="8" r="4" :style="{ fill: `var(--${feature.id})` }"></circle>
-						</svg>
+							view-box="0 0 18 18 "
+							v-html="getCircleSVG(`var(--${feature.id})`, true, 14).outerHTML"
+						></svg>
+						<MarkerSelector
+							v-else-if="getActiveFilterValues(feature).length === 0"
+							:icon-categories="['shapes']"
+							:model-value="markers.get(feature.id)!"
+							:use-popover-portal="true"
+							@update:model-value="(props) => updateMarker(props)"
+						></MarkerSelector>
 						<span>{{ feature.columnDef.header }} ({{ getMatchingRowCount(feature.id) }})</span>
 					</div>
 					<div
@@ -89,14 +99,21 @@ function getCombinedFilters(column: ColumnType) {
 						:key="filter.join('')"
 						class="ml-4 flex items-center gap-2"
 					>
-						<svg class="mt-0.5 size-3.5 shrink-0">
-							<use
-								href="#petal"
-								:style="{
-									fill: `var(--${buildFeatureValueId(feature.id, filter.join(AND_OPERATOR))})`,
-								}"
-							></use>
-						</svg>
+						<MarkerSelector
+							:icon-categories="['shapes']"
+							:model-value="
+								markers.get(buildFeatureValueId(feature.id, filter.join(AND_OPERATOR)))!
+							"
+							:use-popover-portal="true"
+							@update:model-value="(props) => updateMarker(props)"
+						></MarkerSelector>
+						<!-- <svg
+							class="mt-0.5 size-3.5 shrink-0"
+							v-html="
+								getMarkerSVG({ id: buildFeatureValueId(feature.id, filter.join(AND_OPERATOR)) })
+									.outerHTML
+							"
+						></svg> -->
 						<span>
 							<span v-for="(fv, idx) in filter" :key="fv"
 								>{{ fv
@@ -117,37 +134,35 @@ function getCombinedFilters(column: ColumnType) {
 							:key="value"
 							class="flex items-center gap-2"
 						>
-							<svg class="mt-0.5 size-3.5 shrink-0">
-								<use
-									href="#petal"
-									:style="{ fill: `var(--${buildFeatureValueId(feature.id, value)})` }"
-								></use>
-							</svg>
+							<MarkerSelector
+								:icon-categories="['shapes']"
+								:model-value="markers.get(buildFeatureValueId(feature.id, value))!"
+								:use-popover-portal="true"
+								@update:model-value="(props) => updateMarker(props)"
+							></MarkerSelector>
+							<!-- <svg
+								class="mt-0.5 size-3.5 shrink-0"
+								v-html="getMarkerSVG({ id: buildFeatureValueId(feature.id, value) }).outerHTML"
+							></svg> -->
 							<span>{{ value }} ({{ count }})</span>
 						</div>
 						<div
 							v-if="
 								(feature.getFilterValue() as Map<string, number>).size > 0 &&
-								!getAllFacetsActive(feature)
+								!getAllFacetsActive(feature) &&
+								markerSettings.showOtherFeatureValues
 							"
 							class="flex items-center gap-2"
 						>
-							<svg class="mt-0.5 size-3.5 shrink-0">
-								<use
-									href="#petal"
-									:style="{
-										fill: `var(--${feature.id})`,
-										stroke: `var(--${feature.id})`,
-										strokeWidth: '20px',
-										fillOpacity: '0.2',
-									}"
-								></use>
-							</svg>
+							<svg
+								class="mt-0.5 size-3.5 shrink-0"
+								v-html="getMarkerSVG({ id: feature.id, strokeOnly: true }).outerHTML"
+							></svg>
 							<span>Other feature values</span>
 						</div>
 					</div>
-				</div></CollapsibleContent
-			>
+				</div>
+			</CollapsibleContent>
 		</div>
 	</Collapsible>
 </template>
