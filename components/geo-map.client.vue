@@ -17,6 +17,7 @@ import { type GeoMapContext, key, type MarkerProperties } from "@/components/geo
 import GeoMapPopupContent from "@/components/geo-map-popup-content.vue";
 import type { MarkerType } from "@/types/global";
 
+const { markerSettings } = useMarkerStore();
 const { getPetalMarker } = usePetalMarker();
 
 interface Props {
@@ -26,6 +27,7 @@ interface Props {
 	markerType?: MarkerType;
 	selection?: [number, number];
 	displayLabels?: number;
+	useCustomClickHandler?: boolean;
 }
 
 const props = defineProps<Props>();
@@ -335,6 +337,16 @@ watch(
 	() => updateMarkers(),
 );
 
+watch(
+	() => markerSettings.triggerRepaint,
+	() => {
+		if (markerSettings.triggerRepaint) {
+			updateMarkers(false);
+			markerSettings.triggerRepaint = false;
+		}
+	},
+);
+
 const resize = debounce(() => {
 	if (context.map === null) {
 		return;
@@ -370,7 +382,10 @@ watch(
 watch(
 	() => props.selection,
 	() => {
-		if (props.selection) context.map?.flyTo([props.selection[1], props.selection[0]], 10);
+		if (props.selection) {
+			context.map?.closePopup();
+			context.map?.flyTo([props.selection[1], props.selection[0]], 10);
+		}
 	},
 );
 
@@ -390,6 +405,8 @@ provide(key, context);
 		:id="currentPopup.id"
 		:key="currentPopup.id"
 		ref="popupRef"
+		:use-custom-click-handler="props.useCustomClickHandler"
+		@anchor-click="(feature) => (props.useCustomClickHandler ? emit('marker-click', feature) : {})"
 	/>
 </template>
 

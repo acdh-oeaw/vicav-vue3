@@ -7,6 +7,11 @@ const openNewWindowFromAnchor = useMarkerClickHandler();
 
 const props = defineProps<{
 	markers: Array<Feature<Point, MarkerProperties>>;
+	useCustomClickHandler?: boolean;
+}>();
+
+const emit = defineEmits<{
+	(event: "anchor-click", feature: Feature<Point, MarkerProperties>): void;
 }>();
 </script>
 
@@ -16,7 +21,14 @@ const props = defineProps<{
 			v-for="marker in props.markers"
 			:key="marker.properties.targetType + '_' + marker.properties.textId"
 		>
-			<a href="/" @click.prevent.stop="openNewWindowFromAnchor(marker)">
+			<a
+				href="/"
+				@click.prevent.stop="
+					props.useCustomClickHandler
+						? emit('anchor-click', marker)
+						: openNewWindowFromAnchor(marker)
+				"
+			>
 				{{ marker.properties.alt || marker.properties.label }}
 			</a>
 		</li>

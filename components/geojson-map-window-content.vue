@@ -3,7 +3,7 @@ import type { Feature, Point } from "geojson";
 
 import type { MarkerProperties } from "@/lib/api-client";
 import { useGeojsonStore } from "@/stores/use-geojson-store.ts";
-import type { GeojsonMapSchema } from "@/types/global.d";
+import type { GeojsonMapSchema, WindowItem } from "@/types/global.d";
 
 interface Props {
 	params: Zod.infer<typeof GeojsonMapSchema>["params"];
@@ -21,7 +21,10 @@ const filteredMarkers = computed(() => {
 		.get(params.value.url)
 		?.getFilteredRowModel()
 		.rows.map((row) => {
-			return row.original;
+			const marker = row.original;
+			if (!("label" in marker.properties)) marker.properties.label = marker.properties.name;
+			marker.properties.targetType = "Location";
+			return marker;
 		});
 });
 
@@ -31,6 +34,22 @@ const selectedRowCoordinates = computed(() => {
 		selection?.rows.map((r) => r.original.geometry.coordinates as [number, number])[0] ?? undefined
 	);
 });
+
+const openOrUpdateWindow = useOpenOrUpdateWindow();
+function onMarkerClick(feature: Feature) {
+	const selection = tables.value
+		.get(params.value.url)
+		?.getCoreRowModel()
+		.flatRows.find((row) => row.original.id === feature.id);
+	selection?.toggleSelected(true);
+	openOrUpdateWindow(
+		{
+			targetType: "Location",
+			params: selection,
+		} as unknown as WindowItem,
+		feature.properties?.name as unknown as string,
+	);
+}
 </script>
 
 <template>
@@ -47,7 +66,9 @@ const selectedRowCoordinates = computed(() => {
 				:marker-type="params.markerType"
 				:markers="filteredMarkers as Array<Feature<Point, MarkerProperties>>"
 				:selection="selectedRowCoordinates"
+				:use-custom-click-handler="true"
 				:width="width"
+				@marker-click="onMarkerClick"
 			/>
 			<Centered v-if="!filteredMarkers">
 				<LoadingIndicator />
@@ -57,6 +78,7 @@ const selectedRowCoordinates = computed(() => {
 				class="absolute bottom-0 left-0"
 				:params="params"
 			></GeojsonMapLegend>
+			<GeojsonMapControls class="absolute top-0 left-0"></GeojsonMapControls>
 		</VisualisationContainer>
 	</div>
 </template>

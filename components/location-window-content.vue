@@ -37,6 +37,10 @@ const citation = computed(() => {
 		title: `${place}`,
 	} as simpleTEIMetadata;
 });
+
+function getHighlightedValues(col: Column<PatchedFeatureType, unknown>) {
+	return [...((col.getFilterValue() as Map<string, unknown>)?.keys() ?? [])];
+}
 </script>
 
 <template>
@@ -53,7 +57,7 @@ const citation = computed(() => {
 							v-if="col.column.columnDef.header !== 'Name'"
 							:column="col.column"
 							:full-entry="rowOriginal.properties"
-							:highlighted-values="[]"
+							:highlighted-values="getHighlightedValues(col.column)"
 							:value="rowOriginal.properties[col.column.columnDef.id!]"
 						></GeojsonTablePropertyCell>
 						<span v-else class="font-light">{{

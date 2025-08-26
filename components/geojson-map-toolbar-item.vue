@@ -2,9 +2,9 @@
 import type { Column, Table } from "@tanstack/vue-table";
 import { ChevronDown } from "lucide-vue-next";
 
-import { useColorsStore } from "@/stores/use-colors-store";
+import { useMarkerStore } from "@/stores/use-marker-store";
 
-const _props = defineProps<{
+const props = defineProps<{
 	item: Column<unknown>;
 	table: Table<unknown>;
 }>();
@@ -17,8 +17,12 @@ function titleCase(s: string) {
 
 const isCollapsibleOpen = ref(false);
 
-const { colors } = storeToRefs(useColorsStore());
-const { setColor } = useColorsStore();
+const { markers } = storeToRefs(useMarkerStore());
+const { setMarker } = useMarkerStore();
+
+const activeFeatures = computed(() =>
+	props.table?.getVisibleLeafColumns().filter((col) => col.getCanHide()),
+);
 </script>
 
 <template>
@@ -59,6 +63,7 @@ const { setColor } = useColorsStore();
 	<template v-else>
 		<DropdownMenuCheckboxItem
 			:checked="item.getIsVisible()"
+			@mouseover.prevent
 			@select.prevent
 			@update:checked="
 				(value) => {
@@ -69,32 +74,16 @@ const { setColor } = useColorsStore();
 		>
 			<span class="flex-1">{{ item.columnDef.header }}</span>
 
-			<label
-				v-if="item.getIsVisible()"
-				class="ml-3 flex grow-0 basis-0 items-center p-0"
-				@click.capture.stop
-			>
-				<div
-					class="size-4 rounded"
-					:style="{
-						backgroundColor: `var(--${item.id})`,
-						stroke: `var(--${item.id})`,
-					}"
-				></div>
-				<input
-					class="size-0"
-					type="color"
-					:value="colors.get(item.id)?.colorCode || '#cccccc'"
+			<div v-if="item.getIsVisible()" @click.stop>
+				<MarkerSelector
+					:icon-categories="['shapes']"
+					:model-value="markers.get(item.id)!"
+					:type="activeFeatures?.length === 1 ? ['color'] : ['icon']"
+					:use-popover-modal="true"
 					@click.capture.stop
-					@input="
-						(event) => {
-							//@ts-expect-error target.value not recognized
-							setColor({ id: item.id, colorCode: event.target!.value });
-						}
-					"
-				/>
-				<span class="sr-only">Select color</span>
-			</label>
+					@update:model-value="(props) => setMarker(props)"
+				></MarkerSelector>
+			</div>
 			<FeatureSelectionDialog :column="item as Column<unknown>" :table="table" />
 		</DropdownMenuCheckboxItem>
 	</template>

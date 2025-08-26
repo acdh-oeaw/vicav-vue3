@@ -3,44 +3,68 @@ import { divIcon, type LatLng, marker } from "leaflet";
 
 import type { MarkerProperties } from "@/lib/api-client";
 import { useGeojsonStore } from "@/stores/use-geojson-store.ts";
+import { useMarkerStore } from "@/stores/use-marker-store.ts";
 
 import { useAdvancedQueries } from "./use-advanced-queries.ts";
 
 const GeojsonStore = useGeojsonStore();
 const { tables } = storeToRefs(GeojsonStore);
 const url = "https://raw.githubusercontent.com/wibarab/wibarab-data/main/wibarab_varieties.geojson";
-const { buildFeatureValueId } = useColorsStore();
+const { buildFeatureValueId, defaultMarkers } = useMarkerStore();
+const { markers, markerSettings } = storeToRefs(useMarkerStore());
 interface PetalEntry {
 	id: string;
 	strokeOnly?: boolean;
 	type?: "feature" | "featureValue";
 }
 
-function getCircleSVG(fill: string) {
-	const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-	circle.setAttribute("cx", "6");
-	circle.setAttribute("cy", "12");
-	circle.setAttribute("r", "2.5");
-	circle.style.fill = fill;
+function getCircleSVG(fill: string, symmetrical = false, containerLength = 12) {
+	const center = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+	center.setAttribute("cx", symmetrical ? String(containerLength / 2) : "6");
+	center.setAttribute("cy", symmetrical ? String(containerLength / 2) : "12");
+	center.setAttribute("r", symmetrical ? "3" : "2.5");
+	center.style.fill = fill;
+	center.style.filter = "var(--greyscale)";
 
-	return circle;
+	return center;
 }
 
-function getPetalSVG(petalValue: PetalEntry) {
+function getIconSVG(petalValue: PetalEntry) {
 	const petal = document.createElementNS("http://www.w3.org/2000/svg", "use");
-	petal.setAttribute("href", "#petal");
+
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+	let iconEntry = markers.value.get(petalValue.id)?.icon;
+	if (markerSettings.value.flowerCenterId === petalValue.id && !petalValue.strokeOnly)
+		iconEntry = defaultMarkers.circle;
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+	petal.setAttribute("href", `#${String(iconEntry?.name ?? "petal")}`);
 
 	if (petalValue.strokeOnly) {
 		petal.style.stroke = `var(--${petalValue.id}, #cccccc)`;
 		petal.style.fillOpacity = "0.2";
-		petal.style.strokeWidth = "20px";
+		petal.style.strokeWidth =
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+			iconEntry?.name === "petal" ? `calc(var(--strokeWidth, 4px) * 5)` : `var(--strokeWidth, 4px)`;
 	}
-	petal.style.fill = `var(--${petalValue.id}, #cccccc)`;
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+	if (iconEntry?.custom) {
+		petal.style.fill = `var(--${petalValue.id}, #cccccc)`;
+	} else {
+		petal.style.stroke = `var(--${petalValue.id}, #cccccc)`;
+		petal.style.strokeWidth = `var(--strokeWidth, 4px)`;
+		petal.style.fill = `transparent`;
+	}
+
 	petal.style.transformOrigin = "bottom";
+	petal.style.filter = "var(--greyscale)";
 
 	petal.classList.add("size-3", "absolute", "ml-1.5");
 	petal.setAttribute("title", petalValue.id);
 	return petal;
+}
+
+function getMarkerSVG(petalValue: PetalEntry) {
+	return getIconSVG(petalValue);
 }
 
 function getFlowerSVG(entries: Array<PetalEntry>, center?: PetalEntry) {
@@ -53,12 +77,20 @@ function getFlowerSVG(entries: Array<PetalEntry>, center?: PetalEntry) {
 	svg.classList.add("overflow-visible");
 
 	for (const [i, value] of entries.entries()) {
-		const petal = getPetalSVG(value);
-		petal.style.transform = `rotate(${String((i * 360) / NUM_PETALS)}deg)`;
+		const useLucideIcon =
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+			markers.value.has(value.id) && !markers.value.get(value.id)?.icon?.custom;
+		const petal = getMarkerSVG(value);
+		petal.style.transform = `rotate(${String((i * 360) / NUM_PETALS)}deg) ${useLucideIcon && (entries.length > 1 || center) ? "translateY(-3px)" : ""}`;
 		svg.appendChild(petal);
 	}
 
-	if (center) svg.appendChild(getCircleSVG(`var(--${center.id}, #cccccc)`));
+	if (center && markerSettings.value.showCenter) {
+		const centerMarker = getMarkerSVG(center);
+		centerMarker.style.transform = "translateY(6px)";
+		svg.appendChild(centerMarker);
+	}
+	if (entries.length === 0 && !center) svg.appendChild(getCircleSVG(`hsl(var(--color-primary))`));
 
 	div.appendChild(svg);
 
@@ -99,6 +131,12 @@ function getPetalMarker(feature: GeoJsonFeature<Point, MarkerProperties>, latlng
 							(key) => !key.includes(AND_OPERATOR) && key.includes(val),
 						),
 				)
+				.filter((val) => {
+					return (
+						markerSettings.value.showOtherFeatureValues ||
+						(col.getFilterValue() as Map<string, unknown>).has(val)
+					);
+				})
 				.map((val) => ({
 					id: (col.getFilterValue() as Map<string, unknown>).has(val)
 						? buildFeatureValueId(col.id, val)
@@ -157,6 +195,7 @@ function getPetalMarker(feature: GeoJsonFeature<Point, MarkerProperties>, latlng
 export function usePetalMarker() {
 	return {
 		getPetalMarker,
-		getPetalSVG,
+		getMarkerSVG,
+		getCircleSVG,
 	};
 }
