@@ -156,11 +156,12 @@ export function getTrigger(element: HTMLTextAreaElement, triggers: TriggerMap) {
 	for (const trigger of [...triggers.keys()].toSorted((a, b) => b.length - a.length)) {
 		const triggerStart = selectionStart - trigger.length;
 		if (triggerStart >= 0 && value.substring(triggerStart, selectionStart) === trigger) {
-			const secondPreviousChar = value[triggerStart - 1];
-			const isIsolated = !secondPreviousChar || /\W/.test(secondPreviousChar);
-			if (isIsolated) {
-				return trigger;
-			}
+			// const secondPreviousChar = value[triggerStart - 1];
+			// const isIsolated = !secondPreviousChar || /\W/.test(secondPreviousChar);
+			// console.log("Tested trigger: ", `*${trigger}*`, value, selectionStart, secondPreviousChar);
+			// if (isIsolated) {
+			return trigger;
+			// }
 		}
 	}
 	return null;

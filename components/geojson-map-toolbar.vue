@@ -27,7 +27,7 @@ function titleCase(s: string) {
 }
 const isMenuOpen = ref(categories.value!.map(() => false));
 
-const { wibarabTriggers } = useWibarabTrigers();
+const { wibarabTriggers } = useWibarabTriggers();
 </script>
 
 <template>

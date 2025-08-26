@@ -25,9 +25,15 @@ function getFeatureList() {
 const features = computed(() => getFeatureList());
 
 function getValueList(columns: typeof features.value) {
+	const table = tables.value.get(url);
+	if (!table) return [];
 	return columns
 		.map((item) =>
-			[...item.col.getFacetedUniqueValues().keys()].map((key: string) => ({
+			(
+				[
+					...new Set(table.getCoreRowModel().flatRows.flatMap((row) => row.getValue(item.col.id))),
+				] as Array<string>
+			).map((key: string) => ({
 				value: `"${key}"`,
 				displayValue: key,
 			})),
@@ -91,6 +97,6 @@ const wibarabTriggers = computed(() => {
 	return new Map(Object.entries(map));
 });
 
-export function useWibarabTrigers() {
+export function useWibarabTriggers() {
 	return { wibarabTriggers };
 }
