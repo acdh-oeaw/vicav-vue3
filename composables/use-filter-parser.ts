@@ -4,6 +4,7 @@ import {
 	type LogicalExpressionToken,
 	type ParenthesizedExpressionToken,
 	parse,
+	SyntaxError,
 	type TagToken,
 } from "liqe";
 
@@ -238,6 +239,41 @@ function getTraversedAST(query: string) {
 	return traverseAST(normalizeASTtoDNF(parse(query)));
 }
 
+function findImplicitBooleanOperator(ast: LiqeQuery): boolean {
+	if (ast.type === "LogicalExpression") {
+		return (
+			ast.operator.type === "ImplicitBooleanOperator" ||
+			findImplicitBooleanOperator(ast.left) ||
+			findImplicitBooleanOperator(ast.right)
+		);
+	}
+	return false;
+}
+
+export function validateQuery(query: string): Array<string> {
+	const operatorRegex = /\bAND|OR|NOT\b/g;
+	const parenthesesRegex = /\(.*?\)/g;
+
+	const warnings: Array<string> = [];
+	try {
+		if (
+			new Set([...query.matchAll(operatorRegex)].map((e) => e[0])).size > 1 &&
+			[...query.matchAll(parenthesesRegex)].length === 0
+		)
+			warnings.push("Consider using parentheses to group your query (e.g. (A AND B) OR C)");
+		const ast = parse(query);
+		if (findImplicitBooleanOperator(ast))
+			warnings.push("If no operator (AND/OR) is specified, AND is used implicitly.");
+	} catch (err) {
+		if (err instanceof SyntaxError)
+			warnings.push(
+				`The query contains a syntax error at line ${String(err.line)} position ${String(err.column)}`,
+			);
+		else warnings.push("The current query is incomplete");
+	}
+	return warnings;
+}
+
 export function useFilterParser() {
 	return {
 		parseSearchString,
@@ -245,5 +281,6 @@ export function useFilterParser() {
 		matchQueryStringAndFilters,
 		syncGlobalAndColumnFilters,
 		getTraversedAST,
+		validateQuery,
 	};
 }

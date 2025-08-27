@@ -30,7 +30,7 @@ const props = defineProps<{
 	triggers: TriggerMap;
 }>();
 
-const { parseSearchString } = useFilterParser();
+const { parseSearchString, validateQuery } = useFilterParser();
 
 const { contains } = useFilter({ sensitivity: "base" });
 
@@ -143,14 +143,8 @@ watch(
 		value.value = newVal;
 	},
 );
-const operatorRegex = /\b(AND|OR|NOT)\b/g;
 
-const parenthesesHint = computed(() => {
-	const matches = [...(value.value ?? "").matchAll(operatorRegex)];
-	return matches.length > 1
-		? "Hint: Consider using parentheses to group your query (e.g. (A AND B) OR C)"
-		: "";
-});
+const queryWarnings = computed(() => validateQuery(value.value));
 </script>
 
 <template>
@@ -208,8 +202,8 @@ const parenthesesHint = computed(() => {
 				</ComboboxContent>
 			</ComboboxPortal> </ComboboxRoot
 		><Button class="self-end" variant="outline" @click="submitSearch">Search</Button>
-		<div v-if="parenthesesHint" class="text-xs text-orange-700 mt-1 ml-1">
-			{{ parenthesesHint }}
+		<div v-if="queryWarnings.length" class="text-xs text-orange-700 mt-1 ml-1">
+			<div v-for="(warning, idx) in queryWarnings" :key="idx">{{ warning }}</div>
 		</div>
 	</div>
 </template>
