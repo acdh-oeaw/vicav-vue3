@@ -12,7 +12,7 @@ import {
 	type ReferenceElement,
 	useFilter,
 } from "reka-ui";
-import { computed, ref, watch, watchEffect } from "vue";
+import { computed, nextTick, ref, watch, watchEffect } from "vue";
 
 import {
 	getAnchorRect,
@@ -143,10 +143,18 @@ watch(
 		value.value = newVal;
 	},
 );
+const operatorRegex = /\b(AND|OR|NOT)\b/g;
+
+const parenthesesHint = computed(() => {
+	const matches = [...(value.value ?? "").matchAll(operatorRegex)];
+	return matches.length > 1
+		? "Hint: Consider using parentheses to group your query (e.g. (A AND B) OR C)"
+		: "";
+});
 </script>
 
 <template>
-	<div class="grid w-full grid-cols-[1fr_auto] gap-2">
+	<div class="grid w-full grid-cols-[1fr_auto] gap-x-2">
 		<ComboboxRoot
 			v-model:open="open"
 			class="flex w-full flex-col"
@@ -200,5 +208,8 @@ watch(
 				</ComboboxContent>
 			</ComboboxPortal> </ComboboxRoot
 		><Button class="self-end" variant="outline" @click="submitSearch">Search</Button>
+		<div v-if="parenthesesHint" class="text-xs text-orange-700 mt-1 ml-1">
+			{{ parenthesesHint }}
+		</div>
 	</div>
 </template>
