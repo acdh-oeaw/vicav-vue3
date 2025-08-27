@@ -30,7 +30,7 @@ const props = defineProps<{
 	triggers: TriggerMap;
 }>();
 
-const { parseSearchString, validateQuery } = useFilterParser();
+const { parseSearchString, validateQuery, normalizeOperators } = useFilterParser();
 
 const { contains } = useFilter({ sensitivity: "base" });
 
@@ -129,7 +129,7 @@ function handleSelect(ev: CustomEvent) {
 
 function submitSearch() {
 	parseSearchString(value.value, props.table);
-	props.table.setGlobalFilter(value.value);
+	props.table.setGlobalFilter(normalizeOperators(value.value));
 }
 
 onMounted(() => {

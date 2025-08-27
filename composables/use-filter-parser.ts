@@ -3,12 +3,27 @@ import {
 	type LiqeQuery,
 	type LogicalExpressionToken,
 	type ParenthesizedExpressionToken,
-	parse,
+	parse as liqe_parse,
 	SyntaxError,
 	type TagToken,
 } from "liqe";
 
 const { AND_OPERATOR } = useAdvancedQueries();
+
+function normalizeOperators(input: string): string {
+	// Only replace AND/OR/NOT outside of quoted values
+	return input
+		.split(/(".*?")/)
+		.map((part, i) =>
+			i % 2 === 0 ? part.replace(/\b(?:and|or|not)\b/gi, (op) => op.toUpperCase()) : part,
+		)
+		.join("");
+}
+
+function parse(query: string) {
+	const normalized = normalizeOperators(query);
+	return liqe_parse(normalized);
+}
 
 function parseSearchString(searchString: string, table: Table<unknown>) {
 	const ast = parse(searchString);
@@ -250,18 +265,18 @@ function findImplicitBooleanOperator(ast: LiqeQuery): boolean {
 	return false;
 }
 
-export function validateQuery(query: string): Array<string> {
+function validateQuery(query: string): Array<string> {
 	const operatorRegex = /\bAND|OR|NOT\b/g;
 	const parenthesesRegex = /\(.*?\)/g;
 
 	const warnings: Array<string> = [];
 	try {
 		if (
-			new Set([...query.matchAll(operatorRegex)].map((e) => e[0])).size > 1 &&
-			[...query.matchAll(parenthesesRegex)].length === 0
+			new Set([...normalizeOperators(query).matchAll(operatorRegex)].map((e) => e[0])).size > 1 &&
+			[...normalizeOperators(query).matchAll(parenthesesRegex)].length === 0
 		)
 			warnings.push("Consider using parentheses to group your query (e.g. (A AND B) OR C)");
-		const ast = parse(query);
+		const ast = parse(normalizeOperators(query));
 		if (findImplicitBooleanOperator(ast))
 			warnings.push("If no operator (AND/OR) is specified, AND is used implicitly.");
 	} catch (err) {
@@ -282,5 +297,6 @@ export function useFilterParser() {
 		syncGlobalAndColumnFilters,
 		getTraversedAST,
 		validateQuery,
+		normalizeOperators,
 	};
 }
