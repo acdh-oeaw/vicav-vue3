@@ -23,7 +23,7 @@
 		"lint:code:check-no-cache": "eslint .",
 		"lint:code:fix": "pnpm run lint:code:check --fix",
 		"lint:styles:check": "pnpm run lint:styles:check-no-cache --cache",
-		"lint:styles:check-no-cache": "stylelint \"./**/*.@(css|vue)\" --ignore-path ./.gitignore",
+		"lint:styles:check-no-cache": "stylelint \"./**/*.@(css|vue)\" --ignore-path ./.gitignore --ignore-path ./public/???.css",
 		"lint:styles:fix": "pnpm run lint:styles:check --fix",
 		"postinstall": "nuxt prepare",
 		"preinstall": "npx only-allow pnpm",
@@ -170,7 +170,7 @@
 			"prettier --cache --write"
 		],
 		"*.css": [
-			"stylelint --cache --fix",
+			"stylelint --cache --fix --ignore-path public/tei.css --ignore-path public/odd.css",
 			"prettier --cache --write"
 		],
 		"*.!(css|js|ts|vue)": "prettier --cache --ignore-unknown --write"
