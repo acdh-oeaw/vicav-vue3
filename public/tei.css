@@ -38,25 +38,6 @@ of this software, even if advised of the possibility of such damage.
 /* main layout */
 @import "odd.css";
 
-body.simple {
-	margin: 10pt;
-	background-color: #fff;
-	color: #000;
-}
-
-body {
-	margin: 10pt;
-	padding: 0;
-	background-color: #fff;
-	color: #000;
-	font-family: Verdana, Tahoma, Geneva, Arial, Helvetica, sans-serif;
-}
-
-body.pagetable {
-	background-color: #fff;
-	color: #000;
-}
-
 /* 3 columns allowed for, or just a right and left */
 #col1 {
 	position: absolute;
