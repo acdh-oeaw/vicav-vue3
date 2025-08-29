@@ -12,6 +12,8 @@ const dictStore = useDictStore();
 await dictStore.initialize();
 const myDict = await dictStore.getDictById(params.value.textId);
 
+const debug = ref<boolean>(false);
+
 const formId = `dictQueryForm-${params.value.textId}`;
 
 /* data fetch parameters editing copies */
@@ -129,8 +131,8 @@ const goToPage = (newPage: number) => {
 	updateQueryParams();
 }; */
 
-/* TODO: only for testing; not intended for production */
-const api = useApiClient();
+/* TODO: only for testing; not intended for production
+const api = useApiClient(); */
 </script>
 
 <template>
@@ -257,42 +259,18 @@ const api = useApiClient();
 
 		<!-- eslint-disable-next-line vue/no-v-html, vuejs-accessibility/click-events-have-key-events, vuejs-accessibility/no-static-element-interactions -->
 		<div v-if="data" class="prose mb-auto max-w-3xl p-8">
-			<div v-if="data.total_items">Total items: {{ data.total_items }}</div>
-			<div v-if="data.page_count">
+			<Toggle v-model="debug">
+				<div v-if="data.total_items">Total items: {{ data.total_items }}</div>
+				<div v-if="data.took">Search duration: {{ data.took }} ms</div>
+			</Toggle>
+			<div v-if="debug && data.page_count">
 				<pre>{{ JSON.stringify(data._links, null, "  ") }}</pre>
 			</div>
-			<div v-if="data.took">Search duration: {{ data.took }} ms</div>
 			<div v-if="data._embedded && data._embedded.entries">
-				<div v-for="(e, i) in data._embedded.entries" :key="i" class="mt-6">
-					<div v-if="typeof e.id === 'string'" class="text-sm">
-						<span class="font-bold">id:&nbsp;</span>
-						<span>
-							<a :href="`${api.baseUrl}${e._links?.self.href}`">{{ e.id }}</a>
-						</span>
-					</div>
-					<div v-if="typeof e.sid === 'string'" class="text-sm">
-						<span class="font-bold">sid:&nbsp;</span>
-						<span>
-							{{ e.sid }}
-						</span>
-					</div>
-					<div v-if="typeof e.lemma === 'string'" class="text-sm">
-						<span class="font-bold">lemma:&nbsp;</span>
-						<span>
-							{{ e.lemma }}
-						</span>
-					</div>
-					<div v-if="typeof e.status === 'string'" class="text-sm">
-						<span class="font-bold">status:&nbsp;</span>
-						<span>
-							{{ e.status }}
-						</span>
-					</div>
-					<div v-if="typeof e.type === 'string'" class="text-sm">
-						<span class="font-bold">type:&nbsp;</span>
-						<span>
-							{{ e.type }}
-						</span>
+				<div v-for="(e, i) in data._embedded.entries" :key="i">
+					<div v-if="debug" class="text-sm">
+						<pre>{{ JSON.stringify(e, null, "  ") }}</pre>
+						<pre>{{ e.entry }} </pre>
 					</div>
 					<!-- eslint-disable-next-line vue/no-v-html -->
 					<div v-if="typeof e.entry === 'string'" v-html="e.entry" />
@@ -313,7 +291,7 @@ const api = useApiClient();
 @reference "@/styles/index.css";
 /* stylelint-disable selector-class-pattern */
 .dvStats {
-	@apply m-0 mb-[5px] pb-[5px] pl-[5px] border border-solid border-primary bg-primary text-on-primary font-bold;
+	display: none;
 }
 
 .spQueryText {
@@ -414,7 +392,7 @@ const api = useApiClient();
 }
 
 .tbEntry {
-	@apply m-0 mb-2.5 mr-2.5;
+	@apply m-0 mr-2.5;
 }
 
 .tdMain {
