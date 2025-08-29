@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import type { SpecialCharacters } from "@/lib/api-client";
 
+const modelValue = defineModel<string | undefined>({
+	default: "",
+});
+
 const props = withDefaults(
 	defineProps<{
-		modelValue: string;
 		selectValue?: string;
 		specialCharacters: SpecialCharacters;
 		selectOptions?: Map<string, string>;
@@ -21,28 +24,19 @@ const emit = defineEmits(["update:modelValue", "update:selectValue", "submit"]);
 
 const inputElement = ref();
 
-const myString = ref(`${props.modelValue}`);
-watch(
-	() => props.modelValue,
-	(val) => {
-		myString.value = val;
-	},
-);
-watch(myString, (val) => {
-	emit("update:modelValue", val);
-});
 const submit = () => {
-	emit("submit", myString.value);
+	emit("submit", modelValue.value);
 };
 
 const InsertSnippet = async (snippet: string): Promise<void> => {
 	if (typeof inputElement.value.selectionStart !== "undefined") {
+		modelValue.value ??= "";
 		const selectionStart = Number(inputElement.value.selectionStart),
 			selectionEnd = Number(inputElement.value.selectionEnd);
-		myString.value =
-			myString.value.substring(0, selectionStart) +
+		modelValue.value =
+			modelValue.value.substring(0, selectionStart) +
 			snippet +
-			myString.value.substring(selectionEnd, myString.value.length);
+			modelValue.value.substring(selectionEnd, modelValue.value.length);
 		await nextTick();
 		restoreCursorPosition(selectionStart + snippet.length);
 	}
@@ -103,7 +97,7 @@ watch(
 				<!-- eslint-disable-next-line vuejs-accessibility/form-control-has-label -->
 				<input
 					ref="inputElement"
-					v-model="myString"
+					v-model="modelValue"
 					:placeholder="placeholder"
 					type="text"
 					@keydown.enter.prevent="submit"
