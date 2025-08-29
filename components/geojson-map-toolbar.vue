@@ -1,12 +1,13 @@
 <script lang="ts" setup>
 import type { Column, Table } from "@tanstack/vue-table";
 import { ChevronDown } from "lucide-vue-next";
+import type { z } from "zod";
 
 import { useGeojsonStore } from "@/stores/use-geojson-store.ts";
 import type { GeojsonMapSchema } from "@/types/global.d";
 
 interface Props {
-	params: Zod.infer<typeof GeojsonMapSchema>["params"];
+	params: z.infer<typeof GeojsonMapSchema>["params"];
 }
 
 const props = defineProps<Props>();

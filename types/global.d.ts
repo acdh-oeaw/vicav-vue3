@@ -125,6 +125,10 @@ export const DictQuerySchema = z.object({
 			})
 			.optional(),
 		queryString: z.string(),
+		queryTemplateTextInput: z.string().optional(),
+		queryTemplate: z.string().optional(),
+		isTextInputManual: z.boolean().optional().default(false),
+		isQueryVisible: z.boolean().optional().default(true),
 	}),
 });
 export type DictQueryWindowItem = WindowItemBase & z.infer<typeof DictQuerySchema>;
@@ -141,6 +145,7 @@ export const CorpusTextSchema = z.object({
 		z.object({
 			hits: z.string().optional(),
 			u: z.string().optional(), // TODO: give this parameter a telling name
+			label: z.string().optional(),
 		}),
 	)
 		.merge(ShowCitation.partial())

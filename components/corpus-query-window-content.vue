@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { Info } from "lucide-vue-next";
+import type { z } from "zod";
 
 import type { CorpusSearchHits } from "@/lib/api-client";
 import type { CorpusQuerySchema } from "@/types/global";
 
 const api = useApiClient();
 const { simpleItems } = useTEIHeaders();
-const props = defineProps<{ params: Zod.infer<typeof CorpusQuerySchema>["params"] }>();
+const props = defineProps<{ params: z.infer<typeof CorpusQuerySchema>["params"] }>();
 const queryString = ref(props.params.queryString);
 const hits = ref<Array<CorpusSearchHits & { label?: string }> | undefined>([]);
 const showHelp = ref<boolean>(false);

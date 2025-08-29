@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/vue-query";
+import type { z } from "zod";
 
 import type { BibliographyEntriesSchema } from "@/types/global.d";
 
 export function useBiblioTeiQuery(
-	params: MaybeRef<Zod.infer<typeof BibliographyEntriesSchema>["params"]>,
+	params: MaybeRef<z.infer<typeof BibliographyEntriesSchema>["params"]>,
 	options?: { enabled?: boolean },
 ) {
 	const api = useApiClient();

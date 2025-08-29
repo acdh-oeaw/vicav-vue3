@@ -1,10 +1,12 @@
 <script lang="ts" setup>
+import type { z } from "zod";
+
 import type { GeoMapSubnavItemSchema } from "@/types/global.d";
 
 type ItemId = string;
 
 const props = defineProps<{
-	options: Map<ItemId, Zod.infer<typeof GeoMapSubnavItemSchema>>;
+	options: Map<ItemId, z.infer<typeof GeoMapSubnavItemSchema>>;
 	selected: Set<ItemId>;
 }>();
 

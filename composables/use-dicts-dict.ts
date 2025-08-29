@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/vue-query";
+import type { z } from "zod";
 
 import type { Dict } from "@/types/global.d";
 
 export function useDictsDict(
-	params: { id: Zod.infer<typeof Dict>["id"] },
+	params: { id: z.infer<typeof Dict>["id"] },
 	options?: { enabled?: boolean },
 ) {
 	const api = useApiClient();

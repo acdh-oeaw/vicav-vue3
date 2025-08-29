@@ -1,12 +1,13 @@
 <script lang="ts" setup>
 import type { Feature, Point } from "geojson";
+import type { z } from "zod";
 
 import type { MarkerProperties } from "@/lib/api-client";
 import { useGeojsonStore } from "@/stores/use-geojson-store.ts";
 import type { GeojsonMapSchema, WindowItem } from "@/types/global.d";
 
 interface Props {
-	params: Zod.infer<typeof GeojsonMapSchema>["params"];
+	params: z.infer<typeof GeojsonMapSchema>["params"];
 }
 
 const props = defineProps<Props>();
