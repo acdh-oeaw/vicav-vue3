@@ -25,9 +25,10 @@ function titleCase(s: string) {
 		.replace(/^[-_]*(.)/, (_, c) => c.toUpperCase()) // Initial char (after -/_)
 		.replace(/[-_]+(.)/g, (_, c) => ` ${c.toUpperCase()}`); // First char after each -/_
 }
-const isMenuOpen = ref(categories.value!.map(() => false));
 
 const { wibarabTriggers } = useWibarabTriggers();
+
+const isMenuOpen = ref(categories.value!.map(() => false));
 </script>
 
 <template>

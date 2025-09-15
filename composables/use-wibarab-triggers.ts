@@ -98,5 +98,5 @@ const wibarabTriggers = computed(() => {
 });
 
 export function useWibarabTriggers() {
-	return { wibarabTriggers };
+	return { wibarabTriggers, metaInfo };
 }

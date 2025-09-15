@@ -250,6 +250,14 @@ function syncGlobalAndColumnFilters(table: Table<unknown>) {
 	table.setGlobalFilter(currentGlobalFilter);
 }
 
+function addMetaFilter(originalQuery: string, metaKey: string, metaValue: string | Array<string>) {
+	let newFilter: string;
+	if (Array.isArray(metaValue))
+		newFilter = metaValue.map((val) => `${metaKey}:${val}`).join(" OR ");
+	else newFilter = `${metaKey}:${metaValue}`;
+	return `${originalQuery} AND ${newFilter}`;
+}
+
 function getTraversedAST(query: string) {
 	return traverseAST(normalizeASTtoDNF(parse(query)));
 }
@@ -265,11 +273,12 @@ function findImplicitBooleanOperator(ast: LiqeQuery): boolean {
 	return false;
 }
 
-function validateQuery(query: string): Array<string> {
+function validateQuery(query: string): { warnings: Array<string>; isValid: boolean } {
 	const operatorRegex = /\bAND|OR|NOT\b/g;
 	const parenthesesRegex = /\(.*?\)/g;
 
 	const warnings: Array<string> = [];
+	let isValid = false;
 	try {
 		if (
 			new Set([...normalizeOperators(query).matchAll(operatorRegex)].map((e) => e[0])).size > 1 &&
@@ -279,6 +288,7 @@ function validateQuery(query: string): Array<string> {
 		const ast = parse(normalizeOperators(query));
 		if (findImplicitBooleanOperator(ast))
 			warnings.push("If no operator (AND/OR) is specified, AND is used implicitly.");
+		isValid = true;
 	} catch (err) {
 		if (err instanceof SyntaxError)
 			warnings.push(
@@ -286,7 +296,7 @@ function validateQuery(query: string): Array<string> {
 			);
 		else warnings.push("The current query is incomplete");
 	}
-	return warnings;
+	return { warnings, isValid };
 }
 
 export function useFilterParser() {
@@ -298,5 +308,6 @@ export function useFilterParser() {
 		getTraversedAST,
 		validateQuery,
 		normalizeOperators,
+		addMetaFilter,
 	};
 }
