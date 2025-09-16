@@ -20,8 +20,13 @@ function normalizeOperators(input: string): string {
 		.join("");
 }
 
+function normalizeQuantifiers(input: string): string {
+	return input.replaceAll(":ANY", ":*");
+}
+
 function parse(query: string) {
-	const normalized = normalizeOperators(query);
+	let normalized = normalizeOperators(query);
+	normalized = normalizeQuantifiers(normalized);
 	return liqe_parse(normalized);
 }
 
@@ -255,7 +260,7 @@ function addMetaFilter(originalQuery: string, metaKey: string, metaValue: string
 	if (Array.isArray(metaValue))
 		newFilter = metaValue.map((val) => `${metaKey}:${val}`).join(" OR ");
 	else newFilter = `${metaKey}:${metaValue}`;
-	return `${originalQuery} AND ${newFilter}`;
+	return `${originalQuery} AND ${newFilter}`.replaceAll(/ {2,}/g, " ");
 }
 
 function getTraversedAST(query: string) {
@@ -309,5 +314,6 @@ export function useFilterParser() {
 		validateQuery,
 		normalizeOperators,
 		addMetaFilter,
+		parse,
 	};
 }

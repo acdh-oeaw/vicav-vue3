@@ -71,10 +71,12 @@ function getMetaInfoList() {
 	return new Map(
 		[...metaInfo.entries()].map(([key, val]) => [
 			key,
-			[...val].map((v) => ({
-				value: `"${v}"`,
-				displayValue: v,
-			})),
+			[{ value: "ANY", displayValue: "*Any*" }].concat(
+				[...val].map((v) => ({
+					value: `"${v}"`,
+					displayValue: v,
+				})),
+			),
 		]),
 	);
 }
@@ -89,7 +91,13 @@ const wibarabTriggers = computed(() => {
 	const map = {
 		'" ': operators,
 		") ": operators,
-		...Object.fromEntries(features.value.map((f) => [f.value, getValueList([f])])),
+		"ANY ": operators,
+		...Object.fromEntries(
+			features.value.map((f) => [
+				f.value,
+				[{ value: "ANY", displayValue: "*Any*" }].concat(getValueList([f])),
+			]),
+		),
 		...Object.fromEntries([...metaInfo.value.entries()].map(([key, val]) => [`${key}:`, val])),
 		"": [...features.value, ...metaInfoKeys.value],
 	};

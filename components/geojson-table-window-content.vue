@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { ColumnDef, Row, Table } from "@tanstack/vue-table";
-import { parse, test } from "liqe";
+import { test } from "liqe";
 import { Info } from "lucide-vue-next";
 
 import { useGeojsonStore } from "@/stores/use-geojson-store.ts";
@@ -15,7 +15,7 @@ const { fetchedData, tables, showAllDetails } = storeToRefs(GeojsonStore);
 const { buildFeatureTaxonomy } = GeojsonStore;
 const { data: projectData } = useProjectInfo();
 const { createColumnDefs } = useColumnGeneration();
-const { getTraversedAST } = useFilterParser();
+const { getTraversedAST, parse } = useFilterParser();
 
 const columns = computed(() => {
 	const allFeatureNames = fetchedData.value.get(url)?.properties.column_headings;
