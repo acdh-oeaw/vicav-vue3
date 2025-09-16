@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import type { Table } from "@tanstack/vue-table";
 import { computedWithControl } from "@vueuse/core";
-import { ChevronDown, FunnelPlus } from "lucide-vue-next";
+import { ChevronDown, FunnelPlus, X } from "lucide-vue-next";
 import {
 	ComboboxAnchor,
+	ComboboxCancel,
 	ComboboxContent,
 	ComboboxInput,
 	ComboboxItem,
@@ -165,29 +166,42 @@ function addMetaFilterToQuery(key: string, val: string) {
 		>
 			<Label class="sr-only text-sm font-semibold" for="search"> search </Label>
 
-			<ComboboxInput
-				id="search"
-				ref="textareaRef"
-				v-model="value"
-				as="input"
-				autocomplete="off"
-				class="w-full rounded-md border border-muted p-2"
-				placeholder="Click to get a list of available features"
-				rows="5"
-				@input="handleChange"
-				@keydown.enter="
-					(ev: KeyboardEvent) => {
-						if (open) ev.preventDefault();
-					}
-				"
-				@keydown.left.right="open = false"
-				@pointerdown="
-					(e: PointerEvent) => {
-						handleChange(e);
-						// open = false;
-					}
-				"
-			/>
+			<div class="relative w-full rounded-md border border-muted flex">
+				<ComboboxInput
+					id="search"
+					ref="textareaRef"
+					v-model="value"
+					as="input"
+					autocomplete="off"
+					class="p-2 w-full"
+					placeholder="Click to get a list of available features"
+					rows="5"
+					@input="handleChange"
+					@keydown.enter="
+						(ev: KeyboardEvent) => {
+							if (open) ev.preventDefault();
+						}
+					"
+					@keydown.left.right="open = false"
+					@pointerdown="
+						(e: PointerEvent) => {
+							handleChange(e);
+							// open = false;
+						}
+					"
+				/>
+				<ComboboxCancel as-child>
+					<Button
+						class="p-2"
+						variant="ghost"
+						@click="
+							value = '';
+							submitSearch();
+						"
+						><X class="size-4"></X
+					></Button>
+				</ComboboxCancel>
+			</div>
 			<ComboboxAnchor :reference="reference" />
 
 			<ComboboxPortal>
@@ -253,6 +267,12 @@ function addMetaFilterToQuery(key: string, val: string) {
 		<Button class="self-end" variant="outline" @click="submitSearch">Search</Button>
 		<div v-if="queryWarnings.warnings.length" class="text-xs text-orange-700 mt-1 ml-1">
 			<div v-for="(warning, idx) in queryWarnings.warnings" :key="idx">{{ warning }}</div>
+		</div>
+		<div
+			v-else-if="!table.getFilteredRowModel().flatRows.length"
+			class="text-xs text-on-muted mt-1 ml-1"
+		>
+			Your query returned no results.
 		</div>
 	</div>
 </template>
