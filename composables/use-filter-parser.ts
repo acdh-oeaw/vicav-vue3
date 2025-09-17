@@ -6,6 +6,7 @@ import {
 	parse as liqe_parse,
 	SyntaxError,
 	type TagToken,
+	type UnaryOperatorToken,
 } from "liqe";
 
 const { AND_OPERATOR } = useAdvancedQueries();
@@ -70,7 +71,7 @@ function handleAndExpression(ast: LiqeQuery) {
 	}
 }
 
-function traverseAST(ast: LiqeQuery): Array<{ column: string; value: string }> {
+function traverseAST(ast: LiqeQuery): Array<{ column: string; value: string; negated?: boolean }> {
 	switch (ast.type) {
 		case "Tag": {
 			const { column, value } = getColumnAndValueFromTagExpression(ast);
@@ -87,8 +88,10 @@ function traverseAST(ast: LiqeQuery): Array<{ column: string; value: string }> {
 		case "ParenthesizedExpression": {
 			return traverseAST(ast.expression);
 		}
+		case "UnaryOperator": {
+			return traverseAST(ast.operand);
+		}
 		case "EmptyExpression":
-		case "UnaryOperator":
 		default:
 	}
 	return [];
@@ -111,6 +114,15 @@ function constructLocicalExpression(
 		left: left,
 		right: right,
 		location: { start: -1, end: -1 },
+	};
+}
+
+function constructNegatedExpression(ast: LiqeQuery): UnaryOperatorToken {
+	return {
+		type: "UnaryOperator",
+		operator: "NOT",
+		operand: ast,
+		location: ast.location,
 	};
 }
 
@@ -150,8 +162,22 @@ function normalizeASTtoDNF(ast: LiqeQuery): Exclude<LiqeQuery, ParenthesizedExpr
 				);
 			}
 		}
+		case "UnaryOperator": {
+			if (ast.operand.type === "Tag") return ast;
+			if (
+				ast.operand.type === "ParenthesizedExpression" &&
+				ast.operand.expression.type === "LogicalExpression"
+			) {
+				const operator = ast.operand.expression.operator.operator;
+				const newLeft = constructNegatedExpression(ast.operand.expression.left);
+				const newRight = constructNegatedExpression(ast.operand.expression.right);
+				return normalizeASTtoDNF(
+					constructLocicalExpression(operator === "OR" ? "AND" : "OR", newLeft, newRight),
+				);
+			}
+			return ast;
+		}
 		case "EmptyExpression":
-		case "UnaryOperator":
 		default: {
 			return ast;
 		}

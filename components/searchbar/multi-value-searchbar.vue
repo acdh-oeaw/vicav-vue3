@@ -179,7 +179,11 @@ function addMetaFilterToQuery(key: string, val: string) {
 					@input="handleChange"
 					@keydown.enter="
 						(ev: KeyboardEvent) => {
-							if (open) ev.preventDefault();
+							if (open) {
+								ev.preventDefault();
+							} else {
+								submitSearch();
+							}
 						}
 					"
 					@keydown.left.right="open = false"
