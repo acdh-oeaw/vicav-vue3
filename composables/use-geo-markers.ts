@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/vue-query";
 import type { Feature, Point } from "geojson";
+import type Zod from "zod";
 
 import type { MarkerProperties, MarkersType } from "@/lib/api-client";
 import type { GeoMapSchema } from "@/types/global.d";

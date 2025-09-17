@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import type { Feature, Point } from "geojson";
+import type Zod from "zod";
 
 import type { MarkerProperties } from "@/lib/api-client";
 import { useGeojsonStore } from "@/stores/use-geojson-store.ts";

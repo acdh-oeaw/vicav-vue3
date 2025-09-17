@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Info } from "lucide-vue-next";
+import type Zod from "zod";
 
 import type { CorpusSearchHits } from "@/lib/api-client";
 import type { CorpusQuerySchema } from "@/types/global";
