@@ -37,7 +37,7 @@ type ColumnType = Column<
 		id: string;
 		type: "Feature";
 		geometry: { type: "Point"; coordinates: Array<number> };
-		properties?: unknown;
+		properties: unknown;
 	},
 	unknown
 >;
