@@ -102,7 +102,6 @@
 		"@acdh-oeaw/tsconfig": "^1.5.1",
 		"@axe-core/playwright": "^4.10.2",
 		"@nuxt/devtools": "2.3.0",
-		"@nuxt/eslint": "^1.2.0",
 		"@playwright/test": "^1.55.0",
 		"@tailwindcss/typography": "^0.5.16",
 		"@tailwindcss/vite": "^4.1.13",
