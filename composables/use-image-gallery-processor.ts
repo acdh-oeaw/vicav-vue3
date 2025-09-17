@@ -12,7 +12,7 @@ export function useImageGalleryProcessor(element: Ref<HTMLDivElement>) {
 						src: galleryImage.href,
 						thumb: galleryImage.querySelector("img")?.src.toString(),
 						subHtml: `<div class="text-white">
-										<p>${galleryImage.querySelector("img")!.alt.toString()}</p>
+										<p>${galleryImage.querySelector("img")!.alt}</p>
 										<p>${(index + 1).toString()} / ${galleryElement.children.length.toString()}</p>
 								</div>`,
 					};

@@ -39,8 +39,7 @@ function buildColumnDefRecursive(
 			.map((heading) => {
 				const accessorFn = (cell: PatchedFeatureType) => {
 					return Object.keys(
-						cell.properties[String(Object.keys(heading).find((key) => /ft_*/.test(key)) ?? "")] ??
-							{},
+						cell.properties[Object.keys(heading).find((key) => /ft_*/.test(key)) ?? ""] ?? {},
 					);
 				};
 				return columnHelper.accessor(accessorFn, {
@@ -75,7 +74,7 @@ function buildColumnDefRecursive(
 					buildColumnDefRecursive(
 						{
 							header: featureCategories[categoryName] ?? categoryLabel,
-							id: String(categoryName),
+							id: categoryName,
 							columns: [],
 						},
 						featureCategories,
