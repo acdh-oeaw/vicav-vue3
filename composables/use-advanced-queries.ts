@@ -1,4 +1,4 @@
-import type { Column, RowModel } from "@tanstack/vue-table";
+import type { Column, Row } from "@tanstack/vue-table";
 
 interface CombinedFilter {
 	combinedValue: string;
@@ -10,10 +10,10 @@ const AND_OPERATOR = "AND";
 
 function getCombinedFilterOption(
 	column: Column<unknown>,
-	rowModel: RowModel<unknown>,
+	rowModel: Array<Row<unknown>>,
 	items: Array<string>,
 ) {
-	const count = rowModel.flatRows.filter((row) =>
+	const count = rowModel.filter((row) =>
 		items.every((i) => {
 			const rowValue: Array<string> = row.getValue(column.id);
 			return rowValue.includes(i);
