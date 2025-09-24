@@ -4,6 +4,7 @@ import "v3-infinite-loading/lib/style.css"; //required if you're not going to ov
 import { Pause, Play } from "lucide-vue-next";
 import InfiniteLoading from "v3-infinite-loading";
 import type { StateHandler } from "v3-infinite-loading/lib/types";
+import type Zod from "zod";
 
 import type { CorpusTextUtterances } from "@/lib/api-client";
 import type { CorpusTextSchema, VicavHTTPError } from "@/types/global";

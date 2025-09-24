@@ -53,19 +53,15 @@ export const ExploreSamplesQueryBase = z.object({
 	page: z.number().optional(),
 });
 
-export const ExploreSamplesQueryParams = ExploreSamplesQueryBase.merge(
-	z.object({
-		dataType: z.enum(["SampleText", "Feature"]),
-		region: z.string().optional(),
-		settlement: z.string().optional(),
-	}),
-);
+export const ExploreSamplesQueryParams = ExploreSamplesQueryBase.extend({
+	dataType: z.enum(["SampleText", "Feature"]),
+	region: z.string().optional(),
+	settlement: z.string().optional(),
+});
 
-export const ExploreSamplesQueryDbParams = ExploreSamplesQueryBase.merge(
-	z.object({
-		type: z.enum(["samples", "lingfeatures"]),
-	}),
-);
+export const ExploreSamplesQueryDbParams = ExploreSamplesQueryBase.extend({
+	type: z.enum(["samples", "lingfeatures"]),
+});
 
 export const ExploreSamplesFormParams = z.object({
 	dataTypes: z.array(DataTypesEnum),
@@ -73,7 +69,9 @@ export const ExploreSamplesFormParams = z.object({
 
 export const ExploreSamplesSchema = z.object({
 	targetType: z.literal("ExploreSamples"),
-	params: ExploreSamplesQueryParams.merge(TextId.partial()).merge(ShowCitation.partial()),
+	params: ExploreSamplesQueryParams.extend(TextId.partial().shape).extend(
+		ShowCitation.partial().shape,
+	),
 });
 
 export type ExploreSamplesWindowItem = WindowItemBase & z.infer<typeof ExploreSamplesSchema>;
@@ -84,7 +82,7 @@ export const ExploreSamplesFormSchema = z.object({
 		.object({
 			dataTypes: z.array(DataTypesEnum),
 		})
-		.merge(TextId.partial()),
+		.extend(TextId.partial().shape),
 });
 
 export type ExploreSamplesFormWindowItem = WindowItemBase &
@@ -92,12 +90,10 @@ export type ExploreSamplesFormWindowItem = WindowItemBase &
 
 export const BibliographyEntriesSchema = z.object({
 	targetType: z.literal("BiblioEntries"),
-	params: QueryString.merge(
-		z.object({
-			xslt: z.string().optional(),
-			showMap: z.boolean().optional(),
-		}),
-	),
+	params: QueryString.extend({
+		xslt: z.string().optional(),
+		showMap: z.boolean().optional(),
+	}),
 });
 export type BibliographyEntriesWindowItem = WindowItemBase &
 	z.infer<typeof BibliographyEntriesSchema>;
@@ -137,26 +133,24 @@ export type CorpusQueryWindowItem = WindowItemBase & z.infer<typeof CorpusQueryS
 
 export const CorpusTextSchema = z.object({
 	targetType: z.literal("CorpusText"),
-	params: TextId.merge(
-		z.object({
-			hits: z.string().optional(),
-			u: z.string().optional(), // TODO: give this parameter a telling name
-		}),
-	)
-		.merge(ShowCitation.partial())
-		.merge(TeiSource.partial()),
+	params: TextId.extend({
+		hits: z.string().optional(),
+		u: z.string().optional(), // TODO: give this parameter a telling name
+	})
+		.extend(ShowCitation.partial().shape)
+		.extend(TeiSource.partial().shape),
 });
 export type CorpusTextWindowItem = WindowItemBase & z.infer<typeof CorpusTextSchema>;
 
 export const FeatureSchema = z.object({
 	targetType: z.literal("Feature"),
-	params: TextId.merge(TeiSource.partial()).merge(ShowCitation.partial()),
+	params: TextId.extend(TeiSource.partial().shape).extend(ShowCitation.partial().shape),
 });
 export type FeatureWindowItem = WindowItemBase & z.infer<typeof FeatureSchema>;
 
 export const FeatureValueSchema = z.object({
 	targetType: z.literal("FeatureValue"),
-	params: z.object({ values: z.array(z.any()) }).merge(ShowCitation.partial()),
+	params: z.object({ values: z.array(z.any()) }).extend(ShowCitation.partial().shape),
 });
 export type FeatureValueWindowItem = WindowItemBase & z.infer<typeof FeatureValueSchema>;
 
@@ -183,7 +177,7 @@ export type FeatureCollectionType = z.infer<typeof FeatureCollectionSchema>;
 
 export const LocationSchema = z.object({
 	targetType: z.literal("Location"),
-	params: z.object<Row<FeatureType>>({}).merge(ShowCitation.partial()).passthrough(),
+	params: z.object<Row<FeatureType>>({}).extend(ShowCitation.partial().shape).loose(),
 });
 export type LocationWindowItem = WindowItemBase & z.infer<typeof LocationSchema>;
 
@@ -192,15 +186,13 @@ export const CompareMarkersParams = z.object();
 export const GeoMapScope = z.enum(["reg", "geo", "diaGroup"]);
 export const GeoMapSchema = z.object({
 	targetType: z.literal("WMap"),
-	params: QueryString.merge(
-		z.object({
-			title: z.string().optional(),
-			endpoint: z.string(),
-			queryParams: ExploreSamplesQueryDbParams.optional(),
-			scope: z.array(GeoMapScope).optional(),
-			hideDefaultLayers: z.boolean().optional(),
-		}),
-	),
+	params: QueryString.extend({
+		title: z.string().optional(),
+		endpoint: z.string(),
+		queryParams: ExploreSamplesQueryDbParams.optional(),
+		scope: z.array(GeoMapScope).optional(),
+		hideDefaultLayers: z.boolean().optional(),
+	}),
 });
 export type GeoMapWindowItem = WindowItemBase & z.infer<typeof GeoMapSchema>;
 export const GeoMapSubnavItemSchema = z.intersection(
@@ -210,19 +202,19 @@ export const GeoMapSubnavItemSchema = z.intersection(
 
 export const ProfileSchema = z.object({
 	targetType: z.literal("Profile"),
-	params: TextId.merge(TeiSource.partial()).merge(ShowCitation.partial()),
+	params: TextId.extend(TeiSource.partial().shape).extend(ShowCitation.partial().shape),
 });
 export type ProfileWindowItem = WindowItemBase & z.infer<typeof ProfileSchema>;
 
 export const TextSchema = z.object({
 	targetType: z.literal("Text"),
-	params: TextId.merge(TeiSource.partial()).merge(ShowCitation.partial()),
+	params: TextId.extend(TeiSource.partial().shape).extend(ShowCitation.partial().shape),
 });
 export type TextWindowItem = WindowItemBase & z.infer<typeof TextSchema>;
 
 export const SampleTextSchema = z.object({
 	targetType: z.literal("SampleText"),
-	params: TextId.merge(TeiSource.partial()).merge(ShowCitation.partial()),
+	params: TextId.extend(TeiSource.partial().shape).extend(ShowCitation.partial().shape),
 });
 export type SampleTextWindowItem = WindowItemBase & z.infer<typeof SampleTextSchema>;
 
@@ -255,7 +247,7 @@ export const DataListSchema = z.object({
 				})
 				.optional(),
 		})
-		.merge(TextId.partial()),
+		.extend(TextId.partial().shape),
 });
 
 export type DataListWindowItem = WindowItemBase & z.infer<typeof DataListSchema>;
@@ -274,9 +266,9 @@ export const DataTableSchema = z.object({
 				)
 				.optional(),
 		})
-		.merge(TextId.partial())
-		.merge(TeiSource.partial())
-		.merge(ShowCitation.partial()),
+		.extend(TextId.partial().shape)
+		.extend(TeiSource.partial().shape)
+		.extend(ShowCitation.partial().shape),
 });
 export type DataTableWindowItem = WindowItemBase & z.infer<typeof DataTableSchema>;
 

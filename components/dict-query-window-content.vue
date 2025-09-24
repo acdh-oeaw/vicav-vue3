@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type Zod from "zod";
+
 import type { DictQuerySchema } from "@/types/global";
 
 const props = defineProps<{

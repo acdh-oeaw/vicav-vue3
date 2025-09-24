@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/vue-query";
+import type Zod from "zod";
 
 import type { ExploreSamplesQueryParams } from "@/types/global.d";
 

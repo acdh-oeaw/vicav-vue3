@@ -6,6 +6,7 @@
 		 * @see https://github.com/microsoft/TypeScript/issues/54057
 		 */
 		"incremental": false,
-		"erasableSyntaxOnly": false
+		"erasableSyntaxOnly": false,
+		"checkJs": false
 	}
 }

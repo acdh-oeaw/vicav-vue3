@@ -23,7 +23,7 @@ export function useAnchorClickHandler() {
 			? anchorDataObject.label
 			: element.innerText;
 		// Replacement for itemWrapper? Part of fix for #252?
-		anchorDataObject.params ??= anchorDataObject;
+		anchorDataObject.params ??= structuredClone(anchorDataObject);
 
 		if (anchorDataObject.targetType) {
 			if (anchorDataObject.targetType === "External-link") return;

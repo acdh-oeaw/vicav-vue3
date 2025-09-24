@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Column } from "@tanstack/vue-table";
 import { ChevronDown } from "lucide-vue-next";
+import type Zod from "zod";
 
 import type { GeojsonMapSchema } from "@/types/global";
 
@@ -36,7 +37,7 @@ type ColumnType = Column<
 		id: string;
 		type: "Feature";
 		geometry: { type: "Point"; coordinates: Array<number> };
-		properties?: unknown;
+		properties: unknown;
 	},
 	unknown
 >;

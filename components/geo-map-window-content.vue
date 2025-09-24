@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { keyByToMap } from "@acdh-oeaw/lib";
+import type Zod from "zod";
 
 import type { GeoTargetTypeParameters } from "@/lib/api-client";
 import { type GeoMapSchema, GeoMapSubnavItemSchema } from "@/types/global.d";

@@ -11,10 +11,10 @@ export function useOpenOrUpdateWindow() {
 			const targetConfig = config.value?.projectConfig?.menu?.main
 				?.flatMap((menuEntry) => menuEntry.item)
 				.find((menuEntry) => {
-					return menuEntry.id === String(ci.data.textId);
+					return menuEntry.id === ci.data.textId;
 				});
 
-			const window = findWindowByTypeAndParam(item.targetType, "textId", String(ci.data.textId));
+			const window = findWindowByTypeAndParam(item.targetType, "textId", ci.data.textId);
 			if (window) {
 				const windowItem = window;
 				const originalParams: object = window.params as object;

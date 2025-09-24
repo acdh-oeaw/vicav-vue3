@@ -1,3 +1,5 @@
+import type Zod from "zod";
+
 import { Dict } from "@/types/global.d";
 
 type DictIndex = Set<Zod.infer<typeof Dict>["id"]>;

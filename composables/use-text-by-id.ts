@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/vue-query";
+import type Zod from "zod";
 
 import type { TextId } from "@/types/global.d";
 

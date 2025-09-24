@@ -34,7 +34,7 @@ export const useGeojsonStore = defineStore("geojson", () => {
 
 			select: (data) => {
 				const features = data.features.map((feature) => {
-					const result = GeoFeatureSchema.passthrough().safeParse(feature);
+					const result = GeoFeatureSchema.loose().safeParse(feature);
 					if (result.success) {
 						return result.data;
 					} else {

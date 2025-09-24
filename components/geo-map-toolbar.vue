@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import type Zod from "zod";
+
 import type { GeoMapSubnavItemSchema } from "@/types/global.d";
 
 type ItemId = string;
