@@ -48,7 +48,15 @@ function setColumnFilter(columnId: string, value: string, table: Table<unknown>)
 	const filterValue = table.getColumn(columnId)?.getFilterValue() as
 		| Map<string, unknown>
 		| undefined;
-	filterValue?.set(value, 1);
+
+	if (value === "*") {
+		const allColValues = [
+			...new Set(table.getCoreRowModel().flatRows.flatMap((row) => row.getValue(columnId))),
+		];
+		allColValues.forEach((val) => filterValue?.set(val as string, 1));
+	} else {
+		filterValue?.set(value, 1);
+	}
 	table.getColumn(columnId)?.setFilterValue(filterValue);
 }
 
@@ -271,6 +279,21 @@ function syncGlobalAndColumnFilters(table: Table<unknown>) {
 	let currentGlobalFilter = String(table.getState().globalFilter ?? "");
 	const assembledColumnFilters = columnFilters
 		.map((column) => {
+			const allColValues = [
+				...new Set(table.getCoreRowModel().flatRows.flatMap((row) => row.getValue(column.id))),
+			];
+			if (allColValues.every((val) => column.value.has(val as string))) {
+				return [
+					`${column.id}:ANY `,
+					...[...column.value.entries()]
+						.filter(([key, _value]) => {
+							return !allColValues.includes(key);
+						})
+						.map(([key, _value]) => {
+							return assembleFilter(column.id, key);
+						}),
+				];
+			}
 			return [...column.value.entries()].map(([key, _value]) => {
 				return assembleFilter(column.id, key);
 			});

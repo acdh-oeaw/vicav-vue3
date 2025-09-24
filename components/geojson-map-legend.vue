@@ -69,99 +69,95 @@ function updateMarker(markerSelection: SelectionEntry) {
 </script>
 
 <template>
-	<Collapsible v-model:open="collapsibleOpen" class="w-48 bg-white/80 p-3 text-xs">
-		<div>
-			<CollapsibleTrigger class="flex w-full justify-between"
-				><b>{{ activeRows?.length }} total markers</b
-				><ChevronDown class="size-4" :class="collapsibleOpen ? '' : 'rotate-180'"></ChevronDown
-			></CollapsibleTrigger>
-			<CollapsibleContent>
-				<div v-for="feature in activeFeatures" :key="feature.id" class="my-1">
-					<div class="flex items-start gap-2">
-						<svg
-							v-if="activeFeatures?.length === 1 && markerSettings.showCenter"
-							class="mt-0.5 size-3.5 shrink-0"
-							view-box="0 0 18 18 "
-							v-html="getCircleSVG(`var(--${feature.id})`, true, 14).outerHTML"
-						></svg>
-						<MarkerSelector
-							v-else-if="getActiveFilterValues(feature).length === 0"
-							:icon-categories="['shapes']"
-							:model-value="markers.get(feature.id)!"
-							:use-popover-portal="true"
-							@update:model-value="(props) => updateMarker(props)"
-						></MarkerSelector>
-						<span>{{ feature.columnDef.header }} ({{ getMatchingRowCount(feature.id) }})</span>
-					</div>
-					<div
-						v-for="filter in getCombinedFilters(feature)"
-						:key="filter.join('')"
-						class="ml-4 flex items-center gap-2"
-					>
-						<MarkerSelector
-							:icon-categories="['shapes']"
-							:model-value="
-								markers.get(buildFeatureValueId(feature.id, filter.join(AND_OPERATOR)))!
-							"
-							:use-popover-portal="true"
-							@update:model-value="(props) => updateMarker(props)"
-						></MarkerSelector>
-						<!-- <svg
+	<Collapsible v-model:open="collapsibleOpen" class="w-48 bg-white/80 p-3 text-xs flex flex-col">
+		<CollapsibleTrigger class="flex w-full justify-between"
+			><b>{{ activeRows?.length }} total markers</b
+			><ChevronDown class="size-4" :class="collapsibleOpen ? '' : 'rotate-180'"></ChevronDown
+		></CollapsibleTrigger>
+		<CollapsibleContent class="max-h-full !overflow-auto">
+			<div v-for="feature in activeFeatures" :key="feature.id" class="my-1">
+				<div class="flex items-start gap-2">
+					<svg
+						v-if="activeFeatures?.length === 1 && markerSettings.showCenter"
+						class="mt-0.5 size-3.5 shrink-0"
+						view-box="0 0 18 18 "
+						v-html="getCircleSVG(`var(--${feature.id})`, true, 14).outerHTML"
+					></svg>
+					<MarkerSelector
+						v-else-if="getActiveFilterValues(feature).length === 0"
+						:icon-categories="['shapes']"
+						:model-value="markers.get(feature.id)!"
+						:use-popover-portal="true"
+						@update:model-value="(props) => updateMarker(props)"
+					></MarkerSelector>
+					<span>{{ feature.columnDef.header }} ({{ getMatchingRowCount(feature.id) }})</span>
+				</div>
+				<div
+					v-for="filter in getCombinedFilters(feature)"
+					:key="filter.join('')"
+					class="ml-4 flex items-center gap-2"
+				>
+					<MarkerSelector
+						:icon-categories="['shapes']"
+						:model-value="markers.get(buildFeatureValueId(feature.id, filter.join(AND_OPERATOR)))!"
+						:use-popover-portal="true"
+						@update:model-value="(props) => updateMarker(props)"
+					></MarkerSelector>
+					<!-- <svg
 							class="mt-0.5 size-3.5 shrink-0"
 							v-html="
 								getMarkerSVG({ id: buildFeatureValueId(feature.id, filter.join(AND_OPERATOR)) })
 									.outerHTML
 							"
 						></svg> -->
-						<span>
-							<span v-for="(fv, idx) in filter" :key="fv"
-								>{{ fv
-								}}<span v-if="idx < filter.length - 1" class="font-mono font-semibold"
-									>&nbsp;and&nbsp;</span
-								>
-							</span>
+					<span>
+						<span v-for="(fv, idx) in filter" :key="fv"
+							>{{ fv
+							}}<span v-if="idx < filter.length - 1" class="font-mono font-semibold"
+								>&nbsp;and&nbsp;</span
+							>
 						</span>
-					</div>
+					</span>
+				</div>
+				<div
+					v-if="
+						feature.getIsFiltered() && (feature.getFilterValue() as Map<string, number>).size > 0
+					"
+					class="ml-4"
+				>
 					<div
-						v-if="
-							feature.getIsFiltered() && (feature.getFilterValue() as Map<string, number>).size > 0
-						"
-						class="ml-4"
+						v-for="[value, count] in getActiveFilterValues(feature)"
+						:key="value"
+						class="flex items-center gap-2"
 					>
-						<div
-							v-for="[value, count] in getActiveFilterValues(feature)"
-							:key="value"
-							class="flex items-center gap-2"
-						>
-							<MarkerSelector
-								:icon-categories="['shapes']"
-								:model-value="markers.get(buildFeatureValueId(feature.id, value))!"
-								:use-popover-portal="true"
-								@update:model-value="(props) => updateMarker(props)"
-							></MarkerSelector>
-							<!-- <svg
+						<MarkerSelector
+							:icon-categories="['shapes']"
+							:model-value="markers.get(buildFeatureValueId(feature.id, value))!"
+							:use-popover-portal="true"
+							@update:model-value="(props) => updateMarker(props)"
+						></MarkerSelector>
+						<!-- <svg
 								class="mt-0.5 size-3.5 shrink-0"
 								v-html="getMarkerSVG({ id: buildFeatureValueId(feature.id, value) }).outerHTML"
 							></svg> -->
-							<span>{{ value }} ({{ count }})</span>
-						</div>
-						<div
-							v-if="
-								(feature.getFilterValue() as Map<string, number>).size > 0 &&
-								!getAllFacetsActive(feature) &&
-								markerSettings.showOtherFeatureValues
-							"
-							class="flex items-center gap-2"
-						>
-							<svg
-								class="mt-0.5 size-3.5 shrink-0"
-								v-html="getMarkerSVG({ id: feature.id, strokeOnly: true }).outerHTML"
-							></svg>
-							<span>Other feature values</span>
-						</div>
+						<span>{{ value }} ({{ count }})</span>
+					</div>
+					<div
+						v-if="
+							(feature.getFilterValue() as Map<string, number>).size > 0 &&
+							!getAllFacetsActive(feature) &&
+							markerSettings.showOtherFeatureValues
+						"
+						class="flex items-center gap-2"
+					>
+						<svg
+							class="mt-0.5 size-3.5 shrink-0"
+							v-html="getMarkerSVG({ id: feature.id, strokeOnly: true }).outerHTML"
+						></svg>
+						<span>Other feature values</span>
 					</div>
 				</div>
-			</CollapsibleContent>
-		</div>
+			</div>
+		</CollapsibleContent>
 	</Collapsible>
 </template>
