@@ -35,9 +35,8 @@ export default defineNuxtConfig({
 	},
 
 	imports: { dirs: ["./config/"] },
-	modules: ["@pinia/nuxt", "@vueuse/nuxt", "@nuxt/eslint", "@nuxt/test-utils/module", "nuxt-svgo"],
+	modules: ["@pinia/nuxt", "@vueuse/nuxt", "@nuxt/eslint", "@nuxt/test-utils/module", "nuxt-svgo", "nitro-opentelemetry"],
 	nitro: {
-		modules: ["nitro-opentelemetry"],
 		compressPublicAssets: true,
 		otel: {
 			preset: {
@@ -112,13 +111,6 @@ export default defineNuxtConfig({
 					"@/*": ["./*"],
 				},
 			},
-		},
-	},
-
-	otel: {
-		preset: {
-			name: "custom",
-			filePath: "./instrumentation.ts",
 		},
 	},
 
