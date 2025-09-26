@@ -6,7 +6,7 @@ import InfiniteLoading from "v3-infinite-loading";
 import type { StateHandler } from "v3-infinite-loading/lib/types";
 import type Zod from "zod";
 
-import type { CorpusTextUtterances } from "@/lib/api-client";
+import type { CorpusText, CorpusTextHTML, CorpusTextUtterances } from "@/lib/api-client";
 import type { CorpusTextSchema, VicavHTTPError } from "@/types/global";
 
 const props = defineProps<{
@@ -25,6 +25,10 @@ const scrollComplete = ref<boolean>(false);
 const teiHeader = simpleItems.value.find((header) => header.id === props.params.textId);
 const publication = teiHeader?.publication;
 
+function isCorpusTextHTML(item: CorpusTextHTML | CorpusText): item is CorpusTextHTML {
+	return Object.hasOwn(item, "utterances");
+}
+
 const loadNextPage = async function () {
 	const text = await api.vicav.getCorpusText(
 		{
@@ -35,7 +39,7 @@ const loadNextPage = async function () {
 		},
 		{ headers: { Accept: "application/json" } },
 	);
-	if (text.data.utterances !== undefined) {
+	if (isCorpusTextHTML(text.data) && text.data.utterances !== undefined) {
 		utterances.value = utterances.value.concat(text.data.utterances);
 		currentPage.value = currentPage.value + 1;
 	}
@@ -46,7 +50,11 @@ const handleInfiniteScroll = async function ($state: StateHandler) {
 	try {
 		const text = await loadNextPage();
 		$state.loaded();
-		if (text.data.utterances !== undefined && text.data.utterances.length < 10) {
+		if (
+			isCorpusTextHTML(text.data) &&
+			text.data.utterances !== undefined &&
+			text.data.utterances.length < 10
+		) {
 			scrollComplete.value = true;
 			$state.complete();
 		}
