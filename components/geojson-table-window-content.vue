@@ -102,6 +102,7 @@ function registerTable(table: Table<FeatureType>) {
 		projectData.value?.projectConfig?.staticData?.table?.[0] as Record<string, never>,
 	);
 	tables.value.set(url, table);
+	triggerRef(tables);
 	tableRef.value = table;
 	const mw = findWindowByTypeAndParam("GeojsonMap", "url", url);
 	if (mw) {
