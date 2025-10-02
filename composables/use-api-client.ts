@@ -26,8 +26,8 @@ async function fetchWithETag(
 	const cachedETag = cache.get(url);
 	const ifNoneMatchHeader = cachedETag
 		? {
-			"If-None-Match": Object.keys(cachedETag)[0]?.replace(/--gzip$/, ""),
-		}
+				"If-None-Match": Object.keys(cachedETag)[0]?.replace(/--gzip$/, ""),
+			}
 		: {};
 	const requestParams = {
 		method: "GET",
@@ -85,8 +85,7 @@ export function useApiClient() {
 
 	if (env.apiBaseUrl) {
 		api.baseUrl = env.apiBaseUrl;
-	}
-	else if (env.public.apiBaseUrl) {
+	} else if (env.public.apiBaseUrl) {
 		api.baseUrl = env.public.apiBaseUrl;
 	}
 
