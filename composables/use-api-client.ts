@@ -83,7 +83,9 @@ export function useApiClient() {
 		});
 	}
 
-	if (env.public.apiBaseUrl) {
+	if (env.apiBaseUrl) {
+		api.baseUrl = env.apiBaseUrl;
+	} else if (env.public.apiBaseUrl) {
 		api.baseUrl = env.public.apiBaseUrl;
 	}
 

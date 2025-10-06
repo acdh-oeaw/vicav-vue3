@@ -35,8 +35,23 @@ export default defineNuxtConfig({
 	},
 
 	imports: { dirs: ["./config/"] },
-	modules: ["@pinia/nuxt", "@vueuse/nuxt", "@nuxt/eslint", "@nuxt/test-utils/module", "nuxt-svgo"],
-	nitro: { compressPublicAssets: true },
+	modules: [
+		"@pinia/nuxt",
+		"@vueuse/nuxt",
+		"@nuxt/eslint",
+		"@nuxt/test-utils/module",
+		"nuxt-svgo",
+		"nitro-opentelemetry",
+	],
+	nitro: {
+		compressPublicAssets: true,
+		otel: {
+			preset: {
+				name: "custom",
+				filePath: "./server/instrumentation.ts",
+			},
+		},
+	},
 
 	postcss: {
 		plugins: {
@@ -52,6 +67,7 @@ export default defineNuxtConfig({
 
 	runtimeConfig: {
 		BOTS: process.env.BOTS,
+		apiBaseUrl: process.env.NUXT_API_BASE_URL ?? process.env.NUXT_PUBLIC_API_BASE_URL,
 		public: {
 			apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL,
 			appBaseUrl: process.env.PUBLIC_URL ?? process.env.NUXT_PUBLIC_APP_BASE_URL,
@@ -105,6 +121,7 @@ export default defineNuxtConfig({
 			},
 		},
 	},
+
 	future: {
 		compatibilityVersion: 4,
 	},
