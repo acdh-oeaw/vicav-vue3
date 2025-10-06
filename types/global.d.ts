@@ -220,11 +220,9 @@ export type SampleTextWindowItem = WindowItemBase & z.infer<typeof SampleTextSch
 
 export const ListMapSchema = z.object({
 	targetType: z.literal("ListMap"),
-	params: z
-		.object({
-			queryString: z.string().default(""),
-		})
-		.loose(),
+	params: z.object({
+		queryString: z.string().default(""),
+	}),
 });
 export type ListMapWindowItem = WindowItemBase & z.infer<typeof ListMapSchema>;
 
