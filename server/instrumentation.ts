@@ -154,13 +154,13 @@ export class PrettyConsoleMetricExporter implements PushMetricExporter {
 v${metrics.resource.attributes[ATTR_SERVICE_VERSION]?.toString() ?? "unknown version"}:\
  Metric: ${metric.descriptor.name},\
  Data Points: ${JSON.stringify(
-					metric.dataPoints.map((dp) => {
-						return {
-							...{ space: dp.attributes["v8js.heap.space.name"]?.toString() ?? "unknown space" },
-							...{ value: dp.value },
-						};
-					}),
-				)}`);
+		metric.dataPoints.map((dp) => {
+			return {
+				...{ space: dp.attributes["v8js.heap.space.name"]?.toString() ?? "unknown space" },
+				...{ value: dp.value },
+			};
+		}),
+ )}`);
 			}
 		}
 
@@ -176,9 +176,11 @@ const traceProvider = new NodeTracerProvider({
 	}),
 	spanProcessors: [
 		new SimpleSpanProcessor(new PrettyConsoleSpanExporter()),
-		new BatchSpanProcessor(new OTLPTraceExporter({
-			url: process.env.OTEL_EXPORTER_OTLP_ENDPOINT,
-		})),
+		new BatchSpanProcessor(
+			new OTLPTraceExporter({
+				url: process.env.OTEL_EXPORTER_OTLP_ENDPOINT,
+			}),
+		),
 	],
 });
 traceProvider.register({
