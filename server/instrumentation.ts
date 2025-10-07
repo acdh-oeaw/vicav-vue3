@@ -1,7 +1,7 @@
 import { AsyncLocalStorageContextManager } from "@opentelemetry/context-async-hooks";
 import { type ExportResult, ExportResultCode, hrTimeToMicroseconds } from "@opentelemetry/core";
-import { OTLPMetricExporter } from "@opentelemetry/exporter-metrics-otlp-proto";
-import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
+import { OTLPMetricExporter } from "@opentelemetry/exporter-metrics-otlp-grpc";
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-grpc";
 import { registerInstrumentations } from "@opentelemetry/instrumentation";
 import { RuntimeNodeInstrumentation } from "@opentelemetry/instrumentation-runtime-node";
 import { UndiciInstrumentation } from "@opentelemetry/instrumentation-undici";
@@ -154,13 +154,13 @@ export class PrettyConsoleMetricExporter implements PushMetricExporter {
 v${metrics.resource.attributes[ATTR_SERVICE_VERSION]?.toString() ?? "unknown version"}:\
  Metric: ${metric.descriptor.name},\
  Data Points: ${JSON.stringify(
-		metric.dataPoints.map((dp) => {
-			return {
-				...{ space: dp.attributes["v8js.heap.space.name"]?.toString() ?? "unknown space" },
-				...{ value: dp.value },
-			};
-		}),
- )}`);
+					metric.dataPoints.map((dp) => {
+						return {
+							...{ space: dp.attributes["v8js.heap.space.name"]?.toString() ?? "unknown space" },
+							...{ value: dp.value },
+						};
+					}),
+				)}`);
 			}
 		}
 
@@ -176,7 +176,9 @@ const traceProvider = new NodeTracerProvider({
 	}),
 	spanProcessors: [
 		new SimpleSpanProcessor(new PrettyConsoleSpanExporter()),
-		new BatchSpanProcessor(new OTLPTraceExporter()),
+		new BatchSpanProcessor(new OTLPTraceExporter({
+			url: process.env.OTEL_EXPORTER_OTLP_ENDPOINT,
+		})),
 	],
 });
 traceProvider.register({
@@ -194,7 +196,9 @@ const meterProvider = new MeterProvider({
 			exportIntervalMillis: 20000,
 		}),
 		new PeriodicExportingMetricReader({
-			exporter: new OTLPMetricExporter(),
+			exporter: new OTLPMetricExporter({
+				url: process.env.OTEL_EXPORTER_OTLP_ENDPOINT,
+			}),
 			exportIntervalMillis: 5000,
 		}),
 	],
