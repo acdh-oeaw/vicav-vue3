@@ -54,6 +54,7 @@ function updateQueryParam(queryString: string) {
 	<GeojsonTableWindowContent
 		v-else-if="props.item.targetType === 'ListMap'"
 		:params="props.item.params"
+		@update-query-param="updateQueryParam"
 	/>
 	<GeojsonMapWindowContent
 		v-else-if="props.item.targetType === 'GeojsonMap'"

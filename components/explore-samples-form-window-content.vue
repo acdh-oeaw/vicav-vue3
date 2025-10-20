@@ -215,7 +215,7 @@ const openSearchResultsWindow = function () {
 			title: `Search results for ${[words.value.join(","), places.value.join(",")].join(", ")}`,
 		} as WindowState)!;
 	else {
-		resultsWindow.value.params = resultWindowParams.value;
+		resultsWindow.value.params = resultWindowParams.value as WindowItem["params"];
 		resultsWindow.value.winbox.setTitle(
 			`Search results for ${[words.value.join(","), places.value.join(",")].join(", ")}`,
 		);
