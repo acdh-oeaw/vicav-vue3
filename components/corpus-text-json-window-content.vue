@@ -5,8 +5,7 @@ import InfiniteLoading from "v3-infinite-loading";
 import type { StateHandler } from "v3-infinite-loading/lib/types";
 import type { z } from "zod";
 
-import type { HttpResponse } from "@/lib/api-client";
-import type { AnnotationBlock, AnnotationDoc } from "@/types/corpus-as-json";
+import type { Div } from "@/lib/api-client";
 import type { CorpusTextSchema, VicavHTTPError } from "@/types/global";
 
 const props = defineProps<{
@@ -21,13 +20,13 @@ const currentPage = ref(1);
 const infinite = ref<typeof InfiniteLoading | null>(null);
 const scrollComplete = ref<boolean>(false);
 
-const annotationBlocks = ref<Array<AnnotationBlock>>([]);
+const annotationBlocks = ref<Array<Div>>([]);
 const inlineAnnotations = ref<false | true | "indeterminate">(true);
 const inlineTranslations = ref<false | true | "indeterminate">(true);
 
 const api = useApiClient();
 const loadNextPage = async function () {
-	const text = (await api.vicav.getCorpusText(
+	const text = await api.vicav.getCorpusText(
 		{
 			id: props.params.textId,
 			hits: props.params.hits,
@@ -36,9 +35,9 @@ const loadNextPage = async function () {
 			render: "json",
 		},
 		{ headers: { Accept: "application/json" } },
-	)) as unknown as HttpResponse<AnnotationDoc, string>;
-	if (text.data.doc.annotationBlocks !== undefined) {
-		annotationBlocks.value = annotationBlocks.value.concat(text.data.doc.annotationBlocks);
+	);
+	if ("doc" in text.data && text.data.doc !== undefined) {
+		annotationBlocks.value = annotationBlocks.value.concat(text.data.doc.divs);
 		currentPage.value = currentPage.value + 1;
 	}
 	return text;
@@ -48,7 +47,7 @@ const handleInfiniteScroll = async function ($state: StateHandler) {
 	try {
 		const text = await loadNextPage();
 		$state.loaded();
-		if (text.data.doc !== undefined && text.data.doc.annotationBlocks.length < 10) {
+		if ("doc" in text.data && text.data.doc !== undefined && text.data.doc.divs.length < 10) {
 			scrollComplete.value = true;
 			$state.complete();
 		}
@@ -181,10 +180,10 @@ onMounted(async () => {
 							></CorpusTextJsonUtterance>
 						</div>
 						<div
-							v-if="inlineTranslations && a.spanGrp"
+							v-if="inlineTranslations && a.Translation_spanGrp"
 							class="px-6 py-3 max-w-full flex flex-row italic"
 						>
-							{{ a.spanGrp.span["$"] }}
+							{{ a.Translation_spanGrp.span["$"] }}
 						</div>
 					</td>
 				</tr>
