@@ -1,14 +1,19 @@
 <script setup lang="ts">
 import { BookA } from "lucide-vue-next";
 
-import type { UClass } from "@/types/corpus-as-json";
+import type { Gap, Pc, Phr, W } from "@/lib/api-client";
 import { Button } from "#components";
 
 const windowsStore = useWindowsStore();
 const { addWindow } = windowsStore;
 
 const props = defineProps<{
-	utterance: UClass;
+	utterance: {
+		w?: W;
+		pc?: Pc;
+		gap?: Gap;
+		phr?: Phr;
+	};
 	inlineAnnotation: boolean;
 	inlineTranslation: boolean;
 }>();
@@ -22,7 +27,8 @@ const props = defineProps<{
 					<div class="flex justify-center text-lg">
 						{{ props.utterance.w["$"]
 						}}{{
-							props.utterance.w["@join"] === "right" && props.utterance.w["@rend"] === "withDash"
+							props.utterance.w["@join"] === "right" &&
+							props.utterance.w["@rendition"] === "rend:dashAfter"
 								? "-"
 								: "&nbsp;"
 						}}
@@ -37,7 +43,8 @@ const props = defineProps<{
 		<div v-if="inlineAnnotation" class="flex justify-center text-lg">
 			{{ props.utterance.w["$"]
 			}}{{
-				props.utterance.w["@join"] === "right" && props.utterance.w["@rend"] === "withDash"
+				props.utterance.w["@join"] === "right" &&
+				props.utterance.w["@rendition"] === "rend:dashAfter"
 					? "-"
 					: "&nbsp;"
 			}}
@@ -56,8 +63,6 @@ const props = defineProps<{
 						params: {
 							queryString: props.utterance.w['@lemmaRef'].replace('dict:', ''),
 							textId: 'dc_shawi_eng',
-							isTextInputManual: false,
-							isQueryVisible: false,
 							queryParams: {
 								id: props.utterance.w['@lemmaRef'].replace('dict:', ''),
 							},
@@ -77,6 +82,15 @@ const props = defineProps<{
 	</div>
 	<div v-if="props.utterance.pc" class="flex flex-col u text-lg">
 		<div>{{ props.utterance.pc["$"] }}</div>
+	</div>
+	<div v-if="props.utterance.phr" class="flex flex-row">
+		<CorpusTextJsonUtterance
+			v-for="(uContent, index) in props.utterance.phr['$$']"
+			:key="index"
+			:inline-annotation="props.inlineAnnotation as boolean"
+			:inline-translation="props.inlineTranslation as boolean"
+			:utterance="uContent"
+		></CorpusTextJsonUtterance>
 	</div>
 </template>
 
