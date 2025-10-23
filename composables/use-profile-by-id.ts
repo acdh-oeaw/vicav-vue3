@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/vue-query";
-import type { z } from "zod";
+import type Zod from "zod";
 
 import type { TextId } from "@/types/global.d";
 
 export function useProfileById(
-	params: MaybeRef<z.infer<typeof TextId>>,
+	params: MaybeRef<Zod.infer<typeof TextId>>,
 	options?: { enabled?: boolean },
 ) {
 	const api = useApiClient();

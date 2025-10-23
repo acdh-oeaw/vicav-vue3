@@ -133,7 +133,7 @@ export const useWindowsStore = defineStore("windows", () => {
 
 		const ci = TextId.safeParse(params);
 		if (ci.success) {
-			const w = findWindowByTypeAndParam(targetType, "textId", String(ci.data.textId));
+			const w = findWindowByTypeAndParam(targetType, "textId", ci.data.textId);
 			if (w !== null) {
 				w.winbox.focus();
 				w.winbox.addClass("highlighted");

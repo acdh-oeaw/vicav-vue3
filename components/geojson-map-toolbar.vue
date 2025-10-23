@@ -1,13 +1,13 @@
 <script lang="ts" setup>
 import type { Column, Table } from "@tanstack/vue-table";
 import { ChevronDown } from "lucide-vue-next";
-import type { z } from "zod";
+import type Zod from "zod";
 
 import { useGeojsonStore } from "@/stores/use-geojson-store.ts";
 import type { GeojsonMapSchema } from "@/types/global.d";
 
 interface Props {
-	params: z.infer<typeof GeojsonMapSchema>["params"];
+	params: Zod.infer<typeof GeojsonMapSchema>["params"];
 }
 
 const props = defineProps<Props>();
@@ -26,9 +26,10 @@ function titleCase(s: string) {
 		.replace(/^[-_]*(.)/, (_, c) => c.toUpperCase()) // Initial char (after -/_)
 		.replace(/[-_]+(.)/g, (_, c) => ` ${c.toUpperCase()}`); // First char after each -/_
 }
-const isMenuOpen = ref(categories.value!.map(() => false));
 
-const { wibarabTriggers } = useWibarabTrigers();
+const { wibarabTriggers } = useWibarabTriggers();
+
+const isMenuOpen = ref(categories.value!.map(() => false));
 </script>
 
 <template>

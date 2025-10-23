@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/vue-query";
-import type { z } from "zod";
+import type Zod from "zod";
 
 import type { Dict } from "@/types/global.d";
 
@@ -7,7 +7,7 @@ const api = useApiClient();
 
 export function useDictsEntries(
 	params: {
-		dictId: z.infer<typeof Dict>["id"];
+		dictId: Zod.infer<typeof Dict>["id"];
 		queryParams: Parameters<typeof api.restvle.getDictDictNameEntries>[1];
 	},
 	options?: { enabled?: boolean },

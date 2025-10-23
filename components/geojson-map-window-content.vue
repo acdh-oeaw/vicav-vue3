@@ -1,13 +1,13 @@
 <script lang="ts" setup>
 import type { Feature, Point } from "geojson";
-import type { z } from "zod";
+import type Zod from "zod";
 
 import type { MarkerProperties } from "@/lib/api-client";
 import { useGeojsonStore } from "@/stores/use-geojson-store.ts";
 import type { GeojsonMapSchema, WindowItem } from "@/types/global.d";
 
 interface Props {
-	params: z.infer<typeof GeojsonMapSchema>["params"];
+	params: Zod.infer<typeof GeojsonMapSchema>["params"];
 }
 
 const props = defineProps<Props>();
@@ -76,7 +76,7 @@ function onMarkerClick(feature: Feature) {
 			</Centered>
 			<GeojsonMapLegend
 				v-if="filteredMarkers"
-				class="absolute bottom-0 left-0"
+				class="absolute bottom-0 left-0 max-h-full"
 				:params="params"
 			></GeojsonMapLegend>
 			<GeojsonMapControls class="absolute top-0 left-0"></GeojsonMapControls>

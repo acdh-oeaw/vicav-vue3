@@ -80,3 +80,26 @@ pnpm prune
 - Merge `main` into `develop`
 - Revert the commit `Limit actions to production ready`
 - `git push`
+
+## Telemetry
+
+This project is instrumented with OpenTelemetry to collect traces and metrics. You can configure the
+exporter endpoint via the `OTEL_EXPORTER_OTLP_ENDPOINT` environment variable in `.env.local`. See
+`.env.example` for reference.
+
+For a local setup, you can use the Jaeger all-in-one Docker image:
+
+```bash
+docker run --rm --name jaeger \
+   -e COLLECTOR_ZIPKIN_HOST_PORT=:9411 \
+   -p 16686:16686 \
+   -p 4317:4317 \
+   -p 4318:4318 \
+   -p 14250:14250 \
+   -p 14268:14268 \
+   -p 14269:14269 \
+   -p 9411:9411 \
+   jaegertracing/all-in-one:latest
+```
+
+Then set `OTEL_EXPORTER_OTLP_ENDPOINT=http://127.0.0.1:4317` in your `.env.local` file.

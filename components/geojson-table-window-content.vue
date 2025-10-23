@@ -1,10 +1,20 @@
 <script lang="ts" setup>
 import type { ColumnDef, Row, Table } from "@tanstack/vue-table";
-import { parse, test } from "liqe";
+import { test } from "liqe";
 import { Info } from "lucide-vue-next";
 
 import { useGeojsonStore } from "@/stores/use-geojson-store.ts";
-import type { FeatureType, MarkerType } from "@/types/global";
+import type { FeatureType, ListMapWindowItem, MarkerType } from "@/types/global";
+
+interface Props {
+	params: ListMapWindowItem["params"];
+}
+const props = defineProps<Props>();
+const { params } = toRefs(props);
+
+const queryString: Ref<string> = ref(params.value.queryString);
+
+const emit = defineEmits(["updateQueryParam"]);
 
 const GeojsonStore = useGeojsonStore();
 const { addWindow, findWindowByTypeAndParam } = useWindowsStore();
@@ -15,7 +25,7 @@ const { fetchedData, tables, showAllDetails } = storeToRefs(GeojsonStore);
 const { buildFeatureTaxonomy } = GeojsonStore;
 const { data: projectData } = useProjectInfo();
 const { createColumnDefs } = useColumnGeneration();
-const { getTraversedAST } = useFilterParser();
+const { getTraversedAST, parse } = useFilterParser();
 
 const columns = computed(() => {
 	const allFeatureNames = fetchedData.value.get(url)?.properties.column_headings;
@@ -95,14 +105,22 @@ function onColumnFilterChange(columnFilters: Array<{ id: string; value: Map<stri
 			if (!markers.value.has(buildFeatureValueId(column.id, key))) addDefaultMarker(column.id, key);
 	});
 }
+const { parseSearchString, normalizeOperators } = useFilterParser();
 
 const tableRef = ref<Table<FeatureType>>();
 function registerTable(table: Table<FeatureType>) {
 	buildFeatureTaxonomy(
 		projectData.value?.projectConfig?.staticData?.table?.[0] as Record<string, never>,
 	);
+	if (queryString.value && queryString.value.length > 0) {
+		parseSearchString(queryString.value, table as Table<unknown>);
+		table.setGlobalFilter(normalizeOperators(queryString.value));
+	}
+
 	tables.value.set(url, table);
+	triggerRef(tables);
 	tableRef.value = table;
+
 	const mw = findWindowByTypeAndParam("GeojsonMap", "url", url);
 	if (mw) {
 		mw.winbox.focus();
@@ -124,6 +142,12 @@ function registerTable(table: Table<FeatureType>) {
 
 function onRowClick(row: Row<FeatureType>) {
 	row.toggleSelected();
+}
+
+function updateQueryParams(newFilter: string) {
+	queryString.value = newFilter;
+	params.value.queryString = queryString.value;
+	emit("updateQueryParam", queryString.value);
 }
 </script>
 
@@ -162,6 +186,7 @@ function onRowClick(row: Row<FeatureType>) {
 			:items="fetchedData.get(url)?.features as Array<never>"
 			:min-header-depth="2"
 			:visibility-change-fn="onVisibilityChange"
+			@global-filter-change="updateQueryParams"
 			@row-click="onRowClick"
 			@table-ready="registerTable"
 		></DataTable>

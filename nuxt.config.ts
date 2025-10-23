@@ -1,6 +1,7 @@
 import { fileURLToPath } from "node:url";
 
 import tailwindcss from "@tailwindcss/vite";
+import { defineNuxtConfig } from "nuxt/config";
 
 export default defineNuxtConfig({
 	alias: {
@@ -34,8 +35,23 @@ export default defineNuxtConfig({
 	},
 
 	imports: { dirs: ["./config/"] },
-	modules: ["@pinia/nuxt", "@vueuse/nuxt", "@nuxt/eslint", "@nuxt/test-utils/module", "nuxt-svgo"],
-	nitro: { compressPublicAssets: true },
+	modules: [
+		"@pinia/nuxt",
+		"@vueuse/nuxt",
+		"@nuxt/eslint",
+		"@nuxt/test-utils/module",
+		"nuxt-svgo",
+		"nitro-opentelemetry",
+	],
+	nitro: {
+		compressPublicAssets: true,
+		otel: {
+			preset: {
+				name: "custom",
+				filePath: "./server/instrumentation.ts",
+			},
+		},
+	},
 
 	postcss: {
 		plugins: {
@@ -50,19 +66,27 @@ export default defineNuxtConfig({
 	},
 
 	runtimeConfig: {
-		BOTS: process.env.BOTS,
+		// The values here are defaults or sample values.
+		// They are magically replaced with environment variables at runtime.
+		// Variables need to start with NUXT_ or NUXT_PUBLIC_.
+		// See https://nuxt.com/docs/guide/runtime-config
+		BOTS: "disabled",
+		apiBaseUrl: undefined,
 		public: {
-			apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL,
-			appBaseUrl: process.env.PUBLIC_URL ?? process.env.NUXT_PUBLIC_APP_BASE_URL,
-			mapTileLayerAttribution: process.env.NUXT_PUBLIC_MAP_TILE_LAYER_ATTRIBUTION,
-			mapTileLayerUrl: process.env.NUXT_PUBLIC_MAP_TILE_LAYER_URL,
-			matomoBaseUrl: process.env.NUXT_PUBLIC_MATOMO_BASE_URL,
-			matomoId: process.env.NUXT_PUBLIC_MATOMO_ID,
-			redmineId: process.env.NUXT_PUBLIC_REDMINE_ID,
-			teiBaseurl: process.env.NUXT_PUBLIC_TEI_BASEURL,
-			apiUser: process.env.NUXT_PUBLIC_API_USER,
-			apiPass: process.env.NUXT_PUBLIC_API_PASS,
-			currentGitSha: process.env.NUXT_PUBLIC_CURRENT_GIT_SHA,
+			apiBaseUrl: "https://vicav-dev.acdh.oeaw.ac.at",
+			appBaseUrl: "http://localhost:3000",
+			mapTileLayerAttribution:
+				"https://api.mapbox.com/styles/v1/acdh-ch-tech/cllp2n7aj004a01r7fl637bq1/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoiYWNkaC1jaC10ZWNoIiwiYSI6ImNsZXpnMDdpODBlc2Q0MGwzOGZmaWNveDgifQ.yYx8e9PdsDl-NzOpGXAL7g",
+			mapTileLayerUrl:
+				'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery &copy; <a href="http://mapbox.com">Mapbox</a>',
+			matomoBaseUrl: "",
+			matomoId: "",
+			redmineId: "",
+			teiBaseurl: "https://github.com/acdh-oeaw/vicav-content",
+			apiUser: undefined,
+			apiPass: undefined,
+			// This variable is replaced with the environment variable NUXT_PUBLIC_CURRENT_GIT_SHA at build time.
+			currentGitSha: process.env.NUXT_PUBLIC_CURRENT_GIT_SHA ?? "development",
 		},
 	},
 	svgo: {
@@ -104,6 +128,7 @@ export default defineNuxtConfig({
 			},
 		},
 	},
+
 	future: {
 		compatibilityVersion: 4,
 	},

@@ -1,16 +1,17 @@
 <script setup lang="ts">
 import { Info } from "lucide-vue-next";
-import type { z } from "zod";
+import type Zod from "zod";
 
 import type { CorpusSearchHits } from "@/lib/api-client";
 import type { CorpusQuerySchema } from "@/types/global";
 
 const api = useApiClient();
-const { simpleItems } = useTEIHeaders();
-const props = defineProps<{ params: z.infer<typeof CorpusQuerySchema>["params"] }>();
+//const { simpleItems } = useTEIHeaders();
+const props = defineProps<{ params: Zod.infer<typeof CorpusQuerySchema>["params"] }>();
 const queryString = ref(props.params.queryString);
-const hits = ref<Array<CorpusSearchHits & { label?: string }> | undefined>([]);
+const hits = ref<Array<CorpusSearchHits> | undefined>([]);
 const showHelp = ref<boolean>(false);
+
 async function searchCorpus() {
 	if (words.value.length > 0) queryString.value = `[word="${words.value.join("|")}"]`;
 
@@ -23,11 +24,15 @@ async function searchCorpus() {
 		console.error(result.error);
 		return;
 	}
-	hits.value = result.data.hits;
-	hits.value?.forEach((hit) => {
-		const teiHeader = simpleItems.value.find((header) => header.id === hit.doc);
-		hit.label = teiHeader?.label;
-	});
+	if (Array.isArray(result.data.hits)) {
+		hits.value = result.data.hits;
+		/*
+		hits.value?.forEach((hit) => {
+			const teiHeader = simpleItems.value.find((header) => header.id === hit.doc);
+			hit.label = teiHeader?.label;
+		});
+		 */
+	}
 }
 
 const openNewWindowFromAnchor = useAnchorClickHandler();
@@ -63,8 +68,9 @@ const words: Ref<Array<string>> = ref([]);
 			<label class="mb-2 flex w-48! p-0 font-bold" for="word_tags">
 				<span class="grow">Search for exact words</span>
 				<a href="#" title="More information" @click="showHelp = true"
-					><span class="hidden">More information</span><Info class="size-4"
-				/></a>
+					><span class="hidden">More information</span>
+					<Info class="size-4" />
+				</a>
 			</label>
 			<div v-if="showHelp" class="flex items-center gap-2">
 				<span class="text-gray-500"
@@ -94,7 +100,8 @@ const words: Ref<Array<string>> = ref([]);
 				<span class="grow">Advanced search</span>
 			</label>
 			<div class="mb-2 flex items-center gap-2">
-				<Info class="size-4" /><span class="text-gray-500"
+				<Info class="size-4" />
+				<span class="text-gray-500"
 					>Enter a proper CQL query with exact transliateration characters. (<a
 						class="content-center"
 						href="https://howto.acdh.oeaw.ac.at/de/resources/corpus-query-language-im-austrian-media-corpus"
@@ -131,7 +138,6 @@ const words: Ref<Array<string>> = ref([]);
 					<td class="p-0">
 						<a
 							:data-hits="hit.docHits"
-							:data-label="hit.label"
 							data-target-type="CorpusText"
 							:data-text-id="hit.doc"
 							:data-u="hit.u"

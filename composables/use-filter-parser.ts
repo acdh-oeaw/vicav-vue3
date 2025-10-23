@@ -3,11 +3,33 @@ import {
 	type LiqeQuery,
 	type LogicalExpressionToken,
 	type ParenthesizedExpressionToken,
-	parse,
+	parse as liqe_parse,
+	SyntaxError,
 	type TagToken,
+	type UnaryOperatorToken,
 } from "liqe";
 
 const { AND_OPERATOR } = useAdvancedQueries();
+
+function normalizeOperators(input: string): string {
+	// Only replace AND/OR/NOT outside of quoted values
+	return input
+		.split(/(".*?")/)
+		.map((part, i) =>
+			i % 2 === 0 ? part.replace(/\b(?:and|or|not)\b/gi, (op) => op.toUpperCase()) : part,
+		)
+		.join("");
+}
+
+function normalizeQuantifiers(input: string): string {
+	return input.replaceAll(":ANY", ":*");
+}
+
+function parse(query: string) {
+	let normalized = normalizeOperators(query);
+	normalized = normalizeQuantifiers(normalized);
+	return liqe_parse(normalized);
+}
 
 function parseSearchString(searchString: string, table: Table<unknown>) {
 	const ast = parse(searchString);
@@ -26,7 +48,15 @@ function setColumnFilter(columnId: string, value: string, table: Table<unknown>)
 	const filterValue = table.getColumn(columnId)?.getFilterValue() as
 		| Map<string, unknown>
 		| undefined;
-	filterValue?.set(value, 1);
+
+	if (value === "*") {
+		const allColValues = [
+			...new Set(table.getCoreRowModel().flatRows.flatMap((row) => row.getValue(columnId))),
+		];
+		allColValues.forEach((val) => filterValue?.set(val as string, 1));
+	} else {
+		filterValue?.set(value, 1);
+	}
 	table.getColumn(columnId)?.setFilterValue(filterValue);
 }
 
@@ -49,7 +79,7 @@ function handleAndExpression(ast: LiqeQuery) {
 	}
 }
 
-function traverseAST(ast: LiqeQuery): Array<{ column: string; value: string }> {
+function traverseAST(ast: LiqeQuery): Array<{ column: string; value: string; negated?: boolean }> {
 	switch (ast.type) {
 		case "Tag": {
 			const { column, value } = getColumnAndValueFromTagExpression(ast);
@@ -66,8 +96,10 @@ function traverseAST(ast: LiqeQuery): Array<{ column: string; value: string }> {
 		case "ParenthesizedExpression": {
 			return traverseAST(ast.expression);
 		}
+		case "UnaryOperator": {
+			return traverseAST(ast.operand);
+		}
 		case "EmptyExpression":
-		case "UnaryOperator":
 		default:
 	}
 	return [];
@@ -90,6 +122,15 @@ function constructLocicalExpression(
 		left: left,
 		right: right,
 		location: { start: -1, end: -1 },
+	};
+}
+
+function constructNegatedExpression(ast: LiqeQuery): UnaryOperatorToken {
+	return {
+		type: "UnaryOperator",
+		operator: "NOT",
+		operand: ast,
+		location: ast.location,
 	};
 }
 
@@ -129,8 +170,22 @@ function normalizeASTtoDNF(ast: LiqeQuery): Exclude<LiqeQuery, ParenthesizedExpr
 				);
 			}
 		}
+		case "UnaryOperator": {
+			if (ast.operand.type === "Tag") return ast;
+			if (
+				ast.operand.type === "ParenthesizedExpression" &&
+				ast.operand.expression.type === "LogicalExpression"
+			) {
+				const operator = ast.operand.expression.operator.operator;
+				const newLeft = constructNegatedExpression(ast.operand.expression.left);
+				const newRight = constructNegatedExpression(ast.operand.expression.right);
+				return normalizeASTtoDNF(
+					constructLocicalExpression(operator === "OR" ? "AND" : "OR", newLeft, newRight),
+				);
+			}
+			return ast;
+		}
 		case "EmptyExpression":
-		case "UnaryOperator":
 		default: {
 			return ast;
 		}
@@ -224,6 +279,21 @@ function syncGlobalAndColumnFilters(table: Table<unknown>) {
 	let currentGlobalFilter = String(table.getState().globalFilter ?? "");
 	const assembledColumnFilters = columnFilters
 		.map((column) => {
+			const allColValues = [
+				...new Set(table.getCoreRowModel().flatRows.flatMap((row) => row.getValue(column.id))),
+			];
+			if (allColValues.every((val) => column.value.has(val as string))) {
+				return [
+					`${column.id}:ANY `,
+					...[...column.value.entries()]
+						.filter(([key, _value]) => {
+							return !allColValues.includes(key);
+						})
+						.map(([key, _value]) => {
+							return assembleFilter(column.id, key);
+						}),
+				];
+			}
 			return [...column.value.entries()].map(([key, _value]) => {
 				return assembleFilter(column.id, key);
 			});
@@ -234,8 +304,53 @@ function syncGlobalAndColumnFilters(table: Table<unknown>) {
 	table.setGlobalFilter(currentGlobalFilter);
 }
 
+function addMetaFilter(originalQuery: string, metaKey: string, metaValue: string | Array<string>) {
+	let newFilter: string;
+	if (Array.isArray(metaValue))
+		newFilter = metaValue.map((val) => `${metaKey}:${val}`).join(" OR ");
+	else newFilter = `${metaKey}:${metaValue}`;
+	return `${originalQuery} AND ${newFilter}`.replaceAll(/ {2,}/g, " ");
+}
+
 function getTraversedAST(query: string) {
 	return traverseAST(normalizeASTtoDNF(parse(query)));
+}
+
+function findImplicitBooleanOperator(ast: LiqeQuery): boolean {
+	if (ast.type === "LogicalExpression") {
+		return (
+			ast.operator.type === "ImplicitBooleanOperator" ||
+			findImplicitBooleanOperator(ast.left) ||
+			findImplicitBooleanOperator(ast.right)
+		);
+	}
+	return false;
+}
+
+function validateQuery(query: string): { warnings: Array<string>; isValid: boolean } {
+	const operatorRegex = /\bAND|OR|NOT\b/g;
+	const parenthesesRegex = /\(.*?\)/g;
+
+	const warnings: Array<string> = [];
+	let isValid = false;
+	try {
+		if (
+			new Set([...normalizeOperators(query).matchAll(operatorRegex)].map((e) => e[0])).size > 1 &&
+			[...normalizeOperators(query).matchAll(parenthesesRegex)].length === 0
+		)
+			warnings.push("Consider using parentheses to group your query (e.g. (A AND B) OR C)");
+		const ast = parse(normalizeOperators(query));
+		if (findImplicitBooleanOperator(ast))
+			warnings.push("If no operator (AND/OR) is specified, AND is used implicitly.");
+		isValid = true;
+	} catch (err) {
+		if (err instanceof SyntaxError)
+			warnings.push(
+				`The query contains a syntax error at line ${String(err.line)} position ${String(err.column)}`,
+			);
+		else warnings.push("The current query is incomplete");
+	}
+	return { warnings, isValid };
 }
 
 export function useFilterParser() {
@@ -245,5 +360,9 @@ export function useFilterParser() {
 		matchQueryStringAndFilters,
 		syncGlobalAndColumnFilters,
 		getTraversedAST,
+		validateQuery,
+		normalizeOperators,
+		addMetaFilter,
+		parse,
 	};
 }
