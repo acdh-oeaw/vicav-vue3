@@ -24,7 +24,7 @@ jobs:
       APP_NAME: nuxt-vicav
       # This together with the branch name is also used as the namespace to deploy to
       APP_ROOT: "/"
-      herokuish_base_image: ghcr.io/acdh-oeaw/herokuish-for-cypress/main:latest-22
+      herokuish_base_image: ghcr.io/acdh-oeaw/herokuish-for-cypress/main:latest-24
     # You should not need to have to change anything below this line
     #-----------------------------------------------------------------------------------------------------
     steps:
