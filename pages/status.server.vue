@@ -18,14 +18,19 @@ onServerPrefetch(async () => {
 	 */
 	await suspense().catch(noop);
 });
+
+const env = useRuntimeConfig();
 </script>
 
 <template>
 	<pre>
 Backend response:
-ETag: {{ data?.ETag ?? "" }}
-baseURIPublic: {{ data?.projectConfig?.baseURIPublic ?? "" }}
-took: {{ data?.took ?? "" }}
+  ETag: {{ data?.ETag ?? "" }}
+  baseURIPublic: {{ data?.projectConfig?.baseURIPublic ?? "" }}
+  took: {{ data?.took ?? "" }}
+  version: {{ data?.projectConfig?.version?.backend ?? "" }}
+Frontend:
+  version: {{ env.public.currentGitSha ?? "" }}
 	</pre
 	>
 </template>
