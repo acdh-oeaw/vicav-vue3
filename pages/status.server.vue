@@ -1,10 +1,23 @@
 <script setup lang="ts">
+import { noop } from "@acdh-oeaw/lib";
+
 definePageMeta({
 	title: "Status",
 	layout: "plain",
 });
 
-const { data } = useProjectInfo();
+const { data, suspense } = useProjectInfo();
+// copied from layouts/default.vue
+// without this the server does not wait for the data to be ready before
+// returning the rendered page.
+// TODO: find a better way to do this when using useProjectInfo
+onServerPrefetch(async () => {
+	/**
+	 * @see https://github.com/TanStack/query/issues/6606
+	 * @see https://github.com/TanStack/query/issues/5976
+	 */
+	await suspense().catch(noop);
+});
 </script>
 
 <template>
