@@ -23,28 +23,35 @@ const props = defineProps<{
 	column: Column<unknown>;
 	table: Table<unknown>;
 }>();
+
+const rowData = computed(() => props.table.getCoreRowModel().flatRows);
 const facets = toRef(
-	computed(() => [...props.column.getFacetedUniqueValues()]?.sort((a, b) => b[1] - a[1])),
+	computed(() => {
+		const mappedRowData = rowData.value.flatMap((row) =>
+			row.getValue(props.column.id),
+		) as Array<string>;
+		const facetedData = mappedRowData.reduce((prev: Record<string, number>, current: string) => {
+			if (!(current in prev)) prev[current] = 0;
+			prev[current]!++;
+			return prev;
+		}, {});
+		return Object.entries(facetedData).sort((a, b) => b[1] - a[1]);
+	}),
 );
-const selectedCombinedFilters = computed(
-	() =>
-		new Map(
-			[
-				...(props.column.getFilterValue()
-					? (props.column.getFilterValue() as Map<string, number>).keys()
-					: []),
-			]
-				.filter((key) => key.includes(AND_OPERATOR))
-				.map((key) => [
-					key,
-					getCombinedFilterOption(
-						props.column,
-						props.column.getFacetedRowModel(),
-						key.split(AND_OPERATOR),
-					),
-				]),
-		),
-);
+const selectedCombinedFilters = computed(() => {
+	return new Map(
+		[
+			...(props.column.getFilterValue()
+				? (props.column.getFilterValue() as Map<string, number>).keys()
+				: []),
+		]
+			.filter((key) => key.includes(AND_OPERATOR))
+			.map((key) => [
+				key,
+				getCombinedFilterOption(props.column, rowData.value, key.split(AND_OPERATOR)),
+			]),
+	);
+});
 
 const {
 	handleSubmit,
@@ -82,7 +89,7 @@ watch(
 					return;
 				filterSuggestion.value = getCombinedFilterOption(
 					props.column,
-					props.column.getFacetedRowModel(),
+					rowData.value,
 					filteredFormValues,
 				);
 			}
@@ -131,11 +138,7 @@ function addCombinedFilter(combinedValue: string, checked: boolean) {
 		);
 		selectedCombinedFilters.value.set(
 			combinedValue,
-			getCombinedFilterOption(
-				props.column,
-				props.column.getFacetedRowModel(),
-				combinedValue.split(AND_OPERATOR),
-			),
+			getCombinedFilterOption(props.column, rowData.value, combinedValue.split(AND_OPERATOR)),
 		);
 		filterSuggestion.value = null;
 	} else {

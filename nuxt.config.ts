@@ -116,6 +116,12 @@ export default defineNuxtConfig({
 		plugins: [tailwindcss()],
 	},
 
+	vue: {
+		compilerOptions: {
+			whitespace: "preserve",
+		},
+	},
+
 	typescript: {
 		shim: false,
 		strict: true,

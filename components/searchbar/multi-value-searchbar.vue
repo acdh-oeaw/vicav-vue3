@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import type { Table } from "@tanstack/vue-table";
 import { computedWithControl } from "@vueuse/core";
+import { ChevronDown, FunnelPlus, X } from "lucide-vue-next";
 import {
 	ComboboxAnchor,
+	ComboboxCancel,
 	ComboboxContent,
 	ComboboxInput,
 	ComboboxItem,
@@ -12,7 +14,7 @@ import {
 	type ReferenceElement,
 	useFilter,
 } from "reka-ui";
-import { computed, ref, watch, watchEffect } from "vue";
+import { computed, nextTick, ref, watch, watchEffect } from "vue";
 
 import {
 	getAnchorRect,
@@ -30,7 +32,7 @@ const props = defineProps<{
 	triggers: TriggerMap;
 }>();
 
-const { parseSearchString } = useFilterParser();
+const { parseSearchString, validateQuery, normalizeOperators, addMetaFilter } = useFilterParser();
 
 const { contains } = useFilter({ sensitivity: "base" });
 
@@ -129,7 +131,7 @@ function handleSelect(ev: CustomEvent) {
 
 function submitSearch() {
 	parseSearchString(value.value, props.table);
-	props.table.setGlobalFilter(value.value);
+	props.table.setGlobalFilter(normalizeOperators(value.value));
 }
 
 onMounted(() => {
@@ -143,10 +145,19 @@ watch(
 		value.value = newVal;
 	},
 );
+
+const queryWarnings = computed(() => validateQuery(value.value));
+
+const { metaInfo } = useWibarabTriggers();
+const isMetaMenuOpen = ref([...metaInfo.value.keys()].map(() => false));
+function addMetaFilterToQuery(key: string, val: string) {
+	value.value = addMetaFilter(value.value, key, val);
+	submitSearch();
+}
 </script>
 
 <template>
-	<div class="grid w-full grid-cols-[1fr_auto] gap-2">
+	<div class="grid w-full grid-cols-[1fr_auto_auto] gap-x-2">
 		<ComboboxRoot
 			v-model:open="open"
 			class="flex w-full flex-col"
@@ -155,29 +166,46 @@ watch(
 		>
 			<Label class="sr-only text-sm font-semibold" for="search"> search </Label>
 
-			<ComboboxInput
-				id="search"
-				ref="textareaRef"
-				v-model="value"
-				as="input"
-				autocomplete="off"
-				class="w-full rounded-md border border-muted p-2"
-				placeholder="Click to get a list of available features"
-				rows="5"
-				@input="handleChange"
-				@keydown.enter="
-					(ev: KeyboardEvent) => {
-						if (open) ev.preventDefault();
-					}
-				"
-				@keydown.left.right="open = false"
-				@pointerdown="
-					(e: PointerEvent) => {
-						handleChange(e);
-						// open = false;
-					}
-				"
-			/>
+			<div class="relative w-full rounded-md border border-muted flex">
+				<ComboboxInput
+					id="search"
+					ref="textareaRef"
+					v-model="value"
+					as="input"
+					autocomplete="off"
+					class="p-2 w-full"
+					placeholder="Click to get a list of available features"
+					rows="5"
+					@input="handleChange"
+					@keydown.enter="
+						(ev: KeyboardEvent) => {
+							if (open) {
+								ev.preventDefault();
+							} else {
+								submitSearch();
+							}
+						}
+					"
+					@keydown.left.right="open = false"
+					@pointerdown="
+						(e: PointerEvent) => {
+							handleChange(e);
+							// open = false;
+						}
+					"
+				/>
+				<ComboboxCancel as-child>
+					<Button
+						class="p-2"
+						variant="ghost"
+						@click="
+							value = '';
+							submitSearch();
+						"
+						><X class="size-4"></X
+					></Button>
+				</ComboboxCancel>
+			</div>
 			<ComboboxAnchor :reference="reference" />
 
 			<ComboboxPortal>
@@ -188,17 +216,67 @@ watch(
 					position="popper"
 					side="bottom"
 				>
-					<ComboboxItem
-						v-for="item in list"
-						:key="String(item.value)"
-						class="flex cursor-default rounded px-2 py-1 data-highlighted:bg-muted"
-						:value="item.value"
-						@select="handleSelect"
-					>
-						<span class="truncate">{{ item.displayValue }}</span>
-					</ComboboxItem>
+					<template v-for="(item, idx) in list" :key="String(item.value)">
+						<ComboboxItem
+							class="flex cursor-default rounded px-2 py-1 data-highlighted:bg-muted"
+							:value="item.value"
+							@select="handleSelect"
+						>
+							<span class="truncate">{{ item.displayValue }}</span>
+						</ComboboxItem>
+						<ComboboxSeparator
+							v-if="item.value.startsWith('ft') && !list[idx + 1]?.value.startsWith('ft')"
+							><span>&nbsp;</span></ComboboxSeparator
+						>
+					</template>
 				</ComboboxContent>
-			</ComboboxPortal> </ComboboxRoot
-		><Button class="self-end" variant="outline" @click="submitSearch">Search</Button>
+			</ComboboxPortal>
+		</ComboboxRoot>
+		<DropdownMenu>
+			<DropdownMenuTrigger as-child
+				><Button
+					class="self-end"
+					:disabled="!(value.length > 0 && queryWarnings.isValid)"
+					variant="outline"
+					@click="submitSearch"
+					><FunnelPlus class="size-4" /></Button
+			></DropdownMenuTrigger>
+
+			<DropdownMenuContent class="w-52 max-h-[var(--radix-dropdown-menu-content-available-height)]">
+				<Collapsible
+					v-for="([key, val], idx) in metaInfo"
+					:key="key"
+					v-model:open="isMetaMenuOpen[idx]"
+				>
+					<CollapsibleTrigger class="flex w-full items-center gap-1 p-2 text-sm">
+						<span class="capitalize">{{ key }}</span>
+						<ChevronDown
+							class="size-4"
+							:class="isMetaMenuOpen[idx] ? 'rotate-180' : ''"
+						></ChevronDown>
+					</CollapsibleTrigger>
+					<CollapsibleContent>
+						<Button
+							v-for="entry in val.toSorted((a, b) => a.displayValue.localeCompare(b.displayValue))"
+							:key="entry.value"
+							class="text-sm text-start font-normal w-full p-1 pl-4 h-auto whitespace-normal justify-start"
+							variant="ghost"
+							@click="() => addMetaFilterToQuery(key, entry.value)"
+							>{{ entry.displayValue }}</Button
+						>
+					</CollapsibleContent>
+				</Collapsible>
+			</DropdownMenuContent>
+		</DropdownMenu>
+		<Button class="self-end" variant="outline" @click="submitSearch">Search</Button>
+		<div v-if="queryWarnings.warnings.length" class="text-xs text-orange-700 mt-1 ml-1">
+			<div v-for="(warning, idx) in queryWarnings.warnings" :key="idx">{{ warning }}</div>
+		</div>
+		<div
+			v-else-if="!table.getFilteredRowModel().flatRows.length"
+			class="text-xs text-on-muted mt-1 ml-1"
+		>
+			Your query returned no results.
+		</div>
 	</div>
 </template>

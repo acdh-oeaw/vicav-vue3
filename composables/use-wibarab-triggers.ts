@@ -25,9 +25,15 @@ function getFeatureList() {
 const features = computed(() => getFeatureList());
 
 function getValueList(columns: typeof features.value) {
+	const table = tables.value.get(url);
+	if (!table) return [];
 	return columns
 		.map((item) =>
-			[...item.col.getFacetedUniqueValues().keys()].map((key: string) => ({
+			(
+				[
+					...new Set(table.getCoreRowModel().flatRows.flatMap((row) => row.getValue(item.col.id))),
+				] as Array<string>
+			).map((key: string) => ({
 				value: `"${key}"`,
 				displayValue: key,
 			})),
@@ -65,10 +71,12 @@ function getMetaInfoList() {
 	return new Map(
 		[...metaInfo.entries()].map(([key, val]) => [
 			key,
-			[...val].map((v) => ({
-				value: `"${v}"`,
-				displayValue: v,
-			})),
+			[{ value: "ANY", displayValue: "*Any*" }].concat(
+				[...val].map((v) => ({
+					value: `"${v}"`,
+					displayValue: v,
+				})),
+			),
 		]),
 	);
 }
@@ -83,7 +91,13 @@ const wibarabTriggers = computed(() => {
 	const map = {
 		'" ': operators,
 		") ": operators,
-		...Object.fromEntries(features.value.map((f) => [f.value, getValueList([f])])),
+		"ANY ": operators,
+		...Object.fromEntries(
+			features.value.map((f) => [
+				f.value,
+				[{ value: "ANY", displayValue: "*Any*" }].concat(getValueList([f])),
+			]),
+		),
 		...Object.fromEntries([...metaInfo.value.entries()].map(([key, val]) => [`${key}:`, val])),
 		"": [...features.value, ...metaInfoKeys.value],
 	};
@@ -91,6 +105,6 @@ const wibarabTriggers = computed(() => {
 	return new Map(Object.entries(map));
 });
 
-export function useWibarabTrigers() {
-	return { wibarabTriggers };
+export function useWibarabTriggers() {
+	return { wibarabTriggers, metaInfo };
 }
