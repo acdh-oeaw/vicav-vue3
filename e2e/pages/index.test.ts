@@ -89,13 +89,7 @@ test.describe("home page", () => {
 		await page.goto("/");
 		switch (process.env.NUXT_PUBLIC_API_BASE_URL) {
 			case "https://vicav-dev.acdh.oeaw.ac.at":
-				await page
-					.getByRole("contentinfo")
-					.locator("div")
-					.filter({ hasText: "© 2025 ACDH-CH |Imprint|" })
-					.locator("div")
-					.first()
-					.hover();
+				await page.getByRole("contentinfo").first().hover();
 				await expect(page.getByText("CONTACT")).toBeVisible();
 				break;
 		}
