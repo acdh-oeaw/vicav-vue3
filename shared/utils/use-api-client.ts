@@ -88,12 +88,12 @@ async function fetchWithETag(
 		10,
 	);
 
-	// Set timeout to delete cache after maxAge
+	// Set timeout to delete cached data after two times maxAge
 	setTimeout(
 		() => {
 			deleteFromCacheIfExpired(url);
 		},
-		((maxAge > 0 ? maxAge : 5) + 5) * 1000,
+		(maxAge > 0 ? maxAge : 5) * 2 * 1000,
 	);
 
 	if (response.status === 304) {
