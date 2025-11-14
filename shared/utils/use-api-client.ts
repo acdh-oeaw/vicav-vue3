@@ -17,18 +17,28 @@ function basicSecurityWorker(securityData: userPass | null): RequestParams | und
 }
 
 // cache stores for each URL a mapping of ETag to response body
-const cache = new Map<string, Record<string, unknown>>();
-const expires = new Map<string, Record<string, Date>>();
+const cache = new Map<string, { ETag: string; body: unknown; expiresAt: Date }>();
 
 async function fetchWithETag(
 	input: globalThis.Request | URL | string,
 	init?: RequestInit,
 ): Promise<Response> {
 	const url = input instanceof Request ? input.url : input instanceof URL ? input.href : input;
-	const cachedETag = cache.get(url);
-	const ifNoneMatchHeader = cachedETag
+	const cachedEntry = cache.get(url);
+
+	if (cachedEntry && new Date() < cachedEntry.expiresAt) {
+		return new Response(JSON.stringify(cachedEntry.body), {
+			status: 200,
+			headers: {
+				"X-Cache": "fetchWithETag HIT",
+				"X-Cache-Expires": cachedEntry.expiresAt.toISOString(),
+			},
+		});
+	}
+
+	const ifNoneMatchHeader = cachedEntry?.ETag
 		? {
-				"If-None-Match": Object.keys(cachedETag)[0]?.replace(/--gzip$/, ""),
+				"If-None-Match": cachedEntry.ETag.replace(/--gzip$/, ""),
 			}
 		: {};
 	const requestParams = {
@@ -42,10 +52,9 @@ async function fetchWithETag(
 		// Request mit ETag im If-None-Match Header
 		response = await fetch(input, requestParams);
 	} catch (error) {
-		console.warn("Fetch with ETag failed, trying to return cached version...", error);
-		const body = cache.get(url);
-		if (body && Object.keys(body).length >= 1) {
-			return new Response(JSON.stringify(Object.values(body)[0]), { status: 200 });
+		if (cachedEntry) {
+			console.warn("Fetch with ETag failed, returning cached version...", error);
+			return new Response(JSON.stringify(cachedEntry.body), { status: 200 });
 		} else {
 			throw new Error(
 				`Could not fetch and cache with ETag! ${error instanceof Error ? error.message : String(error)}`,
@@ -61,37 +70,48 @@ async function fetchWithETag(
 		10,
 	);
 
+	// Set timeout to delete cache after maxAge
+	setTimeout(
+		() => {
+			deleteFromCacheIfExpired(url);
+		},
+		((maxAge > 0 ? maxAge : 5) + 5) * 1000,
+	);
+
 	if (response.status === 304) {
-		if (cachedETag && Object.keys(cachedETag).length === 1) {
-			const body = Object.values(cachedETag)[0];
-			if (body) return new Response(JSON.stringify(body), { status: 200 });
+		if (cachedEntry) {
+			cachedEntry.expiresAt = new Date();
+			cachedEntry.expiresAt.setSeconds(
+				cachedEntry.expiresAt.getSeconds() + (maxAge > 0 ? maxAge : 5),
+			);
+			if (cachedEntry.body) return new Response(JSON.stringify(cachedEntry.body), { status: 200 });
 		}
 		throw new Error(`Cache error!`);
 	} else if (response.ok) {
 		if (currentETag) {
 			// response body can't be typed at this point
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-			cache.set(url, { [currentETag]: await response.clone().json() });
-			if (maxAge > 0) {
-				// CoPilot suggested this part
-				const expireDate = new Date();
-				expireDate.setSeconds(expireDate.getSeconds() + maxAge);
-				expires.set(url, { [currentETag]: expireDate });
-				// Set timeout to delete cache after maxAge
-				setTimeout(() => {
-					// eslint-disable-next-line no-console
-					console.info(`Cache for ${url} expired after ${maxAge.toString()} seconds, deleting...`);
-					const exp = expires.get(url);
-					if (exp && Object.values(exp)[0] && new Date() >= Object.values(exp)[0]!) {
-						cache.delete(url);
-						expires.delete(url);
-					}
-				}, maxAge * 1000);
-			}
+			const expiresAt = new Date();
+			expiresAt.setSeconds(expiresAt.getSeconds() + (maxAge > 0 ? maxAge : 5));
+			const cacheEntry = {
+				ETag: currentETag,
+				body: (await response.clone().json()) as unknown,
+				expiresAt,
+			};
+			cache.set(url, cacheEntry);
 		}
 		return new Response(JSON.stringify(await response.clone().json()), { status: 200 });
 	} else {
-		throw new Error(`HTTP error! Status: ${response.status.toString()}`);
+		return response;
+	}
+}
+
+function deleteFromCacheIfExpired(url: string) {
+	const expiresAt = cache.get(url)?.expiresAt;
+	if (!expiresAt) return;
+	if (new Date() >= expiresAt) {
+		// eslint-disable-next-line no-console
+		console.info(`Cache for ${url} expired after ${expiresAt.toISOString()}, deleting...`);
+		cache.delete(url);
 	}
 }
 
