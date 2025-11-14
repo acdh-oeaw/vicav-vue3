@@ -19,18 +19,7 @@ export default defineEventHandler(async (event) => {
 			timestamp: new Date().toISOString(),
 		};
 	} catch (error) {
-		if (error instanceof Error) {
-			setResponseStatus(event, 503);
-			return {
-				status: 503,
-				ETag: null,
-				backendVersion: null,
-				frontendVersion: env.public.currentGitSha,
-				error: `Unable to fetch backend status. ${error.message}`,
-				cacheInfo: null,
-				timestamp: new Date().toISOString(),
-			};
-		} else if (error instanceof Response) {
+		if (error instanceof Response) {
 			setResponseStatus(event, error.status);
 			return {
 				status: error.status,
@@ -38,6 +27,17 @@ export default defineEventHandler(async (event) => {
 				backendVersion: null,
 				frontendVersion: env.public.currentGitSha,
 				error: `Unable to fetch backend status. ${error.statusText}`,
+				cacheInfo: null,
+				timestamp: new Date().toISOString(),
+			};
+		} else {
+			setResponseStatus(event, 503);
+			return {
+				status: 503,
+				ETag: null,
+				backendVersion: null,
+				frontendVersion: env.public.currentGitSha,
+				error: `Unable to fetch backend status. ${error instanceof Error ? error.message : String(error)}`,
 				cacheInfo: null,
 				timestamp: new Date().toISOString(),
 			};
