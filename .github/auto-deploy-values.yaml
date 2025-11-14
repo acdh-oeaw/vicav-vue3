@@ -14,8 +14,8 @@ service:
   name: "web"
   url: "$public_url"
   type: ClusterIP
-  externalPort: ${{ inputs.default_port }}
-  internalPort: ${{ inputs.default_port }}
+  externalPort: 3000
+  internalPort: 3000
 ingress:
   enabled: true
   path: "/"
