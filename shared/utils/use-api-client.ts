@@ -16,8 +16,18 @@ function basicSecurityWorker(securityData: userPass | null): RequestParams | und
 	return undefined;
 }
 
-// cache stores for each URL a mapping of ETag to response body
+// The dev server seems to isolate api routes and frontend requests,
+// so shared global variables do not work there.
+// The node code produced with build has a shared global scope.
+
+// This cache stores for each URL a mapping of ETag to response body and expiration date.
 const cache = new Map<string, { ETag: string; body: unknown; expiresAt: Date }>();
+// Avoid multiple simultaneous requests for the same URL + query params.
+// The rest of the code at the moment only works for GET requests,
+// so URL + query params is sufficient to uniquely identify requests.
+// Multiple almost simultaneous requests are common with healthy-checks
+// when the backend is not responding fast enough.
+const currentRequests = new Map<string, Promise<Response>>();
 
 async function fetchWithETag(
 	input: globalThis.Request | URL | string,
@@ -36,22 +46,30 @@ async function fetchWithETag(
 		});
 	}
 
-	const ifNoneMatchHeader = cachedEntry?.ETag
-		? {
-				"If-None-Match": cachedEntry.ETag.replace(/--gzip$/, ""),
-			}
-		: {};
-	const requestParams = {
-		method: "GET",
-		// eslint-disable-next-line @typescript-eslint/no-misused-spread
-		headers: (init ? { ...init.headers, ...ifNoneMatchHeader } : ifNoneMatchHeader) as HeadersInit,
-	};
-
 	let response: Response;
 	try {
+		const ifNoneMatchHeader = cachedEntry?.ETag
+			? {
+					"If-None-Match": cachedEntry.ETag.replace(/--gzip$/, ""),
+				}
+			: {};
+		const requestParams = {
+			method: "GET",
+			headers: (init
+				? // eslint-disable-next-line @typescript-eslint/no-misused-spread
+					{ ...init.headers, ...ifNoneMatchHeader }
+				: ifNoneMatchHeader) as HeadersInit,
+		};
 		// Request mit ETag im If-None-Match Header
-		response = await fetch(input, requestParams);
+		if (!currentRequests.has(url)) {
+			// console.log(`New request for "${url}" initiated...`);
+			currentRequests.set(url, fetch(input, requestParams));
+		}
+		response = await currentRequests.get(url)!;
+		currentRequests.delete(url);
+		// console.log(`Response for "${url}" received...`);
 	} catch (error) {
+		currentRequests.delete(url);
 		if (cachedEntry) {
 			console.warn("Fetch with ETag failed, returning cached version...", error);
 			return new Response(JSON.stringify(cachedEntry.body), { status: 200 });
@@ -97,6 +115,9 @@ async function fetchWithETag(
 				body: (await response.clone().json()) as unknown,
 				expiresAt,
 			};
+			// console.log(
+			// 	`Caching response for "${url}" with ETag ${currentETag} until ${expiresAt.toISOString()}`,
+			// );
 			cache.set(url, cacheEntry);
 		}
 		return new Response(JSON.stringify(await response.clone().json()), { status: 200 });
