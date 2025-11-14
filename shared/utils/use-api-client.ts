@@ -16,7 +16,9 @@ function basicSecurityWorker(securityData: userPass | null): RequestParams | und
 	return undefined;
 }
 
-const cache: Map<string, Record<string, unknown>> = new Map<string, Record<string, unknown>>();
+// cache stores for each URL a mapping of ETag to response body
+const cache = new Map<string, Record<string, unknown>>();
+const expires = new Map<string, Record<string, Date>>();
 
 async function fetchWithETag(
 	input: globalThis.Request | URL | string,
@@ -34,11 +36,30 @@ async function fetchWithETag(
 		// eslint-disable-next-line @typescript-eslint/no-misused-spread
 		headers: (init ? { ...init.headers, ...ifNoneMatchHeader } : ifNoneMatchHeader) as HeadersInit,
 	};
-	// Request mit ETag im If-None-Match Header
-	const response = await fetch(input, requestParams);
 
-	// ETag aus dem Header speichern
+	let response: Response;
+	try {
+		// Request mit ETag im If-None-Match Header
+		response = await fetch(input, requestParams);
+	} catch (error) {
+		console.warn("Fetch with ETag failed, trying to return cached version...", error);
+		const body = cache.get(url);
+		if (body && Object.keys(body).length >= 1) {
+			return new Response(JSON.stringify(Object.values(body)[0]), { status: 200 });
+		} else {
+			throw new Error(
+				`Could not fetch and cache with ETag! ${error instanceof Error ? error.message : String(error)}`,
+			);
+		}
+	}
+
+	// Save ETag from response header
 	const currentETag = response.headers.get("ETag");
+	// Get max-age from Cache-Control header, CoPilot suggested this implementation
+	const maxAge = parseInt(
+		response.headers.get("cache-control")?.match(/max-age=(\d+)/)?.[1] ?? "0",
+		10,
+	);
 
 	if (response.status === 304) {
 		if (cachedETag && Object.keys(cachedETag).length === 1) {
@@ -51,8 +72,24 @@ async function fetchWithETag(
 			// response body can't be typed at this point
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 			cache.set(url, { [currentETag]: await response.clone().json() });
+			if (maxAge > 0) {
+				// CoPilot suggested this part
+				const expireDate = new Date();
+				expireDate.setSeconds(expireDate.getSeconds() + maxAge);
+				expires.set(url, { [currentETag]: expireDate });
+				// Set timeout to delete cache after maxAge
+				setTimeout(() => {
+					// eslint-disable-next-line no-console
+					console.info(`Cache for ${url} expired after ${maxAge.toString()} seconds, deleting...`);
+					const exp = expires.get(url);
+					if (exp && Object.values(exp)[0] && new Date() >= Object.values(exp)[0]!) {
+						cache.delete(url);
+						expires.delete(url);
+					}
+				}, maxAge * 1000);
+			}
 		}
-		return response;
+		return new Response(JSON.stringify(await response.clone().json()), { status: 200 });
 	} else {
 		throw new Error(`HTTP error! Status: ${response.status.toString()}`);
 	}
