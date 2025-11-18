@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { Info } from "lucide-vue-next";
+import InfiniteLoading from "v3-infinite-loading";
+import type { StateHandler } from "v3-infinite-loading/lib/types";
 import type Zod from "zod";
 
 import type { Div } from "@/lib/api-client";
@@ -10,16 +12,23 @@ const { simpleItems } = useTEIHeaders();
 const props = defineProps<{ params: Zod.infer<typeof CorpusQuerySchema>["params"] }>();
 const queryString = ref(props.params.queryString);
 const hits = ref<Array<Div & { label?: string }>>([]);
+const displayHits = ref<Array<Div & { label?: string }>>([]);
 const showHelp = ref<boolean>(false);
 
 const inlineAnnotations = ref<false | true | "indeterminate">(true);
 const inlineTranslations = ref<false | true | "indeterminate">(true);
 
+const currentPage = ref(0);
+const scrollComplete = ref<boolean>(false);
+
 async function searchCorpus() {
 	if (words.value.length > 0) queryString.value = `[word="${words.value.join("|")}"]`;
 
 	const result = await api.vicav.searchCorpus(
-		{ query: queryString.value, render: "json" },
+		{
+			query: queryString.value,
+			render: "json",
+		},
 		{ headers: { Accept: "application/json" } },
 	);
 
@@ -33,8 +42,23 @@ async function searchCorpus() {
 			const teiHeader = simpleItems.value.find((header) => header.id === hit["@docRef"]);
 			hit.label = teiHeader?.label;
 		});
+		displayHits.value = hits.value.slice(currentPage.value * 10, (currentPage.value + 1) * 10);
+		scrollComplete.value = false;
 	}
 }
+
+// API currently doesn't support pagination for corpus search results, so we're faking it
+const handleInfiniteScroll = async function ($state: StateHandler) {
+	currentPage.value += 1;
+	const nextHits = hits.value.slice(currentPage.value * 10, (currentPage.value + 1) * 10);
+	if (nextHits.length > 0) {
+		displayHits.value = displayHits.value.concat(nextHits);
+		$state.loaded();
+	} else {
+		scrollComplete.value = true;
+		$state.complete();
+	}
+};
 
 const openNewWindowFromAnchor = useAnchorClickHandler();
 
@@ -150,9 +174,9 @@ const words: Ref<Array<string>> = ref([]);
 			</div>
 		</div>
 		<div>
-			<div v-if="hits && hits.length > 0" class="my-2">Query: "{{ queryString }}"</div>
+			<div v-if="hits && displayHits.length > 0" class="my-2">Query: "{{ queryString }}"</div>
 			<table>
-				<tr v-for="hit in hits" :key="hit['@id']">
+				<tr v-for="hit in displayHits" :key="hit['@id']">
 					<td class="p-0">
 						<a
 							:data-hits="hit.hits![0]"
@@ -184,6 +208,7 @@ const words: Ref<Array<string>> = ref([]);
 					</td>
 				</tr>
 			</table>
+			<InfiniteLoading v-if="!scrollComplete" ref="infinite" @infinite="handleInfiniteScroll" />
 		</div>
 	</div>
 </template>
