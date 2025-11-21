@@ -121,6 +121,10 @@ export const DictQuerySchema = z.object({
 			})
 			.optional(),
 		queryString: z.string(),
+		queryTemplateTextInput: z.string().optional(),
+		queryTemplate: z.string().optional(),
+		isTextInputManual: z.boolean().optional().default(false),
+		isQueryVisible: z.boolean().optional().default(true),
 	}),
 });
 export type DictQueryWindowItem = WindowItemBase & z.infer<typeof DictQuerySchema>;
