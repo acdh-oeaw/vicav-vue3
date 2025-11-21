@@ -26,27 +26,29 @@ function renderUtterance(u: typeof props.utterance) {
 	renderedUtterance += u.w["@join"] === "right" ? "" : "\u00A0 ";
 	return renderedUtterance;
 }
+
+function openDictWindow(u: typeof props.utterance) {
+	if (!u.w) return;
+	addWindow({
+		targetType: "DictQuery",
+		title: u.w["@lemmaRef"]?.replace("dict:", "") || "Dictionary Entry",
+		params: {
+			queryString: u.w["@lemmaRef"]?.replace("dict:", "") || "",
+			textId: "dc_shawi_eng",
+			queryParams: {
+				id: u.w["@lemmaRef"]?.replace("dict:", "") || "",
+			},
+		},
+	});
+	return;
+}
 </script>
 
 <template>
 	<div v-if="props.utterance.w" class="flex flex-col u">
 		<TooltipProvider v-if="!inlineAnnotation" :delay-duration="0">
 			<Tooltip>
-				<TooltipTrigger
-					@click="
-						addWindow({
-							targetType: 'DictQuery',
-							title: props.utterance.w['@lemmaRef']?.replace('dict:', '') || 'Dictionary Entry',
-							params: {
-								queryString: props.utterance.w['@lemmaRef']?.replace('dict:', '') || '',
-								textId: 'dc_shawi_eng',
-								queryParams: {
-									id: props.utterance.w['@lemmaRef']?.replace('dict:', '') || '',
-								},
-							},
-						})
-					"
-				>
+				<TooltipTrigger @click="openDictWindow(props.utterance)">
 					<div class="flex justify-center text-lg">
 						{{ renderUtterance(props.utterance) }}
 					</div>
@@ -61,19 +63,7 @@ function renderUtterance(u: typeof props.utterance) {
 		<div
 			v-if="inlineAnnotation"
 			class="flex justify-center text-lg"
-			@click="
-				addWindow({
-					targetType: 'DictQuery',
-					title: props.utterance.w['@lemmaRef']?.replace('dict:', '') || 'Dictionary Entry',
-					params: {
-						queryString: props.utterance.w['@lemmaRef']?.replace('dict:', '') || '',
-						textId: 'dc_shawi_eng',
-						queryParams: {
-							id: props.utterance.w['@lemmaRef']?.replace('dict:', '') || '',
-						},
-					},
-				})
-			"
+			@click="openDictWindow(props.utterance)"
 		>
 			{{ renderUtterance(props.utterance) }}
 		</div>
