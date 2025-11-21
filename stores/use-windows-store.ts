@@ -133,9 +133,13 @@ export const useWindowsStore = defineStore("windows", () => {
 
 		const ci = TextId.safeParse(params);
 		if (ci.success) {
-			const w = findWindowByTypeAndParam(targetType, "textId", ci.data.textId);
-			console.log(findWindowByTypeAndTitle(targetType, title));
-			if (w !== null && findWindowByTypeAndTitle(targetType, title)) {
+			let w: WindowItem | null;
+			if (targetType === "DictQuery") {
+				w = findWindowByTypeAndTitle(targetType, title);
+			} else {
+				w = findWindowByTypeAndParam(targetType, "textId", ci.data.textId);
+			}
+			if (w !== null) {
 				w.winbox.focus();
 				w.winbox.addClass("highlighted");
 				setTimeout(() => {

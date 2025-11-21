@@ -107,7 +107,7 @@ const updateQueryParams = () => {
 	else delete queryParams.value.format;
 	params.value.queryParams = queryParams.value;
 	// There is a label passed from the TEI description text. Can we use it?
-	params.value.queryString = `${params.value.textId ?? ""}: ${queryParams.value.id ?? ""}`;
+	params.value.queryString = `${queryParams.value.id ?? ""}`;
 	emit("updateQueryParam", params.value.queryString);
 };
 updateQueryParams();
