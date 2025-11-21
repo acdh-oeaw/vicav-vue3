@@ -145,7 +145,9 @@ const api = useApiClient(); */
 	>
 		<!-- eslint-disable vuejs-accessibility/form-control-has-label, tailwindcss/no-custom-classname -->
 		<Collapsible v-model:open="params.isQueryVisible" class="prose max-w-3xl px-8 pb-4 pt-8">
-			<CollapsibleTrigger class="dvStats flex w-full items-baseline">
+			<CollapsibleTrigger
+				class="flex w-full items-baseline bg-primary text-on-primary p-4 pt-0 pb-0"
+			>
 				<span>Query {{ params.textId }}:</span>
 				<div class="relative top-1 ml-auto mr-4">
 					<div v-if="!params.isQueryVisible">
