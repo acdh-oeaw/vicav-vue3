@@ -14,6 +14,18 @@ const props = defineProps<{
 	inlineAnnotation: boolean;
 	inlineTranslation: boolean;
 }>();
+
+function renderUtterance(u: typeof props.utterance) {
+	if (!u.w) return "";
+	let renderedUtterance = u.w ? u.w["$"] : "";
+	renderedUtterance +=
+		u.w["@join"] === "right" && u.w["@rendition"] === "rend:dashAfter" ? "-" : "";
+	renderedUtterance += u.w["@rendition"] === "rend:ellipsisAfter" ? "..." : "";
+	renderedUtterance +=
+		u.w["@join"] === "right" && u.w["@rendition"] === "rend:withBowBelow" ? "_" : "";
+	renderedUtterance += u.w["@join"] === "right" ? "" : "\u00A0 ";
+	return renderedUtterance;
+}
 </script>
 
 <template>
@@ -36,20 +48,7 @@ const props = defineProps<{
 					"
 				>
 					<div class="flex justify-center text-lg">
-						{{ props.utterance.w["$"]
-						}}{{
-							props.utterance.w["@join"] === "right" &&
-							props.utterance.w["@rendition"] === "rend:dashAfter"
-								? "-"
-								: ""
-						}}{{ props.utterance.w["@rendition"] === "rend:ellipsisAfter" ? "...&nbsp;" : ""
-						}}{{
-							props.utterance.w["@join"] === "right" &&
-							props.utterance.w["@rendition"] === "rend:withBowBelow"
-								? "_"
-								: ""
-						}}
-						{{ props.utterance.w["@join"] !== "right" ? "&nbsp;" : "" }}
+						{{ renderUtterance(props.utterance) }}
 					</div>
 				</TooltipTrigger>
 				<TooltipContent class="bg-primary" side="bottom">
@@ -76,19 +75,7 @@ const props = defineProps<{
 				})
 			"
 		>
-			{{ props.utterance.w["$"]
-			}}{{
-				props.utterance.w["@join"] === "right" &&
-				props.utterance.w["@rendition"] === "rend:dashAfter"
-					? "-"
-					: ""
-			}}{{ props.utterance.w["@rendition"] === "rend:ellipsisAfter" ? "...&nbsp;" : ""
-			}}{{
-				props.utterance.w["@join"] === "right" &&
-				props.utterance.w["@rendition"] === "rend:withBowBelow"
-					? "_"
-					: ""
-			}}
+			{{ renderUtterance(props.utterance) }}
 		</div>
 		<!-- eslint-enable -->
 		<div
