@@ -38,6 +38,8 @@ function openDictWindow(u: typeof props.utterance) {
 			queryParams: {
 				id: u.w["@lemmaRef"]?.replace("dict:", "") || "",
 			},
+			isTextInputManual: false,
+			isQueryVisible: false,
 		},
 	});
 	return;
