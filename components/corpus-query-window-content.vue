@@ -1,22 +1,34 @@
 <script setup lang="ts">
 import { Info } from "lucide-vue-next";
+import InfiniteLoading from "v3-infinite-loading";
+import type { StateHandler } from "v3-infinite-loading/lib/types";
 import type Zod from "zod";
 
-import type { CorpusSearchHits } from "@/lib/api-client";
+import type { Div } from "@/lib/api-client";
 import type { CorpusQuerySchema } from "@/types/global";
 
 const api = useApiClient();
-//const { simpleItems } = useTEIHeaders();
+const { simpleItems } = useTEIHeaders();
 const props = defineProps<{ params: Zod.infer<typeof CorpusQuerySchema>["params"] }>();
 const queryString = ref(props.params.queryString);
-const hits = ref<Array<CorpusSearchHits> | undefined>([]);
+const hits = ref<Array<Div & { label?: string }>>([]);
+const displayHits = ref<Array<Div & { label?: string }>>([]);
 const showHelp = ref<boolean>(false);
+
+const inlineAnnotations = ref<false | true | "indeterminate">(true);
+const inlineTranslations = ref<false | true | "indeterminate">(true);
+
+const currentPage = ref(0);
+const scrollComplete = ref<boolean>(false);
 
 async function searchCorpus() {
 	if (words.value.length > 0) queryString.value = `[word="${words.value.join("|")}"]`;
 
 	const result = await api.vicav.searchCorpus(
-		{ query: queryString.value },
+		{
+			query: queryString.value,
+			render: "json",
+		},
 		{ headers: { Accept: "application/json" } },
 	);
 
@@ -24,16 +36,29 @@ async function searchCorpus() {
 		console.error(result.error);
 		return;
 	}
-	if (Array.isArray(result.data.hits)) {
-		hits.value = result.data.hits;
-		/*
+	if (!Array.isArray(result.data.hits) && Array.isArray(result.data.hits?.divs)) {
+		hits.value = result.data.hits.divs;
 		hits.value?.forEach((hit) => {
-			const teiHeader = simpleItems.value.find((header) => header.id === hit.doc);
+			const teiHeader = simpleItems.value.find((header) => header.id === hit["@docRef"]);
 			hit.label = teiHeader?.label;
 		});
-		 */
+		displayHits.value = hits.value.slice(currentPage.value * 10, (currentPage.value + 1) * 10);
+		scrollComplete.value = false;
 	}
 }
+
+// API currently doesn't support pagination for corpus search results, so we're faking it
+const handleInfiniteScroll = async function ($state: StateHandler) {
+	currentPage.value += 1;
+	const nextHits = hits.value.slice(currentPage.value * 10, (currentPage.value + 1) * 10);
+	if (nextHits.length > 0) {
+		displayHits.value = displayHits.value.concat(nextHits);
+		$state.loaded();
+	} else {
+		scrollComplete.value = true;
+		$state.complete();
+	}
+};
 
 const openNewWindowFromAnchor = useAnchorClickHandler();
 
@@ -129,29 +154,61 @@ const words: Ref<Array<string>> = ref([]);
 			</button>
 			<br />
 		</form>
-		<div>
-			<div v-if="hits === undefined || hits.length > 0" class="my-2">
-				Query: "{{ queryString }}"
+		<div class="flex justify-end p-4">
+			<div>
+				<Checkbox
+					id="switch-annotations"
+					:default-checked="true"
+					@update:checked="inlineAnnotations = !inlineAnnotations"
+				/>
+				<label for="switch-annotations">&nbsp;Inline Annotations</label>
 			</div>
+			&nbsp;
+			<div>
+				<Checkbox
+					id="switch-translations"
+					:default-checked="true"
+					@update:checked="inlineTranslations = !inlineTranslations"
+				/>
+				<label for="switch-translations">&nbsp;Inline Translations</label>
+			</div>
+		</div>
+		<div>
+			<div v-if="hits && displayHits.length > 0" class="my-2">Query: "{{ queryString }}"</div>
 			<table>
-				<tr v-for="hit in hits" :key="hit.u">
+				<tr v-for="hit in displayHits" :key="hit['@id']">
 					<td class="p-0">
 						<a
-							:data-hits="hit.docHits"
+							:data-hits="hit.hits![0]"
 							data-target-type="CorpusText"
-							:data-text-id="hit.doc"
+							:data-text-id="hit['@docRef']"
 							:data-u="hit.u"
 							href="#"
 							@click="openNewWindowFromAnchor"
 						>
-							<strong>{{ hit.u }}</strong>
+							<strong>{{ hit["@docRef"] }}</strong>
 						</a>
 					</td>
-					<td class="pl-5 text-right" v-html="hit.content?.left"></td>
-					<td class="max-w-fit bg-[beige] text-center" v-html="hit.content?.kwic"></td>
-					<td class="p-0" v-html="hit.content?.right"></td>
+					<td>
+						<div v-if="hit.u" class="px-6 py-3 max-w-full flex flex-row">
+							<CorpusTextJsonUtterance
+								v-for="(uContent, index) in hit.u['$$']"
+								:key="index"
+								:inline-annotation="inlineAnnotations as boolean"
+								:inline-translation="inlineTranslations as boolean"
+								:utterance="uContent"
+							></CorpusTextJsonUtterance>
+						</div>
+						<div
+							v-if="inlineTranslations && hit.Translation_spanGrp"
+							class="px-6 py-3 max-w-full flex flex-row italic"
+						>
+							{{ hit.Translation_spanGrp.span["$"] }}
+						</div>
+					</td>
 				</tr>
 			</table>
+			<InfiniteLoading v-if="!scrollComplete" ref="infinite" @infinite="handleInfiniteScroll" />
 		</div>
 	</div>
 </template>

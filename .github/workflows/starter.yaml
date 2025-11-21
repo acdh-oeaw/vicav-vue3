@@ -24,7 +24,8 @@ jobs:
       APP_NAME: nuxt-vicav
       # This together with the branch name is also used as the namespace to deploy to
       APP_ROOT: "/"
-      herokuish_base_image: ghcr.io/acdh-oeaw/herokuish-for-cypress/main:latest-22
+      herokuish_base_image: gliderlabs/herokuish:latest-24
+      herokuish_base_image_test: ghcr.io/acdh-oeaw/herokuish-for-cypress/main:latest-24
     # You should not need to have to change anything below this line
     #-----------------------------------------------------------------------------------------------------
     steps:
@@ -316,8 +317,9 @@ jobs:
       registry_root: ${{ needs.setup_workflow_env.outputs.registry_root }}
       image_name: ${{ needs.setup_workflow_env.outputs.image_name }}
       default_port: ${{ needs.setup_workflow_env.outputs.default_port }}
-      PUBLIC_URL: ${{ needs.generate_workflow_vars.outputs.PUBLIC_URL }}
       fetch-depth: ${{ fromJson(needs.setup_workflow_env.outputs.fetch-depth) }}
+      herokuish_base_image: ${{ needs.setup_workflow_env.outputs.herokuish_base_image }}
+      PUBLIC_URL: ${{ needs.generate_workflow_vars.outputs.PUBLIC_URL }}
       submodules: ${{ needs.setup_workflow_env.outputs.submodules }}
   _2:
     needs: [setup_workflow_env, generate_workflow_vars]
@@ -330,7 +332,7 @@ jobs:
       image_name: ${{ needs.setup_workflow_env.outputs.image_name }}
       default_port: ${{ needs.setup_workflow_env.outputs.default_port }}
       fetch-depth: ${{ fromJson(needs.setup_workflow_env.outputs.fetch-depth) }}
-      herokuish_base_image: ${{ needs.setup_workflow_env.outputs.herokuish_base_image }}
+      herokuish_base_image: ${{ needs.setup_workflow_env.outputs.herokuish_base_image_test }}
       PUBLIC_URL: ${{ needs.generate_workflow_vars.outputs.PUBLIC_URL }}
       submodules: ${{ needs.setup_workflow_env.outputs.submodules }}
   _3:
