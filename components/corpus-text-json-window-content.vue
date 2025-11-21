@@ -164,7 +164,15 @@ onMounted(async () => {
 						<!-- audio player goes here -->
 					</td>
 					<td class="min-w-fit px-3 font-bold">
-						<div class="flex justify-center">{{ teiHeader?.id }}</div>
+						<div
+							v-for="(u, uIndex) in [a.u ?? a.u, a.us ?? a.us]
+								.flat()
+								.filter((u) => u !== undefined)"
+							:key="uIndex"
+							class="flex justify-center"
+						>
+							{{ u["@who"]?.replace("corpus:", "") || "N/A" }}
+						</div>
 					</td>
 					<td>
 						<div class="max-w-full flex flex-row">
