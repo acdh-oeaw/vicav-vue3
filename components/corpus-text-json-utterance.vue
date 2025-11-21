@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Gap, Pc, Phr, W } from "@/lib/api-client";
+import type { Gap, Pc, Seg, W } from "@/lib/api-client";
 
 const windowsStore = useWindowsStore();
 const { addWindow } = windowsStore;
@@ -9,8 +9,7 @@ const props = defineProps<{
 		w?: W;
 		pc?: Pc;
 		gap?: Gap;
-		phr?: Phr;
-		seg?: Phr;
+		seg?: Seg;
 	};
 	inlineAnnotation: boolean;
 	inlineTranslation: boolean;
@@ -114,16 +113,6 @@ const props = defineProps<{
 					: "&nbsp;"
 			}}
 		</div>
-	</div>
-	<div v-if="props.utterance.phr" class="flex flex-row">
-		<CorpusTextJsonUtterance
-			v-for="(uContent, index) in props.utterance.phr['$$']"
-			:key="index"
-			:inline-annotation="props.inlineAnnotation as boolean"
-			:inline-translation="props.inlineTranslation as boolean"
-			:utterance="uContent"
-		></CorpusTextJsonUtterance>
-		{{ "&nbsp;" }}
 	</div>
 	<div v-if="props.utterance.seg" class="flex flex-row">
 		<CorpusTextJsonUtterance
