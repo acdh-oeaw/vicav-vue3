@@ -166,18 +166,23 @@ onMounted(async () => {
 					<td class="min-w-fit px-3 font-bold">
 						<div class="flex justify-center">{{ teiHeader?.id }}</div>
 					</td>
-					<td
-						v-for="(u, uIndex) in [a.u ?? a.u, a.us ?? a.us].flat().filter((u) => u !== undefined)"
-						:key="uIndex"
-					>
+					<td>
 						<div class="px-6 py-3 max-w-full flex flex-row">
-							<CorpusTextJsonUtterance
-								v-for="(uContent, index) in u['$$']"
-								:key="index"
-								:inline-annotation="inlineAnnotations as boolean"
-								:inline-translation="inlineTranslations as boolean"
-								:utterance="uContent"
-							></CorpusTextJsonUtterance>
+							<div
+								v-for="(u, uIndex) in [a.u ?? a.u, a.us ?? a.us]
+									.flat()
+									.filter((u) => u !== undefined)"
+								:key="uIndex"
+								class="px-6 py-3 max-w-full flex flex-row"
+							>
+								<CorpusTextJsonUtterance
+									v-for="(uContent, index) in u['$$']"
+									:key="index"
+									:inline-annotation="inlineAnnotations as boolean"
+									:inline-translation="inlineTranslations as boolean"
+									:utterance="uContent"
+								></CorpusTextJsonUtterance>
+							</div>
 						</div>
 						<div
 							v-if="inlineTranslations && a.Translation_spanGrp"
