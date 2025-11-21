@@ -167,7 +167,7 @@ onMounted(async () => {
 						<div class="flex justify-center">{{ teiHeader?.id }}</div>
 					</td>
 					<td>
-						<div class="px-6 py-3 max-w-full flex flex-row">
+						<div class="max-w-full flex flex-row">
 							<div
 								v-for="(u, uIndex) in [a.u ?? a.u, a.us ?? a.us]
 									.flat()
