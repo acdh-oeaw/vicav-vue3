@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Gap, Pc, Phr, W } from "@/lib/api-client";
+import type { Gap, Pc, Seg, W } from "@/lib/api-client";
 
 const windowsStore = useWindowsStore();
 const { addWindow } = windowsStore;
@@ -9,48 +9,50 @@ const props = defineProps<{
 		w?: W;
 		pc?: Pc;
 		gap?: Gap;
-		phr?: Phr;
-		seg?: Phr;
+		seg?: Seg;
 	};
 	inlineAnnotation: boolean;
 	inlineTranslation: boolean;
 }>();
+
+function renderUtterance(u: typeof props.utterance) {
+	if (!u.w) return "";
+	let renderedUtterance = u.w ? u.w["$"] : "";
+	renderedUtterance +=
+		u.w["@join"] === "right" && u.w["@rendition"] === "rend:dashAfter" ? "-" : "";
+	renderedUtterance += u.w["@rendition"] === "rend:ellipsisAfter" ? "..." : "";
+	renderedUtterance +=
+		u.w["@join"] === "right" && u.w["@rendition"] === "rend:withBowBelow" ? "_" : "";
+	renderedUtterance += u.w["@join"] === "right" ? "" : "\u00A0 ";
+	return renderedUtterance;
+}
+
+function openDictWindow(u: typeof props.utterance) {
+	if (!u.w) return;
+	addWindow({
+		targetType: "DictQuery",
+		title: u.w["@lemmaRef"]?.replace("dict:", "") || "Dictionary Entry",
+		params: {
+			queryString: u.w["@lemmaRef"]?.replace("dict:", "") || "",
+			textId: "dc_shawi_eng",
+			queryParams: {
+				id: u.w["@lemmaRef"]?.replace("dict:", "") || "",
+			},
+			isTextInputManual: false,
+			isQueryVisible: false,
+		},
+	});
+	return;
+}
 </script>
 
 <template>
 	<div v-if="props.utterance.w" class="flex flex-col u">
 		<TooltipProvider v-if="!inlineAnnotation" :delay-duration="0">
 			<Tooltip>
-				<TooltipTrigger
-					@click="
-						addWindow({
-							targetType: 'DictQuery',
-							title: props.utterance.w['@lemmaRef']?.replace('dict:', '') || 'Dictionary Entry',
-							params: {
-								queryString: props.utterance.w['@lemmaRef']?.replace('dict:', '') || '',
-								textId: 'dc_shawi_eng',
-								queryParams: {
-									id: props.utterance.w['@lemmaRef']?.replace('dict:', '') || '',
-								},
-							},
-						})
-					"
-				>
+				<TooltipTrigger @click="openDictWindow(props.utterance)">
 					<div class="flex justify-center text-lg">
-						{{ props.utterance.w["$"]
-						}}{{
-							props.utterance.w["@join"] === "right" &&
-							props.utterance.w["@rendition"] === "rend:dashAfter"
-								? "-"
-								: ""
-						}}{{ props.utterance.w["@rendition"] === "rend:ellipsisAfter" ? "...&nbsp;" : ""
-						}}{{
-							props.utterance.w["@join"] === "right" &&
-							props.utterance.w["@rendition"] === "rend:withBowBelow"
-								? "_"
-								: ""
-						}}
-						{{ props.utterance.w["@join"] !== "right" ? "&nbsp;" : "" }}
+						{{ renderUtterance(props.utterance) }}
 					</div>
 				</TooltipTrigger>
 				<TooltipContent class="bg-primary" side="bottom">
@@ -63,33 +65,9 @@ const props = defineProps<{
 		<div
 			v-if="inlineAnnotation"
 			class="flex justify-center text-lg"
-			@click="
-				addWindow({
-					targetType: 'DictQuery',
-					title: props.utterance.w['@lemmaRef']?.replace('dict:', '') || 'Dictionary Entry',
-					params: {
-						queryString: props.utterance.w['@lemmaRef']?.replace('dict:', '') || '',
-						textId: 'dc_shawi_eng',
-						queryParams: {
-							id: props.utterance.w['@lemmaRef']?.replace('dict:', '') || '',
-						},
-					},
-				})
-			"
+			@click="openDictWindow(props.utterance)"
 		>
-			{{ props.utterance.w["$"]
-			}}{{
-				props.utterance.w["@join"] === "right" &&
-				props.utterance.w["@rendition"] === "rend:dashAfter"
-					? "-"
-					: ""
-			}}{{ props.utterance.w["@rendition"] === "rend:ellipsisAfter" ? "...&nbsp;" : ""
-			}}{{
-				props.utterance.w["@join"] === "right" &&
-				props.utterance.w["@rendition"] === "rend:withBowBelow"
-					? "_"
-					: ""
-			}}
+			{{ renderUtterance(props.utterance) }}
 		</div>
 		<!-- eslint-enable -->
 		<div
@@ -114,16 +92,6 @@ const props = defineProps<{
 					: "&nbsp;"
 			}}
 		</div>
-	</div>
-	<div v-if="props.utterance.phr" class="flex flex-row">
-		<CorpusTextJsonUtterance
-			v-for="(uContent, index) in props.utterance.phr['$$']"
-			:key="index"
-			:inline-annotation="props.inlineAnnotation as boolean"
-			:inline-translation="props.inlineTranslation as boolean"
-			:utterance="uContent"
-		></CorpusTextJsonUtterance>
-		{{ "&nbsp;" }}
 	</div>
 	<div v-if="props.utterance.seg" class="flex flex-row">
 		<CorpusTextJsonUtterance
