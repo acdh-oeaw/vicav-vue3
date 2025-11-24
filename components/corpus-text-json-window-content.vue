@@ -107,7 +107,7 @@ onMounted(async () => {
 			<Citation :header="teiHeader" type="entry" />
 		</div>
 		<!-- eslint-disable tailwindcss/no-custom-classname, vue/no-v-html -->
-		<div :id="params.textId" ref="utterancesWrapper" class="p-4 relative">
+		<div :id="params.textId" ref="utterancesWrapper" class="p-4 relative max-w-full overflow-auto">
 			<h2 class="m-3 text-lg">{{ props.params.label }}</h2>
 
 			<div class="m-3 rounded-sm border border-gray-300 bg-gray-50 p-4">
@@ -159,11 +159,11 @@ onMounted(async () => {
 					</tbody>
 				</table>
 			</div>
-			<table class="text-sm text-left rtl:text-right text-gray-700 w-full">
+			<table class="table-fixed text-sm text-gray-700 w-full">
 				<thead class="text-xs text-gray-700 uppercase bg-primary">
 					<tr>
-						<th class="px-6 py-3" scope="col">Audio</th>
-						<th class="px-6 py-3" scope="col">SpeakerID</th>
+						<th class="px-6 py-3 w-[10px]" scope="col">Audio</th>
+						<th class="px-6 py-3 w-[120px]" scope="col">SpeakerID</th>
 						<th class="px-6 py-3" scope="col">Utterance</th>
 					</tr>
 				</thead>
@@ -190,13 +190,13 @@ onMounted(async () => {
 							</div>
 						</td>
 						<td>
-							<div class="max-w-full flex flex-row">
+							<div class="flex flex-row">
 								<div
 									v-for="(u, uIndex) in [a.u ?? a.u, a.us ?? a.us]
 										.flat()
 										.filter((u) => u !== undefined)"
 									:key="uIndex"
-									class="px-6 py-3 max-w-full flex flex-row"
+									class="px-6 py-3 max-w-full flex flex-row flex-wrap"
 								>
 									<CorpusTextJsonUtterance
 										v-for="(uContent, index) in u['$$']"
