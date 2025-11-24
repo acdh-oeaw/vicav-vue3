@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { BookA } from "lucide-vue-next";
+
 import type { Gap, Pc, Seg, W } from "@/lib/api-client";
 
 const windowsStore = useWindowsStore();
@@ -68,12 +70,13 @@ function openDictWindow(u: typeof props.utterance) {
 			@click="openDictWindow(props.utterance)"
 		>
 			{{ renderUtterance(props.utterance) }}
+			<BookA
+				v-if="inlineAnnotation && props.utterance.w['@lemmaRef']"
+				class="size-3 text-gray-500"
+			/>
 		</div>
 		<!-- eslint-enable -->
-		<div
-			v-if="inlineAnnotation && props.utterance.w['@lemmaRef']"
-			class="flex justify-center text-xs text-gray-500"
-		></div>
+		<div class="flex justify-center text-xs text-gray-500"></div>
 		<div v-if="inlineAnnotation" class="flex justify-center text-xs text-gray-500">
 			{{ props.utterance.w.pos }}&nbsp;
 		</div>
