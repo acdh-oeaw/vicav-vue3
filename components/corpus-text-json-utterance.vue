@@ -47,7 +47,7 @@ function openDictWindow(u: typeof props.utterance) {
 </script>
 
 <template>
-	<div v-if="props.utterance.w" class="flex flex-col u">
+	<div v-if="props.utterance.w" class="flex flex-col u py-3">
 		<TooltipProvider v-if="!inlineAnnotation" :delay-duration="0">
 			<Tooltip>
 				<TooltipTrigger @click="openDictWindow(props.utterance)">

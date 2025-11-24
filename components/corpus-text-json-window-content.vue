@@ -37,7 +37,21 @@ const loadNextPage = async function () {
 		{ headers: { Accept: "application/json" } },
 	);
 	if ("doc" in text.data && text.data.doc !== undefined) {
-		annotationBlocks.value = annotationBlocks.value.concat(text.data.doc.divs);
+		const newDivs: Array<Div> = [];
+		text.data.doc.divs.forEach((div) => {
+			if (div.u && Array.isArray(div.u.$$)) {
+				newDivs.push(div);
+			} else if (div.us && Array.isArray(div.us)) {
+				div.us.forEach((u, i) => {
+					const newDiv: Div = { ...div, us: [u] };
+					if (i + 1 !== div.us?.length) {
+						delete newDiv.Translation_spanGrp;
+					}
+					newDivs.push(newDiv);
+				});
+			}
+		});
+		annotationBlocks.value = annotationBlocks.value.concat(newDivs);
 		currentPage.value = currentPage.value + 1;
 	}
 	return text;
@@ -93,7 +107,7 @@ onMounted(async () => {
 			<Citation :header="teiHeader" type="entry" />
 		</div>
 		<!-- eslint-disable tailwindcss/no-custom-classname, vue/no-v-html -->
-		<div :id="params.textId" ref="utterancesWrapper" class="p-4 relative">
+		<div :id="params.textId" ref="utterancesWrapper" class="p-4 relative max-w-full overflow-auto">
 			<h2 class="m-3 text-lg">{{ props.params.label }}</h2>
 
 			<div class="m-3 rounded-sm border border-gray-300 bg-gray-50 p-4">
@@ -145,61 +159,63 @@ onMounted(async () => {
 					</tbody>
 				</table>
 			</div>
-			<table class="text-sm text-left rtl:text-right text-gray-700 w-full">
-				<thead class="text-xs text-gray-700 uppercase bg-accent">
+			<table class="table-fixed text-sm text-gray-700 w-full">
+				<thead class="text-xs text-gray-700 uppercase bg-primary">
 					<tr>
-						<th class="px-6 py-3" scope="col">Audio</th>
-						<th class="px-6 py-3" scope="col">SpeakerID</th>
+						<th class="px-6 py-3 w-[10px]" scope="col">Audio</th>
+						<th class="px-6 py-3 w-[120px]" scope="col">SpeakerID</th>
 						<th class="px-6 py-3" scope="col">Utterance</th>
 					</tr>
 				</thead>
-				<tr
-					v-for="a in annotationBlocks"
-					:id="a['@id']"
-					:key="a['@id']"
-					ref="annotationBlocksWrapper"
-					class="corpus-utterance u table-row"
-				>
-					<td>
-						<!-- audio player goes here -->
-					</td>
-					<td class="min-w-fit px-3 font-bold">
-						<div
-							v-for="(u, uIndex) in [a.u ?? a.u, a.us ?? a.us]
-								.flat()
-								.filter((u) => u !== undefined)"
-							:key="uIndex"
-							class="flex justify-center"
-						>
-							{{ u["@who"]?.replace("corpus:", "") || "N/A" }}
-						</div>
-					</td>
-					<td>
-						<div class="max-w-full flex flex-row">
+				<tbody>
+					<tr
+						v-for="a in annotationBlocks"
+						:id="a['@id']"
+						:key="a['@id']"
+						ref="annotationBlocksWrapper"
+						class="corpus-utterance u table-row even:bg-accent"
+					>
+						<td>
+							<!-- audio player goes here -->
+						</td>
+						<td class="min-w-fit px-3 font-bold">
 							<div
 								v-for="(u, uIndex) in [a.u ?? a.u, a.us ?? a.us]
 									.flat()
 									.filter((u) => u !== undefined)"
 								:key="uIndex"
-								class="px-6 py-3 max-w-full flex flex-row"
+								class="flex justify-center"
 							>
-								<CorpusTextJsonUtterance
-									v-for="(uContent, index) in u['$$']"
-									:key="index"
-									:inline-annotation="inlineAnnotations as boolean"
-									:inline-translation="inlineTranslations as boolean"
-									:utterance="uContent"
-								></CorpusTextJsonUtterance>
+								{{ u["@who"]?.replace("corpus:", "") || "N/A" }}
 							</div>
-						</div>
-						<div
-							v-if="inlineTranslations && a.Translation_spanGrp"
-							class="px-6 py-3 max-w-full flex flex-row italic"
-						>
-							{{ a.Translation_spanGrp.span["$"] }}
-						</div>
-					</td>
-				</tr>
+						</td>
+						<td>
+							<div class="flex flex-row">
+								<div
+									v-for="(u, uIndex) in [a.u ?? a.u, a.us ?? a.us]
+										.flat()
+										.filter((u) => u !== undefined)"
+									:key="uIndex"
+									class="px-6 py-3 max-w-full flex flex-row flex-wrap"
+								>
+									<CorpusTextJsonUtterance
+										v-for="(uContent, index) in u['$$']"
+										:key="index"
+										:inline-annotation="inlineAnnotations as boolean"
+										:inline-translation="inlineTranslations as boolean"
+										:utterance="uContent"
+									></CorpusTextJsonUtterance>
+								</div>
+							</div>
+							<div
+								v-if="inlineTranslations && a.Translation_spanGrp"
+								class="px-6 py-3 max-w-full flex flex-row italic"
+							>
+								{{ a.Translation_spanGrp.span["$"] }}
+							</div>
+						</td>
+					</tr>
+				</tbody>
 			</table>
 			<InfiniteLoading v-if="!scrollComplete" ref="infinite" @infinite="handleInfiniteScroll" />
 		</div>
