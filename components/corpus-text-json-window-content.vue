@@ -160,7 +160,7 @@ onMounted(async () => {
 				</table>
 			</div>
 			<table class="text-sm text-left rtl:text-right text-gray-700 w-full">
-				<thead class="text-xs text-gray-700 uppercase bg-accent">
+				<thead class="text-xs text-gray-700 uppercase bg-primary">
 					<tr>
 						<th class="px-6 py-3" scope="col">Audio</th>
 						<th class="px-6 py-3" scope="col">SpeakerID</th>
@@ -173,7 +173,7 @@ onMounted(async () => {
 						:id="a['@id']"
 						:key="a['@id']"
 						ref="annotationBlocksWrapper"
-						class="corpus-utterance u table-row"
+						class="corpus-utterance u table-row even:bg-accent"
 					>
 						<td>
 							<!-- audio player goes here -->
