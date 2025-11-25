@@ -171,7 +171,7 @@ function onValueClick(val: Array<Record<string, unknown>>, title: string) {
 					title,
 					place: props.fullEntry.name,
 					feature: props.column.columnDef.header,
-					taxonomy: featureValueTaxonomy.value.get(`${props.column.columnDef.id}.${title}`),
+					taxonomy: featureValueTaxonomy.value.get(`${props.column.columnDef.id}.${title}`)?.label,
 				})),
 				showCitation: false,
 			},

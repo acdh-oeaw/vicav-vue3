@@ -48,7 +48,7 @@ const isMenuOpen = ref(categories.value!.map(() => false));
 						<ChevronDown class="size-4" :class="open ? 'rotate-180' : ''"></ChevronDown>
 					</DropdownMenuTrigger>
 
-					<DropdownMenuContent class="">
+					<DropdownMenuContent class="max-h-[var(--radix-dropdown-menu-content-available-height)]">
 						<GeojsonMapToolbarItem
 							v-for="column in group.columns"
 							:key="column.id"

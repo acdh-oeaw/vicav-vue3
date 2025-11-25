@@ -21,7 +21,7 @@ const { addWindow, findWindowByTypeAndParam } = useWindowsStore();
 const url = "https://raw.githubusercontent.com/wibarab/wibarab-data/main/wibarab_varieties.geojson";
 
 const { isPending } = GeojsonStore.fetchGeojson(url);
-const { fetchedData, tables, showAllDetails } = storeToRefs(GeojsonStore);
+const { fetchedData, tables, showAllDetails, featureValueTaxonomy } = storeToRefs(GeojsonStore);
 const { buildFeatureTaxonomy } = GeojsonStore;
 const { data: projectData } = useProjectInfo();
 const { createColumnDefs } = useColumnGeneration();
@@ -79,6 +79,24 @@ function applyQueryString(row: Row<FeatureType>, colId: string, queryString: str
 			return [key, value];
 		}),
 	);
+
+	for (const col of Object.keys(preparedRow)) {
+		if (!Array.isArray(preparedRow[col])) continue;
+		const taxonomyLevels = [
+			...new Set(
+				(preparedRow[col] as Array<string>).flatMap((val) =>
+					featureValueTaxonomy.value.get(`${col}.${val}`)?.taxonomy.split("."),
+				),
+			),
+		];
+		if (taxonomyLevels && Array.isArray(taxonomyLevels)) {
+			preparedRow[col] = Array.isArray(preparedRow[col])
+				? [...preparedRow[col], ...taxonomyLevels]
+				: [preparedRow[col], ...taxonomyLevels];
+		}
+	}
+
+	console.log(preparedRow, featureValueTaxonomy);
 
 	for (const key in metadata) preparedRow[key] = [...new Set(metadata[key])];
 

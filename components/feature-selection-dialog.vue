@@ -14,10 +14,10 @@ import {
 } from "@/components/ui/dialog";
 
 import type { SelectionEntry } from "./marker-selector.vue";
-import Checkbox from "./ui/form/Checkbox.vue";
 
 const { AND_OPERATOR, getCombinedFilterOption } = useAdvancedQueries();
 const { syncGlobalAndColumnFilters } = useFilterParser();
+const { getTaxonomyTree, featureValueTaxonomy } = useGeojsonStore();
 
 const props = defineProps<{
 	column: Column<unknown>;
@@ -124,6 +124,21 @@ const onChange = (facet: string, checked: boolean) => {
 			addDefaultMarker(props.column.id, facet);
 		computeMarkerData();
 	}
+	const taxonomyKey = featureValueTaxonomy.get(`${props.column.id}.${facet}`)?.taxonomy ?? "";
+	let currentTree = taxonomyTree.value;
+	for (const key of taxonomyKey.split(".")) {
+		if (currentTree.has(key)) {
+			if (getAllValuesSelected(currentTree.get(key)!))
+				setFieldValue("items", formValues.items.concat([key]));
+			else
+				setFieldValue(
+					"items",
+					formValues.items.filter((i) => i !== key),
+				);
+
+			currentTree = currentTree.get(key)!.children;
+		}
+	}
 };
 
 const filterSuggestion = ref<CombinedFilter | null>();
@@ -168,7 +183,40 @@ function toggleAllValues() {
 		computeMarkerData();
 	}
 }
-
+function getAllValuesSelected(tree: TaxonomyTreeEntry): boolean {
+	return (
+		(tree.featureValues.every((val) => formValues.items.includes(val)) &&
+			[...(tree.children.entries() ?? [])].every(([_child, entry]) =>
+				getAllValuesSelected(entry),
+			)) ??
+		false
+	);
+}
+function toggleAllValuesUnderTaxonomy(key: string, tree: TaxonomyTreeEntry, targetVal?: boolean) {
+	const selectValues = targetVal ?? !getAllValuesSelected(tree);
+	const usedTree = tree;
+	if (selectValues) setFieldValue("items", formValues.items.concat([key]));
+	else
+		setFieldValue(
+			"items",
+			formValues.items.filter((i) => i !== key),
+		);
+	usedTree.children.forEach((child, childKey) => {
+		toggleAllValuesUnderTaxonomy(childKey, child, selectValues);
+	});
+	usedTree.featureValues.forEach((facet) => {
+		if (!markers.value.has(buildFeatureValueId(props.column.id, facet)))
+			addDefaultMarker(props.column.id, facet);
+	});
+	if (selectValues) setFieldValue("items", formValues.items.concat(usedTree.featureValues ?? []));
+	else
+		setFieldValue(
+			"items",
+			formValues.items.filter((i) => !usedTree.featureValues.includes(i)),
+		);
+	setFieldValue("items", [...new Set(formValues.items)]);
+	computeMarkerData();
+}
 const markerData = ref<Record<string, SelectionEntry>>({});
 function computeMarkerData() {
 	const data: Record<string, SelectionEntry> = {};
@@ -199,6 +247,8 @@ function updateMarker(markerSelection: SelectionEntry) {
 
 onMounted(() => computeMarkerData());
 onUpdated(() => computeMarkerData());
+
+const taxonomyTree = computed(() => getTaxonomyTree(props.column.id));
 </script>
 
 <template>
@@ -227,133 +277,68 @@ onUpdated(() => computeMarkerData());
 							class="relative rounded bg-secondary p-2.5"
 						>
 							<div class="relative -ml-1 -mt-2 mb-1 text-xs font-light">Combined filters</div>
-							<FormField
+							<FeatureSelectionDialogEntry
 								v-if="filterSuggestion && (filterSuggestion!.count ?? 0) > 0"
-								v-slot="{ value, handleChange }"
-								name="items"
-								type="checkbox"
-								:unchecked-value="false"
-								:value="filterSuggestion?.combinedValue"
+								:count="filterSuggestion!.count"
+								:label="filterSuggestion?.combinedValue"
+								:marker-data="markerData"
+								:update-marker="updateMarker"
+								@checked="
+									(checked) => {
+										onChange(filterSuggestion!.combinedValue, checked);
+										addCombinedFilter(filterSuggestion!.combinedValue, checked);
+									}
+								"
 							>
-								<FormItem class="flex flex-row items-start space-x-3 space-y-0">
-									<FormControl class="my-1">
-										<Checkbox
-											:checked="value.includes(filterSuggestion?.combinedValue)"
-											class="border-sky-300 data-[state=checked]:bg-sky-200"
-											@update:checked="
-												(checked) => {
-													handleChange(checked);
-													onChange(filterSuggestion!.combinedValue, checked);
-													addCombinedFilter(filterSuggestion!.combinedValue, checked);
-												}
-											"
-										/>
-									</FormControl>
-									<FormLabel class="w-auto py-0 font-normal">
-										<span v-for="(fv, idx) in filterSuggestion?.filterValues" :key="fv"
-											>{{ fv
-											}}<span
-												v-if="idx < filterSuggestion!.filterValues.length - 1"
-												class="font-mono font-semibold"
-												>&nbsp;and&nbsp;</span
-											>
-										</span>
-										<Badge class="ml-2 border-neutral-300" variant="outline">{{
-											filterSuggestion!.count
-										}}</Badge>
-									</FormLabel>
-									<MarkerSelector
-										v-if="value.includes(filterSuggestion?.combinedValue)"
-										:icon-categories="['shapes']"
-										:model-value="markerData[filterSuggestion.combinedValue]!"
-										@update:model-value="(props) => updateMarker(props)"
-									></MarkerSelector>
-								</FormItem>
-							</FormField>
+								<span v-for="(fv, idx) in filterSuggestion?.filterValues" :key="fv"
+									>{{ fv
+									}}<span
+										v-if="idx < filterSuggestion!.filterValues.length - 1"
+										class="font-mono font-semibold"
+										>&nbsp;and&nbsp;</span
+									>
+								</span>
+							</FeatureSelectionDialogEntry>
 
 							<!-- Selected combined Feature Values ("X and Y") -->
 							<template
 								v-for="facet in selectedCombinedFilters.values()"
 								:key="facet.combinedValue"
 							>
-								<FormField
-									v-slot="{ value, handleChange }"
-									name="items"
-									type="checkbox"
-									:unchecked-value="false"
-									:value="facet.combinedValue"
+								<FeatureSelectionDialogEntry
+									:count="facet.count"
+									:label="facet.combinedValue"
+									:marker-data="markerData"
+									:update-marker="updateMarker"
 								>
-									<FormItem class="flex flex-row items-start space-x-3 space-y-0">
-										<FormControl class="my-1">
-											<Checkbox
-												:checked="value.includes(facet?.combinedValue)"
-												class="border-sky-300 data-[state=checked]:bg-sky-200"
-												@update:checked="
-													(checked) => {
-														handleChange(checked);
-													}
-												"
-											/>
-										</FormControl>
-										<FormLabel class="w-auto py-0 font-normal">
-											<span v-for="(fv, idx) in facet?.filterValues" :key="fv"
-												>{{ fv
-												}}<span
-													v-if="idx < facet!.filterValues.length - 1"
-													class="font-mono font-semibold"
-													>&nbsp;and&nbsp;</span
-												>
-											</span>
-											<Badge class="ml-2 border-neutral-300" variant="outline">{{
-												facet!.count
-											}}</Badge>
-										</FormLabel>
-										<MarkerSelector
-											v-if="value.includes(facet?.combinedValue)"
-											:icon-categories="['shapes']"
-											:model-value="markerData[facet.combinedValue]!"
-											@update:model-value="(props) => updateMarker(props)"
-										></MarkerSelector>
-									</FormItem>
-								</FormField>
+									<span v-for="(fv, idx) in facet?.filterValues" :key="fv"
+										>{{ fv
+										}}<span
+											v-if="idx < facet!.filterValues.length - 1"
+											class="font-mono font-semibold"
+											>&nbsp;and&nbsp;</span
+										>
+									</span></FeatureSelectionDialogEntry
+								>
 							</template>
 						</div>
 
 						<!-- Regular Feature Values -->
-						<template v-for="facet in facets" :key="facet[0]">
-							<FormField
-								v-slot="{ value, handleChange }"
-								name="items"
-								type="checkbox"
-								:unchecked-value="false"
-								:value="facet[0]"
-							>
-								<FormItem class="flex flex-row items-start space-x-3 space-y-0">
-									<FormControl class="my-1">
-										<Checkbox
-											:checked="value.includes(facet[0])"
-											@update:checked="
-												(checked) => {
-													handleChange(checked);
-													onChange(facet[0], checked);
-												}
-											"
-										/>
-									</FormControl>
-									<FormLabel class="w-auto py-0 font-normal">
-										<span>{{ facet[0] }}</span>
-										<Badge class="ml-2" variant="outline">{{ facet[1] }}</Badge>
-									</FormLabel>
-									<MarkerSelector
-										v-if="value.includes(facet[0])"
-										:icon-categories="['shapes']"
-										:model-value="markerData[facet[0]]!"
-										@update:model-value="(props) => updateMarker(props)"
-									></MarkerSelector>
-								</FormItem>
-							</FormField>
-						</template>
-
+						<div class="ml-2.5">
+							<template v-for="[key, entry] in taxonomyTree.entries()" :key="key">
+								<FeatureSelectionDialogEntry
+									:facets="facets"
+									:label="entry.label ?? ''"
+									:marker-data="markerData"
+									:taxonomy-entry="entry"
+									:update-marker="updateMarker"
+									@checked="(facetKey, checked) => onChange(facetKey, checked)"
+									@toggle-all="(key, tree) => toggleAllValuesUnderTaxonomy(key, tree)"
+								>
+									<span class="font-semibold">{{ entry.label }}</span>
+								</FeatureSelectionDialogEntry>
+							</template>
+						</div>
 						<FormMessage />
 					</FormItem>
 				</FormField>

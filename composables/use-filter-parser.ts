@@ -270,13 +270,15 @@ function matchQueryStringAndFilters(query: string, filters: Array<string>) {
 
 	return filteredQueryString;
 }
-
 function syncGlobalAndColumnFilters(table: Table<unknown>) {
 	const columnFilters = table.getState().columnFilters as Array<{
 		id: string;
 		value: Map<string, unknown>;
 	}>;
 	let currentGlobalFilter = String(table.getState().globalFilter ?? "");
+
+	const { getTaxonomyTree } = useGeojsonStore();
+
 	const assembledColumnFilters = columnFilters
 		.map((column) => {
 			const allColValues = [
@@ -294,15 +296,80 @@ function syncGlobalAndColumnFilters(table: Table<unknown>) {
 						}),
 				];
 			}
-			return [...column.value.entries()].map(([key, _value]) => {
-				return assembleFilter(column.id, key);
-			});
+
+			// Build taxonomy tree for this column
+			const taxonomyTree = getTaxonomyTree(column.id);
+
+			// Helper to check if all values under a taxonomy node are selected
+			function allValuesSelected(treeEntry: TaxonomyTreeEntry): boolean {
+				return (
+					treeEntry.featureValues.length > 0 &&
+					treeEntry.featureValues.every((val) => column.value.has(val))
+				);
+			}
+
+			// Traverse taxonomy tree and replace all selected values under a taxonomy node with taxonomy label
+			const replacedFilters: Array<string> = [];
+			function traverseTree(tree: TaxonomyTree, _parentKey = "") {
+				for (const [key, entry] of tree.entries()) {
+					if (allValuesSelected(entry)) {
+						// Replace all individual filters with taxonomy label
+						replacedFilters.push(`${column.id}:"${key}"`);
+						// Remove individual filters for these featureValues
+						entry.featureValues.forEach((val) => column.value.delete(val));
+					}
+					// Recursively check children
+					traverseTree(entry.children, key);
+				}
+			}
+			traverseTree(taxonomyTree);
+
+			// Add remaining individual filters
+			const remainingFilters = [...column.value.entries()].map(([key, _value]) =>
+				assembleFilter(column.id, key),
+			);
+
+			return [...replacedFilters, ...remainingFilters];
 		})
 		.flat();
+
 	currentGlobalFilter = matchQueryStringAndFilters(currentGlobalFilter, assembledColumnFilters);
 	currentGlobalFilter = currentGlobalFilter.replace(/^ OR /, "").replaceAll("  ", " ");
 	table.setGlobalFilter(currentGlobalFilter);
 }
+
+// function _syncGlobalAndColumnFilters(table: Table<unknown>) {
+// 	const columnFilters = table.getState().columnFilters as Array<{
+// 		id: string;
+// 		value: Map<string, unknown>;
+// 	}>;
+// 	let currentGlobalFilter = String(table.getState().globalFilter ?? "");
+// 	const assembledColumnFilters = columnFilters
+// 		.map((column) => {
+// 			const allColValues = [
+// 				...new Set(table.getCoreRowModel().flatRows.flatMap((row) => row.getValue(column.id))),
+// 			];
+// 			if (allColValues.every((val) => column.value.has(val as string))) {
+// 				return [
+// 					`${column.id}:ANY `,
+// 					...[...column.value.entries()]
+// 						.filter(([key, _value]) => {
+// 							return !allColValues.includes(key);
+// 						})
+// 						.map(([key, _value]) => {
+// 							return assembleFilter(column.id, key);
+// 						}),
+// 				];
+// 			}
+// 			return [...column.value.entries()].map(([key, _value]) => {
+// 				return assembleFilter(column.id, key);
+// 			});
+// 		})
+// 		.flat();
+// 	currentGlobalFilter = matchQueryStringAndFilters(currentGlobalFilter, assembledColumnFilters);
+// 	currentGlobalFilter = currentGlobalFilter.replace(/^ OR /, "").replaceAll("  ", " ");
+// 	table.setGlobalFilter(currentGlobalFilter);
+// }
 
 function addMetaFilter(originalQuery: string, metaKey: string, metaValue: string | Array<string>) {
 	let newFilter: string;
