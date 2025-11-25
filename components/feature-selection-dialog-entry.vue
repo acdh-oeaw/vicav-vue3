@@ -13,39 +13,13 @@ const props = defineProps<{
 }>();
 const emit = defineEmits(["checked", "toggle-all"]);
 
-function countChildren(parent: TaxonomyTreeEntry): number {
-	const featureValueCounts = parent.featureValues.map(
-		(val) => props.facets?.find((entry) => entry[0] === val)?.[1] ?? 0,
-	);
-	const childCounts = [...parent.children.values()].map((child) => countChildren(child));
-	return featureValueCounts.concat(childCounts).reduce((prev, curr) => prev + curr);
-}
+const { getSortedTaxonomyFeatureValues, getSortedTaxonomyChildren } = useGeojsonStore();
 
 const sortedChildren = computed(() => {
-	if (
-		!props.taxonomyEntry ||
-		!props.taxonomyEntry.children ||
-		props.taxonomyEntry.children.size === 0
-	)
-		return null;
-	const childrenAndCount = [...props.taxonomyEntry.children.entries()].map((entry) => [
-		...entry,
-		countChildren(entry[1]),
-	]) as Array<[string, typeof props.taxonomyEntry, number]>;
-	return childrenAndCount.sort((a, b) => b[2] - a[2]);
+	return getSortedTaxonomyChildren(props.taxonomyEntry, props.facets);
 });
 const sortedFeatureValues = computed(() => {
-	if (
-		!props.taxonomyEntry ||
-		!props.taxonomyEntry.featureValues ||
-		props.taxonomyEntry.featureValues.length === 0
-	)
-		return null;
-	const featureValuesAndCount = props.taxonomyEntry.featureValues.map((entry) => [
-		entry,
-		props.facets?.find((f) => f[0] === entry)?.[1] ?? 0,
-	]) as Array<[string, number]>;
-	return featureValuesAndCount.sort((a, b) => b[1] - a[1]);
+	return getSortedTaxonomyFeatureValues(props.taxonomyEntry, props.facets);
 });
 
 const isHierarchyHeading = computed(() => props.taxonomyEntry != null);

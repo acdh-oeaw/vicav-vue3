@@ -17,7 +17,7 @@ import type { SelectionEntry } from "./marker-selector.vue";
 
 const { AND_OPERATOR, getCombinedFilterOption } = useAdvancedQueries();
 const { syncGlobalAndColumnFilters } = useFilterParser();
-const { getTaxonomyTree, featureValueTaxonomy } = useGeojsonStore();
+const { getFacetsForId, getTaxonomyTree, featureValueTaxonomy } = useGeojsonStore();
 
 const props = defineProps<{
 	column: Column<unknown>;
@@ -27,15 +27,7 @@ const props = defineProps<{
 const rowData = computed(() => props.table.getCoreRowModel().flatRows);
 const facets = toRef(
 	computed(() => {
-		const mappedRowData = rowData.value.flatMap((row) =>
-			row.getValue(props.column.id),
-		) as Array<string>;
-		const facetedData = mappedRowData.reduce((prev: Record<string, number>, current: string) => {
-			if (!(current in prev)) prev[current] = 0;
-			prev[current]!++;
-			return prev;
-		}, {});
-		return Object.entries(facetedData).sort((a, b) => b[1] - a[1]);
+		return getFacetsForId(props.table, props.column.id);
 	}),
 );
 const selectedCombinedFilters = computed(() => {
@@ -229,6 +221,7 @@ function computeMarkerData() {
 		if (!markers.value.has(id)) {
 			return;
 		}
+		//@ts-expect-error possibly infinite type instantiation
 		data[entry] = {
 			id,
 			colorCode: markers.value.get(id)!.colorCode,

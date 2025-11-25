@@ -57,6 +57,47 @@ export const useGeojsonStore = defineStore("geojson", () => {
 		}
 		return tree;
 	}
+	function getFacetsForId(table: Table<unknown>, colId: string) {
+		const mappedRowData = table.getCoreRowModel().flatRows.flatMap((row) => row.getValue(colId));
+		const facetedData = mappedRowData.reduce((prev: Record<string, number>, current: string) => {
+			if (!(current in prev)) prev[current] = 0;
+			prev[current]!++;
+			return prev;
+		}, {});
+		return Object.entries(facetedData).sort((a, b) => b[1] - a[1]);
+	}
+	function countChildren(
+		parent: TaxonomyTreeEntry,
+		facets: Array<[string, number]> | undefined,
+	): number {
+		const featureValueCounts = parent.featureValues.map(
+			(val) => facets?.find((entry) => entry[0] === val)?.[1] ?? 0,
+		);
+		const childCounts = [...parent.children.values()].map((child) => countChildren(child, facets));
+		return featureValueCounts.concat(childCounts).reduce((prev, curr) => prev + curr);
+	}
+	function getSortedTaxonomyChildren(
+		entry: TaxonomyTreeEntry | undefined,
+		facets: Array<[string, number]> | undefined,
+	) {
+		if (!entry?.children || entry.children.size === 0) return null;
+		const childrenAndCount = [...entry.children.entries()].map((entry) => [
+			...entry,
+			countChildren(entry[1], facets),
+		]);
+		return childrenAndCount.sort((a, b) => b[2] - a[2]);
+	}
+	function getSortedTaxonomyFeatureValues(
+		entry: TaxonomyTreeEntry | undefined,
+		facets: Array<[string, number]> | undefined,
+	) {
+		if (!entry?.featureValues || entry.featureValues.length === 0) return null;
+		const featureValuesAndCount = entry.featureValues.map((entry) => [
+			entry,
+			facets?.find((f) => f[0] === entry)?.[1] ?? 0,
+		]);
+		return featureValuesAndCount.sort((a, b) => b[1] - a[1]);
+	}
 
 	const fetchGeojson = (url: string) => {
 		return useQuery({
@@ -89,9 +130,12 @@ export const useGeojsonStore = defineStore("geojson", () => {
 		fetchedData,
 		fetchGeojson,
 		tables,
+		getFacetsForId,
 		buildFeatureTaxonomy,
 		featureValueTaxonomy,
 		getTaxonomyTree,
 		showAllDetails,
+		getSortedTaxonomyChildren,
+		getSortedTaxonomyFeatureValues,
 	};
 });
