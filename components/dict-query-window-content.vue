@@ -127,6 +127,8 @@ const isLoading = computed(() => {
 	return isPending.value || isPlaceholderData.value;
 });
 
+const isExtendedFormOpen = ref(false);
+
 /* pagination
 const goToPage = (newPage: number) => {
 	page.value = newPage;
@@ -145,7 +147,9 @@ const api = useApiClient(); */
 	>
 		<!-- eslint-disable vuejs-accessibility/form-control-has-label, tailwindcss/no-custom-classname -->
 		<Collapsible v-model:open="params.isQueryVisible" class="prose max-w-3xl px-8 pb-4 pt-8">
-			<CollapsibleTrigger class="dvStats flex w-full items-baseline">
+			<CollapsibleTrigger
+				class="flex w-full items-baseline bg-primary text-on-primary p-4 pt-0 pb-0"
+			>
 				<span>Query {{ params.textId }}:</span>
 				<div class="relative top-1 ml-auto mr-4">
 					<div v-if="!params.isQueryVisible">
@@ -246,6 +250,106 @@ const api = useApiClient(); */
 						Add one or more filters by entering criteria in the form above and pressing the "+"
 						button.
 					</div>
+				</div>
+				<div class="mt-4">
+					<Collapsible v-model:open="isExtendedFormOpen" class="prose max-w-3xl px-8 pb-4 pt-8">
+						<CollapsibleTrigger class="dvStats flex w-full items-baseline">
+							Extended options:s
+							<div class="relative top-1 ml-auto mr-4">
+								<div v-if="!isExtendedFormOpen">
+									<svg
+										class="svg-icon"
+										style="
+											vertical-align: middle;
+											overflow: hidden;
+											width: 1em;
+											height: 1em;
+											fill: currentColor;
+										"
+										viewBox="0 0 1024 1024"
+										xmlns="http://www.w3.org/2000/svg"
+									>
+										<path
+											d="M511.5 789.9 80.6 359c-22.8-22.8-22.8-59.8 0-82.6 22.8-22.8 59.8-22.8 82.6 0l348.3 348.3 348.3-348.3c22.8-22.8 59.8-22.8 82.6 0 22.8 22.8 22.8 59.8 0 82.6L511.5 789.9 511.5 789.9zM511.5 789.9"
+										/>
+									</svg>
+								</div>
+								<div v-if="isExtendedFormOpen">
+									<svg
+										class="svg-icon"
+										style="
+											vertical-align: middle;
+											overflow: hidden;
+											width: 1em;
+											height: 1em;
+											fill: currentColor;
+										"
+										viewBox="0 0 1024 1024"
+										xmlns="http://www.w3.org/2000/svg"
+									>
+										<path
+											d="M511.5 259.3 942.4 690.1c22.8 22.8 22.8 59.8 0 82.6-22.8 22.8-59.8 22.8-82.6 0L511.5 424.5 163.2 772.8c-22.8 22.8-59.8 22.8-82.6 0-22.8-22.8-22.8-59.8 0-82.6L511.5 259.3 511.5 259.3zM511.5 259.3"
+										/>
+									</svg>
+								</div>
+							</div>
+						</CollapsibleTrigger>
+						<CollapsibleContent>
+							<div :id="`${formId}_ext`" class="bg-gray-200 px-4">
+								<table class="w-full max-w-full table-fixed">
+									<tbody>
+										<tr>
+											<th>page</th>
+											<td>
+												<input v-model="page" class="w-full" type="number" />
+											</td>
+										</tr>
+										<tr>
+											<th>pageSize</th>
+											<td>
+												<input v-model="pageSize" class="w-full" type="number" />
+											</td>
+										</tr>
+										<tr>
+											<th>id</th>
+											<td>
+												<input v-model="id" class="w-full" type="text" />
+											</td>
+										</tr>
+										<tr>
+											<th>ids</th>
+											<td>
+												<input v-model="ids" class="w-full" type="text" />
+											</td>
+										</tr>
+										<tr>
+											<th>sort</th>
+											<td>
+												<select v-model="sort" class="w-full">
+													<option :value="null"></option>
+													<option value="none">none</option>
+													<option value="asc">asc</option>
+													<option value="desc">desc</option>
+												</select>
+											</td>
+										</tr>
+										<tr>
+											<th>altLemma</th>
+											<td>
+												<input v-model="altLemma" class="w-full" type="text" />
+											</td>
+										</tr>
+										<tr>
+											<th>format</th>
+											<td>
+												<input v-model="format" class="w-full" type="text" />
+											</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</CollapsibleContent>
+					</Collapsible>
 				</div>
 				<div class="mt-3">
 					<button
@@ -394,7 +498,7 @@ const api = useApiClient(); */
 }
 
 .tbEntry {
-	@apply m-0 mr-2.5;
+	@apply m-0 mb-2.5 mr-2.5;
 }
 
 .tdMain {
