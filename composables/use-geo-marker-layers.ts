@@ -39,6 +39,11 @@ export function useGeoMarkerLayers(
 									},
 								);
 								break;
+							case "data_markers":
+							case "dict_markers":
+							case "feature_markers":
+							case "profile_markers":
+							case "sample_markers":
 							default:
 								response = await api.vicav.getGeoMarkers(
 									endpoint.slice(0, "_markers".length * -1) as MarkersType,
