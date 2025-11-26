@@ -34,7 +34,7 @@ dist
 /playwright/.cache/
 
 # auto-generated api-client
-/lib/api-client/
+/app/lib/api-client/
 
 
 ## .dockerignore ##
