@@ -10,7 +10,7 @@ export function useGeoMapConfig() {
 	};
 
 	const initialViewState = {
-		center: data.value?.projectConfig?.map?.center as [number, number],
+		center: data.value?.projectConfig?.map?.center,
 		zoom: data.value?.projectConfig?.map?.zoom,
 	};
 

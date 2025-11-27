@@ -281,7 +281,7 @@ onMounted(async () => {
 	if (mapRef.value == null) return;
 
 	context.map = createMap(mapRef.value, config.options).setView(
-		config.initialViewState.center,
+		config.initialViewState.center!,
 		config.initialViewState.zoom,
 	);
 

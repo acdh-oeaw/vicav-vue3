@@ -178,7 +178,7 @@ export type FeatureCollectionType = z.infer<typeof FeatureCollectionSchema>;
 
 export const LocationSchema = z.object({
 	targetType: z.literal("Location"),
-	params: z.object<Row<FeatureType>>({}).extend(ShowCitation.partial().shape).loose(),
+	params: z.object<Row<FeatureType>>().extend(ShowCitation.partial().shape).loose(),
 });
 export type LocationWindowItem = WindowItemBase & z.infer<typeof LocationSchema>;
 
