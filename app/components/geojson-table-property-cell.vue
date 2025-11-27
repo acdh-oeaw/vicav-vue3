@@ -109,7 +109,7 @@ function getPersonGroupIcon(personGroup: Record<string, string>) {
 	return null;
 }
 function trimPrefix(str: string) {
-	if (typeof str === "string") return str.replace(/(#|pgr:)/, "");
+	if (typeof str === "string") return str.replace(/#|pgr:/, "");
 	else return str;
 }
 const { showAllDetails } = storeToRefs(useGeojsonStore());
