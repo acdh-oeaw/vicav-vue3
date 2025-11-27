@@ -128,7 +128,7 @@ export default defineNuxtConfig({
 					"~/*": ["./*"],
 				},
 			},
-			include: ["../*.config.ts", "../i18n/*.config.ts", "../e2e/**/*.ts"],
+			include: ["../*.config.ts", "../e2e/**/*.ts"],
 		},
 	},
 });
