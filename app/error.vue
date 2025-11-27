@@ -95,7 +95,7 @@ const props = defineProps<Props>();
 				>
 					<span v-if="props.error?.statusCode == 404">
 						The page you are looking for does not exist. Check the url in the browser or go to the
-						<NuxtLink class="text-blue-700 underline" to="/public">main site</NuxtLink>
+						<NuxtLink class="text-blue-700 underline" to="/">main site</NuxtLink>
 						.
 					</span>
 					<span v-else>This site is under maintenance right now. Please check back later!</span>

@@ -22,7 +22,7 @@ const emit = defineEmits<{
 			:key="marker.properties.targetType + '_' + marker.properties.textId"
 		>
 			<a
-				href="/public"
+				href="#"
 				@click.prevent.stop="
 					props.useCustomClickHandler
 						? emit('anchor-click', marker)

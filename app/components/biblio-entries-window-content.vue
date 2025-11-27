@@ -136,7 +136,7 @@ function submitNewQueryKeyup(event: KeyboardEvent): void {
 								data-label="Bibliography (Details)"
 								data-target-type="Text"
 								data-text-id="li_vicavExplanationBibliography"
-								href="/public"
+								href="#"
 								@click="openNewWindowFromAnchor"
 							>
 								click here

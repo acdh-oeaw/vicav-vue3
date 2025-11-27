@@ -65,7 +65,7 @@ const funders = computed(() => config.value?.projectConfig?.funders ?? []);
 				<div class="-mx-4 flex flex-wrap">
 					<div class="mt-4 w-1/4 flex-none px-4 sm:w-1/6 md:w-1/6 lg:w-1/12">
 						<div class="">
-							<a href="/public">
+							<a href="https://www.oeaw.ac.at/acdh" rel="noopener" target="_blank">
 								<img
 									alt="ACDH Logo"
 									src="https://fundament.acdh.oeaw.ac.at/common-assets/images/acdh_logo.svg"
