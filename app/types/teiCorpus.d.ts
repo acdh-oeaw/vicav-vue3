@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/consistent-type-definitions */
 import type { JsonValue } from "type-fest";
 
+import type { Person, TeiHeader } from "@/lib/api-client/index.ts";
+
 type simplePerson = {
 	name: string;
 	sex: string;
@@ -56,33 +58,6 @@ export type Responsibility =
 	| "principal"
 	| "transcription"
 	| "transfer to ELAN";
-
-// TeiCropus metadata definition
-
-export type TeiCorpus = {
-	"@id": string;
-	TEIs: Array<TEI>;
-	teiHeader?: TeiHeader;
-	standOff?: StandOff;
-};
-
-export type TEI = {
-	"@space"?: string;
-	"@id"?: string;
-	teiHeader: TeiHeader;
-	"@type"?: string;
-	"@hasTEIw"?: string;
-	"@next"?: string;
-	"@prev"?: string;
-};
-
-export type TeiHeader = {
-	"@id"?: string;
-	fileDesc: FileDesc;
-	encodingDesc?: EncodingDesc;
-	profileDesc?: ProfileDesc;
-	revisionDesc?: RevisionDesc;
-};
 
 export type FileDesc = {
 	titleStmt: TitleStmt;
@@ -364,22 +339,6 @@ export type TextDesc = {
 export type ParticDesc = {
 	person?: Person;
 	listPerson?: Array<Person>;
-};
-
-export type Person = {
-	"@sameAs"?: string;
-	"@id"?: string;
-	"@sex"?: string;
-	"@age"?: string;
-	name?: TeiTypedTarget;
-	persName?: PersName;
-	sex?: XmlTextNode;
-	birth?: Birth | XmlTextNode;
-	note?: XmlTextNode;
-	state?: State;
-	idno?: TeiTypedTarget;
-	affiliation?: XmlTextNode;
-	$?: string;
 };
 
 export type SettingDesc = {

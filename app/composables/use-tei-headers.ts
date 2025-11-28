@@ -1,27 +1,23 @@
 import { computed } from "vue";
 
+import type { Person, TEI, TeiCorpus, TeiHeader } from "@/lib/api-client/index.ts";
 import type {
 	PersName,
-	Person,
 	Responsibility,
 	RespStmt,
 	simpleTEIMetadata,
 	Taxonomy,
-	TEI,
-	TeiCorpus,
-	TeiHeader,
 	TeiTypedTarget,
 } from "@/types/teiCorpus";
 
 import dataTypes from "../config/dataTypes.ts";
 
-// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
 type RawTEIItems = ComputedRef<Array<TeiCorpus | object>>;
 
 const extractPersons = function (item: TEI, corpusMetadata: TeiHeader | undefined) {
 	const corpusPersons = corpusMetadata?.profileDesc?.particDesc?.listPerson;
 	const results = [];
-	if (corpusPersons && item.teiHeader.profileDesc?.particDesc?.listPerson) {
+	if (corpusPersons && item.teiHeader?.profileDesc?.particDesc?.listPerson) {
 		const persons = item.teiHeader.profileDesc.particDesc.listPerson
 			.map((item: Person) => {
 				return (item["@sameAs"] ?? item.$ ?? "").replace("corpus:", "");
@@ -45,7 +41,7 @@ const extractMetadata = function (
 	dataType: string,
 	corpusMetadata: TeiHeader | undefined,
 ) {
-	const place = item.teiHeader.profileDesc?.settingDesc?.place;
+	const place = item.teiHeader?.profileDesc?.settingDesc?.place;
 	const template = {
 		id: "",
 		recordingDate: "",
@@ -72,12 +68,12 @@ const extractMetadata = function (
 		teiHeader: item.teiHeader,
 	} as simpleTEIMetadata;
 
-	template.id = item["@id"] ?? item.teiHeader.fileDesc.publicationStmt.idno?.$ ?? "no_id";
+	template.id = item["@id"] ?? item.teiHeader?.fileDesc.publicationStmt.idno?.$ ?? "no_id";
 
-	if (item.teiHeader.fileDesc.sourceDesc.recordingStmt?.recording.date)
+	if (item.teiHeader?.fileDesc.sourceDesc.recordingStmt?.recording.date)
 		template.recordingDate =
 			item.teiHeader.fileDesc.sourceDesc.recordingStmt.recording.date["@when"];
-	template.pubDate = item.teiHeader.fileDesc.publicationStmt.date?.$ ?? "unknown";
+	template.pubDate = item.teiHeader?.fileDesc.publicationStmt.date?.$ ?? "unknown";
 	const dataTypeObject = Object.values(dataTypes).find(
 		(dataTypeObject) => dataTypeObject.collection === dataType,
 	);
@@ -167,11 +163,11 @@ const extractMetadata = function (
 		] as Array<Responsibility>
 	).forEach((responsibility) => {
 		if (
-			item.teiHeader.fileDesc.titleStmt.respStmts?.find((r) => r.resp.$ === responsibility) &&
+			item.teiHeader?.fileDesc.titleStmt.respStmts?.find((r) => r.resp.$ === responsibility) &&
 			corpusMetadata
 		) {
 			template[responsibility as keyof simpleTEIMetadata] =
-				item.teiHeader.fileDesc.titleStmt.respStmts
+				item.teiHeader?.fileDesc.titleStmt.respStmts
 					.filter((r) => responsibility === r.resp.$)
 					.map((resp) => {
 						const respPerson = corpusMetadata.fileDesc.titleStmt.respStmts?.find(
@@ -331,7 +327,7 @@ const extractMetadata = function (
 };
 
 // Google Gemini Cloude Code suggestion
-// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
+
 function isTEIs(item: TeiCorpus | object): item is TeiCorpus {
 	return Object.hasOwn(item, "TEIs");
 }
