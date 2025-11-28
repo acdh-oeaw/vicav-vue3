@@ -221,6 +221,7 @@ function computeMarkerData() {
 		if (!markers.value.has(id)) {
 			return;
 		}
+
 		//@ts-expect-error possibly infinite type instantiation
 		data[entry] = {
 			id,

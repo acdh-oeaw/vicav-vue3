@@ -58,7 +58,9 @@ export const useGeojsonStore = defineStore("geojson", () => {
 		return tree;
 	}
 	function getFacetsForId(table: Table<unknown>, colId: string) {
-		const mappedRowData = table.getCoreRowModel().flatRows.flatMap((row) => row.getValue(colId));
+		const mappedRowData: Array<string> = table
+			.getCoreRowModel()
+			.flatRows.flatMap((row) => row.getValue(colId));
 		const facetedData = mappedRowData.reduce((prev: Record<string, number>, current: string) => {
 			if (!(current in prev)) prev[current] = 0;
 			prev[current]!++;
@@ -81,10 +83,9 @@ export const useGeojsonStore = defineStore("geojson", () => {
 		facets: Array<[string, number]> | undefined,
 	) {
 		if (!entry?.children || entry.children.size === 0) return null;
-		const childrenAndCount = [...entry.children.entries()].map((entry) => [
-			...entry,
-			countChildren(entry[1], facets),
-		]);
+		const childrenAndCount: Array<[string, TaxonomyTreeEntry, number]> = [
+			...entry.children.entries(),
+		].map((entry) => [...entry, countChildren(entry[1], facets)]);
 		return childrenAndCount.sort((a, b) => b[2] - a[2]);
 	}
 	function getSortedTaxonomyFeatureValues(
@@ -92,7 +93,7 @@ export const useGeojsonStore = defineStore("geojson", () => {
 		facets: Array<[string, number]> | undefined,
 	) {
 		if (!entry?.featureValues || entry.featureValues.length === 0) return null;
-		const featureValuesAndCount = entry.featureValues.map((entry) => [
+		const featureValuesAndCount: Array<[string, number]> = entry.featureValues.map((entry) => [
 			entry,
 			facets?.find((f) => f[0] === entry)?.[1] ?? 0,
 		]);
