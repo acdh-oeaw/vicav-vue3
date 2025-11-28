@@ -5,7 +5,8 @@ import { defineNuxtConfig } from "nuxt/config";
 
 export default defineNuxtConfig({
 	alias: {
-		"@": fileURLToPath(new URL("./", import.meta.url)),
+		"@": fileURLToPath(new URL("./app", import.meta.url)),
+		"~": fileURLToPath(new URL("./", import.meta.url)),
 	},
 
 	app: {
@@ -30,7 +31,8 @@ export default defineNuxtConfig({
 
 	eslint: {
 		config: {
-			standalone: true,
+			autoInit: false,
+			standalone: false,
 		},
 	},
 
@@ -108,10 +110,8 @@ export default defineNuxtConfig({
 	},
 
 	vite: {
-		vue: {
-			script: {
-				defineModel: true,
-			},
+		build: {
+			cssMinify: "lightningcss",
 		},
 		plugins: [tailwindcss()],
 	},
@@ -122,15 +122,13 @@ export default defineNuxtConfig({
 		// https://github.com/nuxt/nuxt/issues/14816#issuecomment-1484918081
 		tsConfig: {
 			compilerOptions: {
+				baseUrl: ".",
 				paths: {
-					"@/*": ["./*"],
+					"@/*": ["./app/*"],
+					"~/*": ["./*"],
 				},
 			},
+			include: ["../*.config.ts", "../e2e/**/*.ts"],
 		},
 	},
-
-	future: {
-		compatibilityVersion: 4,
-	},
-	compatibilityDate: "2024-09-20",
 });
