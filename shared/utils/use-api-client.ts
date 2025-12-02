@@ -161,7 +161,7 @@ export function useApiClient() {
 		});
 	}
 
-	if (env.apiBaseUrl) {
+	if (import.meta.server && env.apiBaseUrl) {
 		api.baseUrl = env.apiBaseUrl;
 	} else if (env.public.apiBaseUrl) {
 		api.baseUrl = env.public.apiBaseUrl;
