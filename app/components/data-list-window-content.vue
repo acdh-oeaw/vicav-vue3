@@ -22,14 +22,16 @@ type groupedByPlace = Record<string, groupedByDataType>; //L3
 type groupedByRegion = Record<string, groupedByPlace>; //L2
 type groupedByCountry = Record<string, groupedByRegion>; //L1
 
+// simpleTEIMetadata is not assignable to JsonObject. Why?
+// Workaround: generic function called with lots of unchecked type casts.
 const groupedItems = getGroupedItems(
-	simpleItems.value,
+	simpleItems.value as unknown as Array<JsonObject>,
 	["place.country", "place.region", "place.settlement", "dataType"],
 	"dataType",
 	props.params.dataTypes,
 	(a: JsonObject, b: JsonObject) => {
-		const amatch = Number((a as simpleTEIMetadata).label?.match(/[a-z]+(\d+)/i)?.at(1));
-		const bmatch = Number((b as simpleTEIMetadata).label?.match(/[a-z]+(\d+)/i)?.at(1));
+		const amatch = Number((a as unknown as simpleTEIMetadata).label?.match(/[a-z]+(\d+)/i)?.at(1));
+		const bmatch = Number((b as unknown as simpleTEIMetadata).label?.match(/[a-z]+(\d+)/i)?.at(1));
 
 		if (!amatch || !bmatch)
 			return !a.label || !b.label ? 0 : a.label < b.label ? -1 : a.label > b.label ? 1 : 0;
@@ -38,7 +40,7 @@ const groupedItems = getGroupedItems(
 		}
 	},
 	props.params.filterListBy,
-) as groupedByCountry;
+) as unknown as groupedByCountry;
 const openNewWindowFromAnchor = useAnchorClickHandler();
 
 const debugString = debug ? JSON.stringify(groupedItems, null, 2) : "";
