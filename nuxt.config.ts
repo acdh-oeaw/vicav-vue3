@@ -9,6 +9,11 @@ export default defineNuxtConfig({
 		"~": fileURLToPath(new URL("./", import.meta.url)),
 	},
 
+	sourcemap: {
+		server: true,
+		client: true,
+	},
+
 	app: {
 		layoutTransition: false,
 		pageTransition: false,
