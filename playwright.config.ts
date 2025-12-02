@@ -17,10 +17,10 @@ const backend = (() => {
 		case "http://localhost:8984":
 			// case "https://shawi-api.acdh.oeaw.ac.at": This is the next production backend.
 			return "shawi";
-		case "https://tunocent-22a417b1-9f07-406b-9098-288b3f981d99.acdh-ch-dev.oeaw.ac.at/":
-		case "https://tunocent-api.acdh.oeaw.ac.at/":
+		case "https://tunocent-22a417b1-9f07-406b-9098-288b3f981d99.acdh-ch-dev.oeaw.ac.at":
+		case "https://tunocent-api.acdh.oeaw.ac.at":
 			return "tunocent";
-		case "https://wibarab-api.acdh-ch-dev.oeaw.ac.at/":
+		case "https://wibarab-api.acdh-ch-dev.oeaw.ac.at":
 			return "wibarab";
 		default:
 			// in VSCode there is "playwright.env" in settings.conf for the playwright running in the UI.
@@ -31,7 +31,8 @@ const backend = (() => {
 			// }
 			// If nothing is set in settings.conf file or the OS environment the UI will show the tests
 			// failing here:
-			throw new Error("unknown backend");
+			throw new Error(`Unknown backend ${process.env.NUXT_PUBLIC_API_BASE_URL ?? "undefined"}`);
+		// The backends _should_ _not_ end in a /
 	}
 })();
 
