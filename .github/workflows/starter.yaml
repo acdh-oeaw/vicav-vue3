@@ -322,7 +322,7 @@ jobs:
       PUBLIC_URL: ${{ needs.generate_workflow_vars.outputs.PUBLIC_URL }}
       submodules: ${{ needs.setup_workflow_env.outputs.submodules }}
   _2:
-    needs: [setup_workflow_env, generate_workflow_vars]
+    needs: [setup_workflow_env, generate_workflow_vars, _1]
     uses: acdh-oeaw/gl-autodevops-minimal-port/.github/workflows/herokuish-tests-db-url.yaml@main
     secrets: inherit
     # if you run this outside of acdh-oeaw yo uneed to specify every secret you want to pass by name
@@ -336,7 +336,7 @@ jobs:
       PUBLIC_URL: ${{ needs.generate_workflow_vars.outputs.PUBLIC_URL }}
       submodules: ${{ needs.setup_workflow_env.outputs.submodules }}
   _2_tunocent:
-    needs: [setup_workflow_env, generate_workflow_vars_tunocent, _2]
+    needs: [setup_workflow_env, generate_workflow_vars_tunocent, _1]
     uses: acdh-oeaw/gl-autodevops-minimal-port/.github/workflows/herokuish-tests-db-url.yaml@main
     secrets: inherit
     # if you run this outside of acdh-oeaw yo uneed to specify every secret you want to pass by name
@@ -350,7 +350,7 @@ jobs:
       PUBLIC_URL: ${{ needs.generate_workflow_vars_tunocent.outputs.PUBLIC_URL }}
       submodules: ${{ needs.setup_workflow_env.outputs.submodules }}
   _2_shawi:
-    needs: [setup_workflow_env, generate_workflow_vars_shawi, _1, _2]
+    needs: [setup_workflow_env, generate_workflow_vars_shawi, _1]
     uses: acdh-oeaw/gl-autodevops-minimal-port/.github/workflows/herokuish-tests-db-url.yaml@main
     secrets: inherit
     # if you run this outside of acdh-oeaw yo uneed to specify every secret you want to pass by name
@@ -364,7 +364,7 @@ jobs:
       PUBLIC_URL: ${{ needs.generate_workflow_vars_shawi.outputs.PUBLIC_URL }}
       submodules: ${{ needs.setup_workflow_env.outputs.submodules }}
   _2_wibarab:
-    needs: [setup_workflow_env, generate_workflow_vars_wibarab, _1, _2]
+    needs: [setup_workflow_env, generate_workflow_vars_wibarab, _1]
     uses: acdh-oeaw/gl-autodevops-minimal-port/.github/workflows/herokuish-tests-db-url.yaml@main
     secrets: inherit
     # if you run this outside of acdh-oeaw yo uneed to specify every secret you want to pass by name

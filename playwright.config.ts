@@ -11,10 +11,10 @@ const backend = (() => {
 	switch (process.env.NUXT_PUBLIC_API_BASE_URL) {
 		case "https://vicav-dev.acdh.oeaw.ac.at":
 		case "https://vicav.acdh.oeaw.ac.at":
-		case "http://localhost:8984":
 			// http://localhost:8984 needs to be moved according to the backend running
 			return "vicav";
 		case "https://shawi.acdh-ch-dev.oeaw.ac.at":
+		case "http://localhost:8984":
 			// case "https://shawi-api.acdh.oeaw.ac.at": This is the next production backend.
 			return "shawi";
 		case "https://tunocent-22a417b1-9f07-406b-9098-288b3f981d99.acdh-ch-dev.oeaw.ac.at":
