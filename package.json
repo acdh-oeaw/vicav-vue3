@@ -6,9 +6,9 @@
 	"license": "MIT",
 	"engines": {
 		"node": "24.x",
-		"pnpm": "9.x"
+		"pnpm": "10.x"
 	},
-	"packageManager": "pnpm@9.10.0+sha256.355a8ab8dbb6ad41befbef39bc4fd6b5df85e12761d2724bd01f13e878de4b13",
+	"packageManager": "pnpm@10.24.0+sha512.01ff8ae71b4419903b65c60fb2dc9d34cf8bb6e06d03bde112ef38f7a34d6904c424ba66bea5cdcf12890230bf39f9580473140ed9c946fef328b6e5238a345a",
 	"scripts": {
 		"analyze": "nuxt analyze",
 		"build": "NUXT_PUBLIC_CURRENT_GIT_SHA=$(git describe --tags --always) && run-s generate:api-client build:client",
@@ -50,7 +50,7 @@
 		"@fontsource-variable/roboto-flex": "^5.2.7",
 		"@fortawesome/fontawesome-free": "^6.7.2",
 		"@iconify/vue": "^4.3.0",
-		"@nuxt/test-utils": "^3.19.2",
+		"@nuxt/test-utils": "^3.20.1",
 		"@opentelemetry/api": "^1.9.0",
 		"@opentelemetry/context-async-hooks": "^2.1.0",
 		"@opentelemetry/core": "^2.1.0",
@@ -111,9 +111,9 @@
 		"@acdh-oeaw/prettier-config": "^2.0.1",
 		"@acdh-oeaw/stylelint-config": "^2.3.0",
 		"@acdh-oeaw/tsconfig": "^1.5.1",
-		"@nuxt/eslint": "^1.10.0",
 		"@axe-core/playwright": "^4.10.2",
 		"@nuxt/devtools": "^3.1.1",
+		"@nuxt/eslint": "^1.10.0",
 		"@playwright/test": "^1.55.0",
 		"@tailwindcss/typography": "^0.5.16",
 		"@tailwindcss/vite": "^4.1.13",
@@ -123,13 +123,13 @@
 		"@types/leaflet": "^1.9.20",
 		"@types/node": "^22.18.4",
 		"@types/winbox": "0.2.3",
-		"@vitest/coverage-v8": "^3.2.4",
+		"@vitest/coverage-v8": "^4.0.15",
 		"ci-info": "^3.9.0",
 		"cross-env": "^7.0.3",
 		"dotenv": "^16.6.1",
 		"dotenv-cli": "^8.0.0",
 		"dotenv-expand": "^12.0.3",
-		"eslint": "^9.35.0",
+		"eslint": "^9.38.0",
 		"eslint-config-flat-gitignore": "^2.1.0",
 		"eslint-plugin-check-file": "^3.3.1",
 		"h3": "^1.15.4",
@@ -146,7 +146,7 @@
 		"type-fest": "^4.41.0",
 		"typescript": "^5.9.3",
 		"typescript-eslint": "^8.47.0",
-		"vitest": "^3.2.4",
+		"vitest": "^4.0.15",
 		"vue-tsc": "^2.2.12"
 	},
 	"resolutions": {
@@ -157,7 +157,16 @@
 			"winbox@0.2.82": "patches/winbox@0.2.82.patch",
 			"@types/winbox@0.2.3": "patches/@types__winbox@0.2.3.patch",
 			"liqe": "patches/liqe.patch"
-		}
+		},
+		"onlyBuiltDependencies": [
+			"@parcel/watcher",
+			"@tailwindcss/oxide",
+			"esbuild",
+			"protobufjs",
+			"simple-git-hooks",
+			"unrs-resolver",
+			"vue-demi"
+		]
 	},
 	"browserslist": {
 		"development": [
