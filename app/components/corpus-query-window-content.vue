@@ -1,0 +1,214 @@
+<script setup lang="ts">
+import { Info } from "lucide-vue-next";
+import InfiniteLoading from "v3-infinite-loading";
+import type { StateHandler } from "v3-infinite-loading/lib/types";
+import type Zod from "zod";
+
+import type { Div } from "@/lib/api-client";
+import type { CorpusQuerySchema } from "@/types/global.ts";
+
+const api = useApiClient();
+const { simpleItems } = useTEIHeaders();
+const props = defineProps<{ params: Zod.infer<typeof CorpusQuerySchema>["params"] }>();
+const queryString = ref(props.params.queryString);
+const hits = ref<Array<Div & { label?: string }>>([]);
+const displayHits = ref<Array<Div & { label?: string }>>([]);
+const showHelp = ref<boolean>(false);
+
+const inlineAnnotations = ref<false | true | "indeterminate">(true);
+const inlineTranslations = ref<false | true | "indeterminate">(true);
+
+const currentPage = ref(0);
+const scrollComplete = ref<boolean>(false);
+
+async function searchCorpus() {
+	if (words.value.length > 0) queryString.value = `[word="${words.value.join("|")}"]`;
+
+	const result = await api.vicav.searchCorpus(
+		{
+			query: queryString.value,
+			render: "json",
+		},
+		{ headers: { Accept: "application/json" } },
+	);
+
+	if (result.error) {
+		console.error(result.error);
+		return;
+	}
+	if (!Array.isArray(result.data.hits) && Array.isArray(result.data.hits?.divs)) {
+		hits.value = result.data.hits.divs;
+		hits.value?.forEach((hit) => {
+			const teiHeader = simpleItems.value.find((header) => header.id === hit["@docRef"]);
+			hit.label = teiHeader?.label;
+		});
+		displayHits.value = hits.value.slice(currentPage.value * 10, (currentPage.value + 1) * 10);
+		scrollComplete.value = false;
+	}
+}
+
+// API currently doesn't support pagination for corpus search results, so we're faking it
+const handleInfiniteScroll = async function ($state: StateHandler) {
+	currentPage.value += 1;
+	const nextHits = hits.value.slice(currentPage.value * 10, (currentPage.value + 1) * 10);
+	if (nextHits.length > 0) {
+		displayHits.value = displayHits.value.concat(nextHits);
+		$state.loaded();
+	} else {
+		scrollComplete.value = true;
+		$state.complete();
+	}
+};
+
+const openNewWindowFromAnchor = useAnchorClickHandler();
+
+const { data: config } = useProjectInfo();
+const specialCharacters = config.value?.projectConfig?.specialCharacters;
+const wordSearch = ref("");
+const dataWordsQuery = useDataWords(
+	{ dataType: "CorpusText", query: wordSearch },
+	{ enabled: false },
+);
+
+watch(wordSearch, async (value) => {
+	if (!value || value.length < 2) return;
+	await dataWordsQuery.refetch();
+});
+
+const wordOptions = computed(() => {
+	return ((dataWordsQuery.data.value as unknown as Array<string>) ?? []).map((item: string) => {
+		return { label: item, value: item };
+	});
+});
+
+const words: Ref<Array<string>> = ref([]);
+</script>
+
+<template>
+	<!-- eslint-disable vue/no-v-html -->
+	<div class="p-2">
+		<form
+			class="block w-full rounded border border-gray-300 bg-gray-50 p-2.5 px-4 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
+		>
+			<label class="mb-2 flex w-48! p-0 font-bold" for="word_tags">
+				<span class="grow">Search for exact words</span>
+				<a href="#" title="More information" @click="showHelp = true"
+					><span class="hidden">More information</span>
+					<Info class="size-4" />
+				</a>
+			</label>
+			<div v-if="showHelp" class="flex items-center gap-2">
+				<span class="text-gray-500"
+					>Enter beginning of the word to trigger autocomplete suggestions from the words occurring
+					in the corpus. Autocomplete is accent-insensitive, allowing for a simplified word form
+					selection. Eg. "wa" will return results starting with "wā" or "ẉa" as well. <br />
+					Apart from the accent-insensitivity, "?" is used as a shortcut for ʔalif or ʕayn.<br />
+					Instead of choosing exact word forms from autocomplete results, you can enter a word with
+					wildcards and add it to the queried words by pressing enter. Supported wildcards: ".?"
+					stand for one character ".*" stands for multiple characters. characters.<br />
+					Example: w.?n would yield results like "wen", "win", "w.*n" would yield results for "wen,
+					win or weyn" as well.
+				</span>
+			</div>
+			<TagsSelect
+				v-if="wordOptions"
+				id="word_tags"
+				v-model="words"
+				v-model:search-term="wordSearch"
+				:filter-function="(i) => i"
+				:options="wordOptions"
+				placeholder="Search for words..."
+				:special-characters="specialCharacters"
+			/>
+
+			<label class="mb-2 flex w-40! p-0 font-bold" for="word_tags">
+				<span class="grow">Advanced search</span>
+			</label>
+			<div class="mb-2 flex items-center gap-2">
+				<Info class="size-4" />
+				<span class="text-gray-500"
+					>Enter a proper CQL query with exact transliateration characters. (<a
+						class="content-center"
+						href="https://howto.acdh.oeaw.ac.at/de/resources/corpus-query-language-im-austrian-media-corpus"
+						target="_blank"
+						title="More information about CQL syntax"
+						><span>More info</span></a
+					>)
+				</span>
+			</div>
+			<InputExtended
+				v-if="specialCharacters"
+				id="query"
+				v-model="queryString"
+				aria-label="Search"
+				placeholder="Search in corpus ..."
+				:special-characters="specialCharacters"
+				@submit="searchCorpus"
+			/>
+			<button
+				class="inline-block h-10 w-full rounded border-2 border-solid border-primary bg-on-primary text-center align-middle font-bold whitespace-nowrap text-primary hover:bg-primary hover:text-on-primary disabled:border-gray-400 disabled:text-gray-400 hover:disabled:bg-on-primary hover:disabled:text-gray-400"
+				:disabled="queryString === '' && words.length == 0"
+				@click.prevent.stop="searchCorpus"
+			>
+				Query
+			</button>
+			<br />
+		</form>
+		<div class="flex justify-end p-4">
+			<div>
+				<Checkbox
+					id="switch-annotations"
+					:default-checked="true"
+					@update:checked="inlineAnnotations = !inlineAnnotations"
+				/>
+				<label for="switch-annotations">&nbsp;Inline Annotations</label>
+			</div>
+			&nbsp;
+			<div>
+				<Checkbox
+					id="switch-translations"
+					:default-checked="true"
+					@update:checked="inlineTranslations = !inlineTranslations"
+				/>
+				<label for="switch-translations">&nbsp;Inline Translations</label>
+			</div>
+		</div>
+		<div>
+			<div v-if="hits && displayHits.length > 0" class="my-2">Query: "{{ queryString }}"</div>
+			<table>
+				<tr v-for="hit in displayHits" :key="hit['@id']">
+					<td class="p-0">
+						<a
+							:data-hits="hit.hits![0]"
+							data-target-type="CorpusText"
+							:data-text-id="hit['@docRef']"
+							:data-u="hit.u"
+							href="#"
+							@click="openNewWindowFromAnchor"
+						>
+							<strong>{{ hit["@docRef"] }}</strong>
+						</a>
+					</td>
+					<td>
+						<div v-if="hit.u" class="flex max-w-full flex-row px-6 py-3">
+							<CorpusTextJsonUtterance
+								v-for="(uContent, index) in hit.u['$$']"
+								:key="index"
+								:inline-annotation="inlineAnnotations as boolean"
+								:inline-translation="inlineTranslations as boolean"
+								:utterance="uContent"
+							></CorpusTextJsonUtterance>
+						</div>
+						<div
+							v-if="inlineTranslations && hit.Translation_spanGrp"
+							class="flex max-w-full flex-row px-6 py-3 italic"
+						>
+							{{ hit.Translation_spanGrp.span["$"] }}
+						</div>
+					</td>
+				</tr>
+			</table>
+			<InfiniteLoading v-if="!scrollComplete" ref="infinite" @infinite="handleInfiniteScroll" />
+		</div>
+	</div>
+</template>

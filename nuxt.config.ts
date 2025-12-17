@@ -5,7 +5,13 @@ import { defineNuxtConfig } from "nuxt/config";
 
 export default defineNuxtConfig({
 	alias: {
-		"@": fileURLToPath(new URL("./", import.meta.url)),
+		"@": fileURLToPath(new URL("./app", import.meta.url)),
+		"~": fileURLToPath(new URL("./", import.meta.url)),
+	},
+
+	sourcemap: {
+		server: true,
+		client: true,
 	},
 
 	app: {
@@ -30,7 +36,8 @@ export default defineNuxtConfig({
 
 	eslint: {
 		config: {
-			standalone: true,
+			autoInit: false,
+			standalone: false,
 		},
 	},
 
@@ -76,7 +83,7 @@ export default defineNuxtConfig({
 			apiBaseUrl: "https://vicav-dev.acdh.oeaw.ac.at",
 			appBaseUrl: "http://localhost:3000",
 			mapTileLayerAttribution:
-				"https://api.mapbox.com/styles/v1/acdh-ch-tech/cllp2n7aj004a01r7fl637bq1/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoiYWNkaC1jaC10ZWNoIiwiYSI6ImNsZXpnMDdpODBlc2Q0MGwzOGZmaWNveDgifQ.yYx8e9PdsDl-NzOpGXAL7g",
+				"https://api.mapbox.com/styles/v1/acdh/cmj1dhylp005x01r4dw4p9ghx/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoiYWNkaCIsImEiOiJjbWoxOHBsNjEwZjc5M2VyNzBvZ2x2ejlkIn0.itr6_jU4L58IgS2H8aDySA",
 			mapTileLayerUrl:
 				'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery &copy; <a href="http://mapbox.com">Mapbox</a>',
 			matomoBaseUrl: "",
@@ -108,10 +115,8 @@ export default defineNuxtConfig({
 	},
 
 	vite: {
-		vue: {
-			script: {
-				defineModel: true,
-			},
+		build: {
+			cssMinify: "lightningcss",
 		},
 		plugins: [tailwindcss()],
 	},
@@ -122,15 +127,13 @@ export default defineNuxtConfig({
 		// https://github.com/nuxt/nuxt/issues/14816#issuecomment-1484918081
 		tsConfig: {
 			compilerOptions: {
+				baseUrl: ".",
 				paths: {
-					"@/*": ["./*"],
+					"@/*": ["./app/*"],
+					"~/*": ["./*"],
 				},
 			},
+			include: ["../*.config.ts", "../e2e/**/*.ts"],
 		},
 	},
-
-	future: {
-		compatibilityVersion: 4,
-	},
-	compatibilityDate: "2024-09-20",
 });

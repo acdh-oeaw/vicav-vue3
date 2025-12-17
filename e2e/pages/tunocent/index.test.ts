@@ -1,0 +1,43 @@
+import { expect, test } from "@playwright/test";
+
+test.describe("home page", () => {
+	test("should have document title", async ({ page }) => {
+		await page.goto("/");
+		await expect(page).toHaveTitle(
+			"Home | TUNOCENT - Tunisia’s Linguistic terra incognita: An Investigation into the Arabic Varieties of Northwestern and Central Tunisia",
+		);
+	});
+
+	test("should show initial windows", async ({ page }) => {
+		await page.goto("/");
+		await expect(
+			page
+				.locator("div")
+				.filter({ hasText: /^Welcome to TUNOCENT$/ })
+				.nth(1),
+		).toBeVisible();
+	});
+
+	test("should open window menu with appropriate entries", async ({ page }) => {
+		await page.goto("/");
+		await expect(page.getByRole("menuitem", { name: "Windows" })).toBeVisible();
+		await page.getByRole("menuitem", { name: "Windows" }).click();
+		await expect(page.getByRole("menuitem", { name: "Welcome to TUNOCENT" })).toBeVisible();
+	});
+
+	test("should show footer bar with imprint link", async ({ page }) => {
+		await page.goto("/");
+		await expect(page.getByRole("link", { name: "Imprint" })).toBeVisible();
+	});
+	test("should open extended footer", async ({ page }) => {
+		await page.goto("/");
+		await page
+			.getByRole("contentinfo")
+			.locator("div")
+			.filter({ hasText: "© 2025 ACDH-CH |Imprint|" })
+			.locator("div")
+			.first()
+			.hover();
+		await expect(page.getByText("CONTACT")).toBeVisible();
+	});
+});

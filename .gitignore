@@ -36,7 +36,7 @@ dist
 /.cache/**
 
 # auto-generated api-client
-/lib/api-client/
+/app/lib/api-client/
 
 # heroku buildpack specific directory
 /.heroku/**
