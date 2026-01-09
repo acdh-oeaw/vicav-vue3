@@ -96,8 +96,6 @@ function applyQueryString(row: Row<FeatureType>, colId: string, queryString: str
 		}
 	}
 
-	console.log(preparedRow, featureValueTaxonomy);
-
 	for (const key in metadata) preparedRow[key] = [...new Set(metadata[key])];
 
 	return test(parse(queryString), preparedRow);

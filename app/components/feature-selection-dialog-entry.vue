@@ -26,8 +26,6 @@ const isHierarchyHeading = computed(() => props.taxonomyEntry != null);
 
 function handleCheck(checked: boolean) {
 	if (isHierarchyHeading.value) {
-		// toggle all children
-		console.log("Toggle all", props.label, props.taxonomyEntry);
 		emit("toggle-all", props.label, props.taxonomyEntry);
 	} else {
 		emit("checked", props.label, checked);
