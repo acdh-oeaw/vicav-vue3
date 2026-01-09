@@ -8,6 +8,9 @@ import {
 	type TagToken,
 	type UnaryOperatorToken,
 } from "liqe";
+import { storeToRefs } from "pinia";
+
+import { useGeojsonStore } from "../stores/use-geojson-store";
 
 const { AND_OPERATOR } = useAdvancedQueries();
 
@@ -57,6 +60,7 @@ function setColumnFilter(columnId: string, value: string, table: Table<unknown>)
 		];
 		allColValues.forEach((val) => filterValue?.set(val as string, 1));
 	} else {
+		let isTaxonomyEntry = false;
 		value.split(AND_OPERATOR).forEach((part) => {
 			const taxonomyMatches = [...featureValueTaxonomy.value.entries()]
 				.filter(
@@ -70,10 +74,13 @@ function setColumnFilter(columnId: string, value: string, table: Table<unknown>)
 					filterValue?.set(match[0].replace(`${columnId}.`, ""), 1);
 				});
 				filterValue?.set(part, 1);
+				isTaxonomyEntry = true;
 			} else {
 				filterValue?.set(part, 1);
 			}
 		});
+		// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+		if (!isTaxonomyEntry) filterValue?.set(value, 1);
 	}
 
 	table.getColumn(columnId)?.setFilterValue(filterValue);

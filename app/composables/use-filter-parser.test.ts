@@ -1,5 +1,6 @@
 import { createColumnHelper, getCoreRowModel, type Table, useVueTable } from "@tanstack/vue-table";
-import { describe, expect, test } from "vitest";
+import { createPinia,setActivePinia } from "pinia";
+import { beforeEach, describe, expect, test } from "vitest";
 
 import { useFilterParser } from "./use-filter-parser.ts";
 
@@ -51,6 +52,9 @@ const table = useVueTable({
 });
 
 describe("simple search strings", () => {
+	beforeEach(() => {
+		setActivePinia(createPinia());
+	});
 	test("Empty search string should reset all filters", () => {
 		parseSearchString("", table as Table<unknown>);
 		expect(table.getColumn("fruit")?.getFilterValue()).toBeUndefined();
@@ -64,6 +68,9 @@ describe("simple search strings", () => {
 });
 
 describe("OR operator", () => {
+	beforeEach(() => {
+		setActivePinia(createPinia());
+	});
 	test("OR expression sets multiple filter values (2)", () => {
 		parseSearchString("color:red OR color:yellow", table as Table<unknown>);
 		const colorFilter = table.getColumn("color")?.getFilterValue() as Map<string, unknown>;
@@ -87,6 +94,9 @@ describe("OR operator", () => {
 });
 
 describe("AND operator", () => {
+	beforeEach(() => {
+		setActivePinia(createPinia());
+	});
 	test("AND expression combines values (2)", () => {
 		parseSearchString("color:red AND color:yellow", table as Table<unknown>);
 		const colorFilter = table.getColumn("color")?.getFilterValue() as Map<string, unknown>;
@@ -108,6 +118,9 @@ describe("AND operator", () => {
 });
 
 describe("Expressions containing parentheses", () => {
+	beforeEach(() => {
+		setActivePinia(createPinia());
+	});
 	test("Parentheses around OR followed by a different feature", () => {
 		parseSearchString("(fruit:apple OR fruit:banana) AND color:red", table as Table<unknown>);
 		const fruitFilter = table.getColumn("fruit")?.getFilterValue() as Map<string, unknown>;
@@ -131,6 +144,9 @@ describe("Expressions containing parentheses", () => {
 });
 
 describe("Test isInQuery function", () => {
+	beforeEach(() => {
+		setActivePinia(createPinia());
+	});
 	test("Simple tag expression", () => {
 		expect(isInQuery("fruit:apple", "fruit:apple")).toBe(true);
 	});
