@@ -43,7 +43,7 @@ test.describe("home page", () => {
 		await page
 			.getByRole("contentinfo")
 			.locator("div")
-			.filter({ hasText: "© 2025 ACDH-CH |Imprint|" })
+			.filter({ hasText: "|Imprint|" })
 			.locator("div")
 			.first()
 			.hover();
