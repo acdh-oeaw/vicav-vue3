@@ -222,7 +222,6 @@ function computeMarkerData() {
 			return;
 		}
 
-		//@ts-expect-error possibly infinite type instantiation
 		data[entry] = {
 			id,
 			colorCode: markers.value.get(id)!.colorCode,
