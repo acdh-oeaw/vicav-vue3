@@ -1,5 +1,5 @@
 import { createColumnHelper, getCoreRowModel, type Table, useVueTable } from "@tanstack/vue-table";
-import { createPinia,setActivePinia } from "pinia";
+import { createPinia, setActivePinia } from "pinia";
 import { beforeEach, describe, expect, test } from "vitest";
 
 import { useFilterParser } from "./use-filter-parser.ts";
