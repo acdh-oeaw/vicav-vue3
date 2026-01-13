@@ -70,7 +70,11 @@ function updateMarker(markerSelection: SelectionEntry) {
 </script>
 
 <template>
-	<Collapsible v-model:open="collapsibleOpen" class="flex w-48 flex-col bg-white/80 p-3 text-xs">
+	<Collapsible
+		v-model:open="collapsibleOpen"
+		class="flex h-fit w-48 flex-col bg-white/80 p-3 text-xs"
+		data-geo-map-legend
+	>
 		<CollapsibleTrigger class="flex w-full justify-between"
 			><b>{{ activeRows?.length }} total markers</b
 			><ChevronDown class="size-4" :class="collapsibleOpen ? '' : 'rotate-180'"></ChevronDown
