@@ -1,5 +1,5 @@
 import { assert } from "@acdh-oeaw/lib";
-import * as htmlToImage from "html-to-image";
+import * as htmlToImage from "@jpinsonneau/html-to-image";
 
 /**
  * Composable to export a DOM node as PNG, fixing CSS variables and SVG <use> issues.
@@ -7,15 +7,42 @@ import * as htmlToImage from "html-to-image";
 export function useHtmlToImageExport() {
 	// Inline CSS variables for SVG elements using var(--...)
 	function addInlineCSSVariables(node: HTMLElement) {
-		const styles = document.documentElement.attributeStyleMap;
-		for (const style of styles)
-			if (style[0].startsWith("--")) {
-				for (const val of style[1]) node.style.setProperty(style[0], val.toString());
-			}
+		// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+		if (document.documentElement.attributeStyleMap) {
+			const styles = document.documentElement.attributeStyleMap;
+			for (const style of styles)
+				if (style[0].startsWith("--")) {
+					for (const val of style[1]) node.style.setProperty(style[0], val.toString());
+				}
+		} else {
+			// for Firefox
+			const styles = document.documentElement.style;
+			// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+			if (!styles) return;
+			for (const style of styles)
+				if (style.startsWith("--")) {
+					node.style.setProperty(style, styles.getPropertyValue(style));
+				}
+		}
 	}
 	function removeInlineCSSVariables(node: HTMLElement) {
-		const styles = document.documentElement.attributeStyleMap;
-		for (const style of styles) if (style[0].startsWith("--")) node.style.removeProperty(style[0]);
+		// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+		if (document.documentElement.attributeStyleMap) {
+			const styles = document.documentElement.attributeStyleMap;
+			for (const style of styles)
+				if (style[0].startsWith("--")) {
+					for (const _val of style[1]) node.style.removeProperty(style[0]);
+				}
+		} else {
+			// for Firefox
+			const styles = document.documentElement.style;
+			// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+			if (!styles) return;
+			for (const style of styles)
+				if (style.startsWith("--")) {
+					node.style.removeProperty(style);
+				}
+		}
 	}
 
 	// Export node as PNG
