@@ -52,6 +52,7 @@
 		"@iconify/vue": "^4.3.0",
 		"@jpinsonneau/html-to-image": "^1.11.13",
 		"@nuxt/test-utils": "^3.23.0",
+		"@vue/test-utils": "^2.4.6",
 		"@opentelemetry/api": "^1.9.0",
 		"@opentelemetry/context-async-hooks": "^2.4.0",
 		"@opentelemetry/core": "^2.4.0",
