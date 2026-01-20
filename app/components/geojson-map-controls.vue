@@ -16,6 +16,19 @@ function download() {
 		);
 	}
 }
+function downloadLegend() {
+	const node = document.querySelector("[data-geo-map-legend]");
+	if (node != null) {
+		exportInProgress.value = true;
+		node.classList.remove("bg-white/80", "absolute");
+		node.classList.add("bg-white");
+		exportNodeAsPng(node as HTMLElement, fileFormat.value).then(() => {
+			exportInProgress.value = false;
+			node.classList.add("bg-white/80", "absolute");
+			node.classList.remove("bg-white");
+		});
+	}
+}
 </script>
 
 <template>
@@ -82,7 +95,10 @@ function download() {
 					><span>Include legend</span> <input v-model="printLegend" type="checkbox"
 				/></label>
 				<Button class="mt-1 h-fit w-full py-1 text-xs" variant="outline" @click="download"
-					><span>Download</span></Button
+					><span>Download map</span></Button
+				>
+				<Button class="mt-1 h-fit w-full py-1 text-xs" variant="outline" @click="downloadLegend"
+					><span>Download legend only</span></Button
 				>
 			</PopoverContent>
 		</Popover>
