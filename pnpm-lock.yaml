@@ -48,7 +48,7 @@ importers:
         version: 1.11.13
       '@nuxt/test-utils':
         specifier: ^3.23.0
-        version: 3.23.0(@playwright/test@1.57.0)(happy-dom@15.11.7)(magicast@0.5.1)(playwright-core@1.57.0)(typescript@5.9.3)(vitest@4.0.17(@opentelemetry/api@1.9.0)(@types/node@22.19.7)(happy-dom@15.11.7)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.46.0)(yaml@2.8.2))
+        version: 3.23.0(@playwright/test@1.57.0)(happy-dom@20.3.4)(magicast@0.5.1)(playwright-core@1.57.0)(typescript@5.9.3)(vitest@4.0.17(@opentelemetry/api@1.9.0)(@types/node@22.19.7)(happy-dom@20.3.4)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.46.0)(yaml@2.8.2))
       '@opentelemetry/api':
         specifier: ^1.9.0
         version: 1.9.0
@@ -259,7 +259,7 @@ importers:
         version: 0.2.3(patch_hash=0a7da929b24380ff52f1be0f874a423703170bc1cfafdda98ac4b170c7162400)
       '@vitest/coverage-v8':
         specifier: ^4.0.17
-        version: 4.0.17(vitest@4.0.17(@opentelemetry/api@1.9.0)(@types/node@22.19.7)(happy-dom@15.11.7)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.46.0)(yaml@2.8.2))
+        version: 4.0.17(vitest@4.0.17(@opentelemetry/api@1.9.0)(@types/node@22.19.7)(happy-dom@20.3.4)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.46.0)(yaml@2.8.2))
       ci-info:
         specifier: ^3.9.0
         version: 3.9.0
@@ -288,8 +288,8 @@ importers:
         specifier: ^1.15.5
         version: 1.15.5
       happy-dom:
-        specifier: ^15.11.7
-        version: 15.11.7
+        specifier: 20.3.4
+        version: 20.3.4
       lint-staged:
         specifier: 15.2.7
         version: 15.2.7
@@ -328,7 +328,7 @@ importers:
         version: 8.53.1(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3)
       vitest:
         specifier: ^4.0.17
-        version: 4.0.17(@opentelemetry/api@1.9.0)(@types/node@22.19.7)(happy-dom@15.11.7)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.46.0)(yaml@2.8.2)
+        version: 4.0.17(@opentelemetry/api@1.9.0)(@types/node@22.19.7)(happy-dom@20.3.4)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.46.0)(yaml@2.8.2)
       vue-tsc:
         specifier: ^2.2.12
         version: 2.2.12(typescript@5.9.3)
@@ -2816,8 +2816,14 @@ packages:
   '@types/web-bluetooth@0.0.21':
     resolution: {integrity: sha512-oIQLCGWtcFZy2JW77j9k8nHzAOpqMHLQejDA48XXMWH6tjCQHz5RCFz1bzsmROyL6PUm+LLnUiI4BCn221inxA==}
 
+  '@types/whatwg-mimetype@3.0.2':
+    resolution: {integrity: sha512-c2AKvDT8ToxLIOUlN51gTiHXflsfIFisS4pO7pDPoKouJCESkhZnEy623gwP9laCy5lnLDAw1vAzu2vM2YLOrA==}
+
   '@types/winbox@0.2.3':
     resolution: {integrity: sha512-Dc1+DOlCs1kQpNE94sMGZQxgqpaq9Z2u0l5dqd7019nQLY90AMGS/mKVAI3kT3TPBvpD2qfI76deTIzs+GquQA==}
+
+  '@types/ws@8.18.1':
+    resolution: {integrity: sha512-ThVF6DCVhA8kUGy+aazFQ4kXQ7E1Ty7A3ypFOe0IcJV8O/M511G99AW24irKrW56Wt44yG9+ij8FaqoBGkuBXg==}
 
   '@typescript-eslint/eslint-plugin@8.53.1':
     resolution: {integrity: sha512-cFYYFZ+oQFi6hUnBTbLRXfTJiaQtYE3t4O692agbBl+2Zy+eqSKWtPjhPXJu1G7j4RLjKgeJPDdq3EqOwmX5Ag==}
@@ -4435,9 +4441,9 @@ packages:
       crossws:
         optional: true
 
-  happy-dom@15.11.7:
-    resolution: {integrity: sha512-KyrFvnl+J9US63TEzwoiJOQzZBJY7KgBushJA8X61DMbNsH+2ONkDuLDnCnwUiPTF42tLoEmrPyoqbenVA5zrg==}
-    engines: {node: '>=18.0.0'}
+  happy-dom@20.3.4:
+    resolution: {integrity: sha512-rfbiwB6OKxZFIFQ7SRnCPB2WL9WhyXsFoTfecYgeCeFSOBxvkWLaXsdv5ehzJrfqwXQmDephAKWLRQoFoJwrew==}
+    engines: {node: '>=20.0.0'}
 
   has-flag@4.0.0:
     resolution: {integrity: sha512-EykJT/Q1KjTWctppgIAgfSO0tKVuZUjhgMr17kqTumMl6Afv3EISleU7qZUzoXDFTAHTDC4NOoG/ZxU3EvlMPQ==}
@@ -6808,10 +6814,6 @@ packages:
   webidl-conversions@3.0.1:
     resolution: {integrity: sha512-2JAn3z8AR6rjK8Sm8orRC0h/bcl/DqL7tRPdGZ4I1CjdF+EaMLmYxBHyXuKL849eucPFhvBoxMsflfOb8kxaeQ==}
 
-  webidl-conversions@7.0.0:
-    resolution: {integrity: sha512-VwddBukDzu71offAQR975unBIGqfKZpM+8ZX6ySk8nYhVoo5CYaZyzt3YBvYtRtO+aoGlqxPg/B87NGVZ/fu6g==}
-    engines: {node: '>=12'}
-
   webpack-virtual-modules@0.6.2:
     resolution: {integrity: sha512-66/V2i5hQanC51vBQKPH4aI8NMAcBW59FVBs+rC7eGHupMyfn34q7rZIE+ETlJ+XTevqfUhVVBgSUNSW2flEUQ==}
 
@@ -8097,7 +8099,7 @@ snapshots:
     transitivePeerDependencies:
       - magicast
 
-  '@nuxt/test-utils@3.23.0(@playwright/test@1.57.0)(happy-dom@15.11.7)(magicast@0.5.1)(playwright-core@1.57.0)(typescript@5.9.3)(vitest@4.0.17(@opentelemetry/api@1.9.0)(@types/node@22.19.7)(happy-dom@15.11.7)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.46.0)(yaml@2.8.2))':
+  '@nuxt/test-utils@3.23.0(@playwright/test@1.57.0)(happy-dom@20.3.4)(magicast@0.5.1)(playwright-core@1.57.0)(typescript@5.9.3)(vitest@4.0.17(@opentelemetry/api@1.9.0)(@types/node@22.19.7)(happy-dom@20.3.4)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.46.0)(yaml@2.8.2))':
     dependencies:
       '@clack/prompts': 1.0.0-alpha.9
       '@nuxt/kit': 3.20.2(magicast@0.5.1)
@@ -8125,13 +8127,13 @@ snapshots:
       tinyexec: 1.0.2
       ufo: 1.6.3
       unplugin: 2.3.11
-      vitest-environment-nuxt: 1.0.1(@playwright/test@1.57.0)(happy-dom@15.11.7)(magicast@0.5.1)(playwright-core@1.57.0)(typescript@5.9.3)(vitest@4.0.17(@opentelemetry/api@1.9.0)(@types/node@22.19.7)(happy-dom@15.11.7)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.46.0)(yaml@2.8.2))
+      vitest-environment-nuxt: 1.0.1(@playwright/test@1.57.0)(happy-dom@20.3.4)(magicast@0.5.1)(playwright-core@1.57.0)(typescript@5.9.3)(vitest@4.0.17(@opentelemetry/api@1.9.0)(@types/node@22.19.7)(happy-dom@20.3.4)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.46.0)(yaml@2.8.2))
       vue: 3.5.13(typescript@5.9.3)
     optionalDependencies:
       '@playwright/test': 1.57.0
-      happy-dom: 15.11.7
+      happy-dom: 20.3.4
       playwright-core: 1.57.0
-      vitest: 4.0.17(@opentelemetry/api@1.9.0)(@types/node@22.19.7)(happy-dom@15.11.7)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.46.0)(yaml@2.8.2)
+      vitest: 4.0.17(@opentelemetry/api@1.9.0)(@types/node@22.19.7)(happy-dom@20.3.4)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.46.0)(yaml@2.8.2)
     transitivePeerDependencies:
       - crossws
       - magicast
@@ -9952,7 +9954,13 @@ snapshots:
 
   '@types/web-bluetooth@0.0.21': {}
 
+  '@types/whatwg-mimetype@3.0.2': {}
+
   '@types/winbox@0.2.3(patch_hash=0a7da929b24380ff52f1be0f874a423703170bc1cfafdda98ac4b170c7162400)': {}
+
+  '@types/ws@8.18.1':
+    dependencies:
+      '@types/node': 22.19.7
 
   '@typescript-eslint/eslint-plugin@8.53.1(@typescript-eslint/parser@8.53.1(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3)':
     dependencies:
@@ -10155,7 +10163,7 @@ snapshots:
       vite: 7.3.1(@types/node@22.19.7)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.46.0)(yaml@2.8.2)
       vue: 3.5.13(typescript@5.9.3)
 
-  '@vitest/coverage-v8@4.0.17(vitest@4.0.17(@opentelemetry/api@1.9.0)(@types/node@22.19.7)(happy-dom@15.11.7)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.46.0)(yaml@2.8.2))':
+  '@vitest/coverage-v8@4.0.17(vitest@4.0.17(@opentelemetry/api@1.9.0)(@types/node@22.19.7)(happy-dom@20.3.4)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.46.0)(yaml@2.8.2))':
     dependencies:
       '@bcoe/v8-coverage': 1.0.2
       '@vitest/utils': 4.0.17
@@ -10167,7 +10175,7 @@ snapshots:
       obug: 2.1.1
       std-env: 3.10.0
       tinyrainbow: 3.0.3
-      vitest: 4.0.17(@opentelemetry/api@1.9.0)(@types/node@22.19.7)(happy-dom@15.11.7)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.46.0)(yaml@2.8.2)
+      vitest: 4.0.17(@opentelemetry/api@1.9.0)(@types/node@22.19.7)(happy-dom@20.3.4)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.46.0)(yaml@2.8.2)
 
   '@vitest/expect@4.0.17':
     dependencies:
@@ -11736,11 +11744,17 @@ snapshots:
       rou3: 0.7.12
       srvx: 0.10.1
 
-  happy-dom@15.11.7:
+  happy-dom@20.3.4:
     dependencies:
+      '@types/node': 22.19.7
+      '@types/whatwg-mimetype': 3.0.2
+      '@types/ws': 8.18.1
       entities: 4.5.0
-      webidl-conversions: 7.0.0
       whatwg-mimetype: 3.0.0
+      ws: 8.19.0
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
 
   has-flag@4.0.0: {}
 
@@ -14222,9 +14236,9 @@ snapshots:
       terser: 5.46.0
       yaml: 2.8.2
 
-  vitest-environment-nuxt@1.0.1(@playwright/test@1.57.0)(happy-dom@15.11.7)(magicast@0.5.1)(playwright-core@1.57.0)(typescript@5.9.3)(vitest@4.0.17(@opentelemetry/api@1.9.0)(@types/node@22.19.7)(happy-dom@15.11.7)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.46.0)(yaml@2.8.2)):
+  vitest-environment-nuxt@1.0.1(@playwright/test@1.57.0)(happy-dom@20.3.4)(magicast@0.5.1)(playwright-core@1.57.0)(typescript@5.9.3)(vitest@4.0.17(@opentelemetry/api@1.9.0)(@types/node@22.19.7)(happy-dom@20.3.4)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.46.0)(yaml@2.8.2)):
     dependencies:
-      '@nuxt/test-utils': 3.23.0(@playwright/test@1.57.0)(happy-dom@15.11.7)(magicast@0.5.1)(playwright-core@1.57.0)(typescript@5.9.3)(vitest@4.0.17(@opentelemetry/api@1.9.0)(@types/node@22.19.7)(happy-dom@15.11.7)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.46.0)(yaml@2.8.2))
+      '@nuxt/test-utils': 3.23.0(@playwright/test@1.57.0)(happy-dom@20.3.4)(magicast@0.5.1)(playwright-core@1.57.0)(typescript@5.9.3)(vitest@4.0.17(@opentelemetry/api@1.9.0)(@types/node@22.19.7)(happy-dom@20.3.4)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.46.0)(yaml@2.8.2))
     transitivePeerDependencies:
       - '@cucumber/cucumber'
       - '@jest/globals'
@@ -14240,7 +14254,7 @@ snapshots:
       - typescript
       - vitest
 
-  vitest@4.0.17(@opentelemetry/api@1.9.0)(@types/node@22.19.7)(happy-dom@15.11.7)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.46.0)(yaml@2.8.2):
+  vitest@4.0.17(@opentelemetry/api@1.9.0)(@types/node@22.19.7)(happy-dom@20.3.4)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.46.0)(yaml@2.8.2):
     dependencies:
       '@vitest/expect': 4.0.17
       '@vitest/mocker': 4.0.17(vite@7.3.1(@types/node@22.19.7)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.46.0)(yaml@2.8.2))
@@ -14265,7 +14279,7 @@ snapshots:
     optionalDependencies:
       '@opentelemetry/api': 1.9.0
       '@types/node': 22.19.7
-      happy-dom: 15.11.7
+      happy-dom: 20.3.4
     transitivePeerDependencies:
       - jiti
       - less
@@ -14340,8 +14354,6 @@ snapshots:
       typescript: 5.9.3
 
   webidl-conversions@3.0.1: {}
-
-  webidl-conversions@7.0.0: {}
 
   webpack-virtual-modules@0.6.2: {}
 
