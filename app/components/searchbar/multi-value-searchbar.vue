@@ -222,7 +222,7 @@ function addMetaFilterToQuery(key: string, val: string) {
 							:value="item.value"
 							@select="handleSelect"
 						>
-							<span class="truncate">{{ item.displayValue }}</span>
+							<span class="truncate whitespace-pre">{{ item.displayValue }}</span>
 						</ComboboxItem>
 						<ComboboxSeparator
 							v-if="item.value.startsWith('ft') && !list[idx + 1]?.value.startsWith('ft')"

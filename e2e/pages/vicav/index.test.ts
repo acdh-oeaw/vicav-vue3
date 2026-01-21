@@ -41,6 +41,7 @@ test.describe("home page", () => {
 		await page.goto("/");
 		await expect(page.getByRole("link", { name: "Imprint" })).toBeVisible();
 	});
+
 	test("should open extended footer", async ({ page }) => {
 		await page.goto("/");
 		await page

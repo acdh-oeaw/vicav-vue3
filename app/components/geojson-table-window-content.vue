@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { ColumnDef, Row, Table } from "@tanstack/vue-table";
 import { test } from "liqe";
-import { Info } from "lucide-vue-next";
+import { Download, Info } from "lucide-vue-next";
 
 import { useGeojsonStore } from "@/stores/use-geojson-store.ts";
 import type { FeatureType, ListMapWindowItem, MarkerType } from "@/types/global.ts";
@@ -21,7 +21,7 @@ const { addWindow, findWindowByTypeAndParam } = useWindowsStore();
 const url = "https://raw.githubusercontent.com/wibarab/wibarab-data/main/wibarab_varieties.geojson";
 
 const { isPending } = GeojsonStore.fetchGeojson(url);
-const { fetchedData, tables, showAllDetails } = storeToRefs(GeojsonStore);
+const { fetchedData, tables, showAllDetails, featureValueTaxonomy } = storeToRefs(GeojsonStore);
 const { buildFeatureTaxonomy } = GeojsonStore;
 const { data: projectData } = useProjectInfo();
 const { createColumnDefs } = useColumnGeneration();
@@ -79,6 +79,22 @@ function applyQueryString(row: Row<FeatureType>, colId: string, queryString: str
 			return [key, value];
 		}),
 	);
+
+	for (const col of Object.keys(preparedRow)) {
+		if (!Array.isArray(preparedRow[col])) continue;
+		const taxonomyLevels = [
+			...new Set(
+				(preparedRow[col] as Array<string>).flatMap((val) =>
+					featureValueTaxonomy.value.get(`${col}.${val}`)?.taxonomy.split("."),
+				),
+			),
+		];
+		if (taxonomyLevels && Array.isArray(taxonomyLevels)) {
+			preparedRow[col] = Array.isArray(preparedRow[col])
+				? [...preparedRow[col], ...taxonomyLevels]
+				: [preparedRow[col], ...taxonomyLevels];
+		}
+	}
 
 	for (const key in metadata) preparedRow[key] = [...new Set(metadata[key])];
 
@@ -149,6 +165,26 @@ function updateQueryParams(newFilter: string) {
 	params.value.queryString = queryString.value;
 	emit("updateQueryParam", queryString.value);
 }
+
+async function downloadTable(separator = ",", multivalueSaparator = ";") {
+	const headers = tableRef.value?.getHeaderGroups().slice(-1)[0]?.headers;
+	const rows = tableRef.value?.getFilteredRowModel().rows;
+	const mappedRows = rows?.map((row) =>
+		headers
+			?.map((header) => row.getValue(header.column.id))
+			.map((val) => (Array.isArray(val) ? val.join(multivalueSaparator) : val)),
+	);
+	const hiddenElement = document.createElement("a");
+	hiddenElement.href = `data:text/csv;charset=utf-8,${encodeURI(
+		`${headers!.map((h) => h.column.columnDef.header).join(separator)}\n${mappedRows!.join("\n")}`,
+	)}`;
+	hiddenElement.target = "_blank";
+	hiddenElement.download = `${tableRef.value?.getState().globalFilter}.csv`;
+	hiddenElement.style.display = "none";
+	document.body.appendChild(hiddenElement);
+	hiddenElement.click();
+	document.body.removeChild(hiddenElement);
+}
 </script>
 
 <template>
@@ -164,7 +200,11 @@ function updateQueryParams(newFilter: string) {
 					><Info class="size-4 stroke-neutral-800 transition-colors" />
 					<span class="line-clamp-1 text-ellipsis">Show details</span></Toggle
 				>
-				<DataTableActiveFilters
+				<Button class="inline-flex h-8 gap-2 border-0" variant="outline" @click="downloadTable">
+					<Download class="size-4 stroke-neutral-800 transition-colors" />
+					<span class="line-clamp-1 text-ellipsis">Export table</span>
+				</Button>
+				<!-- <DataTableActiveFilters
 					v-if="tableRef"
 					class="inline"
 					:table="tableRef as unknown as Table<never>"
@@ -173,7 +213,7 @@ function updateQueryParams(newFilter: string) {
 					v-if="tableRef"
 					class="inline"
 					:table="tableRef as unknown as Table<never>"
-				/>
+				/> -->
 			</div>
 		</div>
 		<DataTable

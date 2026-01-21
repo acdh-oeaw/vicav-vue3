@@ -8,6 +8,9 @@ import {
 	type TagToken,
 	type UnaryOperatorToken,
 } from "liqe";
+import { storeToRefs } from "pinia";
+
+import { useGeojsonStore } from "../stores/use-geojson-store";
 
 const { AND_OPERATOR } = useAdvancedQueries();
 
@@ -45,6 +48,8 @@ function setColumnFilter(columnId: string, value: string, table: Table<unknown>)
 	if (!table.getColumn(columnId)?.getFilterValue()) {
 		table.getColumn(columnId)?.setFilterValue(new Map());
 	}
+	const { featureValueTaxonomy } = storeToRefs(useGeojsonStore());
+
 	const filterValue = table.getColumn(columnId)?.getFilterValue() as
 		| Map<string, unknown>
 		| undefined;
@@ -55,8 +60,29 @@ function setColumnFilter(columnId: string, value: string, table: Table<unknown>)
 		];
 		allColValues.forEach((val) => filterValue?.set(val as string, 1));
 	} else {
-		filterValue?.set(value, 1);
+		let isTaxonomyEntry = false;
+		value.split(AND_OPERATOR).forEach((part) => {
+			const taxonomyMatches = [...featureValueTaxonomy.value.entries()]
+				.filter(
+					([_key, val]) =>
+						(val?.taxonomy.startsWith(columnId) ?? false) ||
+						(val?.taxonomy === "" && _key.startsWith(`${columnId}.`)),
+				)
+				.filter(([_key, val]) => val?.taxonomy.endsWith(`.${part}`));
+			if (taxonomyMatches.length > 0) {
+				taxonomyMatches.forEach((match) => {
+					filterValue?.set(match[0].replace(`${columnId}.`, ""), 1);
+				});
+				filterValue?.set(part, 1);
+				isTaxonomyEntry = true;
+			} else {
+				filterValue?.set(part, 1);
+			}
+		});
+		// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+		if (!isTaxonomyEntry) filterValue?.set(value, 1);
 	}
+
 	table.getColumn(columnId)?.setFilterValue(filterValue);
 }
 
@@ -270,15 +296,20 @@ function matchQueryStringAndFilters(query: string, filters: Array<string>) {
 
 	return filteredQueryString;
 }
-
 function syncGlobalAndColumnFilters(table: Table<unknown>) {
 	const columnFilters = table.getState().columnFilters as Array<{
 		id: string;
 		value: Map<string, unknown>;
 	}>;
 	let currentGlobalFilter = String(table.getState().globalFilter ?? "");
+
+	const { getTaxonomyTree } = useGeojsonStore();
+
 	const assembledColumnFilters = columnFilters
 		.map((column) => {
+			// Check if all values for a specific column are selected
+			// if so, remove all featureValues for this column from the query string
+			// and return `${column.id}:ANY`
 			const allColValues = [
 				...new Set(table.getCoreRowModel().flatRows.flatMap((row) => row.getValue(column.id))),
 			];
@@ -294,13 +325,45 @@ function syncGlobalAndColumnFilters(table: Table<unknown>) {
 						}),
 				];
 			}
-			return [...column.value.entries()].map(([key, _value]) => {
-				return assembleFilter(column.id, key);
-			});
+
+			// Check if all values for a specific taxonomy level within this feature are selected
+			// if so, remove all featureValues under this level from the query string and insert the
+			// taxonomy name, e.g. `${column.id}:"exceptionalCases"`
+			const taxonomyTree = getTaxonomyTree(column.id);
+			function allValuesSelected(treeEntry: TaxonomyTreeEntry): boolean {
+				return (
+					treeEntry.featureValues.length > 0 &&
+					treeEntry.featureValues.every((val) => column.value.has(val))
+				);
+			}
+			const replacedFilters: Array<string> = [];
+			let removeKeys: Array<string> = [];
+			function traverseTree(tree: TaxonomyTree, _parentKey = "") {
+				for (const [key, entry] of tree.entries()) {
+					if (allValuesSelected(entry)) {
+						replacedFilters.push(`${column.id}:"${key}"`);
+						removeKeys = removeKeys.concat(entry.featureValues);
+					}
+					traverseTree(entry.children, key);
+				}
+			}
+			traverseTree(taxonomyTree);
+
+			// Add remaining individual filters
+			const remainingFilters = [...column.value.entries()]
+				.filter(([key, _value]) => {
+					return !removeKeys.includes(key);
+				})
+				.map(([key, _value]) => assembleFilter(column.id, key));
+			console.log(remainingFilters);
+
+			return [...replacedFilters, ...remainingFilters];
 		})
 		.flat();
+
 	currentGlobalFilter = matchQueryStringAndFilters(currentGlobalFilter, assembledColumnFilters);
 	currentGlobalFilter = currentGlobalFilter.replace(/^ OR /, "").replaceAll("  ", " ");
+
 	table.setGlobalFilter(currentGlobalFilter);
 }
 

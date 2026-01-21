@@ -165,6 +165,7 @@ const resultParams = computed(() => {
 });
 
 const resultWindowParams = computed(() => {
+	// eslint-disable-next-line vue/no-side-effects-in-computed-properties
 	return Object.assign(resultParams.value, {
 		dataType: params.value.dataTypes[0],
 		page: 1,
@@ -172,6 +173,7 @@ const resultWindowParams = computed(() => {
 });
 
 const queryParams = computed(() => {
+	// eslint-disable-next-line vue/no-side-effects-in-computed-properties
 	return Object.assign(resultParams.value, {
 		type: dataTypes[params.value.dataTypes[0]!].collection.replace("vicav_", "") as
 			| "samples"

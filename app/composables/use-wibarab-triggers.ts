@@ -1,13 +1,21 @@
 // Adapted from https://reka-ui.com/examples/combobox-textarea
 
+import type { Table } from "@tanstack/vue-table";
 import { storeToRefs } from "pinia";
 
 import type { TriggerMap } from "@/components/searchbar";
-import { useGeojsonStore } from "@/stores/use-geojson-store.ts";
+import { type TaxonomyTreeEntry, useGeojsonStore } from "@/stores/use-geojson-store.ts";
 
 const GeojsonStore = useGeojsonStore();
 const { tables } = storeToRefs(GeojsonStore);
 const url = "https://raw.githubusercontent.com/wibarab/wibarab-data/main/wibarab_varieties.geojson";
+
+const {
+	getTaxonomyTree,
+	getSortedTaxonomyChildren,
+	getSortedTaxonomyFeatureValues,
+	getFacetsForId,
+} = useGeojsonStore();
 
 function getFeatureList() {
 	const table = tables.value.get(url);
@@ -27,17 +35,37 @@ const features = computed(() => getFeatureList());
 function getValueList(columns: typeof features.value) {
 	const table = tables.value.get(url);
 	if (!table) return [];
+
+	function traverseTaxonomyTree(
+		entry: TaxonomyTreeEntry,
+		facets: Array<[string, number]>,
+		currentLevel = 0,
+	): Array<{ key: string; label: string; level: number }> {
+		const sortedChildren = getSortedTaxonomyChildren(entry, facets) ?? [];
+		const sortedFeatureValues = getSortedTaxonomyFeatureValues(entry, facets) ?? [];
+		return [
+			...sortedFeatureValues.map((v) => ({ key: v[0], label: v[0], level: currentLevel })),
+			...sortedChildren
+				.map((c) => [
+					{ key: c[0], label: c[1].label ?? "", level: currentLevel },
+					...traverseTaxonomyTree(c[1], facets, currentLevel + 1),
+				])
+				.flat(),
+		];
+	}
+
 	return columns
-		.map((item) =>
-			(
-				[
-					...new Set(table.getCoreRowModel().flatRows.flatMap((row) => row.getValue(item.col.id))),
-				] as Array<string>
-			).map((key: string) => ({
+		.map((item) => {
+			const taxonomy =
+				getTaxonomyTree(item.col.id).get(item.col.id) ?? getTaxonomyTree(item.col.id).get("");
+			const facets = getFacetsForId(table as Table<unknown>, item.col.id);
+			return traverseTaxonomyTree(taxonomy!, facets).map(({ key, label, level }) => ({
 				value: `"${key}"`,
-				displayValue: key,
-			})),
-		)
+				displayValue: `${Array.from(Array(level))
+					.map(() => "\t")
+					.join("")}${label}`,
+			}));
+		})
 		.flat();
 }
 

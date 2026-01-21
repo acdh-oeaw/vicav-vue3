@@ -12,7 +12,10 @@ const funders = computed(() => config.value?.projectConfig?.funders ?? []);
 		<div class="flex items-center gap-2 border px-8 py-1.5 text-xs">
 			<div
 				class="h-4 flex-1"
-				onmouseover="document.querySelector('footer').style.transform = `translateY(-${document.querySelector('#footer-content').clientHeight}px)`"
+				onmouseover="
+					document.querySelector('footer').style.transform =
+						`translateY(-${document.querySelector('#footer-content').clientHeight}px)`
+				"
 			></div>
 			<span class="flex gap-1">
 				<span>&copy; {{ new Date().getUTCFullYear() }}</span>
@@ -36,7 +39,10 @@ const funders = computed(() => config.value?.projectConfig?.funders ?? []);
 			</span>
 			<div
 				class="h-4 flex-1"
-				onmouseover="document.querySelector('footer').style.transform = `translateY(-${document.querySelector('#footer-content').clientHeight}px)`"
+				onmouseover="
+					document.querySelector('footer').style.transform =
+						`translateY(-${document.querySelector('#footer-content').clientHeight}px)`
+				"
 			></div>
 		</div>
 		<div id="footer-content" class="mb-0 w-full bg-neutral-50 px-0 text-gray-900">
