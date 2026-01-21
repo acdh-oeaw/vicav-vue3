@@ -60,6 +60,7 @@ export default defineConfig({
 				launchOptions: {
 					firefoxUserPrefs: {
 						"dom.webgpu.enabled": true,
+						"webgl.enable-webgl2": true,
 					},
 				},
 			},
