@@ -133,7 +133,7 @@ export default defineNuxtConfig({
 					"~/*": ["./*"],
 				},
 			},
-			include: ["../*.config.ts", "../e2e/**/*.ts"],
+			include: ["../*.config.ts", "../e2e/**/*.ts", "../lib/**/*.ts"],
 		},
 	},
 });
