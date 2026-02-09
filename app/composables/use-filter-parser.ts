@@ -75,7 +75,7 @@ function setColumnFilter(columnId: string, value: string, table: Table<unknown>)
 				});
 				filterValue?.set(part, 1);
 				isTaxonomyEntry = true;
-			} else {
+			} else if (!value.includes(AND_OPERATOR)) {
 				filterValue?.set(part, 1);
 			}
 		});
@@ -360,7 +360,6 @@ function syncGlobalAndColumnFilters(table: Table<unknown>) {
 			return [...replacedFilters, ...remainingFilters];
 		})
 		.flat();
-
 	currentGlobalFilter = matchQueryStringAndFilters(currentGlobalFilter, assembledColumnFilters);
 	currentGlobalFilter = currentGlobalFilter.replace(/^ OR /, "").replaceAll("  ", " ");
 
