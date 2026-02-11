@@ -31,6 +31,13 @@ export const TeiDateSchema = z.object({
 });
 export type TeiDate = z.infer<typeof TeiDateSchema>;
 
+export const placeSchema = z.object({
+	settlement: z.string().optional(),
+	country: z.string().optional(),
+	region: z.string().optional(),
+});
+export type place = z.infer<typeof placeSchema>;
+
 export const SimpleTEIMetadataSchema = z.object({
 	id: z.string(),
 	label: z.string(),
@@ -47,11 +54,7 @@ export const SimpleTEIMetadataSchema = z.object({
 	recordingDate: z.union([z.string(), TeiDateSchema]).optional(),
 	duration: z.string().optional(),
 	audioAvailability: z.string(),
-	place: z.object({
-		settlement: z.string(),
-		country: z.string(),
-		region: z.string(),
-	}),
+	place: placeSchema,
 	person: z.array(SimplePersonSchema),
 	"@hasTEIw": z.string(),
 	teiHeader: TeiHeaderSchema,

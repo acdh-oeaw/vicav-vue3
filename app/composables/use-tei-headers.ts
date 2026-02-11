@@ -140,6 +140,7 @@ const extractMetadata = function (
 				return false;
 			}
 		});
+
 		let name;
 		if (respPerson?.persName && isAuthor(respPerson.persName)) {
 			const persName2 = respPerson.persName;
