@@ -1,13 +1,25 @@
-import { computed } from "vue";
+import { computed, type ComputedRef } from "vue";
 import * as z from "zod";
 
-import type { Author, AuthorRef, Person, TEI, TeiCorpus, TeiHeader } from "@/lib/api-client";
-import { type simpleTEIMetadata, type place, SimpleTEIMetadataSchema, placeSchema  } from "@/types/teiCorpus.ts";
 import dataTypes from "@/config/dataTypes.ts";
+import {
+	type Author,
+	type AuthorRef,
+	BiblStructType,
+	type Person,
+	type Responsibility,
+	type RespStmt,
+	type Taxonomy,
+	type TEI,
+	type TeiCorpus,
+	type TeiHeader,
+	Unit,
+} from "@/lib/api-client";
+import { type simpleTEIMetadata, SimpleTEIMetadataSchema } from "@/types/teiCorpus.ts";
 
 const TeiCorpusSchema = z.fromJSONSchema(useOpenapiSchema("TeiCorpus")!) as z.ZodType<TeiCorpus>;
 const AuthorRefSchema = z.fromJSONSchema(useOpenapiSchema("AuthorRef")!) as z.ZodType<AuthorRef>;
-const AuthorSchema = z.fromJSONSchema(useOpenapiSchema('Author')!) as z.ZodType<Author>;
+const AuthorSchema = z.fromJSONSchema(useOpenapiSchema("Author")!) as z.ZodType<Author>;
 
 export const useTeiHeadersStore = defineStore("use-tei-headers-store", () => {
 	const { data: projectData, suspense } = useProjectInfo();
@@ -58,14 +70,18 @@ export const useTeiHeadersStore = defineStore("use-tei-headers-store", () => {
 	) {
 		const dataTypeObject = Object.values(dataTypes).find(
 			(dataTypeObject) => dataTypeObject.collection === dataType,
-		)
+		);
+		const resolvedDataType = dataTypeObject ? dataTypeObject.targetType : "Text";
 		const h = item.teiHeader;
 
 		// duration
-		const duration = h?.fileDesc.sourceDesc.recordingStmt?.recording ? parseInt(
-			h.fileDesc.sourceDesc.recordingStmt.recording["@dur-iso"]
-				.replace("PT", "")
-				.replace(".0", "")) : undefined;
+		const duration = h?.fileDesc.sourceDesc.recordingStmt?.recording
+			? parseInt(
+					h.fileDesc.sourceDesc.recordingStmt.recording["@dur-iso"]
+						.replace("PT", "")
+						.replace(".0", ""),
+				)
+			: undefined;
 		const durHours = duration ? Math.floor(duration / 3600) : undefined;
 		const durSeconds = duration ? Math.floor(duration % 60) : undefined;
 		const durMinutes = duration ? Math.floor(((duration % 3600) - durSeconds!) / 60) : undefined;
@@ -73,11 +89,218 @@ export const useTeiHeadersStore = defineStore("use-tei-headers-store", () => {
 		// resp
 		const persName = h?.fileDesc.sourceDesc.recordingStmt?.recording.respStmt.persName;
 		const respPerson = corpusMetadata?.fileDesc.titleStmt.respStmts?.find((resp) => {
-				const resp1 = AuthorRefSchema.safeParse(resp.persName).data?.["@ref"];
-				const resp2 = AuthorRefSchema.safeParse(persName).data?.["@ref"];
-				return resp1 === resp2;
+			const resp1 = AuthorRefSchema.safeParse(resp.persName).data?.["@ref"];
+			const resp2 = AuthorRefSchema.safeParse(persName).data?.["@ref"];
+			return resp1 === resp2;
+		});
+		const respRef = AuthorRefSchema.safeParse(persName);
+		const respAuthor = respPerson ? AuthorSchema.safeParse(respPerson.persName).data : undefined;
+		const respName =
+			respAuthor?.forename && respAuthor.surname
+				? `${respAuthor.forename.$} ${respAuthor.surname.$}`
+				: (respAuthor?.name?.$ ??
+					(respRef.success ? respRef.data["@ref"]?.replace("corpus:", "") : undefined));
+
+		// place
+		const place = h?.profileDesc?.settingDesc?.place;
+		let placeSettlement;
+		if (place?.placeName) {
+			placeSettlement = place.placeName.$;
+		} else if (place?.settlement?.name) {
+			const placeName = place.settlement.name.find((n) => n["@lang"] === "en");
+			if (placeName) placeSettlement = placeName.$;
+		}
+		const placeName =
+			place?.settlement?.name.at(0) ??
+			(place?.settlement?.name
+				? place.settlement.name.find((n) => n["@lang"] === "en")
+				: undefined);
+		if (placeName) placeSettlement = placeName.$;
+
+		// responsibilities
+		const responsibilityData: Partial<
+			Record<Responsibility, Array<{ given: string; family: string }>>
+		> = {};
+		(
+			[
+				"author",
+				"recording",
+				"principal",
+				"transcription",
+				"transfer to ELAN",
+			] as Array<Responsibility>
+		).forEach((responsibility) => {
+			if (
+				h?.fileDesc.titleStmt.respStmts?.find((r) => r.resp.$ === responsibility) &&
+				corpusMetadata
+			) {
+				responsibilityData[responsibility] = h.fileDesc.titleStmt.respStmts
+					.filter((r) => responsibility === r.resp.$)
+					.map((resp) => {
+						const respPerson = corpusMetadata.fileDesc.titleStmt.respStmts?.find(
+							(resp2: RespStmt) => {
+								const respRef = AuthorRefSchema.safeParse(resp.persName);
+								const resp2Ref = AuthorRefSchema.safeParse(resp2.persName);
+								return (
+									respRef.success &&
+									resp2Ref.success &&
+									respRef.data["@ref"] === resp2Ref.data["@ref"]
+								);
+							},
+						);
+						const author = respPerson
+							? AuthorSchema.safeParse(respPerson.persName).data
+							: undefined;
+						if (author?.forename && author.surname) {
+							return { given: author.forename.$, family: author.surname.$ };
+						}
+						if (author?.name?.$) return { given: author.name.$, family: "" };
+						return { family: "", given: "" };
+					});
+			}
 		});
 
+		// publication
+		let publication: simpleTEIMetadata["publication"] | undefined;
+		if (h?.fileDesc.sourceDesc.biblStruct?.["@type"] === BiblStructType.BookSection) {
+			publication = {
+				refType: "external",
+				type: "chapter",
+				bibl: {
+					"container-title": h.fileDesc.sourceDesc.biblStruct.monogr.title?.$,
+					title: h.fileDesc.sourceDesc.biblStruct.analytic?.title?.$ ?? "",
+					author: [
+						{
+							given: h.fileDesc.sourceDesc.biblStruct.analytic?.author?.forename?.$ ?? "",
+							family: h.fileDesc.sourceDesc.biblStruct.analytic?.author?.surname?.$ ?? "",
+						},
+					],
+					editor: [
+						{
+							given: h.fileDesc.sourceDesc.biblStruct.monogr.editor?.forename?.$ ?? "",
+							family: h.fileDesc.sourceDesc.biblStruct.monogr.editor?.surname?.$ ?? "",
+						},
+					],
+					issued: [h.fileDesc.sourceDesc.biblStruct.monogr.imprint.date.$],
+					publisherPlace: h.fileDesc.sourceDesc.biblStruct.monogr.imprint.pubPlace?.$,
+					page: h.fileDesc.sourceDesc.biblStruct.monogr.imprint.biblScopes?.find(
+						(s) => s["@unit"] === Unit.Page,
+					)?.$,
+				},
+			};
+		} else if (h?.fileDesc.sourceDesc.biblStruct?.["@type"] === BiblStructType.JournalArticle) {
+			publication = {
+				refType: "external",
+				type: "journalArticle",
+				bibl: {
+					"container-title": h.fileDesc.sourceDesc.biblStruct.monogr.title?.$,
+					title: h.fileDesc.sourceDesc.biblStruct.analytic?.title?.$ ?? "",
+					author: [
+						{
+							given: h.fileDesc.sourceDesc.biblStruct.analytic?.author?.forename?.$ ?? "",
+							family: h.fileDesc.sourceDesc.biblStruct.analytic?.author?.surname?.$ ?? "",
+						},
+					],
+					editor: [
+						{
+							given: h.fileDesc.sourceDesc.biblStruct.monogr.editor?.forename?.$ ?? "",
+							family: h.fileDesc.sourceDesc.biblStruct.monogr.editor?.surname?.$ ?? "",
+						},
+					],
+					issued: [h.fileDesc.sourceDesc.biblStruct.monogr.imprint.date.$],
+					publisherPlace: h.fileDesc.sourceDesc.biblStruct.monogr.imprint.pubPlace?.$,
+					volume: h.fileDesc.sourceDesc.biblStruct.monogr.imprint.biblScopes?.find(
+						(s) => s["@unit"] === Unit.Volume,
+					)?.$,
+					page: h.fileDesc.sourceDesc.biblStruct.monogr.imprint.biblScopes?.find(
+						(s) => s["@unit"] === Unit.Page,
+					)?.$,
+				},
+			};
+		} else if (h?.fileDesc.sourceDesc.biblStruct?.["@type"] === BiblStructType.Thesis) {
+			publication = {
+				refType: "external",
+				type: "book",
+				bibl: {
+					title: h.fileDesc.sourceDesc.biblStruct.monogr.title?.$ ?? "",
+					author: [
+						{
+							given: h.fileDesc.sourceDesc.biblStruct.monogr.author?.forename?.$ ?? "",
+							family: h.fileDesc.sourceDesc.biblStruct.monogr.author?.surname?.$ ?? "",
+						},
+					],
+					issued: [h.fileDesc.sourceDesc.biblStruct.monogr.imprint.date.$],
+					publisherPlace: h.fileDesc.sourceDesc.biblStruct.monogr.imprint.pubPlace?.$,
+				},
+			};
+		}
+		const safePublication =
+			publication ??
+			({
+				refType: "external",
+				type: "",
+				bibl: {
+					author: [],
+					title: "",
+					issued: [],
+				},
+			} as simpleTEIMetadata["publication"]);
+
+		// category
+		let category = "";
+		if (resolvedDataType === "CorpusText" && corpusMetadata) {
+			const categoryId = h?.profileDesc?.textClass?.catRefs
+				? h.profileDesc.textClass.catRefs.at(0)?.["@target"]
+				: "";
+
+			const mergedTaxonomies: Taxonomy = {
+				categories: [],
+			};
+			corpusMetadata.encodingDesc?.classDecl?.taxonomies.forEach((t) => {
+				mergedTaxonomies.categories = mergedTaxonomies.categories.concat(t.categories);
+				return mergedTaxonomies;
+			});
+			const categoryItem = mergedTaxonomies.categories.find(
+				(cat) => cat["@id"] === categoryId?.replace("corpus:", ""),
+			);
+			if (categoryItem?.catDesc.name) {
+				category = categoryItem.catDesc.name.$;
+			} else if (categoryItem?.catDesc.$) {
+				category = categoryItem.catDesc.$;
+			} else {
+				category = "Unknown";
+			}
+		}
+
+		// label/title
+		const persons = extractPersons(item, corpusMetadata);
+		let label;
+		if (!persons.at(0)?.name) {
+			label = item["@id"] ?? h?.fileDesc.publicationStmt.idno?.$ ?? "no_id";
+		} else if (h?.fileDesc.titleStmt.titles?.at(0)?.$) {
+			label = h.fileDesc.titleStmt.titles.at(0)!.$!;
+		} else {
+			label = placeSettlement;
+		}
+		if (resolvedDataType === "CorpusText" && h?.fileDesc.titleStmt.titles?.at(0)) {
+			label = h.fileDesc.titleStmt.titles[0]!.$!;
+		} else if (persons.at(0)) {
+			label = persons[0]!.name;
+		} else if (h?.fileDesc.titleStmt.titles?.at(0)) {
+			label = h.fileDesc.titleStmt.titles[0]!.$;
+		}
+		const title = h?.fileDesc.titleStmt.titles?.at(0)
+			? persons.at(0)?.name
+				? `${h.fileDesc.titleStmt.titles[0]!.$} – ${persons.at(0)?.name ?? ""}`
+				: h.fileDesc.titleStmt.titles[0]!.$
+			: label;
+		const safeLabel = label ?? "";
+		const safeTitle = title ?? safeLabel;
+
+		const audioAvailability =
+			duration && resolvedDataType !== "Feature" && resolvedDataType !== "Profile"
+				? (h?.fileDesc.publicationStmt.availability?.["@status"] ?? "unknown")
+				: "restricted";
 
 		const parsedItem = SimpleTEIMetadataSchema.safeParse({
 			id: item["@id"] ?? h?.fileDesc.publicationStmt.idno?.$ ?? "no_id",
@@ -85,27 +308,45 @@ export const useTeiHeadersStore = defineStore("use-tei-headers-store", () => {
 				? h.fileDesc.sourceDesc.recordingStmt.recording.date["@when"]
 				: undefined,
 			pubDate: h?.fileDesc.publicationStmt.date?.$ ?? "unknown",
-			dataType: dataTypeObject ? dataTypeObject.targetType : undefined,
+			dataType: resolvedDataType,
+			label: safeLabel,
+			title: safeTitle,
+			author: responsibilityData.author ?? [],
+			recording: responsibilityData.recording ?? [],
+			principal: responsibilityData.principal ?? [],
+			transcription: responsibilityData.transcription ?? [],
+			"transfer to ELAN": responsibilityData["transfer to ELAN"] ?? [],
 			place: {
-				settlement: h?.profileDesc?.settingDesc?.place?.settlement?.name[0]
-					? h.profileDesc.settingDesc.place.settlement.name[0].$
-					: undefined,
-				country: h?.profileDesc?.settingDesc?.place?.country?.$ ?? undefined,
-				region: h?.profileDesc?.settingDesc?.place?.region?.$ ?? undefined,
+				settlement: placeSettlement,
+				country: place?.country?.$ ?? undefined,
+				region: place?.region?.$ ?? undefined,
 			},
-			duration: duration ? `${durHours ? `${String(durHours).padStart(2, "0")}:` : ""}${String(durMinutes).padStart(2, "0")}:${String(durSeconds).padStart(2, "0")}` : undefined,
-			audioAvailability: h?.fileDesc.publicationStmt.availability?.["@status"] ?? "unknown",
+			person: persons,
+			resp:
+				resolvedDataType === "CorpusText" &&
+				!h?.fileDesc.sourceDesc.recordingStmt?.recording.respStmt
+					? "Unknown"
+					: (respName ?? ""),
+			category,
+			duration: duration
+				? `${durHours ? `${String(durHours).padStart(2, "0")}:` : ""}${String(durMinutes).padStart(
+						2,
+						"0",
+					)}:${String(durSeconds).padStart(2, "0")}`
+				: undefined,
+			audioAvailability,
+			"@hasTEIw": item["@hasTEIw"] === "true" ? "true" : "false",
+			teiHeader: h,
+			publication: safePublication,
 		});
-		if(parsedItem.success) return parsedItem.data;
+		if (parsedItem.success) return parsedItem.data;
 		else return null;
-	}
-
-
-
+	};
 
 	const simpleItems: ComputedRef<Array<simpleTEIMetadata>> = computed(() => {
-		const corpusMetadata = rawItems.value
-			.find((item) => item.teiHeader && item["@id"] === "vicav_corpus")?.teiHeader;
+		const corpusMetadata = rawItems.value.find(
+			(item) => item.teiHeader && item["@id"] === "vicav_corpus",
+		)?.teiHeader;
 		const data = rawItems.value
 			.map((dataTypeTEIs) => {
 				return dataTypeTEIs.TEIs?.map((item) =>
@@ -113,7 +354,14 @@ export const useTeiHeadersStore = defineStore("use-tei-headers-store", () => {
 				);
 			})
 			.filter((i) => i !== undefined);
-		return data;
+
+		return (
+			([] as Array<simpleTEIMetadata>)
+				// @ts-expect-error type inference faulty
+				.concat(...data)
+				// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+				.filter((item) => item !== null)
+		);
 	});
 
 	return {
