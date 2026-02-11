@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import dataTypes from "@/config/dataTypes.ts";
+import { useTeiHeadersStore } from "@/stores/use-tei-headers-store.ts";
 import type { ExploreSamplesFormWindowItem, GeoMapWindowItem, WindowItem } from "@/types/global.ts";
 
 const { findWindowByTypeAndParam } = useWindowsStore();
@@ -22,7 +23,7 @@ const sentenceOptions = Array.from(
 
 const props = defineProps<Props>();
 const { params } = toRefs(props);
-const { simpleItems } = useTEIHeaders();
+const { simpleItems } = useTeiHeadersStore();
 const windowsStore = useWindowsStore();
 const { addWindow } = windowsStore;
 

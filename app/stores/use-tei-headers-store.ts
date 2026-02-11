@@ -17,9 +17,26 @@ import {
 } from "@/lib/api-client";
 import { type simpleTEIMetadata, SimpleTEIMetadataSchema } from "@/types/teiCorpus.ts";
 
-const TeiCorpusSchema = z.fromJSONSchema(useOpenapiSchema("TeiCorpus")!) as z.ZodType<TeiCorpus>;
-const AuthorRefSchema = z.fromJSONSchema(useOpenapiSchema("AuthorRef")!) as z.ZodType<AuthorRef>;
-const AuthorSchema = z.fromJSONSchema(useOpenapiSchema("Author")!) as z.ZodType<Author>;
+const TeiCorpusSchema: z.ZodType<TeiCorpus> = z
+	.object({
+		"@id": z.string().optional(),
+		TEIs: z.array(z.custom<TEI>()).optional(),
+		teiHeader: z.custom<TeiHeader>().optional(),
+	})
+	.loose();
+const AuthorRefSchema: z.ZodType<AuthorRef> = z
+	.object({
+		"@ref": z.string().optional(),
+	})
+	.loose();
+const AuthorSchema: z.ZodType<Author> = z
+	.object({
+		"@id": z.string().optional(),
+		forename: z.object({ $: z.string() }).optional(),
+		surname: z.object({ $: z.string() }).optional(),
+		name: z.object({ $: z.string() }).optional(),
+	})
+	.loose();
 
 export const useTeiHeadersStore = defineStore("use-tei-headers-store", () => {
 	const { data: projectData, suspense } = useProjectInfo();

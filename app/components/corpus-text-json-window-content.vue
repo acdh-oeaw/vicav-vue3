@@ -6,14 +6,15 @@ import type { StateHandler } from "v3-infinite-loading/lib/types";
 import type { z } from "zod";
 
 import type { Div } from "@/lib/api-client";
+import { useTeiHeadersStore } from "@/stores/use-tei-headers-store.ts";
 import type { CorpusTextSchema, VicavHTTPError } from "@/types/global.ts";
 
 const props = defineProps<{
 	params: z.infer<typeof CorpusTextSchema>["params"] & { label?: string };
 }>();
 
-const { simpleItems } = useTEIHeaders();
-const teiHeader = simpleItems.value.find((header) => header.id === props.params.textId);
+const { simpleItems } = useTeiHeadersStore();
+const teiHeader = simpleItems.find((header) => header.id === props.params.textId);
 const publication = teiHeader?.publication;
 
 const currentPage = ref(1);
