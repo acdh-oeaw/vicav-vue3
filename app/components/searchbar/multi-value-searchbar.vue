@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { syntaxHighlighting } from "@codemirror/language";
 import type { Table } from "@tanstack/vue-table";
 import { computedWithControl } from "@vueuse/core";
 import { ChevronDown, FunnelPlus, X } from "lucide-vue-next";
@@ -15,6 +16,7 @@ import {
 	useFilter,
 } from "reka-ui";
 import { computed, nextTick, ref, watch, watchEffect } from "vue";
+import CodeMirror from "vue-codemirror6";
 
 import {
 	getAnchorRect,
@@ -24,8 +26,10 @@ import {
 	getTriggerOffset,
 	getValue,
 	replaceValue,
+	setEndOfContenteditable,
 	type TriggerMap,
 } from "./index.ts";
+import { queryHighlightStyle, queryLanguageSupport, wordHover } from "./query-language.ts";
 
 const props = defineProps<{
 	table: Table<unknown>;
@@ -35,6 +39,14 @@ const props = defineProps<{
 const { parseSearchString, validateQuery, normalizeOperators, addMetaFilter } = useFilterParser();
 
 const { contains } = useFilter({ sensitivity: "base" });
+
+const cmExtensions = computed(() => [
+	queryLanguageSupport,
+	wordHover(props.triggers),
+	syntaxHighlighting(queryHighlightStyle),
+]);
+
+console.log(props.triggers);
 
 const value = ref("");
 const trigger = ref<string | null>(null);
@@ -75,10 +87,10 @@ watch(
 );
 
 watchEffect(() => {
-	const textarea = textareaRef.value?.$el as HTMLTextAreaElement | undefined;
-	if (caretOffset.value !== null && textarea) {
-		textarea.setSelectionRange(caretOffset.value, caretOffset.value);
-	}
+	// const textarea = textareaRef.value?.$el as HTMLTextAreaElement | undefined;
+	// if (caretOffset.value !== null && textarea) {
+	// 	textarea.setSelectionRange(caretOffset.value, caretOffset.value);
+	// }
 });
 
 function handleChange(ev: InputEvent | PointerEvent) {
@@ -92,8 +104,8 @@ function handleChange(ev: InputEvent | PointerEvent) {
 		trigger.value = null;
 		open.value = false;
 	}
-
-	value.value = target.value;
+	console.log("Trigger: ", trigger.value);
+	// value.value = target.textContent;
 	searchValue.value = _searchValue;
 
 	if (_trigger === null) open.value = false;
@@ -111,18 +123,19 @@ function handleSelect(ev: CustomEvent) {
 
 	// prevent setting `ComboboxInput`
 	ev.preventDefault();
-
+	console.log(value.value);
 	value.value = replaceValue(
-		value.value,
+		value.value ?? "",
 		offset,
 		searchValue.value,
 		selectedValue,
 		trigger.value ?? "",
 	);
-
+	console.log(textarea);
 	trigger.value = null;
-	const nextCaretOffset = offset + selectedValue.length;
+	const nextCaretOffset = offset + selectedValue?.length;
 	caretOffset.value = nextCaretOffset;
+	setEndOfContenteditable(textarea);
 
 	nextTick().then(() => {
 		handleChange({ target: textarea } as InputEvent);
@@ -167,33 +180,33 @@ function addMetaFilterToQuery(key: string, val: string) {
 			<Label class="sr-only text-sm font-semibold" for="search"> search </Label>
 
 			<div class="relative flex w-full rounded-md border border-muted">
-				<ComboboxInput
-					id="search"
-					ref="textareaRef"
-					v-model="value"
-					as="input"
-					autocomplete="off"
-					class="w-full p-2"
-					placeholder="Click to get a list of available features"
-					rows="5"
-					@input="handleChange"
-					@keydown.enter="
-						(ev: KeyboardEvent) => {
-							if (open) {
-								ev.preventDefault();
-							} else {
-								submitSearch();
+				<ComboboxInput id="search" :as-child="true" autocomplete="off" class="w-full p-2">
+					<CodeMirror
+						ref="textareaRef"
+						v-model="value"
+						class="w-full p-2"
+						:extensions="cmExtensions"
+						:lang="queryLanguageSupport"
+						placeholder="Click to get a list of available features"
+						@input="handleChange"
+						@keydown.enter="
+							(ev: KeyboardEvent) => {
+								if (open) {
+									ev.preventDefault();
+								} else {
+									submitSearch();
+								}
 							}
-						}
-					"
-					@keydown.left.right="open = false"
-					@pointerdown="
-						(e: PointerEvent) => {
-							handleChange(e);
-							// open = false;
-						}
-					"
-				/>
+						"
+						@keydown.left.right="open = false"
+						@pointerdown="
+							(e: PointerEvent) => {
+								handleChange(e);
+								// open = false;
+							}
+						"
+					/>
+				</ComboboxInput>
 				<ComboboxCancel as-child>
 					<Button
 						class="p-2"
@@ -236,7 +249,7 @@ function addMetaFilterToQuery(key: string, val: string) {
 			<DropdownMenuTrigger as-child
 				><Button
 					class="self-end"
-					:disabled="!(value.length > 0 && queryWarnings.isValid)"
+					:disabled="!(value?.length > 0 && queryWarnings.isValid)"
 					variant="outline"
 					@click="submitSearch"
 					><FunnelPlus class="size-4" /></Button
@@ -280,3 +293,43 @@ function addMetaFilterToQuery(key: string, val: string) {
 		</div>
 	</div>
 </template>
+
+<style>
+@reference "@/styles/index.css";
+
+.cm-scroller {
+	font-family: inherit !important;
+}
+
+.cm-feature {
+	@apply text-amber-900;
+}
+
+.cm-filter {
+	@apply text-amber-900;
+}
+
+.cm-filter::before {
+	@apply mr-0.5 opacity-80;
+
+	content: "🛈";
+}
+
+/* .cm-feature::before {
+	@apply bg-emerald-900 inline-block size-2 rounded-full mr-1;
+
+	content: "";
+} */
+
+.cm-feature-value {
+	@apply text-amber-700 font-medium;
+}
+
+.cm-operator {
+	@apply text-on-muted mx-1 text-xs font-bold;
+}
+
+.cm-tooltip {
+	@apply p-1 bg-white! rounded;
+}
+</style>
