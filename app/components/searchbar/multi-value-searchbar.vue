@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { syntaxHighlighting } from "@codemirror/language";
+import { tooltips } from "@codemirror/view";
 import type { Table } from "@tanstack/vue-table";
 import { computedWithControl } from "@vueuse/core";
 import { ChevronDown, FunnelPlus, X } from "lucide-vue-next";
@@ -44,6 +45,7 @@ const cmExtensions = computed(() => [
 	queryLanguageSupport,
 	wordHover(props.triggers),
 	syntaxHighlighting(queryHighlightStyle),
+	tooltips({ parent: document.body }),
 ]);
 
 console.log(props.triggers);
@@ -170,21 +172,21 @@ function addMetaFilterToQuery(key: string, val: string) {
 </script>
 
 <template>
-	<div class="grid w-full grid-cols-[1fr_auto_auto] gap-x-2">
+	<div class="grid w-full max-w-full grid-cols-[1fr_auto_auto] gap-x-2 overflow-x-hidden">
 		<ComboboxRoot
 			v-model:open="open"
-			class="flex w-full flex-col"
+			class="flex w-full flex-col overflow-x-hidden"
 			ignore-filter
 			:reset-search-term-on-blur="false"
 		>
 			<Label class="sr-only text-sm font-semibold" for="search"> search </Label>
 
-			<div class="relative flex w-full rounded-md border border-muted">
+			<div class="flex w-full rounded-md border border-muted">
 				<ComboboxInput id="search" :as-child="true" autocomplete="off" class="w-full p-2">
 					<CodeMirror
 						ref="textareaRef"
 						v-model="value"
-						class="w-full p-2"
+						class="w-full overflow-x-auto p-2"
 						:extensions="cmExtensions"
 						:lang="queryLanguageSupport"
 						placeholder="Click to get a list of available features"
@@ -209,7 +211,7 @@ function addMetaFilterToQuery(key: string, val: string) {
 				</ComboboxInput>
 				<ComboboxCancel as-child>
 					<Button
-						class="p-2"
+						class="self-center p-2"
 						variant="ghost"
 						@click="
 							value = '';
@@ -248,7 +250,7 @@ function addMetaFilterToQuery(key: string, val: string) {
 		<DropdownMenu>
 			<DropdownMenuTrigger as-child
 				><Button
-					class="self-end"
+					class="h-full self-end"
 					:disabled="!(value?.length > 0 && queryWarnings.isValid)"
 					variant="outline"
 					@click="submitSearch"
@@ -281,7 +283,7 @@ function addMetaFilterToQuery(key: string, val: string) {
 				</Collapsible>
 			</DropdownMenuContent>
 		</DropdownMenu>
-		<Button class="self-end" variant="outline" @click="submitSearch">Search</Button>
+		<Button class="h-full self-end" variant="outline" @click="submitSearch">Search</Button>
 		<div v-if="queryWarnings.warnings.length" class="mt-1 ml-1 text-xs text-orange-700">
 			<div v-for="(warning, idx) in queryWarnings.warnings" :key="idx">{{ warning }}</div>
 		</div>
@@ -330,6 +332,6 @@ function addMetaFilterToQuery(key: string, val: string) {
 }
 
 .cm-tooltip {
-	@apply p-1 bg-white! rounded;
+	@apply p-1 bg-white! rounded text-xs;
 }
 </style>

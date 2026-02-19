@@ -59,7 +59,9 @@ const isMenuOpen = ref(categories.value!.map(() => false));
 				</DropdownMenu>
 			</div>
 		</div>
-		<div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm font-medium text-on-surface/75">
+		<div
+			class="flex flex-wrap items-center gap-x-4 gap-y-1 overflow-x-clip overflow-y-visible text-sm font-medium text-on-surface/75"
+		>
 			<MultiValueSearchbar
 				v-if="table"
 				:table="table as Table<unknown>"

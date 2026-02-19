@@ -1,6 +1,6 @@
 import type { Completion } from "@codemirror/autocomplete";
 import { HighlightStyle, LanguageSupport, StreamLanguage } from "@codemirror/language";
-import { hoverTooltip } from "@codemirror/view";
+import { hoverTooltip, type Tooltip, type TooltipView } from "@codemirror/view";
 import { Tag } from "@lezer/highlight";
 
 import type { TriggerMap } from "@/components/searchbar";
@@ -118,8 +118,8 @@ export const wordHover = (triggers: TriggerMap) =>
 				create() {
 					const dom = document.createElement("div");
 					dom.textContent = trigger.displayValue;
-					return { dom };
+					return { dom } satisfies TooltipView;
 				},
-			};
+			} satisfies Tooltip;
 		return null;
 	});
