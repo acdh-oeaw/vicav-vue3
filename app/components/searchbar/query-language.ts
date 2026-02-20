@@ -27,7 +27,7 @@ export const queryLanguage = StreamLanguage.define({
 		}
 
 		// Logical operators
-		if (stream.match(/^(AND|OR|NOT)\b/)) {
+		if (stream.match(/^(AND|OR|NOT)\b/i)) {
 			return operatorTag.toString();
 		}
 

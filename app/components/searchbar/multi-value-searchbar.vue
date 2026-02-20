@@ -137,9 +137,9 @@ function handleSelect(ev: CustomEvent) {
 	trigger.value = null;
 	const nextCaretOffset = offset + selectedValue?.length;
 	caretOffset.value = nextCaretOffset;
-	setEndOfContenteditable(textarea);
 
 	nextTick().then(() => {
+		setEndOfContenteditable(textarea);
 		handleChange({ target: textarea } as InputEvent);
 	});
 }
@@ -328,7 +328,7 @@ function addMetaFilterToQuery(key: string, val: string) {
 }
 
 .cm-operator {
-	@apply text-on-muted mx-1 text-xs font-bold;
+	@apply text-on-muted text-xs font-bold uppercase;
 }
 
 .cm-tooltip {
