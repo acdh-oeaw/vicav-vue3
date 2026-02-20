@@ -363,6 +363,15 @@ function syncGlobalAndColumnFilters(table: Table<unknown>) {
 	currentGlobalFilter = matchQueryStringAndFilters(currentGlobalFilter, assembledColumnFilters);
 	currentGlobalFilter = currentGlobalFilter.replace(/^ OR /, "").replaceAll("  ", " ");
 
+	// Check if "AND" would incorrectly be overwritten with "OR"
+	const globalFilterWithAndReplacedOutside = String(table.getState().globalFilter ?? "").replaceAll(
+		/\bAND\b(?![^(]*\))/g,
+		"OR",
+	);
+	if (globalFilterWithAndReplacedOutside === currentGlobalFilter) {
+		return;
+	}
+
 	table.setGlobalFilter(currentGlobalFilter);
 }
 
