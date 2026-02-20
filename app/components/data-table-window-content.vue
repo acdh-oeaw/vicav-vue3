@@ -43,7 +43,7 @@ const columns = ref([
 			}
 
 			if (linked_type) {
-				linked_id = simpleItems.value.find((i) => {
+				linked_id = simpleItems.find((i) => {
 					return (
 						i.dataType === linked_type &&
 						i.person.at(0)?.name === info.row.original.person.at(0)?.name
