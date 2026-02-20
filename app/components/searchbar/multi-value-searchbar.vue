@@ -5,6 +5,7 @@ import type { Table } from "@tanstack/vue-table";
 import { computedWithControl } from "@vueuse/core";
 import { ChevronDown, FunnelPlus, X } from "lucide-vue-next";
 import {
+	type AcceptableValue,
 	ComboboxAnchor,
 	ComboboxCancel,
 	ComboboxContent,
@@ -16,7 +17,7 @@ import {
 	type ReferenceElement,
 	useFilter,
 } from "reka-ui";
-import { computed, nextTick, ref, watch, watchEffect } from "vue";
+import { computed, nextTick, ref, watch } from "vue";
 import CodeMirror from "vue-codemirror6";
 
 import {
@@ -88,13 +89,6 @@ watch(
 	},
 );
 
-watchEffect(() => {
-	// const textarea = textareaRef.value?.$el as HTMLTextAreaElement | undefined;
-	// if (caretOffset.value !== null && textarea) {
-	// 	textarea.setSelectionRange(caretOffset.value, caretOffset.value);
-	// }
-});
-
 function handleChange(ev: InputEvent | PointerEvent) {
 	const target = ev.target as HTMLTextAreaElement;
 	const _trigger = getTrigger(target, props.triggers);
@@ -106,7 +100,6 @@ function handleChange(ev: InputEvent | PointerEvent) {
 		trigger.value = null;
 		open.value = false;
 	}
-	console.log("Trigger: ", trigger.value);
 	// value.value = target.textContent;
 	searchValue.value = _searchValue;
 
@@ -114,6 +107,7 @@ function handleChange(ev: InputEvent | PointerEvent) {
 }
 
 function handleSelect(ev: CustomEvent) {
+	highlighted.value = null;
 	const textarea = textareaRef.value?.$el;
 
 	if (!textarea) return;
@@ -125,7 +119,6 @@ function handleSelect(ev: CustomEvent) {
 
 	// prevent setting `ComboboxInput`
 	ev.preventDefault();
-	console.log(value.value);
 	value.value = replaceValue(
 		value.value ?? "",
 		offset,
@@ -133,7 +126,6 @@ function handleSelect(ev: CustomEvent) {
 		selectedValue,
 		trigger.value ?? "",
 	);
-	console.log(textarea);
 	trigger.value = null;
 	const nextCaretOffset = offset + selectedValue?.length;
 	caretOffset.value = nextCaretOffset;
@@ -169,6 +161,25 @@ function addMetaFilterToQuery(key: string, val: string) {
 	value.value = addMetaFilter(value.value, key, val);
 	submitSearch();
 }
+
+const highlighted = ref<string | null>(null);
+function setHighlight(el: { ref: HTMLElement; value: AcceptableValue } | undefined) {
+	highlighted.value = el?.value ? String(el?.value) : null;
+}
+watch(open, () => (highlighted.value = null));
+
+const eventListener = (e: KeyboardEvent) => {
+	if (e.key === "Enter") {
+		e.preventDefault();
+		if (!highlighted.value && queryWarnings.value.isValid) submitSearch();
+	}
+};
+onMounted(() => {
+	window.addEventListener("keydown", eventListener);
+});
+onBeforeUnmount(() => {
+	window.removeEventListener("keydown", eventListener);
+});
 </script>
 
 <template>
@@ -178,6 +189,7 @@ function addMetaFilterToQuery(key: string, val: string) {
 			class="flex w-full flex-col overflow-x-hidden"
 			ignore-filter
 			:reset-search-term-on-blur="false"
+			@highlight="setHighlight"
 		>
 			<Label class="sr-only text-sm font-semibold" for="search"> search </Label>
 
@@ -191,15 +203,13 @@ function addMetaFilterToQuery(key: string, val: string) {
 						:lang="queryLanguageSupport"
 						placeholder="Click to get a list of available features"
 						@input="handleChange"
-						@keydown.enter="
-							(ev: KeyboardEvent) => {
-								if (open) {
-									ev.preventDefault();
-								} else {
-									submitSearch();
-								}
+						@keydown.delete="
+							() => {
+								open = false;
+								highlighted = null;
 							}
 						"
+						@keydown.enter="eventListener"
 						@keydown.left.right="open = false"
 						@pointerdown="
 							(e: PointerEvent) => {
