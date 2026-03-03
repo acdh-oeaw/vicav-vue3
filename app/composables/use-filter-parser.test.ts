@@ -6,7 +6,7 @@ import { useFilterParser } from "./use-filter-parser.ts";
 
 const { AND_OPERATOR } = useAdvancedQueries();
 
-const { parseSearchString, isInQuery } = useFilterParser();
+const { parseSearchString, isInQuery, matchQueryStringAndFilters } = useFilterParser();
 
 interface TestInterface {
 	fruit: string;
@@ -197,5 +197,29 @@ describe("Test isInQuery function", () => {
 				"fruit:apple AND fruit:banana",
 			),
 		).toBe(true);
+	});
+
+	test("matchQueryStringAndFilters maintains AND when syncing - different features", () => {
+		const query = 'a:"1" AND b:"2"';
+		const new_filters = ['c:"3"'];
+		const filters = [...query.split(" AND "), ...new_filters];
+		const out = matchQueryStringAndFilters(query, filters);
+		expect(out).toBe('(a:"1" AND b:"2") OR c:"3"');
+	});
+
+	test("matchQueryStringAndFilters maintains AND when syncing - same feature", () => {
+		const query = 'a:"1" AND a:"2"';
+		const new_filters = ['c:"3"'];
+		const filters = ['(a:"1" AND a:"2")', ...new_filters];
+		const out = matchQueryStringAndFilters(query, filters);
+		expect(out).toBe('(a:"1" AND a:"2") OR c:"3"');
+	});
+
+	test("Don't add unnecessary parentheses around OR", () => {
+		const query = 'a:"1" AND a:"2" OR b:"3"';
+		const new_filters = ['c:"4"'];
+		const filters = ['(a:"1" AND a:"2")', 'b:"3"', ...new_filters];
+		const out = matchQueryStringAndFilters(query, filters);
+		expect(out).toBe('(a:"1" AND a:"2") OR b:"3" OR c:"4"');
 	});
 });

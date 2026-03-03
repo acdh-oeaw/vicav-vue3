@@ -2,7 +2,6 @@ import type { Table } from "@tanstack/vue-table";
 import {
 	type LiqeQuery,
 	type LogicalExpressionToken,
-	type ParenthesizedExpressionToken,
 	parse as liqe_parse,
 	SyntaxError,
 	type TagToken,
@@ -34,6 +33,31 @@ function parse(query: string) {
 	return liqe_parse(normalized);
 }
 
+function getNormalizedAST(input: LiqeQuery | string): LiqeQuery {
+	const ast = typeof input === "string" ? parse(input) : input;
+	return normalizeASTtoDNF(ast);
+}
+
+function getAllColumnValues(table: Table<unknown>, columnId: string): Array<string> {
+	return [
+		...new Set<string>(table.getCoreRowModel().flatRows.flatMap((row) => row.getValue(columnId))),
+	];
+}
+
+function ensureColumnFilterMap(
+	table: Table<unknown>,
+	columnId: string,
+):
+	| { column: ReturnType<Table<unknown>["getColumn"]>; filterValue: Map<string, unknown> }
+	| undefined {
+	const col = table.getColumn(columnId);
+	if (!col) return undefined;
+	col.toggleVisibility(true);
+	if (!col.getFilterValue()) col.setFilterValue(new Map<string, unknown>());
+	const filterValue = col.getFilterValue() as Map<string, unknown> | undefined;
+	return { column: col, filterValue: filterValue ?? new Map<string, unknown>() };
+}
+
 function parseSearchString(searchString: string, table: Table<unknown>) {
 	const ast = parse(searchString);
 
@@ -43,22 +67,14 @@ function parseSearchString(searchString: string, table: Table<unknown>) {
 }
 
 function setColumnFilter(columnId: string, value: string, table: Table<unknown>) {
-	if (!table.getAllFlatColumns().find((column) => column.id === columnId)) return;
-	table.getColumn(columnId)?.toggleVisibility(true);
-	if (!table.getColumn(columnId)?.getFilterValue()) {
-		table.getColumn(columnId)?.setFilterValue(new Map());
-	}
+	const ensured = ensureColumnFilterMap(table, columnId);
+	if (!ensured) return;
+	const { filterValue } = ensured;
 	const { featureValueTaxonomy } = storeToRefs(useGeojsonStore());
 
-	const filterValue = table.getColumn(columnId)?.getFilterValue() as
-		| Map<string, unknown>
-		| undefined;
-
 	if (value === "*") {
-		const allColValues = [
-			...new Set(table.getCoreRowModel().flatRows.flatMap((row) => row.getValue(columnId))),
-		];
-		allColValues.forEach((val) => filterValue?.set(val as string, 1));
+		const allColValues = getAllColumnValues(table, columnId);
+		allColValues.forEach((val) => filterValue.set(val, 1));
 	} else {
 		let isTaxonomyEntry = false;
 		value.split(AND_OPERATOR).forEach((part) => {
@@ -71,19 +87,20 @@ function setColumnFilter(columnId: string, value: string, table: Table<unknown>)
 				.filter(([_key, val]) => val?.taxonomy.endsWith(`.${part}`));
 			if (taxonomyMatches.length > 0) {
 				taxonomyMatches.forEach((match) => {
-					filterValue?.set(match[0].replace(`${columnId}.`, ""), 1);
+					filterValue.set(match[0].replace(`${columnId}.`, ""), 1);
 				});
-				filterValue?.set(part, 1);
+				filterValue.set(part, 1);
 				isTaxonomyEntry = true;
 			} else if (!value.includes(AND_OPERATOR)) {
-				filterValue?.set(part, 1);
+				filterValue.set(part, 1);
 			}
 		});
 		// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
 		if (!isTaxonomyEntry) filterValue?.set(value, 1);
 	}
 
-	table.getColumn(columnId)?.setFilterValue(filterValue);
+	// ensureColumnFilterMap already ensured column and initial filter map
+	ensured.column!.setFilterValue(filterValue);
 }
 
 function getColumnAndValueFromTagExpression(ast: TagToken) {
@@ -93,61 +110,83 @@ function getColumnAndValueFromTagExpression(ast: TagToken) {
 	return { column: ast.field.name, value: String(ast.expression.value) };
 }
 
-function handleAndExpression(ast: LiqeQuery) {
-	if (!ast.left || !ast.right) return [];
-	const left = traverseAST(ast.left);
-	const right = traverseAST(ast.right);
-	if (!left[0]?.column || !right[0]?.column) return [];
-	if (left[0].column !== right[0].column) {
-		return [left, right].flat();
-	} else {
-		return [{ column: left[0].column, value: [left[0].value, right[0].value].join(AND_OPERATOR) }];
-	}
+// helper type for a leaf node
+interface FilterLeaf {
+	column: string;
+	value: string;
+	negated?: boolean;
 }
 
-function traverseAST(ast: LiqeQuery): Array<{ column: string; value: string; negated?: boolean }> {
+// generator that yields leaves without building intermediate arrays
+function* iterateLeaves(ast: LiqeQuery): Generator<FilterLeaf> {
 	switch (ast.type) {
 		case "Tag": {
 			const { column, value } = getColumnAndValueFromTagExpression(ast);
-			if (!column || !value) return [];
-			return [{ column, value }];
+			if (column && value) yield { column, value };
+			return;
 		}
 		case "LogicalExpression": {
 			if (ast.operator.operator === "OR") {
-				return [traverseAST(ast.left), traverseAST(ast.right)].flat();
+				yield* iterateLeaves(ast.left);
+				yield* iterateLeaves(ast.right);
 			} else {
-				return handleAndExpression(ast);
+				// AND expression: we need to look at both sides to decide whether
+				// to merge values or emit separately.  collect first leaf of each
+				// branch; this is typically small.
+				const leftLeaves: Array<FilterLeaf> = [...iterateLeaves(ast.left)];
+				const rightLeaves: Array<FilterLeaf> = [...iterateLeaves(ast.right)];
+
+				if (leftLeaves.length === 0 || rightLeaves.length === 0) return;
+				const l0 = leftLeaves[0]!;
+				const r0 = rightLeaves[0]!;
+				if (l0.column !== r0.column) {
+					for (const l of leftLeaves) yield l;
+					for (const r of rightLeaves) yield r;
+				} else {
+					yield { column: l0.column, value: [l0.value, r0.value].join(AND_OPERATOR) };
+				}
 			}
+			return;
 		}
 		case "ParenthesizedExpression": {
-			return traverseAST(ast.expression);
+			yield* iterateLeaves(ast.expression);
+			return;
 		}
 		case "UnaryOperator": {
-			return traverseAST(ast.operand);
+			yield* iterateLeaves(ast.operand);
+			return;
 		}
 		case "EmptyExpression":
 		default:
+			return;
 	}
-	return [];
+}
+
+function collectLeavesAsArray(ast: LiqeQuery): Array<FilterLeaf> {
+	return [...iterateLeaves(ast)];
 }
 
 function traverseASTandApplyFilter(ast: LiqeQuery, table: Table<unknown>) {
-	traverseAST(normalizeASTtoDNF(ast)).forEach((result) => {
-		setColumnFilter(result.column, result.value, table);
-	});
+	for (const { column, value } of iterateLeaves(getNormalizedAST(ast))) {
+		setColumnFilter(column, value, table);
+	}
 }
 
-function constructLocicalExpression(
+function constructLogicalExpression(
 	operator: "AND" | "OR",
 	left: LiqeQuery,
 	right: LiqeQuery,
 ): LogicalExpressionToken {
 	return {
 		type: "LogicalExpression",
-		operator: { type: "BooleanOperator", operator: operator, location: { start: -1, end: -1 } },
+		operator: {
+			type: "BooleanOperator",
+			operator: operator,
+			location: { start: left.location.end + 1, end: right.location.start - 1 },
+		},
 		left: left,
 		right: right,
-		location: { start: -1, end: -1 },
+		location: { start: left.location.start, end: right.location.end },
 	};
 }
 
@@ -160,13 +199,20 @@ function constructNegatedExpression(ast: LiqeQuery): UnaryOperatorToken {
 	};
 }
 
-function normalizeASTtoDNF(ast: LiqeQuery): Exclude<LiqeQuery, ParenthesizedExpressionToken> {
+function unwrapParenthesizedExpression(ast: LiqeQuery): LiqeQuery {
+	if (ast.type === "ParenthesizedExpression") {
+		return unwrapParenthesizedExpression(ast.expression);
+	}
+	return ast;
+}
+
+function normalizeASTtoDNF(ast: LiqeQuery): LiqeQuery {
 	switch (ast.type) {
 		case "Tag": {
 			return ast;
 		}
 		case "ParenthesizedExpression": {
-			return normalizeASTtoDNF(ast.expression);
+			return { ...ast, expression: normalizeASTtoDNF(ast.expression) };
 		}
 		case "LogicalExpression": {
 			if (ast.operator.operator === "AND") {
@@ -175,21 +221,39 @@ function normalizeASTtoDNF(ast: LiqeQuery): Exclude<LiqeQuery, ParenthesizedExpr
 				if (left.type === "EmptyExpression" || right.type === "EmptyExpression") {
 					return ast;
 				}
-				if (typeof left.operator !== "string" && left.operator.operator === "OR") {
-					const newLeft = normalizeASTtoDNF(constructLocicalExpression("AND", left.left!, right));
-					const newRight = normalizeASTtoDNF(constructLocicalExpression("AND", left.right!, right));
-					return constructLocicalExpression("OR", newLeft, newRight);
+				const unwrappedLeft = unwrapParenthesizedExpression(left);
+				const unwrappedRight = unwrapParenthesizedExpression(right);
+				if (
+					"operator" in unwrappedLeft &&
+					typeof unwrappedLeft.operator !== "string" &&
+					unwrappedLeft.operator.operator === "OR"
+				) {
+					const newLeft = normalizeASTtoDNF(
+						constructLogicalExpression("AND", unwrappedLeft.left!, right),
+					);
+					const newRight = normalizeASTtoDNF(
+						constructLogicalExpression("AND", unwrappedLeft.right!, right),
+					);
+					return constructLogicalExpression("OR", newLeft, newRight);
 				}
-				if (typeof right.operator !== "string" && right.operator.operator === "OR") {
-					const newLeft = normalizeASTtoDNF(constructLocicalExpression("AND", left, right.left!));
-					const newRight = normalizeASTtoDNF(constructLocicalExpression("AND", left, right.right!));
-					return constructLocicalExpression("OR", newLeft, newRight);
+				if (
+					"operator" in unwrappedRight &&
+					typeof unwrappedRight.operator !== "string" &&
+					unwrappedRight.operator.operator === "OR"
+				) {
+					const newLeft = normalizeASTtoDNF(
+						constructLogicalExpression("AND", left, unwrappedRight.left!),
+					);
+					const newRight = normalizeASTtoDNF(
+						constructLogicalExpression("AND", left, unwrappedRight.right!),
+					);
+					return constructLogicalExpression("OR", newLeft, newRight);
 				}
-				return constructLocicalExpression("AND", left, right);
+				return constructLogicalExpression("AND", left, right);
 			}
 			// if ast.operator.operator === "OR":
 			else {
-				return constructLocicalExpression(
+				return constructLogicalExpression(
 					"OR",
 					normalizeASTtoDNF(ast.left),
 					normalizeASTtoDNF(ast.right),
@@ -206,7 +270,7 @@ function normalizeASTtoDNF(ast: LiqeQuery): Exclude<LiqeQuery, ParenthesizedExpr
 				const newLeft = constructNegatedExpression(ast.operand.expression.left);
 				const newRight = constructNegatedExpression(ast.operand.expression.right);
 				return normalizeASTtoDNF(
-					constructLocicalExpression(operator === "OR" ? "AND" : "OR", newLeft, newRight),
+					constructLogicalExpression(operator === "OR" ? "AND" : "OR", newLeft, newRight),
 				);
 			}
 			return ast;
@@ -236,8 +300,8 @@ function isEqual(a: LiqeQuery, b: LiqeQuery): boolean {
 }
 
 function isInQuery(query: LiqeQuery | string, filter: LiqeQuery | string): boolean {
-	const ast = typeof query === "string" ? normalizeASTtoDNF(parse(query)) : query;
-	const filterAST = typeof filter === "string" ? normalizeASTtoDNF(parse(filter)) : filter;
+	const ast = getNormalizedAST(query);
+	const filterAST = getNormalizedAST(filter);
 
 	if (ast.type === "ParenthesizedExpression") {
 		return isInQuery(ast.expression, filterAST);
@@ -271,30 +335,115 @@ function assembleFilter(columnId: string, key: string) {
 	return assembledFilter;
 }
 
-function matchQueryStringAndFilters(query: string, filters: Array<string>) {
-	// remove leafs from query that are not in filters:
-	const normalizedAST = normalizeASTtoDNF(parse(query));
-	const filteredAST = traverseAST(normalizedAST).filter((leaf) =>
-		filters.includes(assembleFilter(leaf.column, leaf.value)),
-	);
-	let filteredQueryString = filteredAST
-		.map((leaf) => assembleFilter(leaf.column, leaf.value))
-		.join(" OR ");
-
-	// add filters that are not in query:
-	if (filters.length === 0) return filteredQueryString;
-
-	filteredQueryString = filters.reduce(
-		(acc, filter) => {
-			if (!isInQuery(acc, filter)) {
-				return `${acc} OR ${filter}`;
+function filterASTtoAllowed(ast: LiqeQuery, allowed: Set<string>): LiqeQuery {
+	switch (ast.type) {
+		case "Tag": {
+			const { column, value } = getColumnAndValueFromTagExpression(ast);
+			if (column && value && allowed.has(assembleFilter(column, value))) {
+				return ast;
 			}
-			return acc;
-		},
-		filteredQueryString.length > 0 ? filteredQueryString : filters[0]!,
-	);
+			return { type: "EmptyExpression", location: ast.location };
+		}
+		case "LogicalExpression": {
+			if (ast.operator.operator === "OR") {
+				const left = filterASTtoAllowed(ast.left, allowed);
+				const right = filterASTtoAllowed(ast.right, allowed);
+				if (left.type === "EmptyExpression") return right;
+				if (right.type === "EmptyExpression") return left;
+				return { ...ast, left, right };
+			} else {
+				// AND: Check if the stringified AND expression is in allowed before pruning children
+				const stringified = stringifyAST(ast);
+				const stringifiedWithParens = `(${stringified})`;
+				if (allowed.has(stringified) || allowed.has(stringifiedWithParens)) {
+					return ast;
+				}
 
-	return filteredQueryString;
+				const left = filterASTtoAllowed(ast.left, allowed);
+				const right = filterASTtoAllowed(ast.right, allowed);
+				if (left.type === "EmptyExpression") return right;
+				if (right.type === "EmptyExpression") return left;
+				return { ...ast, left, right };
+			}
+		}
+		case "ParenthesizedExpression": {
+			const expr = filterASTtoAllowed(ast.expression, allowed);
+			if (expr.type === "EmptyExpression") return expr;
+			return { ...ast, expression: expr };
+		}
+		case "UnaryOperator": {
+			const operand = filterASTtoAllowed(ast.operand, allowed);
+			if (operand.type === "EmptyExpression") return operand;
+			return { ...ast, operand };
+		}
+		case "EmptyExpression":
+		default:
+			return ast;
+	}
+}
+
+// Convert an AST back into a query string.  We simply re‑assemble leaf
+// expressions with `assembleFilter` and parenthesise binary operators to
+// preserve grouping.
+function stringifyAST(ast: LiqeQuery, parentOp?: "AND" | "OR"): string {
+	switch (ast.type) {
+		case "Tag": {
+			const { column, value } = getColumnAndValueFromTagExpression(ast);
+			return column && value ? assembleFilter(column, value) : "";
+		}
+		case "LogicalExpression": {
+			const left = stringifyAST(ast.left, ast.operator.operator);
+			const right = stringifyAST(ast.right, ast.operator.operator);
+			const op = ast.operator.operator;
+			const inner = `${left} ${op} ${right}`;
+			// Wrap in parentheses if:
+			// - Parent is AND (both AND and OR need parens inside AND)
+			// - This is AND and parent is OR (AND needs parens to clarify precedence)
+			const needsParens = parentOp === "AND" || (parentOp === "OR" && op === "AND");
+			return needsParens ? `(${inner})` : inner;
+		}
+		case "ParenthesizedExpression":
+			return `(${stringifyAST(ast.expression)})`;
+		case "UnaryOperator":
+			return `NOT ${stringifyAST(ast.operand)}`;
+		case "EmptyExpression":
+		default:
+			return "";
+	}
+}
+
+function matchQueryStringAndFilters(query: string, filters: Array<string>) {
+	const normalizedAST = getNormalizedAST(query);
+
+	// compute intersection of query leaves and filters by pruning the AST
+	const allowed = new Set(filters);
+	const pruned = filterASTtoAllowed(normalizedAST, allowed);
+	const filteredQueryString = stringifyAST(pruned);
+
+	if (filters.length === 0) return filteredQueryString.trim();
+
+	const existingLeaves = new Set<string>();
+	for (const leaf of iterateLeaves(normalizedAST)) {
+		existingLeaves.add(assembleFilter(leaf.column, leaf.value));
+	}
+
+	let result = filteredQueryString.trim();
+	for (const filter of filters) {
+		if (!existingLeaves.has(filter)) {
+			if (result.length > 0) {
+				// If result contains a top-level AND and we're adding with OR, wrap it
+				if (pruned.type === "LogicalExpression" && pruned.operator.operator === "AND") {
+					result = `(${result}) OR ${filter}`;
+				} else {
+					result = `${result} OR ${filter}`;
+				}
+			} else {
+				result = filter;
+			}
+		}
+	}
+
+	return result.trim();
 }
 function syncGlobalAndColumnFilters(table: Table<unknown>) {
 	const columnFilters = table.getState().columnFilters as Array<{
@@ -355,7 +504,7 @@ function syncGlobalAndColumnFilters(table: Table<unknown>) {
 					return !removeKeys.includes(key);
 				})
 				.map(([key, _value]) => assembleFilter(column.id, key));
-			console.log(remainingFilters);
+			// debugging: remainingFilters
 
 			return [...replacedFilters, ...remainingFilters];
 		})
@@ -384,7 +533,7 @@ function addMetaFilter(originalQuery: string, metaKey: string, metaValue: string
 }
 
 function getTraversedAST(query: string) {
-	return traverseAST(normalizeASTtoDNF(parse(query)));
+	return collectLeavesAsArray(getNormalizedAST(query));
 }
 
 function findImplicitBooleanOperator(ast: LiqeQuery): boolean {
