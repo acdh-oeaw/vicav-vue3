@@ -45,6 +45,29 @@ const properties: Array<keyof CSSStyleDeclaration> = [
 const isBrowser = typeof window !== "undefined";
 const isFirefox = isBrowser && window.navigator.userAgent.toLowerCase().includes("firefox");
 
+function getSelectionOffset(element: HTMLElement) {
+	element.focus();
+	if ((document.getSelection()?.rangeCount ?? -1) <= 0) return 0;
+	const _range = document.getSelection()?.getRangeAt(0);
+	if (!_range) return -1;
+	const range = _range.cloneRange();
+	range.selectNodeContents(element);
+	range.setEnd(_range.endContainer, _range.endOffset);
+	return range.toString().length;
+}
+// Source - https://stackoverflow.com/a/3866442
+// Posted by Nico Burns, modified by community. See post 'Timeline' for change history
+// Retrieved 2026-02-12, License - CC BY-SA 3.0
+
+export function setEndOfContenteditable(element: HTMLElement) {
+	const range = document.createRange(); //Create a range (a range is a like the selection but invisible)
+	range.selectNodeContents(element); //Select the entire contents of the element with the range
+	range.collapse(false); //collapse the range to the end point. false means collapse to end rather than the start
+	const selection = window.getSelection(); //get the selection object (allows you to change selection)
+	selection?.removeAllRanges(); //remove any selections already made
+	selection?.addRange(range); //make the range you have just created the visible selection
+}
+
 function getCaretCoordinates(
 	element: HTMLInputElement | HTMLTextAreaElement,
 	position: number,
@@ -87,12 +110,11 @@ function getCaretCoordinates(
 	} else {
 		style.overflow = "hidden";
 	}
-
-	div.textContent = element.value.substring(0, position);
+	div.textContent = element.textContent.substring(0, position);
 	if (isInput) div.textContent = div.textContent.replace(/\s/g, "\u00A0");
 
 	const span = document.createElement("span");
-	span.textContent = element.value.substring(position) || ".";
+	span.textContent = element.textContent.substring(position) || ".";
 	div.appendChild(span);
 
 	const coordinates: CaretCoordinates = {
@@ -140,7 +162,8 @@ export type TriggerMap = Map<
 >;
 
 export function getTriggerOffset(element: HTMLTextAreaElement, triggers: TriggerMap) {
-	const { value, selectionStart } = element;
+	const value = element.textContent;
+	const selectionStart = getSelectionOffset(element);
 	for (let i = selectionStart; i >= 0; i--) {
 		for (const trigger of [...triggers.keys()].toSorted((a, b) => b.length - a.length)) {
 			if (value.substring(i - trigger.length + 1, i + 1) === trigger) {
@@ -152,10 +175,12 @@ export function getTriggerOffset(element: HTMLTextAreaElement, triggers: Trigger
 }
 
 export function getTrigger(element: HTMLTextAreaElement, triggers: TriggerMap) {
-	const { value, selectionStart } = element;
+	const value = element.textContent;
+
+	const selectionOffset = getSelectionOffset(element);
 	for (const trigger of [...triggers.keys()].toSorted((a, b) => b.length - a.length)) {
-		const triggerStart = selectionStart - trigger.length;
-		if (triggerStart >= 0 && value.substring(triggerStart, selectionStart) === trigger) {
+		const triggerStart = selectionOffset - trigger.length;
+		if (triggerStart >= 0 && value.substring(triggerStart, selectionOffset) === trigger) {
 			// const secondPreviousChar = value[triggerStart - 1];
 			// const isIsolated = !secondPreviousChar || /\W/.test(secondPreviousChar);
 			// console.log("Tested trigger: ", `*${trigger}*`, value, selectionStart, secondPreviousChar);
@@ -170,8 +195,8 @@ export function getTrigger(element: HTMLTextAreaElement, triggers: TriggerMap) {
 export function getSearchValue(element: HTMLTextAreaElement, triggers: TriggerMap) {
 	const offset = getTriggerOffset(element, triggers);
 	const trigger = getTrigger(element, triggers);
-	if (offset === -1) return "";
-	return element.value.slice(offset + (trigger?.length ?? 0), element.selectionStart);
+	// if (offset === -1) return "";
+	return element.textContent.slice(offset + (trigger?.length ?? 0), getSelectionOffset(element));
 }
 
 export function getAnchorRect(element: HTMLTextAreaElement, triggers: TriggerMap) {
