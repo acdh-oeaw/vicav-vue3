@@ -47,11 +47,31 @@ const customIcons = [
 			y: "5%",
 		},
 	},
-	{
-		name: "circle-small",
-		categories: ["shapes"],
-		tags: [],
-	},
+	...[
+		"circle-small",
+		"badge",
+		"club",
+		"cross",
+		"diamond",
+		"heart",
+		"hexagon",
+		"octagon",
+		"pentagon",
+		"rectangle-horizontal",
+		"rectangle-vertical",
+		"shield",
+		"sparkle",
+		"square",
+		"squircle",
+		"star",
+		"triangle",
+	].map(
+		(iconName) =>
+			({
+				name: iconName!,
+				categories: ["shapes"],
+			}) as IconType,
+	),
 ];
 </script>
 
