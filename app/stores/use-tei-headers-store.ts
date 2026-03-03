@@ -30,6 +30,7 @@ export const useTeiHeadersStore = defineStore("use-tei-headers-store", () => {
 
 	const rawItems = computed(() => {
 		const parsedItems: Array<TeiCorpus> = [];
+		console.log(projectData.value?.projectConfig?.staticData?.table);
 		(projectData.value?.projectConfig?.staticData?.table ?? []).forEach((item) => {
 			const parsedItem = TeiCorpusSchema.safeParse(item);
 			if (parsedItem.success) {
@@ -101,7 +102,7 @@ export const useTeiHeadersStore = defineStore("use-tei-headers-store", () => {
 			respAuthor?.forename && respAuthor.surname
 				? `${respAuthor.forename.$} ${respAuthor.surname.$}`
 				: (respAuthor?.name?.$ ??
-					(respRef.success ? respRef.data["@ref"]?.replace("corpus:", "") : undefined));
+					(respRef.success ? respRef.data["@ref"].replace("corpus:", "") : undefined));
 
 		// place
 		const place = h?.profileDesc?.settingDesc?.place;
