@@ -51,11 +51,19 @@ export default defineConfig({
 	projects: [
 		{
 			name: "chromium",
-			use: { ...devices["Desktop Chrome"] },
+			use: { ...devices["Desktop Chrome"], launchOptions: { args: ["--use-gl=angle"] } },
 		},
 		{
 			name: "firefox",
-			use: { ...devices["Desktop Firefox"] },
+			use: {
+				...devices["Desktop Firefox"],
+				launchOptions: {
+					firefoxUserPrefs: {
+						"dom.webgpu.enabled": true,
+						"webgl.enable-webgl2": true,
+					},
+				},
+			},
 		},
 		{
 			name: "webkit",
