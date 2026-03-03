@@ -41,6 +41,8 @@ export const useTeiHeadersStore = defineStore("use-tei-headers-store", () => {
 		return parsedItems;
 	});
 
+	//TODO: extract person metadata from dedicated section in projectInfo, should be a global definition
+	//for the entire corpus
 	const extractPersons = function (item: TEI, corpusMetadata: TeiHeader | undefined) {
 		const corpusPersons = corpusMetadata?.profileDesc?.particDesc?.listPerson;
 		const results = [];
