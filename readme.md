@@ -101,6 +101,7 @@ docker run --rm --name jaeger \
    -p 9411:9411 \
    jaegertracing/all-in-one:latest
 ```
+
 Then set `OTEL_EXPORTER_OTLP_ENDPOINT=http://127.0.0.1:4317` in your `.env.local` file.
 
 ## Maps
