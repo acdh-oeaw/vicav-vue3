@@ -1,9 +1,10 @@
+import type { JSONSchema } from "zod/v4/core";
+
 import openapi from "@/assets/openapi.json";
 
-type OpenApiSchema = Record<string, unknown>;
 interface OpenApiDocument {
 	components?: {
-		schemas?: Record<string, OpenApiSchema>;
+		schemas?: Record<string, JSONSchema.JSONSchema>;
 	};
 }
 
@@ -35,15 +36,15 @@ const mapRefsToDefs = (schema: unknown): unknown => {
 export function useOpenapiSchema(name: string) {
 	const schema = openapiDocument.components?.schemas?.[name];
 	const allSchemas = openapiDocument.components?.schemas;
-	if (!schema || !allSchemas) return undefined;
+	if (!schema || !allSchemas) return false;
 
-	const defs: Record<string, OpenApiSchema> = {};
+	const defs: Record<string, JSONSchema.JSONSchema> = {};
 	for (const [key, value] of Object.entries(allSchemas)) {
-		defs[key] = mapRefsToDefs(value) as OpenApiSchema;
+		defs[key] = mapRefsToDefs(value) as JSONSchema.JSONSchema;
 	}
 
 	return {
 		$ref: `${defsPrefix}${name}`,
 		$defs: defs,
-	} as OpenApiSchema;
+	} as JSONSchema.JSONSchema;
 }
