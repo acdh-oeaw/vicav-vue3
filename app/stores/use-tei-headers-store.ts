@@ -108,7 +108,9 @@ export const useTeiHeadersStore = defineStore("use-tei-headers-store", () => {
 		const place = h?.profileDesc?.settingDesc?.place;
 		let placeSettlement;
 		if (place?.placeName) {
-			placeSettlement = place.placeName.$;
+			if ("$" in place.placeName) {
+				placeSettlement = place.placeName.$;
+			}
 		} else if (place?.settlement?.name) {
 			const placeName = place.settlement.name.find((n) => n["@lang"] === "en");
 			if (placeName) placeSettlement = placeName.$;
