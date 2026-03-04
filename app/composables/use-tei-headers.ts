@@ -85,7 +85,9 @@ const extractMetadata = function (
 	if (dataTypeObject) template.dataType = dataTypeObject.targetType;
 	if (place) {
 		if (place.placeName) {
-			template.place.settlement = place.placeName.$;
+			if ("$" in place.placeName) {
+				template.place.settlement = place.placeName.$;
+			}
 		} else if (place.settlement?.name) {
 			const placeName = place.settlement.name.find((n) => n["@lang"] === "en");
 			if (placeName) template.place.settlement = placeName.$;
@@ -148,7 +150,7 @@ const extractMetadata = function (
 					? `${persName2.forename.$} ${persName2.surname.$}`
 					: (persName2.name?.$ ?? "unknown");
 		} else if (isAuthorRef(persName)) {
-			name = (persName["@ref"] ?? "missing persName").replace("corpus:", "");
+			name = persName["@ref"].replace("corpus:", "");
 		}
 		if (name) template.resp = name;
 	} else if (
