@@ -85,7 +85,7 @@ const extractMetadata = function (
 	if (dataTypeObject) template.dataType = dataTypeObject.targetType;
 	if (place) {
 		if (place.placeName) {
-			if ("$" in place.placeName) {
+			if ("$" in place.placeName && place.placeName.$) {
 				template.place.settlement = place.placeName.$;
 			}
 		} else if (place.settlement?.name) {
