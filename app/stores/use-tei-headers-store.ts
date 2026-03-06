@@ -44,33 +44,41 @@ export const useTeiHeadersStore = defineStore("use-tei-headers-store", () => {
 	const rawItems = computed(() => {
 		const parsedItems: Array<TeiCorpus> = [];
 		console.log(projectData.value?.projectConfig?.staticData?.table);
-		(projectData.value?.projectConfig?.staticData?.table ?? []).forEach((item) => {
+		(projectData.value?.projectConfig?.staticData?.table ?? []).forEach((item, itemIndex) => {
 			if (!isTeiCorpus(item)) return;
-			const TEIs = item.TEIs;
+			const TEIs = item.TEIs ?? [];
 			item.TEIs = [];
-			const parsedItem = TeiCorpusSchema.safeParse(item);
+			// We want to check the teiCorpus teiHeader first and throw away all the data if that is
+			// invalid.
+			let parsedItem = TeiCorpusSchema.safeParse(item);
 			if (parsedItem.success) {
-				parsedItem.data.TEIs = [];
-				TEIs?.forEach((tei) => {
+				// We need to parse the TEIs one by one to get more detailed error messages about which TEI
+				// by position and @id is not valid and why
+				TEIs.forEach((tei, teiIndex) => {
 					const parsedTEI = TeiSchema.safeParse(tei);
 					if (parsedTEI.success) {
-						parsedItem.data.TEIs?.push(parsedTEI.data);
+						item.TEIs?.push(parsedTEI.data);
 					} else {
 						if (hasIDAttribute(parsedItem.data)) {
-							console.log(`Error parsing item with @id: ${parsedItem.data["@id"]}`);
+							console.log(
+								`Error parsing item ${itemIndex.toString()} with @id: ${parsedItem.data["@id"]}`,
+							);
 						}
 						if (hasIDAttribute(tei)) {
-							console.log(`Error parsing TEI with @id: ${tei["@id"]}`);
+							console.log(`Error parsing TEI[${teiIndex.toString()}] with @id: ${tei["@id"]}`);
 						} else {
-							console.log("Error parsing TEI without @id attribute");
+							console.log(`Error parsing TEI[${teiIndex.toString()}] without @id attribute`);
 						}
 						console.log(parsedTEI.error);
 					}
 				});
-				parsedItems.push(parsedItem.data);
+				// TODO: It seems to be wasteful to parse twice. But if I try to just add correct TEIs to
+				// parsedItem.data.TEIs, they don't show up. Why?
+				parsedItem = TeiCorpusSchema.safeParse(item);
+				if (parsedItem.success) parsedItems.push(parsedItem.data);
 			} else {
 				if (hasIDAttribute(item)) {
-					console.log(`Error parsing item with @id: ${item["@id"]}`);
+					console.log(`Error parsing item ${itemIndex.toString()} with @id: ${item["@id"]}`);
 				} else {
 					console.log("Error parsing item without @id attribute");
 				}
