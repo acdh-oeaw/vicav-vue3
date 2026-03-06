@@ -21,6 +21,14 @@ const TeiCorpusSchema = z.fromJSONSchema(useOpenapiSchema("TeiCorpus")) as z.Zod
 const AuthorRefSchema = z.fromJSONSchema(useOpenapiSchema("AuthorRef")) as z.ZodType<AuthorRef>;
 const AuthorSchema = z.fromJSONSchema(useOpenapiSchema("Author")) as z.ZodType<Author>;
 
+interface ObjectWithID {
+	"@id": string;
+}
+
+function hasIDAttribute(item: unknown): item is ObjectWithID {
+	return Object.prototype.hasOwnProperty.call(item, "@id");
+}
+
 export const useTeiHeadersStore = defineStore("use-tei-headers-store", () => {
 	const { data: projectData, suspense } = useProjectInfo();
 
@@ -36,6 +44,11 @@ export const useTeiHeadersStore = defineStore("use-tei-headers-store", () => {
 			if (parsedItem.success) {
 				parsedItems.push(parsedItem.data);
 			} else {
+				if (hasIDAttribute(item)) {
+					console.log(`Error parsing item with @id: ${item["@id"]}`);
+				} else {
+					console.log("Error parsing item without @id attribute");
+				}
 				console.log(parsedItem.error);
 			}
 		});
