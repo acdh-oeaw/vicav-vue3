@@ -55,7 +55,7 @@ export const useTeiHeadersStore = defineStore("use-tei-headers-store", () => {
 			let parsedItem = TeiCorpusSchema.safeParse(item);
 			if (parsedItem.success) {
 				// We need to parse the TEIs one by one to get more detailed error messages about which TEI
-				// by position andis not valid and why
+				// at which position is not valid and why
 				TEIs.forEach((tei, teiIndex) => {
 					const parsedTEI = TeiSchema.safeParse(tei);
 					if (parsedTEI.success) {
@@ -67,9 +67,9 @@ export const useTeiHeadersStore = defineStore("use-tei-headers-store", () => {
 							);
 						}
 						if (hasIDAttribute(tei)) {
-							console.log(`Error parsing TEI[${teiIndex.toString()}] with @id: ${tei["@id"]}`);
+							console.log(`Error parsing TEIs[${teiIndex.toString()}] with @id: ${tei["@id"]}`);
 						} else {
-							console.log(`Error parsing TEI[${teiIndex.toString()}] without @id attribute`);
+							console.log(`Error parsing TEIs[${teiIndex.toString()}] without @id attribute`);
 						}
 						console.log(parsedTEI.error);
 					}
@@ -138,7 +138,10 @@ export const useTeiHeadersStore = defineStore("use-tei-headers-store", () => {
 		const durMinutes = duration ? Math.floor(((duration % 3600) - durSeconds!) / 60) : undefined;
 
 		// resp
-		const persName = h?.fileDesc.sourceDesc.recordingStmt?.recording.respStmt.persName;
+		const persName =
+			h?.fileDesc.sourceDesc.recordingStmt?.recording.respStmt?.persName ??
+			h?.fileDesc.sourceDesc.recordingStmt?.recording.p?.$ ??
+			"Recording record malformed";
 		const respPerson = corpusMetadata?.fileDesc.titleStmt.respStmts?.find((resp) => {
 			const resp1 = AuthorRefSchema.safeParse(resp.persName).data?.["@ref"];
 			const resp2 = AuthorRefSchema.safeParse(persName).data?.["@ref"];
@@ -218,7 +221,7 @@ export const useTeiHeadersStore = defineStore("use-tei-headers-store", () => {
 				refType: "external",
 				type: "chapter",
 				bibl: {
-					"container-title": h.fileDesc.sourceDesc.biblStruct.monogr.title?.$,
+					"container-title": h.fileDesc.sourceDesc.biblStruct.monogr?.title?.$,
 					title: h.fileDesc.sourceDesc.biblStruct.analytic?.title?.$ ?? "",
 					author: [
 						{
@@ -228,13 +231,13 @@ export const useTeiHeadersStore = defineStore("use-tei-headers-store", () => {
 					],
 					editor: [
 						{
-							given: h.fileDesc.sourceDesc.biblStruct.monogr.editor?.forename?.$ ?? "",
-							family: h.fileDesc.sourceDesc.biblStruct.monogr.editor?.surname?.$ ?? "",
+							given: h.fileDesc.sourceDesc.biblStruct.monogr?.editor?.forename?.$ ?? "",
+							family: h.fileDesc.sourceDesc.biblStruct.monogr?.editor?.surname?.$ ?? "",
 						},
 					],
-					issued: [h.fileDesc.sourceDesc.biblStruct.monogr.imprint.date.$],
-					publisherPlace: h.fileDesc.sourceDesc.biblStruct.monogr.imprint.pubPlace?.$,
-					page: h.fileDesc.sourceDesc.biblStruct.monogr.imprint.biblScopes?.find(
+					issued: [h.fileDesc.sourceDesc.biblStruct.monogr?.imprint.date.$ ?? ""],
+					publisherPlace: h.fileDesc.sourceDesc.biblStruct.monogr?.imprint.pubPlace?.$,
+					page: h.fileDesc.sourceDesc.biblStruct.monogr?.imprint.biblScopes?.find(
 						(s) => s["@unit"] === Unit.Page,
 					)?.$,
 				},
@@ -244,7 +247,7 @@ export const useTeiHeadersStore = defineStore("use-tei-headers-store", () => {
 				refType: "external",
 				type: "journalArticle",
 				bibl: {
-					"container-title": h.fileDesc.sourceDesc.biblStruct.monogr.title?.$,
+					"container-title": h.fileDesc.sourceDesc.biblStruct.monogr?.title?.$,
 					title: h.fileDesc.sourceDesc.biblStruct.analytic?.title?.$ ?? "",
 					author: [
 						{
@@ -254,16 +257,16 @@ export const useTeiHeadersStore = defineStore("use-tei-headers-store", () => {
 					],
 					editor: [
 						{
-							given: h.fileDesc.sourceDesc.biblStruct.monogr.editor?.forename?.$ ?? "",
-							family: h.fileDesc.sourceDesc.biblStruct.monogr.editor?.surname?.$ ?? "",
+							given: h.fileDesc.sourceDesc.biblStruct.monogr?.editor?.forename?.$ ?? "",
+							family: h.fileDesc.sourceDesc.biblStruct.monogr?.editor?.surname?.$ ?? "",
 						},
 					],
-					issued: [h.fileDesc.sourceDesc.biblStruct.monogr.imprint.date.$],
-					publisherPlace: h.fileDesc.sourceDesc.biblStruct.monogr.imprint.pubPlace?.$,
-					volume: h.fileDesc.sourceDesc.biblStruct.monogr.imprint.biblScopes?.find(
+					issued: [h.fileDesc.sourceDesc.biblStruct.monogr?.imprint.date.$ ?? ""],
+					publisherPlace: h.fileDesc.sourceDesc.biblStruct.monogr?.imprint.pubPlace?.$,
+					volume: h.fileDesc.sourceDesc.biblStruct.monogr?.imprint.biblScopes?.find(
 						(s) => s["@unit"] === Unit.Volume,
 					)?.$,
-					page: h.fileDesc.sourceDesc.biblStruct.monogr.imprint.biblScopes?.find(
+					page: h.fileDesc.sourceDesc.biblStruct.monogr?.imprint.biblScopes?.find(
 						(s) => s["@unit"] === Unit.Page,
 					)?.$,
 				},
@@ -273,15 +276,15 @@ export const useTeiHeadersStore = defineStore("use-tei-headers-store", () => {
 				refType: "external",
 				type: "book",
 				bibl: {
-					title: h.fileDesc.sourceDesc.biblStruct.monogr.title?.$ ?? "",
+					title: h.fileDesc.sourceDesc.biblStruct.monogr?.title?.$ ?? "",
 					author: [
 						{
-							given: h.fileDesc.sourceDesc.biblStruct.monogr.author?.forename?.$ ?? "",
-							family: h.fileDesc.sourceDesc.biblStruct.monogr.author?.surname?.$ ?? "",
+							given: h.fileDesc.sourceDesc.biblStruct.monogr?.author?.forename?.$ ?? "",
+							family: h.fileDesc.sourceDesc.biblStruct.monogr?.author?.surname?.$ ?? "",
 						},
 					],
-					issued: [h.fileDesc.sourceDesc.biblStruct.monogr.imprint.date.$],
-					publisherPlace: h.fileDesc.sourceDesc.biblStruct.monogr.imprint.pubPlace?.$,
+					issued: [h.fileDesc.sourceDesc.biblStruct.monogr?.imprint.date.$ ?? ""],
+					publisherPlace: h.fileDesc.sourceDesc.biblStruct.monogr?.imprint.pubPlace?.$,
 				},
 			};
 		}
