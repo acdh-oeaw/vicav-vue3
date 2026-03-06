@@ -18,6 +18,7 @@ import {
 import { type simpleTEIMetadata, SimpleTEIMetadataSchema } from "@/types/teiCorpus.ts";
 
 const TeiCorpusSchema = z.fromJSONSchema(useOpenapiSchema("TeiCorpus")) as z.ZodType<TeiCorpus>;
+const TeiSchema = z.fromJSONSchema(useOpenapiSchema("TEI")) as z.ZodType<TEI>;
 const AuthorRefSchema = z.fromJSONSchema(useOpenapiSchema("AuthorRef")) as z.ZodType<AuthorRef>;
 const AuthorSchema = z.fromJSONSchema(useOpenapiSchema("Author")) as z.ZodType<Author>;
 
@@ -27,6 +28,10 @@ interface ObjectWithID {
 
 function hasIDAttribute(item: unknown): item is ObjectWithID {
 	return Object.prototype.hasOwnProperty.call(item, "@id");
+}
+
+function isTeiCorpus(item: unknown): item is TeiCorpus {
+	return Object.prototype.hasOwnProperty.call(item, "TEIs");
 }
 
 export const useTeiHeadersStore = defineStore("use-tei-headers-store", () => {
@@ -40,8 +45,28 @@ export const useTeiHeadersStore = defineStore("use-tei-headers-store", () => {
 		const parsedItems: Array<TeiCorpus> = [];
 		console.log(projectData.value?.projectConfig?.staticData?.table);
 		(projectData.value?.projectConfig?.staticData?.table ?? []).forEach((item) => {
+			if (!isTeiCorpus(item)) return;
+			const TEIs = item.TEIs;
+			item.TEIs = [];
 			const parsedItem = TeiCorpusSchema.safeParse(item);
 			if (parsedItem.success) {
+				parsedItem.data.TEIs = [];
+				TEIs?.forEach((tei) => {
+					const parsedTEI = TeiSchema.safeParse(tei);
+					if (parsedTEI.success) {
+						parsedItem.data.TEIs?.push(parsedTEI.data);
+					} else {
+						if (hasIDAttribute(parsedItem.data)) {
+							console.log(`Error parsing item with @id: ${parsedItem.data["@id"]}`);
+						}
+						if (hasIDAttribute(tei)) {
+							console.log(`Error parsing TEI with @id: ${tei["@id"]}`);
+						} else {
+							console.log("Error parsing TEI without @id attribute");
+						}
+						console.log(parsedTEI.error);
+					}
+				});
 				parsedItems.push(parsedItem.data);
 			} else {
 				if (hasIDAttribute(item)) {
