@@ -41,7 +41,9 @@ export const useTeiHeadersStore = defineStore("use-tei-headers-store", () => {
 		await suspense();
 	};
 
-	const rawItems = computed(() => {
+	const rawItems = computed((previousParsedItems: Array<TeiCorpus> | undefined) => {
+		// Why is this computed serveral times?
+		if (previousParsedItems) return previousParsedItems;
 		const parsedItems: Array<TeiCorpus> = [];
 		console.log(projectData.value?.projectConfig?.staticData?.table);
 		(projectData.value?.projectConfig?.staticData?.table ?? []).forEach((item, itemIndex) => {
@@ -53,7 +55,7 @@ export const useTeiHeadersStore = defineStore("use-tei-headers-store", () => {
 			let parsedItem = TeiCorpusSchema.safeParse(item);
 			if (parsedItem.success) {
 				// We need to parse the TEIs one by one to get more detailed error messages about which TEI
-				// by position and @id is not valid and why
+				// by position andis not valid and why
 				TEIs.forEach((tei, teiIndex) => {
 					const parsedTEI = TeiSchema.safeParse(tei);
 					if (parsedTEI.success) {
