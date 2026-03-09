@@ -45,21 +45,20 @@ export const useTeiHeadersStore = defineStore("use-tei-headers-store", () => {
 		// Why is this computed serveral times?
 		if (previousParsedItems) return previousParsedItems;
 		const parsedItems: Array<TeiCorpus> = [];
-		console.log(projectData.value?.projectConfig?.staticData?.table);
 		(projectData.value?.projectConfig?.staticData?.table ?? []).forEach((item, itemIndex) => {
 			if (!isTeiCorpus(item)) return;
 			const TEIs = item.TEIs ?? [];
-			item.TEIs = [];
 			// We want to check the teiCorpus teiHeader first and throw away all the data if that is
 			// invalid.
-			let parsedItem = TeiCorpusSchema.safeParse(item);
+			const parsedItem = TeiCorpusSchema.safeParse(item);
 			if (parsedItem.success) {
+				parsedItem.data.TEIs = [];
 				// We need to parse the TEIs one by one to get more detailed error messages about which TEI
 				// at which position is not valid and why
 				TEIs.forEach((tei, teiIndex) => {
 					const parsedTEI = TeiSchema.safeParse(tei);
 					if (parsedTEI.success) {
-						item.TEIs?.push(parsedTEI.data);
+						parsedItem.data.TEIs?.push(parsedTEI.data);
 					} else {
 						if (hasIDAttribute(parsedItem.data)) {
 							console.log(
@@ -74,10 +73,7 @@ export const useTeiHeadersStore = defineStore("use-tei-headers-store", () => {
 						console.log(parsedTEI.error);
 					}
 				});
-				// TODO: It seems to be wasteful to parse twice. But if I try to just add correct TEIs to
-				// parsedItem.data.TEIs, they don't show up. Why?
-				parsedItem = TeiCorpusSchema.safeParse(item);
-				if (parsedItem.success) parsedItems.push(parsedItem.data);
+				parsedItems.push(parsedItem.data);
 			} else {
 				if (hasIDAttribute(item)) {
 					console.log(`Error parsing item ${itemIndex.toString()} with @id: ${item["@id"]}`);
