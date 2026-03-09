@@ -130,7 +130,7 @@ const extractMetadata = function (
 
 	if (
 		template.dataType === "CorpusText" &&
-		item.teiHeader?.fileDesc.sourceDesc.recordingStmt?.recording.respStmt.persName &&
+		item.teiHeader?.fileDesc.sourceDesc.recordingStmt?.recording.respStmt?.persName &&
 		corpusMetadata
 	) {
 		const persName = item.teiHeader.fileDesc.sourceDesc.recordingStmt.recording.respStmt.persName;
@@ -216,7 +216,7 @@ const extractMetadata = function (
 			refType: "external",
 			type: "chapter",
 			bibl: {
-				"container-title": item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr.title?.$,
+				"container-title": item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr?.title?.$,
 				title: item.teiHeader.fileDesc.sourceDesc.biblStruct.analytic?.title?.$ ?? "",
 				author: [
 					{
@@ -228,13 +228,17 @@ const extractMetadata = function (
 				],
 				editor: [
 					{
-						given: item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr.editor?.forename?.$ ?? "",
-						family: item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr.editor?.surname?.$ ?? "",
+						given: item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr?.editor?.forename?.$ ?? "",
+
+						family: item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr?.editor?.surname?.$ ?? "",
 					},
 				],
-				issued: [item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr.imprint.date.$],
-				publisherPlace: item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr.imprint.pubPlace?.$,
-				page: item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr.imprint.biblScopes?.find(
+
+				issued: [item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr?.imprint.date.$ ?? ""],
+
+				publisherPlace: item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr?.imprint.pubPlace?.$,
+
+				page: item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr?.imprint.biblScopes?.find(
 					(s) => s["@unit"] === Unit.Page,
 				)?.$,
 			},
@@ -246,7 +250,7 @@ const extractMetadata = function (
 			refType: "external",
 			type: "journalArticle",
 			bibl: {
-				"container-title": item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr.title?.$,
+				"container-title": item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr?.title?.$,
 				title: item.teiHeader.fileDesc.sourceDesc.biblStruct.analytic?.title?.$ ?? "",
 				author: [
 					{
@@ -258,16 +262,21 @@ const extractMetadata = function (
 				],
 				editor: [
 					{
-						given: item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr.editor?.forename?.$ ?? "",
-						family: item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr.editor?.surname?.$ ?? "",
+						given: item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr?.editor?.forename?.$ ?? "",
+
+						family: item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr?.editor?.surname?.$ ?? "",
 					},
 				],
-				issued: [item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr.imprint.date.$],
-				publisherPlace: item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr.imprint.pubPlace?.$,
-				volume: item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr.imprint.biblScopes?.find(
+
+				issued: [item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr?.imprint.date.$ ?? ""],
+
+				publisherPlace: item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr?.imprint.pubPlace?.$,
+
+				volume: item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr?.imprint.biblScopes?.find(
 					(s) => s["@unit"] === Unit.Volume,
 				)?.$,
-				page: item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr.imprint.biblScopes?.find(
+
+				page: item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr?.imprint.biblScopes?.find(
 					(s) => s["@unit"] === Unit.Page,
 				)?.$,
 			},
@@ -277,15 +286,18 @@ const extractMetadata = function (
 			refType: "external",
 			type: "book",
 			bibl: {
-				title: item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr.title?.$ ?? "",
+				title: item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr?.title?.$ ?? "",
 				author: [
 					{
-						given: item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr.author?.forename?.$ ?? "",
-						family: item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr.author?.surname?.$ ?? "",
+						given: item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr?.author?.forename?.$ ?? "",
+
+						family: item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr?.author?.surname?.$ ?? "",
 					},
 				],
-				issued: [item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr.imprint.date.$],
-				publisherPlace: item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr.imprint.pubPlace?.$,
+
+				issued: [item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr?.imprint.date.$ ?? ""],
+
+				publisherPlace: item.teiHeader.fileDesc.sourceDesc.biblStruct.monogr?.imprint.pubPlace?.$,
 			},
 		};
 	}
