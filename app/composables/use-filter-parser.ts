@@ -382,9 +382,7 @@ function filterASTtoAllowed(ast: LiqeQuery, allowed: Set<string>): LiqeQuery {
 	}
 }
 
-// Convert an AST back into a query string.  We simply re‑assemble leaf
-// expressions with `assembleFilter` and parenthesise binary operators to
-// preserve grouping.
+// custom stringification function (instead of liqe.stringify) to better handle parentheses
 function stringifyAST(ast: LiqeQuery, parentOp?: "AND" | "OR"): string {
 	switch (ast.type) {
 		case "Tag": {
@@ -397,13 +395,14 @@ function stringifyAST(ast: LiqeQuery, parentOp?: "AND" | "OR"): string {
 			const op = ast.operator.operator;
 			const inner = `${left} ${op} ${right}`;
 			// Wrap in parentheses if:
-			// - Parent is AND (both AND and OR need parens inside AND)
-			// - This is AND and parent is OR (AND needs parens to clarify precedence)
+			// - parent is AND (both AND and OR need parens inside AND)
+			// - this is AND and parent is OR (AND needs parens to clarify precedence)
 			const needsParens = parentOp === "AND" || (parentOp === "OR" && op === "AND");
 			return needsParens ? `(${inner})` : inner;
 		}
 		case "ParenthesizedExpression":
-			return `(${stringifyAST(ast.expression)})`;
+			if (ast.expression.type !== "Tag") return `(${stringifyAST(ast.expression)})`;
+			else return stringifyAST(ast.expression);
 		case "UnaryOperator":
 			return `NOT ${stringifyAST(ast.operand)}`;
 		case "EmptyExpression":
