@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Contact } from "lucide-vue-next";
+
 import { useTeiHeadersStore } from "@/stores/use-tei-headers-store.ts";
 
 const props = defineProps<{
@@ -55,12 +57,50 @@ const publication = computed(() => {
 					</td>
 				</tr>
 				<tr>
-					<th>Speakers:</th>
+					<th class="align-text-top">Speakers:</th>
 					<td>
-						<span v-for="(person, index) in teiHeader?.person" :key="index">
-							{{ person.name }} (age: {{ person.age }}, sex: {{ person.sex }})
-							<span v-if="index < (teiHeader?.person.length || 1) - 1">, </span>
-						</span>
+						<div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+							<Card
+								v-for="(person, index) in teiHeader?.person"
+								:key="index"
+								class="border-border/70 bg-background/80 shadow-none"
+							>
+								<CardHeader class="pb-3">
+									<CardTitle class="flex items-center gap-3 text-base leading-tight">
+										<Contact class="text-muted-foreground size-5 shrink-0" />
+										<span class="ml-auto text-right">{{ person.name }}</span>
+									</CardTitle>
+								</CardHeader>
+								<CardContent>
+									<div
+										class="flex items-center justify-between gap-3 rounded-md bg-muted/60 px-3 py-1"
+									>
+										<p class="text-[11px] font-semibold tracking-[0.14em] uppercase">Age</p>
+										<p class="text-sm font-medium">
+											{{ person.age }}
+										</p>
+									</div>
+									<div
+										class="flex items-center justify-between gap-3 rounded-md bg-muted/60 px-3 py-1"
+									>
+										<p class="text-[11px] font-semibold tracking-[0.14em] uppercase">
+											Date of Birth
+										</p>
+										<p class="text-sm font-medium">
+											{{ person.dob }}
+										</p>
+									</div>
+									<div
+										class="flex items-center justify-between gap-3 rounded-md bg-muted/60 px-3 py-1"
+									>
+										<p class="text-[11px] font-semibold tracking-[0.14em] uppercase">Sex</p>
+										<p class="text-sm font-medium">
+											{{ person.sex }}
+										</p>
+									</div>
+								</CardContent>
+							</Card>
+						</div>
 					</td>
 				</tr>
 			</tbody>

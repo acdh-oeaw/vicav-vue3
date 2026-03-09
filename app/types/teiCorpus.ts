@@ -7,6 +7,7 @@ const SimplePersonSchema = z.object({
 	name: z.string(),
 	sex: z.string(),
 	age: z.string(),
+	dob: z.string(),
 });
 export type simplePerson = z.infer<typeof SimplePersonSchema>;
 
