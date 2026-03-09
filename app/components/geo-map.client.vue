@@ -1,4 +1,7 @@
 <script lang="ts" setup>
+import "maplibre-gl";
+import "@maplibre/maplibre-gl-leaflet";
+
 import { debounce } from "@acdh-oeaw/lib";
 import type { Feature, Point } from "geojson";
 import {
@@ -7,12 +10,13 @@ import {
 	latLng,
 	type Map as LeafletMap,
 	map as createMap,
+	maplibreGL,
 	type Marker as LeafletMarker,
 	marker,
 	type Point as LeafletPoint,
-	tileLayer,
 } from "leaflet";
 
+import mapStyle from "@/assets/mapStyles.json";
 import { type GeoMapContext, key, type MarkerProperties } from "@/components/geo-map.context.ts";
 import GeoMapPopupContent from "@/components/geo-map-popup-content.vue";
 import type { MarkerType } from "@/types/global.ts";
@@ -285,8 +289,9 @@ onMounted(async () => {
 		config.initialViewState.zoom,
 	);
 
-	context.baseLayer = tileLayer(config.baseLayer.url, {
-		attribution: config.baseLayer.attribution,
+	context.baseLayer = maplibreGL({
+		//@ts-expect-error Type 'number' is not assignable to type '8'
+		style: mapStyle,
 	}).addTo(context.map);
 
 	context.featureGroups.markers = geoJSON<MarkerProperties, Point>(undefined, {
