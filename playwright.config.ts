@@ -17,7 +17,7 @@ const backend = (() => {
 		case "https://shawi.acdh-ch-dev.oeaw.ac.at":
 			// case "https://shawi-api.acdh.oeaw.ac.at": This is the next production backend.
 			return "shawi";
-		case "https://tunocent-22a417b1-9f07-406b-9098-288b3f981d99.acdh-ch-dev.oeaw.ac.at":
+		case "https://tunocent-api.acdh-dev.oeaw.ac.at":
 		case "https://tunocent-api.acdh.oeaw.ac.at":
 			return "tunocent";
 		case "https://wibarab-api.acdh-ch-dev.oeaw.ac.at":
