@@ -76,10 +76,6 @@ const handleInfiniteScroll = async function ($state: StateHandler) {
 		$state.error();
 	}
 };
-
-onMounted(async () => {
-	await loadNextPage();
-});
 </script>
 
 <template>
