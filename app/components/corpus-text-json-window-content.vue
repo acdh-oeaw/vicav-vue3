@@ -80,7 +80,7 @@ const handleInfiniteScroll = async function ($state: StateHandler) {
 
 <template>
 	<div>
-		<div class="flex justify-end p-4">
+		<div class="sticky top-0 z-10 flex justify-end bg-background p-4">
 			<div>
 				<Checkbox
 					id="switch-annotations"
