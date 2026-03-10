@@ -49,7 +49,7 @@ function openDictWindow(u: typeof props.utterance) {
 </script>
 
 <template>
-	<div v-if="props.utterance.w" class="u flex flex-col py-3">
+	<div v-if="props.utterance.w" class="u flex flex-col">
 		<TooltipProvider v-if="!inlineAnnotation" :delay-duration="0">
 			<Tooltip>
 				<TooltipTrigger @click="openDictWindow(props.utterance)">
@@ -87,7 +87,7 @@ function openDictWindow(u: typeof props.utterance) {
 	<div v-if="props.utterance.pc" class="u flex flex-col text-lg">
 		<div>{{ props.utterance.pc["$"] }}{{ "&nbsp;" }}</div>
 	</div>
-	<div v-if="props.utterance.gap" class="u flex flex-col text-lg">
+	<div v-if="props.utterance.gap" class="u flex flex-col py-3 text-lg">
 		<div>
 			{{
 				props.utterance.gap["@rendition"] === "rend:ellipsisInSquareBrackets"
