@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { Column, Table } from "@tanstack/vue-table";
-import { ChevronDown } from "lucide-vue-next";
+import { ChevronDown, Table as LucideTable } from "lucide-vue-next";
 import type Zod from "zod";
 
 import { useGeojsonStore } from "@/stores/use-geojson-store.ts";
@@ -30,10 +30,40 @@ function titleCase(s: string) {
 const { wibarabTriggers } = useWibarabTriggers();
 
 const isMenuOpen = ref(categories.value!.map(() => false));
+
+const { addWindow, findWindowByTypeAndParam } = useWindowsStore();
+function openGeoJsonTable() {
+	const mw = findWindowByTypeAndParam(
+		"ListMap",
+		"queryString",
+		tables.value.get(params.value.url)?.getState().globalFilter,
+	);
+	if (mw) {
+		mw.winbox.focus();
+		mw.winbox.addClass("highlighted");
+		setTimeout(() => {
+			mw.winbox.removeClass("highlighted");
+		}, 1000);
+	} else {
+		addWindow({
+			targetType: "ListMap",
+			params: {
+				queryString: tables.value.get(params.value.url)?.getState().globalFilter,
+			},
+			title: tables.value.get(params.value.url)?.getState().globalFilter,
+		});
+	}
+}
 </script>
 
 <template>
 	<div class="grid items-center border-b border-border bg-surface px-8 py-3 text-on-surface">
+		<div>
+			<Button class="inline-flex h-8 gap-2 border-0" variant="outline" @click="openGeoJsonTable">
+				<LucideTable class="size-4 stroke-neutral-800 transition-colors" />
+				<span class="line-clamp-1 text-ellipsis">Open table</span>
+			</Button>
+		</div>
 		<div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm font-medium text-on-surface/75">
 			<div v-for="(group, catIdx) in categories" :key="group.id">
 				<DropdownMenu v-slot="{ open }" v-model:open="isMenuOpen[catIdx]">
