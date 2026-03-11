@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { ColumnDef, Row, Table } from "@tanstack/vue-table";
 import { test } from "liqe";
-import { Download, Info } from "lucide-vue-next";
+import { Download, Info, Map } from "lucide-vue-next";
 
 import { useGeojsonStore } from "@/stores/use-geojson-store.ts";
 import type { FeatureType, ListMapWindowItem, MarkerType } from "@/types/global.ts";
@@ -137,6 +137,10 @@ function registerTable(table: Table<FeatureType>) {
 	triggerRef(tables);
 	tableRef.value = table;
 
+	openGeoJsonMap();
+}
+
+function openGeoJsonMap() {
 	const mw = findWindowByTypeAndParam("GeojsonMap", "url", url);
 	if (mw) {
 		mw.winbox.focus();
@@ -203,6 +207,10 @@ async function downloadTable(separator = ",", multivalueSaparator = ";") {
 				<Button class="inline-flex h-8 gap-2 border-0" variant="outline" @click="downloadTable">
 					<Download class="size-4 stroke-neutral-800 transition-colors" />
 					<span class="line-clamp-1 text-ellipsis">Export table</span>
+				</Button>
+				<Button class="inline-flex h-8 gap-2 border-0" variant="outline" @click="openGeoJsonMap">
+					<Map class="size-4 stroke-neutral-800 transition-colors" />
+					<span class="line-clamp-1 text-ellipsis">Open map</span>
 				</Button>
 				<!-- <DataTableActiveFilters
 					v-if="tableRef"
