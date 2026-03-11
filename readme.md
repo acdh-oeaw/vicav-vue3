@@ -103,3 +103,7 @@ docker run --rm --name jaeger \
 ```
 
 Then set `OTEL_EXPORTER_OTLP_ENDPOINT=http://127.0.0.1:4317` in your `.env.local` file.
+
+## Maps
+
+The global map config has been moved from env variables to `app/assets/mapStyles.json`

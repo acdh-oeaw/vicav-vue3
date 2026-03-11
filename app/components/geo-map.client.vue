@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import "@maplibre/maplibre-gl-leaflet";
+
 import { debounce } from "@acdh-oeaw/lib";
 import type { Feature, Point } from "geojson";
 import {
@@ -7,12 +9,14 @@ import {
 	latLng,
 	type Map as LeafletMap,
 	map as createMap,
+	maplibreGL,
 	type Marker as LeafletMarker,
 	marker,
 	type Point as LeafletPoint,
-	tileLayer,
 } from "leaflet";
+import maplibregl from "maplibre-gl";
 
+import mapStyle from "@/assets/mapStyles.json";
 import { type GeoMapContext, key, type MarkerProperties } from "@/components/geo-map.context.ts";
 import GeoMapPopupContent from "@/components/geo-map-popup-content.vue";
 import type { MarkerType } from "@/types/global.ts";
@@ -71,6 +75,19 @@ const context: GeoMapContext = {
 		markers: null,
 	},
 };
+
+function ensureRtlTextPlugin() {
+	const status =
+		typeof maplibregl.getRTLTextPluginStatus === "function"
+			? maplibregl.getRTLTextPluginStatus()
+			: null;
+	if (status === "unavailable") {
+		maplibregl.setRTLTextPlugin(
+			"https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.3.0/dist/mapbox-gl-rtl-text.js",
+			true, // Lazy load the plugin
+		);
+	}
+}
 
 const ptDistanceSq = function (pt1: LeafletPoint, pt2: LeafletPoint): number {
 	const dx = pt1.x - pt2.x;
@@ -285,8 +302,15 @@ onMounted(async () => {
 		config.initialViewState.zoom,
 	);
 
-	context.baseLayer = tileLayer(config.baseLayer.url, {
-		attribution: config.baseLayer.attribution,
+	ensureRtlTextPlugin();
+
+	context.baseLayer = maplibreGL({
+		//@ts-expect-error Type 'number' is not assignable to type '8'
+		style: mapStyle,
+		// Allow reading from the WebGL canvas for export.
+		canvasContextAttributes: {
+			preserveDrawingBuffer: true,
+		},
 	}).addTo(context.map);
 
 	context.featureGroups.markers = geoJSON<MarkerProperties, Point>(undefined, {
