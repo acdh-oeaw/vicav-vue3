@@ -292,6 +292,10 @@ onMounted(async () => {
 	context.baseLayer = maplibreGL({
 		//@ts-expect-error Type 'number' is not assignable to type '8'
 		style: mapStyle,
+		// Allow reading from the WebGL canvas for export.
+		canvasContextAttributes: {
+			preserveDrawingBuffer: true,
+		},
 	}).addTo(context.map);
 
 	context.featureGroups.markers = geoJSON<MarkerProperties, Point>(undefined, {
