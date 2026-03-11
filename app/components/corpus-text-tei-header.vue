@@ -20,7 +20,7 @@ const publication = computed(() => {
 
 <template>
 	<div class="m-3 rounded-sm border border-gray-300 bg-gray-50 p-4">
-		<table>
+		<table class="w-full">
 			<thead>
 				<tr></tr>
 				<tr></tr>
@@ -58,22 +58,22 @@ const publication = computed(() => {
 				</tr>
 				<tr>
 					<th class="align-text-top">Speakers:</th>
-					<td>
-						<div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+					<td class="w-full">
+						<div class="flex flex-wrap gap-3">
 							<Card
 								v-for="(person, index) in teiHeader?.person"
 								:key="index"
-								class="border-border/70 bg-background/80 shadow-none"
+								class="rounded-sm border-border bg-background shadow-sm ring-1 ring-black/5"
 							>
-								<CardHeader class="pb-3">
+								<CardHeader class="rounded-t-lg border-b bg-muted/40 pb-3">
 									<CardTitle class="flex items-center gap-3 text-base leading-tight">
-										<Contact class="text-muted-foreground size-5 shrink-0" />
+										<Contact class="size-5 shrink-0" />
 										<span class="ml-auto text-right">{{ person.name }}</span>
 									</CardTitle>
 								</CardHeader>
-								<CardContent>
+								<CardContent class="space-y-2 pt-4">
 									<div
-										class="flex items-center justify-between gap-3 rounded-md bg-muted/60 px-3 py-1"
+										class="flex items-center justify-between gap-3 rounded-md border border-border/60 bg-muted/60 px-3 py-1.5"
 									>
 										<p class="text-[11px] font-semibold tracking-[0.14em] uppercase">Age</p>
 										<p class="text-sm font-medium">
@@ -81,7 +81,7 @@ const publication = computed(() => {
 										</p>
 									</div>
 									<div
-										class="flex items-center justify-between gap-3 rounded-md bg-muted/60 px-3 py-1"
+										class="flex items-center justify-between gap-3 rounded-md border border-border/60 bg-muted/60 px-3 py-1.5"
 									>
 										<p class="text-[11px] font-semibold tracking-[0.14em] uppercase">
 											Date of Birth
@@ -91,7 +91,7 @@ const publication = computed(() => {
 										</p>
 									</div>
 									<div
-										class="flex items-center justify-between gap-3 rounded-md bg-muted/60 px-3 py-1"
+										class="flex items-center justify-between gap-3 rounded-md border border-border/60 bg-muted/60 px-3 py-1.5"
 									>
 										<p class="text-[11px] font-semibold tracking-[0.14em] uppercase">Sex</p>
 										<p class="text-sm font-medium">
