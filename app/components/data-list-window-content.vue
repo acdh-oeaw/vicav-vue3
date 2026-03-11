@@ -4,6 +4,7 @@ import { Volume2, VolumeX } from "lucide-vue-next";
 import type { JsonObject } from "type-fest";
 
 import dataTypes from "@/config/dataTypes.ts";
+import { useTeiHeadersStore } from "@/stores/use-tei-headers-store.ts";
 import type { DataListWindowItem, DataTypesEnum } from "@/types/global.ts";
 import type { simpleTEIMetadata } from "@/types/teiCorpus";
 
@@ -15,7 +16,7 @@ const debug = false;
 
 const props = defineProps<Props>();
 
-const { simpleItems /* rawItems */ } = useTEIHeaders();
+const { simpleItems /* rawItems */ } = useTeiHeadersStore();
 // Four grouping levels: country, region, place, dataType
 type groupedByDataType = Record<DataTypesEnum, Array<simpleTEIMetadata>>; //L4
 type groupedByPlace = Record<string, groupedByDataType>; //L3
@@ -25,7 +26,7 @@ type groupedByCountry = Record<string, groupedByRegion>; //L1
 // simpleTEIMetadata is not assignable to JsonObject. Why?
 // Workaround: generic function called with lots of unchecked type casts.
 const groupedItems = getGroupedItems(
-	simpleItems.value as unknown as Array<JsonObject>,
+	simpleItems as unknown as Array<JsonObject>,
 	["place.country", "place.region", "place.settlement", "dataType"],
 	"dataType",
 	props.params.dataTypes,

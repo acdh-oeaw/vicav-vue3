@@ -8,7 +8,7 @@ import {
 import { Volume2, VolumeX } from "lucide-vue-next";
 import { h } from "vue";
 
-import { useTEIHeaders } from "@/composables/use-tei-headers.ts";
+import { useTeiHeadersStore } from "@/stores/use-tei-headers-store.ts";
 import type { DataTableWindowItem } from "@/types/global.ts";
 import type { simpleTEIMetadata } from "@/types/teiCorpus";
 
@@ -19,11 +19,11 @@ interface Props {
 const props = defineProps<Props>();
 const { params } = toRefs(props);
 
-const { simpleItems } = useTEIHeaders();
+const { simpleItems } = useTeiHeadersStore();
 const openNewWindowFromAnchor = useAnchorClickHandler();
 const columnHelper = createColumnHelper<simpleTEIMetadata>();
 const items = computed(() => {
-	return simpleItems.value.filter((i) => props.params.dataTypes.includes(i.dataType));
+	return simpleItems.filter((i) => props.params.dataTypes.includes(i.dataType));
 });
 
 const categories = [
@@ -43,7 +43,7 @@ const columns = ref([
 			}
 
 			if (linked_type) {
-				linked_id = simpleItems.value.find((i) => {
+				linked_id = simpleItems.find((i) => {
 					return (
 						i.dataType === linked_type &&
 						i.person.at(0)?.name === info.row.original.person.at(0)?.name

@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { useTeiHeadersStore } from "@/stores/use-tei-headers-store.ts";
 import type { ExploreSamplesWindowItem } from "@/types/global.ts";
 
 interface Props {
@@ -9,13 +10,13 @@ const props = defineProps<Props>();
 const { params } = toRefs(props);
 const content: Ref<HTMLElement | undefined> = ref();
 const tooltip: Ref<HTMLElement | null> = ref(null);
-const { simpleItems } = useTEIHeaders();
+const { simpleItems } = useTeiHeadersStore();
 
 const filters: Array<"region" | "settlement"> = ["region", "settlement"];
 const ids = computed(() => {
 	return params.value.ids
 		? params.value.ids
-		: simpleItems.value
+		: simpleItems
 				.filter((item) => params.value.dataType === item.dataType)
 				.filter((item) => {
 					if (!params.value.region && !params.value.settlement) return true;

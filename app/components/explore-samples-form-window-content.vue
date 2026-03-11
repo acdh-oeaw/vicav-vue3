@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import dataTypes from "@/config/dataTypes.ts";
+import { useTeiHeadersStore } from "@/stores/use-tei-headers-store.ts";
 import type { ExploreSamplesFormWindowItem, GeoMapWindowItem, WindowItem } from "@/types/global.ts";
 
 const { findWindowByTypeAndParam } = useWindowsStore();
@@ -22,7 +23,7 @@ const sentenceOptions = Array.from(
 
 const props = defineProps<Props>();
 const { params } = toRefs(props);
-const { simpleItems } = useTEIHeaders();
+const { simpleItems } = useTeiHeadersStore();
 const windowsStore = useWindowsStore();
 const { addWindow } = windowsStore;
 
@@ -45,7 +46,7 @@ const comment = ref([]);
 const translation = ref("");
 const persons: Ref<Array<string>> = ref([]);
 
-const dataset = simpleItems.value.filter((item) => params.value.dataTypes.includes(item.dataType));
+const dataset = simpleItems.filter((item) => params.value.dataTypes.includes(item.dataType));
 const countries = Array.from(new Set(dataset.map((item) => item.place.country)));
 let options: Array<Tag> = [];
 
@@ -69,8 +70,9 @@ countries.forEach((country) => {
 		).sort();
 
 		options = options.concat(
-			settlements.map((item: string) => {
-				return { label: item, value: item };
+			settlements.map((item) => {
+				const label = item ?? "Unknown settlement";
+				return { label, value: label };
 			}),
 		);
 	});
@@ -111,7 +113,7 @@ const wordOptions = computed(() => {
 const sex = ref(["m", "f"]);
 
 const personsFilter = computed(() =>
-	simpleItems.value
+	simpleItems
 		.filter((item) => {
 			if (!params.value.dataTypes.includes(item.dataType)) return false;
 			if (sex.value.length > 0) {

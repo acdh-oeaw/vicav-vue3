@@ -6,15 +6,15 @@ import type { StateHandler } from "v3-infinite-loading/lib/types";
 import type { z } from "zod";
 
 import type { Div } from "@/lib/api-client";
+import { useTeiHeadersStore } from "@/stores/use-tei-headers-store.ts";
 import type { CorpusTextSchema, VicavHTTPError } from "@/types/global.ts";
 
 const props = defineProps<{
 	params: z.infer<typeof CorpusTextSchema>["params"] & { label?: string };
 }>();
 
-const { simpleItems } = useTEIHeaders();
-const teiHeader = simpleItems.value.find((header) => header.id === props.params.textId);
-const publication = teiHeader?.publication;
+const { simpleItems } = useTeiHeadersStore();
+const teiHeader = simpleItems.find((header) => header.id === props.params.textId);
 
 const currentPage = ref(1);
 const infinite = ref<typeof InfiniteLoading | null>(null);
@@ -76,15 +76,11 @@ const handleInfiniteScroll = async function ($state: StateHandler) {
 		$state.error();
 	}
 };
-
-onMounted(async () => {
-	await loadNextPage();
-});
 </script>
 
 <template>
 	<div>
-		<div class="flex justify-end p-4">
+		<div class="sticky top-0 z-10 flex justify-end bg-background p-4">
 			<div>
 				<Checkbox
 					id="switch-annotations"
@@ -107,59 +103,11 @@ onMounted(async () => {
 			<Citation :header="teiHeader" type="entry" />
 		</div>
 		<!-- eslint-disable tailwindcss/no-custom-classname, vue/no-v-html -->
-		<div :id="params.textId" ref="utterancesWrapper" class="relative max-w-full overflow-auto p-4">
+		<div :id="params.textId" ref="utterancesWrapper" class="relative inline-block p-4">
 			<h2 class="m-3 text-lg">{{ props.params.label }}</h2>
 
-			<div class="m-3 rounded-sm border border-gray-300 bg-gray-50 p-4">
-				<table>
-					<thead>
-						<tr></tr>
-						<tr></tr>
-					</thead>
-					<tbody>
-						<tr>
-							<th class="w-44">Recording:</th>
-							<td>
-								{{ teiHeader?.recording?.map((p) => [p.given, p.family].join(" ")).join(", ") }}
-							</td>
-						</tr>
-						<tr>
-							<th>Recording date:</th>
-							<td>{{ teiHeader?.recordingDate }}</td>
-						</tr>
-						<tr>
-							<th>Transcribed by:</th>
-							<td>
-								{{ teiHeader?.transcription?.map((p) => [p.given, p.family].join(" ")).join(", ") }}
-							</td>
-						</tr>
-						<tr v-if="teiHeader?.hasOwnProperty('transfer to ELAN')">
-							<th>Transferred to ELAN:</th>
-							<td>
-								{{
-									teiHeader["transfer to ELAN"].map((p) => [p.given, p.family].join(" ")).join(", ")
-								}}
-							</td>
-						</tr>
-						<tr v-if="publication">
-							<th class="align-text-top">Published in:</th>
-							<td>
-								<Citation v-bind="publication" />
-							</td>
-						</tr>
-						<tr>
-							<th>Speakers:</th>
-							<td>
-								<span v-for="(person, index) in teiHeader?.person" :key="index">
-									{{ person.name }} (age: {{ person.age }}, sex: {{ person.sex }})
-									<span v-if="index < (teiHeader?.person.length || 1) - 1">, </span>
-								</span>
-							</td>
-						</tr>
-					</tbody>
-				</table>
-			</div>
-			<table class="w-full table-fixed text-sm text-gray-700">
+			<CorpusTextTeiHeader :text-id="params.textId" />
+			<table class="text-sm text-gray-700">
 				<thead class="bg-primary text-xs text-gray-700 uppercase">
 					<tr>
 						<th class="w-[10px] px-6 py-3" scope="col">Audio</th>

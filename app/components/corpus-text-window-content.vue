@@ -7,13 +7,14 @@ import type { StateHandler } from "v3-infinite-loading/lib/types";
 import type Zod from "zod";
 
 import type { CorpusText, CorpusTextHTML, CorpusTextUtterances } from "@/lib/api-client";
+import { useTeiHeadersStore } from "@/stores/use-tei-headers-store.ts";
 import type { CorpusTextSchema, VicavHTTPError } from "@/types/global.ts";
 
 const props = defineProps<{
 	params: Zod.infer<typeof CorpusTextSchema>["params"] & { label?: string };
 }>();
 
-const { simpleItems } = useTEIHeaders();
+const { simpleItems } = useTeiHeadersStore();
 const utterances = ref<Array<CorpusTextUtterances>>([]);
 const utterancesWrapper = ref<HTMLDivElement | null>(null);
 const utteranceElements = ref<Array<Element>>([]);
@@ -22,7 +23,7 @@ const infinite = ref<typeof InfiniteLoading | null>(null);
 const currentPage = ref(1);
 const api = useApiClient();
 const scrollComplete = ref<boolean>(false);
-const teiHeader = simpleItems.value.find((header) => header.id === props.params.textId);
+const teiHeader = simpleItems.find((header) => header.id === props.params.textId);
 const publication = teiHeader?.publication;
 
 function isCorpusTextHTML(item: CorpusTextHTML | CorpusText): item is CorpusTextHTML {

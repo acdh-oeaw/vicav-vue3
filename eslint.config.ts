@@ -13,7 +13,7 @@ import { withNuxt } from "./.nuxt/eslint.config.mjs";
 
 const configs = defineConfig(
 	{
-		ignores: [".cache/**", ".heroku/**", "./*.js", "./*.mjs"],
+		ignores: [".cache/**", ".heroku/**", "./*.js", "./*.mjs", "app/assets/openapi.json"],
 	},
 	gitignore({ strict: false }),
 	baseConfig,

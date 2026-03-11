@@ -259,7 +259,7 @@ export const DataTableSchema = z.object({
 	targetType: z.literal("DataTable"),
 	params: z
 		.object({
-			dataTypes: z.array(z.enum(["Profile", "Text", "SampleText", "Feature", "CorpusText"])),
+			dataTypes: z.array(DataTypesEnum),
 			filters: z
 				.array(
 					z.object({

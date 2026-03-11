@@ -37,6 +37,7 @@ dist
 
 # auto-generated api-client
 /app/lib/api-client/
+/app/assets/openapi.json
 
 # heroku buildpack specific directory
 /.heroku/**

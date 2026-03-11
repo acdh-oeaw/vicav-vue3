@@ -1,8 +1,9 @@
 <script lang="ts" setup>
+import { useTeiHeadersStore } from "@/stores/use-tei-headers-store.ts";
 import type { FeatureWindowItem } from "@/types/global.ts";
 import type { simpleTEIMetadata } from "@/types/teiCorpus";
 
-const { simpleItems } = useTEIHeaders();
+const { simpleItems } = useTeiHeadersStore();
 
 interface Props {
 	params: FeatureWindowItem["params"];
@@ -17,7 +18,7 @@ const tooltip: Ref<HTMLElement | null> = ref(null);
 const { data, isPending, isPlaceholderData } = useFeatureById(queryParams);
 const openNewWindowFromAnchor = useAnchorClickHandler();
 const { showTooltip, tooltipContent, handleHoverTooltip } = useHoverTooltipHandler(tooltip);
-const header = simpleItems.value.find((i: simpleTEIMetadata) => i.id === params.value.textId);
+const header = simpleItems.find((i: simpleTEIMetadata) => i.id === params.value.textId);
 const isLoading = computed(() => {
 	return isPending.value || isPlaceholderData.value;
 });
