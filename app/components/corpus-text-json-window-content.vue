@@ -103,11 +103,11 @@ const handleInfiniteScroll = async function ($state: StateHandler) {
 			<Citation :header="teiHeader" type="entry" />
 		</div>
 		<!-- eslint-disable tailwindcss/no-custom-classname, vue/no-v-html -->
-		<div :id="params.textId" ref="utterancesWrapper" class="relative max-w-full overflow-auto p-4">
+		<div :id="params.textId" ref="utterancesWrapper" class="relative inline-block p-4">
 			<h2 class="m-3 text-lg">{{ props.params.label }}</h2>
 
 			<CorpusTextTeiHeader :text-id="params.textId" />
-			<table class="w-full table-fixed text-sm text-gray-700">
+			<table class="text-sm text-gray-700">
 				<thead class="bg-primary text-xs text-gray-700 uppercase">
 					<tr>
 						<th class="w-[10px] px-6 py-3" scope="col">Audio</th>

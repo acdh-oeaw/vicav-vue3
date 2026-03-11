@@ -27,23 +27,23 @@ const publication = computed(() => {
 			</thead>
 			<tbody>
 				<tr>
-					<th class="w-44">Recording:</th>
+					<th class="w-fit pr-4 text-left whitespace-nowrap">Recording:</th>
 					<td>
 						{{ teiHeader?.recording?.map((p) => [p.given, p.family].join(" ")).join(", ") }}
 					</td>
 				</tr>
 				<tr>
-					<th>Recording date:</th>
+					<th class="w-fit pr-4 text-left whitespace-nowrap">Recording date:</th>
 					<td>{{ teiHeader?.recordingDate }}</td>
 				</tr>
 				<tr>
-					<th>Transcribed by:</th>
+					<th class="w-fit pr-4 text-left whitespace-nowrap">Transcribed by:</th>
 					<td>
 						{{ teiHeader?.transcription?.map((p) => [p.given, p.family].join(" ")).join(", ") }}
 					</td>
 				</tr>
 				<tr v-if="teiHeader?.hasOwnProperty('transfer to ELAN')">
-					<th>Transferred to ELAN:</th>
+					<th class="w-fit pr-4 text-left whitespace-nowrap">Transferred to ELAN:</th>
 					<td>
 						{{
 							teiHeader?.["transfer to ELAN"]?.map((p) => [p.given, p.family].join(" ")).join(", ")
@@ -51,13 +51,13 @@ const publication = computed(() => {
 					</td>
 				</tr>
 				<tr v-if="publication">
-					<th class="align-text-top">Published in:</th>
+					<th class="w-fit pr-4 text-left align-text-top whitespace-nowrap">Published in:</th>
 					<td>
 						<Citation v-bind="publication" />
 					</td>
 				</tr>
 				<tr>
-					<th class="align-text-top">Speakers:</th>
+					<th class="w-fit pr-4 text-left align-text-top whitespace-nowrap">Speakers:</th>
 					<td class="w-full">
 						<div class="flex flex-wrap gap-3">
 							<Card
