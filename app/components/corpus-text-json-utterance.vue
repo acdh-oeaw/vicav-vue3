@@ -66,7 +66,7 @@ function openDictWindow(u: typeof props.utterance) {
 		<!-- eslint-disable vuejs-accessibility/click-events-have-key-events, vuejs-accessibility/no-static-element-interactions -->
 		<div
 			v-if="inlineAnnotation"
-			class="flex justify-center text-lg"
+			class="flex flex-col items-center text-lg"
 			@click="openDictWindow(props.utterance)"
 		>
 			{{ renderUtterance(props.utterance) }}
