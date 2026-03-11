@@ -30,7 +30,7 @@ function renderUtterance(u: typeof props.utterance) {
 }
 
 function openDictWindow(u: typeof props.utterance) {
-	if (!u.w) return;
+	if (!u.w || !u.w["@lemmaRef"]) return;
 	addWindow({
 		targetType: "DictQuery",
 		title: u.w["@lemmaRef"]?.replace("dict:", "") || "Dictionary Entry",
