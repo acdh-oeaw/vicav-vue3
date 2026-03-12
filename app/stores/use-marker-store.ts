@@ -21,7 +21,7 @@ export const useMarkerStore = defineStore("markers", () => {
 		strokeWidth: 4,
 		greyscale: false,
 		showCenter: true,
-		showOtherFeatureValues: true,
+		showOtherFeatureValues: false,
 		triggerRepaint: false,
 	});
 	const defaultMarkers = {
