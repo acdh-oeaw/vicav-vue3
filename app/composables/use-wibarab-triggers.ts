@@ -113,7 +113,10 @@ const metaInfoKeys = computed(() =>
 	[...metaInfo.value.keys()].map((key) => ({ value: `${key}:`, displayValue: key })),
 );
 
-const operators = ["and", "or"].map((o) => ({ displayValue: o, value: o.toUpperCase() }));
+const operators = ["and", "or", "and not", "or not"].map((o) => ({
+	displayValue: o,
+	value: o.toUpperCase(),
+}));
 
 const wibarabTriggers = computed(() => {
 	const map = {
