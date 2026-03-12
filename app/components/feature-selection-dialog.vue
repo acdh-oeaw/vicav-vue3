@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Column, Table } from "@tanstack/vue-table";
-import { List } from "lucide-vue-next";
+import { Check } from "lucide-vue-next";
 import { Field as FormField, useForm } from "vee-validate";
 
 import {
@@ -242,13 +242,43 @@ onMounted(() => computeMarkerData());
 onUpdated(() => computeMarkerData());
 
 const taxonomyTree = computed(() => getTaxonomyTree(props.column.id));
+
+function deselectColumn() {
+	props.column.toggleVisibility();
+	setFieldValue("items", []);
+	void onSubmit();
+}
 </script>
 
 <template>
 	<Dialog :open="dialogOpen" @update:open="dialogOpen = false">
-		<DialogTrigger @click.stop="dialogOpen = true">
-			<List class="ml-2 size-4"></List>
-			<span class="sr-only">Select feature values</span>
+		<DialogTrigger
+			class="grid w-full grid-cols-[auto_1fr_auto] items-center justify-between gap-2 px-2 py-1 text-left text-sm hover:bg-accent"
+			@click.stop="dialogOpen = true"
+		>
+			<Button
+				v-if="column.getIsVisible()"
+				class="size-4 border-0 p-0"
+				variant="outline"
+				@click.stop="deselectColumn"
+			>
+				<Check class="size-full"></Check>
+				<span class="sr-only">Deselect feature</span>
+			</Button>
+			<div v-else class="size-4"></div>
+
+			<span>{{ column.columnDef.header }}</span>
+			<div @click.stop>
+				<MarkerSelector
+					v-if="column.getIsVisible()"
+					:icon-categories="['shapes']"
+					:model-value="markers.get(column.id)!"
+					:type="['icon']"
+					:use-popover-modal="true"
+					@click.capture.stop
+					@update:model-value="(props) => updateMarker(props)"
+				></MarkerSelector>
+			</div>
 		</DialogTrigger>
 		<DialogContent class="sm:max-w-[425px]">
 			<form class="grid grid-rows-[auto_1fr_auto] gap-4 sm:max-h-[90vh]" @submit="onSubmit">
