@@ -2,6 +2,8 @@
 import type { ColumnFilter, Table } from "@tanstack/vue-table";
 import { Filter, X } from "lucide-vue-next";
 
+import { ensureFilterValueMap, FilterValueMap } from "@/utils/filter-value-map";
+
 const props = defineProps<{
 	table: Table<never>;
 }>();
@@ -9,17 +11,21 @@ const props = defineProps<{
 const activeFilterColumns = computed(() =>
 	props.table
 		.getState()
-		.columnFilters.filter((c: ColumnFilter) => (c.value as Array<string>).length > 0),
+		.columnFilters.filter((c: ColumnFilter) => {
+			const value = ensureFilterValueMap(c.value);
+			return value.size > 0 || value.exclude.size > 0;
+		}),
 );
 function removeFilters(colId: string) {
-	props.table.getColumn(colId)?.setFilterValue(new Map());
+	props.table.getColumn(colId)?.setFilterValue(new FilterValueMap());
 }
 function removeAllFilters() {
 	props.table.resetColumnFilters();
 }
 function removeValFromColumnFilter(col: ColumnFilter, val: string) {
-	(col.value as Map<string, number>).delete(val);
-	props.table.getColumn(col.id)?.setFilterValue(col.value);
+	const map = ensureFilterValueMap(col.value);
+	map.delete(val);
+	props.table.getColumn(col.id)?.setFilterValue(map);
 }
 </script>
 

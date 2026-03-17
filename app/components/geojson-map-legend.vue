@@ -4,6 +4,7 @@ import { ChevronDown } from "lucide-vue-next";
 import type Zod from "zod";
 
 import type { GeojsonMapSchema } from "@/types/global.ts";
+import { ensureFilterValueMap } from "@/utils/filter-value-map";
 
 import type { SelectionEntry } from "./marker-selector.vue";
 
@@ -43,14 +44,16 @@ type ColumnType = Column<
 >;
 
 function getActiveFilterValues(feature: ColumnType) {
+	const filterValue = ensureFilterValueMap(feature.getFilterValue());
 	return [...feature.getFacetedUniqueValues().entries()].filter(([value, _]) =>
-		(feature.getFilterValue() as Map<string, number>).has(value),
+		filterValue.has(value),
 	);
 }
 
 function getAllFacetsActive(feature: ColumnType) {
+	const filterValue = ensureFilterValueMap(feature.getFilterValue());
 	for (const [facet, _] of feature.getFacetedUniqueValues()) {
-		if (feature.getFilterValue() && !(feature.getFilterValue() as Map<string, number>).has(facet)) {
+		if (feature.getFilterValue() && !filterValue.has(facet)) {
 			return false;
 		}
 	}
@@ -60,9 +63,14 @@ function getAllFacetsActive(feature: ColumnType) {
 const { AND_OPERATOR } = useAdvancedQueries();
 function getCombinedFilters(column: ColumnType) {
 	if (!column.getFilterValue()) return [];
-	return [...(column.getFilterValue() as Map<string, number>).keys()]
+	const filterValue = ensureFilterValueMap(column.getFilterValue());
+	return [...filterValue.keys()]
 		.filter((filter) => filter.includes(AND_OPERATOR))
 		.map((filter) => filter.split(AND_OPERATOR));
+}
+function hasActiveFilters(column: ColumnType) {
+	const filterValue = ensureFilterValueMap(column.getFilterValue());
+	return filterValue.size > 0 || filterValue.exclude.size > 0;
 }
 function updateMarker(markerSelection: SelectionEntry) {
 	setMarker(markerSelection);
@@ -126,7 +134,7 @@ function updateMarker(markerSelection: SelectionEntry) {
 				</div>
 				<div
 					v-if="
-						feature.getIsFiltered() && (feature.getFilterValue() as Map<string, number>).size > 0
+						feature.getIsFiltered() && hasActiveFilters(feature)
 					"
 					class="ml-4"
 				>
@@ -149,7 +157,7 @@ function updateMarker(markerSelection: SelectionEntry) {
 					</div>
 					<div
 						v-if="
-							(feature.getFilterValue() as Map<string, number>).size > 0 &&
+							hasActiveFilters(feature) &&
 							!getAllFacetsActive(feature) &&
 							markerSettings.showOtherFeatureValues
 						"

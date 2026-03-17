@@ -3,6 +3,8 @@ import type { Column, Table } from "@tanstack/vue-table";
 import { ChevronDown, LayoutList, ListChecks, ListTodo, TableProperties } from "lucide-vue-next";
 import type { Component } from "vue";
 
+import { FilterValueMap } from "@/utils/filter-value-map";
+
 const props = defineProps<{
 	table: Table<never>;
 }>();
@@ -37,7 +39,7 @@ function toggleCategory(category: Column<never>) {
 	}
 	category.columns.forEach((c) => {
 		if (c.getIsVisible() !== targetVisibility) {
-			c.setFilterValue(new Map());
+			c.setFilterValue(new FilterValueMap());
 			c.toggleVisibility(targetVisibility);
 		}
 	});
@@ -135,7 +137,7 @@ const visibilityToIcon: Record<visibilityState, Component> = {
 									@update:checked="
 										(value) => {
 											column.toggleVisibility(!!value);
-											column.setFilterValue(new Map());
+											column.setFilterValue(new FilterValueMap());
 										}
 									"
 								>

@@ -2,6 +2,8 @@
 import type { Column } from "@tanstack/vue-table";
 import { Filter } from "lucide-vue-next";
 
+import { cloneFilterValueMap } from "@/utils/filter-value-map";
+
 const props = defineProps<{
 	column: Column<never, unknown>;
 }>();
@@ -9,7 +11,7 @@ const facets = computed(() =>
 	[...props.column.getFacetedUniqueValues()]?.sort((a, b) => b[1] - a[1]),
 );
 const selectedValues = computed(
-	() => new Map(props.column?.getFilterValue() as Map<string, number>),
+	() => cloneFilterValueMap(props.column?.getFilterValue()),
 );
 </script>
 

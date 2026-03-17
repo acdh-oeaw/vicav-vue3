@@ -3,6 +3,7 @@ import type { Column, Table } from "@tanstack/vue-table";
 import { ChevronDown } from "lucide-vue-next";
 
 import { useMarkerStore } from "@/stores/use-marker-store.ts";
+import { FilterValueMap } from "@/utils/filter-value-map";
 
 const props = defineProps<{
 	item: Column<unknown>;
@@ -68,7 +69,7 @@ const activeFeatures = computed(() =>
 			@update:checked="
 				(value) => {
 					item.toggleVisibility(!!value);
-					item.setFilterValue(new Map());
+					item.setFilterValue(new FilterValueMap());
 				}
 			"
 		>

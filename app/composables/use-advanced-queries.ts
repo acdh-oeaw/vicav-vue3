@@ -7,6 +7,7 @@ interface CombinedFilter {
 }
 
 const AND_OPERATOR = "AND";
+const NOT_OPERATOR = "NOT";
 
 function getCombinedFilterOption(
 	column: Column<unknown>,
@@ -29,6 +30,7 @@ function getCombinedFilterOption(
 export function useAdvancedQueries() {
 	return {
 		AND_OPERATOR,
+		NOT_OPERATOR,
 		getCombinedFilterOption,
 	} as const;
 }
