@@ -1,10 +1,11 @@
 <script lang="ts" setup>
+import { useTeiHeadersStore } from "@/stores/use-tei-headers-store.ts";
 import type { ProfileWindowItem } from "@/types/global.ts";
 
 interface Props {
 	params: ProfileWindowItem["params"];
 }
-const { simpleItems } = useTEIHeaders();
+const { simpleItems } = useTeiHeadersStore();
 
 const props = defineProps<Props>();
 const { params } = toRefs(props);
@@ -23,7 +24,7 @@ const isLoading = computed(() => {
 watch(content, () => {
 	processImageGalleries();
 });
-const header = simpleItems.value.find((i) => i.id === params.value.textId);
+const header = simpleItems.find((i) => i.id === params.value.textId);
 </script>
 
 <template>

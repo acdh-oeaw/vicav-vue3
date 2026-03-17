@@ -1,11 +1,12 @@
 <script lang="ts" setup>
+import { useTeiHeadersStore } from "@/stores/use-tei-headers-store.ts";
 import type { SampleTextWindowItem } from "@/types/global.ts";
 import type { simpleTEIMetadata } from "@/types/teiCorpus";
 
 interface Props {
 	params: SampleTextWindowItem["params"];
 }
-const { simpleItems } = useTEIHeaders();
+const { simpleItems } = useTeiHeadersStore();
 
 const props = defineProps<Props>();
 const { params } = toRefs(props);
@@ -16,7 +17,7 @@ const queryParams = computed(() => {
 const { data, isPending, isPlaceholderData } = useSampleTextById(queryParams);
 const openNewWindowFromAnchor = useAnchorClickHandler();
 const { showTooltip, tooltipContent, handleHoverTooltip } = useHoverTooltipHandler(tooltip);
-const header = simpleItems.value.find((i: simpleTEIMetadata) => i.id === params.value.textId);
+const header = simpleItems.find((i: simpleTEIMetadata) => i.id === params.value.textId);
 
 const isLoading = computed(() => {
 	return isPending.value || isPlaceholderData.value;

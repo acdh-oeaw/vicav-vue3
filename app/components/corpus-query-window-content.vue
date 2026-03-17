@@ -5,10 +5,11 @@ import type { StateHandler } from "v3-infinite-loading/lib/types";
 import type Zod from "zod";
 
 import type { Div } from "@/lib/api-client";
+import { useTeiHeadersStore } from "@/stores/use-tei-headers-store.ts";
 import type { CorpusQuerySchema } from "@/types/global.ts";
 
 const api = useApiClient();
-const { simpleItems } = useTEIHeaders();
+const { simpleItems } = useTeiHeadersStore();
 const props = defineProps<{ params: Zod.infer<typeof CorpusQuerySchema>["params"] }>();
 const queryString = ref(props.params.queryString);
 const hits = ref<Array<Div & { label?: string }>>([]);
@@ -39,7 +40,7 @@ async function searchCorpus() {
 	if (!Array.isArray(result.data.hits) && Array.isArray(result.data.hits?.divs)) {
 		hits.value = result.data.hits.divs;
 		hits.value?.forEach((hit) => {
-			const teiHeader = simpleItems.value.find((header) => header.id === hit["@docRef"]);
+			const teiHeader = simpleItems.find((header) => header.id === hit["@docRef"]);
 			hit.label = teiHeader?.label;
 		});
 		displayHits.value = hits.value.slice(currentPage.value * 10, (currentPage.value + 1) * 10);

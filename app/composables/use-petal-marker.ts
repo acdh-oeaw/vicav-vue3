@@ -4,6 +4,7 @@ import { divIcon, type LatLng, marker } from "leaflet";
 import type { MarkerProperties } from "@/lib/api-client";
 import { useGeojsonStore } from "@/stores/use-geojson-store.ts";
 import { useMarkerStore } from "@/stores/use-marker-store.ts";
+import { ensureFilterValueMap } from "@/utils/filter-value-map";
 
 import { useAdvancedQueries } from "./use-advanced-queries.ts";
 
@@ -100,62 +101,51 @@ function getFlowerSVG(entries: Array<PetalEntry>, center?: PetalEntry) {
 function getPetalMarker(feature: GeoJsonFeature<Point, MarkerProperties>, latlng: LatLng) {
 	const { AND_OPERATOR } = useAdvancedQueries();
 	const table = tables.value.get(url);
+	const getFilterValue = (col: { getFilterValue: () => unknown }) =>
+		ensureFilterValueMap(col.getFilterValue());
+	const hasActiveFilters = (col: { getFilterValue: () => unknown }) => {
+		const filterValue = getFilterValue(col);
+		return filterValue.size > 0 || filterValue.exclude.size > 0;
+	};
 	const features = table
 		?.getVisibleLeafColumns()
 		.filter(
 			(col) => col.getCanFilter() && Object.keys(feature.properties).find((k) => k === col.id),
 		);
 	let unfilteredFeatures =
-		features?.filter(
-			(col) => !col.getIsFiltered() || (col.getFilterValue() as Map<string, unknown>).size === 0,
-		) ?? [];
+		features?.filter((col) => !col.getIsFiltered() || !hasActiveFilters(col)) ?? [];
 	if (features?.length === 1 && unfilteredFeatures.length === 1) unfilteredFeatures = [];
 	const flowerCenter = features?.length === 1 ? features[0] : undefined;
 
 	const featureValues = table
 		?.getVisibleLeafColumns()
-		.filter(
-			(col) =>
-				col.getIsFiltered() &&
-				col.getFilterValue() &&
-				(col.getFilterValue() as Map<string, unknown>).size > 0,
-		)
-		.flatMap((col) =>
-			Object.keys(feature.properties[col.id as keyof MarkerProperties] ?? {})
+		.filter((col) => col.getIsFiltered() && col.getFilterValue() && hasActiveFilters(col))
+		.flatMap((col) => {
+			const filterValue = getFilterValue(col);
+			return Object.keys(feature.properties[col.id as keyof MarkerProperties] ?? {})
 				.filter(
 					(val) =>
-						![...(col.getFilterValue() as Map<string, unknown>).keys()].find(
+						![...filterValue.keys()].find(
 							(key) => key.includes(AND_OPERATOR) && key.includes(val),
 						) ||
-						[...(col.getFilterValue() as Map<string, unknown>).keys()].find(
-							(key) => !key.includes(AND_OPERATOR) && key.includes(val),
-						),
+						[...filterValue.keys()].find((key) => !key.includes(AND_OPERATOR) && key.includes(val)),
 				)
 				.filter((val) => {
-					return (
-						markerSettings.value.showOtherFeatureValues ||
-						(col.getFilterValue() as Map<string, unknown>).has(val)
-					);
+					return markerSettings.value.showOtherFeatureValues || filterValue.has(val);
 				})
 				.map((val) => ({
-					id: (col.getFilterValue() as Map<string, unknown>).has(val)
-						? buildFeatureValueId(col.id, val)
-						: col.id,
+					id: filterValue.has(val) ? buildFeatureValueId(col.id, val) : col.id,
 					// show "empty" petals for feature values that are not in the filter
-					strokeOnly: !(col.getFilterValue() as Map<string, unknown>).has(val),
+					strokeOnly: !filterValue.has(val),
 					type: "featureValue",
-				})),
-		);
+				}));
+		});
 	const combinedFilters = table
 		?.getVisibleLeafColumns()
-		.filter(
-			(col) =>
-				col.getIsFiltered() &&
-				col.getFilterValue() &&
-				(col.getFilterValue() as Map<string, unknown>).size > 0,
-		)
-		.flatMap((col) =>
-			[...(col.getFilterValue() as Map<string, unknown>).keys()]
+		.filter((col) => col.getIsFiltered() && col.getFilterValue() && hasActiveFilters(col))
+		.flatMap((col) => {
+			const filterValue = getFilterValue(col);
+			return [...filterValue.keys()]
 				.filter(
 					(key) =>
 						key.includes(AND_OPERATOR) &&
@@ -171,8 +161,8 @@ function getPetalMarker(feature: GeoJsonFeature<Point, MarkerProperties>, latlng
 				.map((key) => ({
 					id: buildFeatureValueId(col.id, key),
 					type: "featureValue",
-				})),
-		);
+				}));
+		});
 
 	const htmlContent = getFlowerSVG(
 		//@ts-expect-error missing accessorFn

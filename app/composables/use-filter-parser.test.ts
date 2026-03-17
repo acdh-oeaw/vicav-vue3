@@ -6,7 +6,8 @@ import { useFilterParser } from "./use-filter-parser.ts";
 
 const { AND_OPERATOR } = useAdvancedQueries();
 
-const { parseSearchString, isInQuery, matchQueryStringAndFilters } = useFilterParser();
+const { parseSearchString, isInQuery, matchQueryStringAndFilters, syncGlobalAndColumnFilters } =
+	useFilterParser();
 
 interface TestInterface {
 	fruit: string;
@@ -198,7 +199,12 @@ describe("Test isInQuery function", () => {
 			),
 		).toBe(true);
 	});
+});
 
+describe("Test matchQueryStringAndFilters function", () => {
+	beforeEach(() => {
+		setActivePinia(createPinia());
+	});
 	test("matchQueryStringAndFilters maintains AND when syncing - different features", () => {
 		const query = 'a:"1" AND b:"2"';
 		const new_filters = ['c:"3"'];
@@ -221,5 +227,37 @@ describe("Test isInQuery function", () => {
 		const filters = ['(a:"1" AND a:"2")', 'b:"3"', ...new_filters];
 		const out = matchQueryStringAndFilters(query, filters);
 		expect(out).toBe('(a:"1" AND a:"2") OR b:"3" OR c:"4"');
+	});
+	test("Handle NOT operator correctly", () => {
+		const query = '(a:"1" AND NOT a:"2")';
+		const new_filters = ['b:"3"'];
+		const filters = ['(a:"1" AND NOT a:"2")', ...new_filters];
+		const out = matchQueryStringAndFilters(query, filters);
+		expect(out).toBe('(a:"1" AND NOT a:"2") OR b:"3"');
+	});
+
+	test("syncGlobalAndColumnFilters preserves NOT expression when adding column filter", () => {
+		const table2 = useVueTable({
+			get data() {
+				return data;
+			},
+			columns,
+			getCoreRowModel: getCoreRowModel(),
+		}) as Table<unknown>;
+
+		table2.setGlobalFilter('fruit:"apple" AND NOT fruit:"banana"');
+
+		const colorColumn = table2.getColumn("color");
+		expect(colorColumn).toBeDefined();
+		colorColumn!.toggleVisibility(true);
+		const map = new Map<string, unknown>();
+		map.set("red", 1);
+		colorColumn!.setFilterValue(map);
+
+		syncGlobalAndColumnFilters(table2);
+
+		expect(String(table2.getState().globalFilter ?? "")).toBe(
+			'(fruit:"apple" AND NOT fruit:"banana") OR color:"red"',
+		);
 	});
 });
