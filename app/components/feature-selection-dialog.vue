@@ -101,7 +101,10 @@ const { markers } = storeToRefs(useMarkerStore());
 const onSubmit = handleSubmit((values: { items: Array<string> }) => {
 	if (values.items.length > 0) props.column.toggleVisibility(true);
 	const existing = ensureFilterValueMap(props.column.getFilterValue());
-	const allFilters = new FilterValueMap(values.items.map((item) => [item, 1]), existing.exclude);
+	const allFilters = new FilterValueMap(
+		values.items.map((item) => [item, 1]),
+		existing.exclude,
+	);
 	props.column.setFilterValue(allFilters);
 	values.items.forEach((element) => {
 		if (!markers.value.has(buildFeatureValueId(props.column.id, element)))

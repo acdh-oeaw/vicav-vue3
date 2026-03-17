@@ -9,12 +9,10 @@ const props = defineProps<{
 }>();
 
 const activeFilterColumns = computed(() =>
-	props.table
-		.getState()
-		.columnFilters.filter((c: ColumnFilter) => {
-			const value = ensureFilterValueMap(c.value);
-			return value.size > 0 || value.exclude.size > 0;
-		}),
+	props.table.getState().columnFilters.filter((c: ColumnFilter) => {
+		const value = ensureFilterValueMap(c.value);
+		return value.size > 0 || value.exclude.size > 0;
+	}),
 );
 function removeFilters(colId: string) {
 	props.table.getColumn(colId)?.setFilterValue(new FilterValueMap());

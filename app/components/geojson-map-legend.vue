@@ -132,12 +132,7 @@ function updateMarker(markerSelection: SelectionEntry) {
 						</span>
 					</span>
 				</div>
-				<div
-					v-if="
-						feature.getIsFiltered() && hasActiveFilters(feature)
-					"
-					class="ml-4"
-				>
+				<div v-if="feature.getIsFiltered() && hasActiveFilters(feature)" class="ml-4">
 					<div
 						v-for="[value, count] in getActiveFilterValues(feature)"
 						:key="value"

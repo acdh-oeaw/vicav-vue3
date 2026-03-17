@@ -10,9 +10,7 @@ const props = defineProps<{
 const facets = computed(() =>
 	[...props.column.getFacetedUniqueValues()]?.sort((a, b) => b[1] - a[1]),
 );
-const selectedValues = computed(
-	() => cloneFilterValueMap(props.column?.getFilterValue()),
-);
+const selectedValues = computed(() => cloneFilterValueMap(props.column?.getFilterValue()));
 </script>
 
 <template>

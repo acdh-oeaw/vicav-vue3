@@ -113,20 +113,13 @@ function getPetalMarker(feature: GeoJsonFeature<Point, MarkerProperties>, latlng
 			(col) => col.getCanFilter() && Object.keys(feature.properties).find((k) => k === col.id),
 		);
 	let unfilteredFeatures =
-		features?.filter(
-			(col) => !col.getIsFiltered() || !hasActiveFilters(col),
-		) ?? [];
+		features?.filter((col) => !col.getIsFiltered() || !hasActiveFilters(col)) ?? [];
 	if (features?.length === 1 && unfilteredFeatures.length === 1) unfilteredFeatures = [];
 	const flowerCenter = features?.length === 1 ? features[0] : undefined;
 
 	const featureValues = table
 		?.getVisibleLeafColumns()
-		.filter(
-			(col) =>
-				col.getIsFiltered() &&
-				col.getFilterValue() &&
-				hasActiveFilters(col),
-		)
+		.filter((col) => col.getIsFiltered() && col.getFilterValue() && hasActiveFilters(col))
 		.flatMap((col) => {
 			const filterValue = getFilterValue(col);
 			return Object.keys(feature.properties[col.id as keyof MarkerProperties] ?? {})
@@ -135,9 +128,7 @@ function getPetalMarker(feature: GeoJsonFeature<Point, MarkerProperties>, latlng
 						![...filterValue.keys()].find(
 							(key) => key.includes(AND_OPERATOR) && key.includes(val),
 						) ||
-						[...filterValue.keys()].find(
-							(key) => !key.includes(AND_OPERATOR) && key.includes(val),
-						),
+						[...filterValue.keys()].find((key) => !key.includes(AND_OPERATOR) && key.includes(val)),
 				)
 				.filter((val) => {
 					return markerSettings.value.showOtherFeatureValues || filterValue.has(val);
@@ -151,12 +142,7 @@ function getPetalMarker(feature: GeoJsonFeature<Point, MarkerProperties>, latlng
 		});
 	const combinedFilters = table
 		?.getVisibleLeafColumns()
-		.filter(
-			(col) =>
-				col.getIsFiltered() &&
-				col.getFilterValue() &&
-				hasActiveFilters(col),
-		)
+		.filter((col) => col.getIsFiltered() && col.getFilterValue() && hasActiveFilters(col))
 		.flatMap((col) => {
 			const filterValue = getFilterValue(col);
 			return [...filterValue.keys()]
