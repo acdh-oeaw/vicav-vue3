@@ -38,19 +38,24 @@ function buildColumnDefRecursive(
 			.filter((heading) => heading.category === col.id)
 			.map((heading) => {
 				const accessorFn = (cell: PatchedFeatureType) => {
-					return Object.keys(
-						cell.properties[Object.keys(heading).find((key) => /ft_*/.test(key)) ?? ""] ?? {},
-					);
+					const value =
+						cell.properties[Object.keys(heading).find((key) => /ft_*/.test(key)) ?? col.id] ?? {};
+					if (typeof value === "string") {
+						return [value];
+					}
+					return Object.keys(value);
 				};
 				return columnHelper.accessor(accessorFn, {
-					id: Object.keys(heading).find((key) => /ft_*/.test(key)) ?? "",
-					header: heading[Object.keys(heading).find((key) => /ft_*/.test(key)) ?? ""],
+					id: Object.keys(heading).find((key) => /ft_*/.test(key)) ?? col.id,
+					header: heading[Object.keys(heading).find((key) => /ft_*/.test(key)) ?? col.id],
 					cell: (cell: CellContext<PatchedFeatureType, unknown>) => {
 						const highlightedValues = [
 							...(cell.column.getFilterValue() as Map<string, unknown>).keys(),
 						];
+						let value = cell.row.original.properties[cell.column.columnDef.id!];
+						if (typeof value === "string") value = { [value]: [{}] };
 						return h(geojsonTablePropertyCell, {
-							value: cell.row.original.properties[cell.column.columnDef.id!],
+							value,
 							highlightedValues: highlightedValues,
 							column: cell.column,
 							fullEntry: cell.row.original.properties,

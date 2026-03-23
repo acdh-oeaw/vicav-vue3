@@ -246,7 +246,12 @@ function updateMarker(markerSelection: SelectionEntry) {
 onMounted(() => computeMarkerData());
 onUpdated(() => computeMarkerData());
 
-const taxonomyTree = computed(() => getTaxonomyTree(props.column.id));
+const taxonomyTree = computed(() =>
+	getTaxonomyTree(
+		props.column.id,
+		facets.value.map((f) => f[0]),
+	),
+);
 
 function deselectColumn() {
 	props.column.toggleVisibility();

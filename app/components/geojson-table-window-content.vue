@@ -27,23 +27,36 @@ const { data: projectData } = useProjectInfo();
 const { createColumnDefs } = useColumnGeneration();
 const { getTraversedAST, parse } = useFilterParser();
 
-const columns = computed(() => {
+const extendedFeatureNames = computed(() => {
 	const allFeatureNames = fetchedData.value.get(url)?.properties.column_headings;
-
+	const extendedFeatureNames = allFeatureNames?.concat([
+		{ category: "country", count: "1", country: "Country" },
+	]);
+	return extendedFeatureNames;
+});
+const extendedFeatureCategories = computed(() => {
 	const featureCategories = projectData.value!.projectConfig?.staticData?.table?.[1] as Record<
 		string,
 		string
 	>;
+	const extendedFeatureCategories = { ...featureCategories, country: "Country" };
+	return extendedFeatureCategories;
+});
 
-	if (allFeatureNames && featureCategories)
-		return createColumnDefs(featureCategories, allFeatureNames);
+const columns = computed(() => {
+	if (extendedFeatureNames.value && extendedFeatureCategories.value)
+		return createColumnDefs(extendedFeatureCategories.value, extendedFeatureNames.value);
 	else return [];
 });
 const columnVisibility = computed(() => {
 	const columnHeadings = fetchedData.value.get(url)?.properties.column_headings ?? [];
-	return Object.fromEntries(
-		columnHeadings?.map((heading) => [Object.keys(heading).find((key) => /ft_*/.test(key)), false]),
-	);
+	return Object.fromEntries([
+		...columnHeadings.map((heading) => [
+			Object.keys(heading).find((key) => /ft_*/.test(key)),
+			false,
+		]),
+		["country", false],
+	]);
 });
 
 function applyGlobalFilter(row: Row<FeatureType>, _colId: string, queryString: string) {

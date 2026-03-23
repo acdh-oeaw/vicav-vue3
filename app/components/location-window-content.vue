@@ -54,7 +54,7 @@ function getHighlightedValues(col: Column<PatchedFeatureType, unknown>) {
 					<TableCell class="capitalize">{{ col.column.columnDef.header }}</TableCell>
 					<TableCell>
 						<GeojsonTablePropertyCell
-							v-if="col.column.columnDef.header !== 'Name'"
+							v-if="typeof rowOriginal.properties[col.column.columnDef.id!] !== 'string'"
 							:column="col.column"
 							:full-entry="rowOriginal.properties"
 							:highlighted-values="getHighlightedValues(col.column)"
