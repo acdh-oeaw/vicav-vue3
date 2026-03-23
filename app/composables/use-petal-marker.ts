@@ -122,7 +122,9 @@ function getPetalMarker(feature: GeoJsonFeature<Point, MarkerProperties>, latlng
 		.filter((col) => col.getIsFiltered() && col.getFilterValue() && hasActiveFilters(col))
 		.flatMap((col) => {
 			const filterValue = getFilterValue(col);
-			return Object.keys(feature.properties[col.id as keyof MarkerProperties] ?? {})
+			const featureValue = feature.properties[col.id as keyof MarkerProperties];
+
+			return (typeof featureValue === "string" ? [featureValue] : Object.keys(featureValue ?? {}))
 				.filter(
 					(val) =>
 						![...filterValue.keys()].find(
@@ -145,6 +147,7 @@ function getPetalMarker(feature: GeoJsonFeature<Point, MarkerProperties>, latlng
 		.filter((col) => col.getIsFiltered() && col.getFilterValue() && hasActiveFilters(col))
 		.flatMap((col) => {
 			const filterValue = getFilterValue(col);
+			const featureValue = feature.properties[col.id as keyof MarkerProperties];
 			return [...filterValue.keys()]
 				.filter(
 					(key) =>
@@ -154,8 +157,9 @@ function getPetalMarker(feature: GeoJsonFeature<Point, MarkerProperties>, latlng
 							.every(
 								(k) =>
 									k in
-									((feature.properties[col.id as keyof MarkerProperties] as object | undefined) ??
-										{}),
+									(typeof featureValue === "string"
+										? { [featureValue]: true }
+										: ((featureValue as object | undefined) ?? {})),
 							),
 				)
 				.map((key) => ({

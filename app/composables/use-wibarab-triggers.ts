@@ -59,11 +59,17 @@ function getValueList(columns: typeof features.value) {
 			const taxonomy =
 				getTaxonomyTree(item.col.id).get(item.col.id) ?? getTaxonomyTree(item.col.id).get("");
 			const facets = getFacetsForId(table as Table<unknown>, item.col.id);
-			return traverseTaxonomyTree(taxonomy!, facets).map(({ key, label, level }) => ({
-				value: `"${key}"`,
-				displayValue: `${Array.from(Array(level))
-					.map(() => "\t")
-					.join("")}${label}`,
+			if (taxonomy) {
+				return traverseTaxonomyTree(taxonomy, facets).map(({ key, label, level }) => ({
+					value: `"${key}"`,
+					displayValue: `${Array.from(Array(level))
+						.map(() => "\t")
+						.join("")}${label}`,
+				}));
+			}
+			return facets.map((f) => ({
+				value: `"${f[0]}"`,
+				displayValue: f[0],
 			}));
 		})
 		.flat();
