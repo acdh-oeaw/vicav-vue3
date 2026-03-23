@@ -1,4 +1,3 @@
-import { computed, type ComputedRef } from "vue";
 import * as z from "zod";
 
 import dataTypes from "@/config/dataTypes.ts";
@@ -36,16 +35,13 @@ function isTeiCorpus(item: unknown): item is TeiCorpus {
 
 export const useTeiHeadersStore = defineStore("use-tei-headers-store", () => {
 	const { data: projectData, suspense } = useProjectInfo();
+	const rawItems = ref<Array<TeiCorpus>>([]);
+	const simpleItems = ref<Array<simpleTEIMetadata>>([]);
+	let initializationPromise: Promise<void> | null = null;
 
-	const initialize = async () => {
-		await suspense();
-	};
-
-	const rawItems = computed((previousParsedItems: Array<TeiCorpus> | undefined) => {
-		// Why is this computed serveral times?
-		if (previousParsedItems) return previousParsedItems;
+	const parseRawItems = function (table: Array<unknown>) {
 		const parsedItems: Array<TeiCorpus> = [];
-		(projectData.value?.projectConfig?.staticData?.table ?? []).forEach((item, itemIndex) => {
+		table.forEach((item, itemIndex) => {
 			if (!isTeiCorpus(item)) return;
 			const TEIs = item.TEIs ?? [];
 			// We want to check the teiCorpus teiHeader first and throw away all the data if that is
@@ -84,7 +80,22 @@ export const useTeiHeadersStore = defineStore("use-tei-headers-store", () => {
 			}
 		});
 		return parsedItems;
-	});
+	};
+
+	const initialize = async function () {
+		if (initializationPromise) {
+			await initializationPromise;
+			return;
+		}
+
+		initializationPromise = (async () => {
+			await suspense();
+			rawItems.value = parseRawItems(projectData.value?.projectConfig?.staticData?.table ?? []);
+			simpleItems.value = buildSimpleItems(rawItems.value);
+		})();
+
+		await initializationPromise;
+	};
 
 	const extractPersons = function (item: TEI, corpusMetadata: TeiHeader | undefined) {
 		const corpusPersons = corpusMetadata?.profileDesc?.particDesc?.listPerson;
@@ -392,11 +403,11 @@ export const useTeiHeadersStore = defineStore("use-tei-headers-store", () => {
 		else return null;
 	};
 
-	const simpleItems: ComputedRef<Array<simpleTEIMetadata>> = computed(() => {
-		const corpusMetadata = rawItems.value.find(
+	const buildSimpleItems = function (items: Array<TeiCorpus>) {
+		const corpusMetadata = items.find(
 			(item) => item.teiHeader && item["@id"] === "vicav_corpus",
 		)?.teiHeader;
-		const data = rawItems.value
+		const data = items
 			.map((dataTypeTEIs) => {
 				return dataTypeTEIs.TEIs?.map((item) =>
 					extractMetadata(item, dataTypeTEIs["@id"] ?? "", corpusMetadata),
@@ -411,7 +422,7 @@ export const useTeiHeadersStore = defineStore("use-tei-headers-store", () => {
 				// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
 				.filter((item) => item !== null)
 		);
-	});
+	};
 
 	return {
 		initialize,
