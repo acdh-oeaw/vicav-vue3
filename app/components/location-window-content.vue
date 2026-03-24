@@ -60,7 +60,7 @@ function getNonFeatureValue(col: (typeof columns.value)[0]) {
 					<TableCell class="capitalize">{{ col.column.columnDef.header }}</TableCell>
 					<TableCell>
 						<GeojsonTablePropertyCell
-							v-if="typeof rowOriginal.properties[col.column.columnDef.id!] !== 'string'"
+							v-if="!['name', 'country', 'alternateNames'].includes(col.column.id)"
 							:column="col.column"
 							:full-entry="rowOriginal.properties"
 							:highlighted-values="getHighlightedValues(col.column)"
