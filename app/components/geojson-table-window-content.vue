@@ -29,10 +29,9 @@ const { getTraversedAST, parse } = useFilterParser();
 
 const extendedFeatureNames = computed(() => {
 	const allFeatureNames = fetchedData.value.get(url)?.properties.column_headings;
-	const extendedFeatureNames = allFeatureNames?.concat([
-		{ category: "country", count: "1", country: "Country" },
-	]);
-	return extendedFeatureNames;
+	if (allFeatureNames)
+		allFeatureNames.find((feature) => feature.country === "Country").category = "country";
+	return allFeatureNames;
 });
 const extendedFeatureCategories = computed(() => {
 	const featureCategories = projectData.value!.projectConfig?.staticData?.table?.[1] as Record<
