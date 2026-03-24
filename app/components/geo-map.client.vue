@@ -219,7 +219,7 @@ function updateMarkers(updateViewport = true) {
 	featureGroup.clearLayers();
 
 	props.markers.forEach((marker) => {
-		featureGroup.addData(marker);
+		if (marker.geometry.coordinates.length > 0) featureGroup.addData(marker);
 	});
 
 	if (props.displayLabels)

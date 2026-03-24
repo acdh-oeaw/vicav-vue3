@@ -82,10 +82,10 @@ function getMetaInfoList() {
 	const metaInfo = new Map<string, Set<string>>();
 	if (!table) return new Map() as TriggerMap;
 	table.getCoreRowModel().rows.forEach((row) => {
-		Object.values(
+		Object.entries(
 			row.original.properties as Record<string, Record<string, Array<Record<string, unknown>>>>,
-		).forEach((featureValues) => {
-			if (typeof featureValues === "string") return;
+		).forEach(([key, featureValues]) => {
+			if (typeof featureValues === "string" || key === "alternateNames") return;
 			Object.values(featureValues).forEach((featureValueInfos) => {
 				featureValueInfos.forEach((featureValueInfo) => {
 					Object.entries(featureValueInfo).forEach(([key, val]) => {

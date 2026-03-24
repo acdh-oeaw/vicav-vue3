@@ -41,6 +41,12 @@ const citation = computed(() => {
 function getHighlightedValues(col: Column<PatchedFeatureType, unknown>) {
 	return [...((col.getFilterValue() as Map<string, unknown>)?.keys() ?? [])];
 }
+
+function getNonFeatureValue(col: (typeof columns.value)[0]) {
+	const value = rowOriginal.value.properties[col.column.columnDef.id!];
+	if (!value || typeof value === "string") return value;
+	return (value as unknown as Array<Record<string, string>>).map((entry) => entry.name).join(" / ");
+}
 </script>
 
 <template>
@@ -54,15 +60,13 @@ function getHighlightedValues(col: Column<PatchedFeatureType, unknown>) {
 					<TableCell class="capitalize">{{ col.column.columnDef.header }}</TableCell>
 					<TableCell>
 						<GeojsonTablePropertyCell
-							v-if="typeof rowOriginal.properties[col.column.columnDef.id!] !== 'string'"
+							v-if="!['name', 'country', 'alternateNames'].includes(col.column.id)"
 							:column="col.column"
 							:full-entry="rowOriginal.properties"
 							:highlighted-values="getHighlightedValues(col.column)"
 							:value="rowOriginal.properties[col.column.columnDef.id!]"
 						></GeojsonTablePropertyCell>
-						<span v-else class="font-light">{{
-							rowOriginal.properties[col.column.columnDef.id!]
-						}}</span>
+						<span v-else class="font-light">{{ getNonFeatureValue(col) }}</span>
 					</TableCell>
 				</TableRow>
 			</TableBody>
