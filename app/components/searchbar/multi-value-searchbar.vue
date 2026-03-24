@@ -3,7 +3,7 @@ import { syntaxHighlighting } from "@codemirror/language";
 import { tooltips } from "@codemirror/view";
 import type { Table } from "@tanstack/vue-table";
 import { computedWithControl } from "@vueuse/core";
-import { ChevronDown, FunnelPlus, X } from "lucide-vue-next";
+import { X } from "lucide-vue-next";
 import {
 	type AcceptableValue,
 	ComboboxAnchor,
@@ -38,7 +38,7 @@ const props = defineProps<{
 	triggers: TriggerMap;
 }>();
 
-const { parseSearchString, validateQuery, normalizeOperators, addMetaFilter } = useFilterParser();
+const { parseSearchString, validateQuery, normalizeOperators } = useFilterParser();
 
 const { contains } = useFilter({ sensitivity: "base" });
 
@@ -141,6 +141,8 @@ function submitSearch() {
 	props.table.setGlobalFilter(normalizeOperators(value.value));
 }
 
+defineExpose({ submitSearch, value });
+
 onMounted(() => {
 	value.value = props.table.getState().globalFilter;
 	nextTick(() => (open.value = false));
@@ -154,13 +156,6 @@ watch(
 );
 
 const queryWarnings = computed(() => validateQuery(value.value));
-
-const { metaInfo } = useWibarabTriggers();
-const isMetaMenuOpen = ref([...metaInfo.value.keys()].map(() => false));
-function addMetaFilterToQuery(key: string, val: string) {
-	value.value = addMetaFilter(value.value, key, val);
-	submitSearch();
-}
 
 const highlighted = ref<string | null>(null);
 function setHighlight(el: { ref: HTMLElement; value: AcceptableValue } | undefined) {
@@ -183,7 +178,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-	<div class="grid w-full max-w-full grid-cols-[1fr_auto_auto] gap-x-2 overflow-x-hidden">
+	<div class="grid w-full max-w-full grid-cols-[1fr_auto] gap-x-2">
 		<ComboboxRoot
 			v-model:open="open"
 			class="flex w-full flex-col overflow-x-hidden"
@@ -257,43 +252,13 @@ onBeforeUnmount(() => {
 				</ComboboxContent>
 			</ComboboxPortal>
 		</ComboboxRoot>
-		<DropdownMenu>
-			<DropdownMenuTrigger as-child
-				><Button
-					class="h-full self-end"
-					:disabled="!(value?.length > 0 && queryWarnings.isValid)"
-					variant="outline"
-					@click="submitSearch"
-					><FunnelPlus class="size-4" /></Button
-			></DropdownMenuTrigger>
 
-			<DropdownMenuContent class="max-h-[var(--radix-dropdown-menu-content-available-height)] w-52">
-				<Collapsible
-					v-for="([key, val], idx) in metaInfo"
-					:key="key"
-					v-model:open="isMetaMenuOpen[idx]"
-				>
-					<CollapsibleTrigger class="flex w-full items-center gap-1 p-2 text-sm">
-						<span class="capitalize">{{ key }}</span>
-						<ChevronDown
-							class="size-4"
-							:class="isMetaMenuOpen[idx] ? 'rotate-180' : ''"
-						></ChevronDown>
-					</CollapsibleTrigger>
-					<CollapsibleContent>
-						<Button
-							v-for="entry in val.toSorted((a, b) => a.displayValue.localeCompare(b.displayValue))"
-							:key="entry.value"
-							class="h-auto w-full justify-start p-1 pl-4 text-start text-sm font-normal whitespace-normal"
-							variant="ghost"
-							@click="() => addMetaFilterToQuery(key, entry.value)"
-							>{{ entry.displayValue }}</Button
-						>
-					</CollapsibleContent>
-				</Collapsible>
-			</DropdownMenuContent>
-		</DropdownMenu>
-		<Button class="h-full self-end" variant="outline" @click="submitSearch">Search</Button>
+		<Button
+			class="h-full self-end bg-header text-white hover:bg-primary"
+			variant="outline"
+			@click="submitSearch"
+			>Search</Button
+		>
 		<div v-if="queryWarnings.warnings.length" class="mt-1 ml-1 text-xs text-orange-700">
 			<div v-for="(warning, idx) in queryWarnings.warnings" :key="idx">{{ warning }}</div>
 		</div>
@@ -320,18 +285,6 @@ onBeforeUnmount(() => {
 .cm-filter {
 	@apply text-amber-900;
 }
-
-.cm-filter::before {
-	@apply mr-0.5 opacity-80;
-
-	content: "🛈";
-}
-
-/* .cm-feature::before {
-	@apply bg-emerald-900 inline-block size-2 rounded-full mr-1;
-
-	content: "";
-} */
 
 .cm-feature-value {
 	@apply text-amber-700 font-medium;
