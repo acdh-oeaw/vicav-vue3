@@ -6,8 +6,8 @@ import {
 } from "@tanstack/vue-table";
 
 import geojsonTablePropertyCell from "@/components/geojson-table-property-cell.vue";
-import Button from "@/components/ui/button/Button.vue";
-import type { FeatureType, WindowItem } from "@/types/global.ts";
+import GeojsonTableSimpleCell from "@/components/geojson-table-simple-cell.vue";
+import type { FeatureType } from "@/types/global.ts";
 
 export interface PatchedFeatureType extends FeatureType {
 	properties: Record<string, Record<string, unknown>>;
@@ -92,7 +92,6 @@ function createColumnDefs(
 	featureCategories: Record<string, string>,
 	allFeatureNames: Array<Record<string, string>>,
 ) {
-	const openOrUpdateWindow = useOpenOrUpdateWindow();
 	const topLevelColumns: Array<SimpleColumnInterface> = [
 		{
 			id: "-",
@@ -130,23 +129,20 @@ function createColumnDefs(
 								header: Object.values(heading)[0],
 								enableHiding: false,
 								cell: ({ cell }: CellContext<PatchedFeatureType, never>) => {
-									return h(
-										Button,
-										{
-											class: "max-w-[500px] truncate font-medium cursor-pointer text-black",
-											variant: "link",
-											onclick: () => {
-												openOrUpdateWindow(
-													{
-														targetType: "Location",
-														params: cell.row,
-													} as unknown as WindowItem,
-													cell.row.original.properties.name as unknown as string,
-												);
-											},
-										},
-										() => cell.row.original.properties[cell.column.columnDef.id!],
-									);
+									return h(GeojsonTableSimpleCell, {
+										cell: cell,
+										valuePrimary: cell.row.original.properties[cell.column.columnDef.id!] ?? "",
+										valueSecondary:
+											cell.column.id === "name"
+												? (
+														cell.row.original.properties.alternateNames as unknown as
+															| Array<Record<string, string>>
+															| undefined
+													)
+														?.map((nameEntry) => nameEntry.name!)
+														.join(" / ")
+												: undefined,
+									});
 								},
 								accessorFn: (cell: PatchedFeatureType) => {
 									return cell.properties[String(Object.keys(heading)[0])];

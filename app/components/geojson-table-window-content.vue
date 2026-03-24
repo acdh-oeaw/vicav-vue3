@@ -34,16 +34,21 @@ const columns = computed(() => {
 		string,
 		string
 	>;
-
 	if (allFeatureNames && featureCategories)
 		return createColumnDefs(featureCategories, allFeatureNames);
 	else return [];
 });
 const columnVisibility = computed(() => {
 	const columnHeadings = fetchedData.value.get(url)?.properties.column_headings ?? [];
-	return Object.fromEntries(
-		columnHeadings?.map((heading) => [Object.keys(heading).find((key) => /ft_*/.test(key)), false]),
-	);
+	return {
+		...Object.fromEntries(
+			columnHeadings?.map((heading) => [
+				Object.keys(heading).find((key) => /ft_*/.test(key)),
+				false,
+			]),
+		),
+		alternateNames: false,
+	};
 });
 
 function applyGlobalFilter(row: Row<FeatureType>, _colId: string, queryString: string) {
