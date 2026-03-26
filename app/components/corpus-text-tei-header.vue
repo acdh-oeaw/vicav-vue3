@@ -17,6 +17,21 @@ const teiHeader = computed(() => {
 const publication = computed(() => {
 	return teiHeader.value?.publication;
 });
+
+const toggledSpeakerIndexes = ref<Array<number>>([]);
+
+function isDenseSpeaker(index: number) {
+	return toggledSpeakerIndexes.value.includes(index) ? !props.dense : props.dense;
+}
+
+function toggleSpeakerCard(index: number) {
+	if (toggledSpeakerIndexes.value.includes(index)) {
+		toggledSpeakerIndexes.value = toggledSpeakerIndexes.value.filter((value) => value !== index);
+		return;
+	}
+
+	toggledSpeakerIndexes.value = [...toggledSpeakerIndexes.value, index];
+}
 </script>
 
 <template>
@@ -64,9 +79,15 @@ const publication = computed(() => {
 							<Card
 								v-for="(person, index) in teiHeader?.person"
 								:key="index"
-								class="rounded-sm border-border bg-background shadow-sm ring-1 ring-black/5"
+								:aria-expanded="!isDenseSpeaker(index)"
+								class="cursor-pointer rounded-sm border-border bg-background shadow-sm ring-1 ring-black/5"
+								role="button"
+								tabindex="0"
+								@click="toggleSpeakerCard(index)"
+								@keydown.enter.prevent="toggleSpeakerCard(index)"
+								@keydown.space.prevent="toggleSpeakerCard(index)"
 							>
-								<template v-if="props.dense">
+								<template v-if="isDenseSpeaker(index)">
 									<CardContent class="flex items-center gap-3 px-3 py-2 whitespace-nowrap">
 										<Contact class="size-4 shrink-0" />
 										<p class="text-sm font-medium">{{ person.name }}</p>
