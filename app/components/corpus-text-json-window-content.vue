@@ -96,12 +96,12 @@ const handleInfiniteScroll = async function ($state: StateHandler) {
 
 <template>
 	<div>
-		<div class="sticky top-0 z-10 flex justify-end p-4">
+		<div class="sticky top-0 z-10 flex justify-end bg-white p-4">
 			<TooltipProvider>
 				<ToggleGroup v-model="enabledOptions" type="multiple" variant="outline">
 					<Tooltip>
 						<TooltipTrigger as-child>
-							<ToggleGroupItem value="annotations">
+							<ToggleGroupItem class="hover:bg-primary" value="annotations">
 								<ChevronsLeftRightEllipsis class="h-4 w-4" />
 							</ToggleGroupItem>
 						</TooltipTrigger>
@@ -111,7 +111,7 @@ const handleInfiniteScroll = async function ($state: StateHandler) {
 					</Tooltip>
 					<Tooltip>
 						<TooltipTrigger as-child>
-							<ToggleGroupItem value="translations">
+							<ToggleGroupItem class="hover:bg-primary" value="translations">
 								<Languages class="h-4 w-4" />
 							</ToggleGroupItem>
 						</TooltipTrigger>
@@ -121,7 +121,7 @@ const handleInfiniteScroll = async function ($state: StateHandler) {
 					</Tooltip>
 					<Tooltip>
 						<TooltipTrigger as-child>
-							<ToggleGroupItem value="dense-tei-header">
+							<ToggleGroupItem class="hover:bg-primary" value="dense-tei-header">
 								<AlignVerticalSpaceBetween class="h-4 w-4" />
 							</ToggleGroupItem>
 						</TooltipTrigger>
