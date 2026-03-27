@@ -24,6 +24,8 @@ const scrollComplete = ref<boolean>(false);
 
 async function searchCorpus() {
 	currentPage.value = 0;
+	hits.value = [];
+	displayHits.value = [];
 	if (words.value.length > 0) queryString.value = `[word="${words.value.join("|")}"]`;
 
 	const result = await api.vicav.searchCorpus(
@@ -175,8 +177,8 @@ const words: Ref<Array<string>> = ref([]);
 				<label for="switch-translations">&nbsp;Inline Translations</label>
 			</div>
 		</div>
-		<div>
-			<div v-if="hits && displayHits.length > 0" class="my-2">Query: "{{ queryString }}"</div>
+		<div v-if="hits && displayHits.length > 0">
+			<div class="my-2">Query: "{{ queryString }}"</div>
 			<table>
 				<tr v-for="hit in displayHits" :key="hit['@id']">
 					<td class="p-0">
