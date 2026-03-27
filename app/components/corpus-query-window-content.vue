@@ -15,6 +15,7 @@ const queryString = ref(props.params.queryString);
 const hits = ref<Array<Div & { label?: string }>>([]);
 const displayHits = ref<Array<Div & { label?: string }>>([]);
 const showHelp = ref<boolean>(false);
+const isSearching = ref(false);
 
 const inlineAnnotations = ref<false | true | "indeterminate">(true);
 const inlineTranslations = ref<false | true | "indeterminate">(true);
@@ -23,31 +24,36 @@ const currentPage = ref(0);
 const scrollComplete = ref<boolean>(false);
 
 async function searchCorpus() {
+	isSearching.value = true;
 	currentPage.value = 0;
 	hits.value = [];
 	displayHits.value = [];
-	if (words.value.length > 0) queryString.value = `[word="${words.value.join("|")}"]`;
+	try {
+		if (words.value.length > 0) queryString.value = `[word="${words.value.join("|")}"]`;
 
-	const result = await api.vicav.searchCorpus(
-		{
-			query: queryString.value.toString(),
-			render: "json",
-		},
-		{ headers: { Accept: "application/json" } },
-	);
+		const result = await api.vicav.searchCorpus(
+			{
+				query: queryString.value.toString(),
+				render: "json",
+			},
+			{ headers: { Accept: "application/json" } },
+		);
 
-	if (result.error) {
-		console.error(result.error);
-		return;
-	}
-	if (!Array.isArray(result.data.hits) && Array.isArray(result.data.hits?.divs)) {
-		hits.value = result.data.hits.divs;
-		hits.value?.forEach((hit) => {
-			const teiHeader = simpleItems.find((header) => header.id === hit["@docRef"]);
-			hit.label = teiHeader?.label;
-		});
-		displayHits.value = hits.value.slice(currentPage.value * 10, (currentPage.value + 1) * 10);
-		scrollComplete.value = false;
+		if (result.error) {
+			console.error(result.error);
+			return;
+		}
+		if (!Array.isArray(result.data.hits) && Array.isArray(result.data.hits?.divs)) {
+			hits.value = result.data.hits.divs;
+			hits.value?.forEach((hit) => {
+				const teiHeader = simpleItems.find((header) => header.id === hit["@docRef"]);
+				hit.label = teiHeader?.label;
+			});
+			displayHits.value = hits.value.slice(currentPage.value * 10, (currentPage.value + 1) * 10);
+			scrollComplete.value = false;
+		}
+	} finally {
+		isSearching.value = false;
 	}
 }
 
@@ -151,11 +157,14 @@ const words: Ref<Array<string>> = ref([]);
 			/>
 			<button
 				class="inline-block h-10 w-full rounded border-2 border-solid border-primary bg-on-primary text-center align-middle font-bold whitespace-nowrap text-primary hover:bg-primary hover:text-on-primary disabled:border-gray-400 disabled:text-gray-400 hover:disabled:bg-on-primary hover:disabled:text-gray-400"
-				:disabled="queryString === '' && words.length == 0"
+				:disabled="isSearching || (queryString === '' && words.length == 0)"
 				@click.prevent.stop="searchCorpus"
 			>
 				Query
 			</button>
+			<div v-if="isSearching" class="flex justify-center py-4 text-primary">
+				<LoadingIndicator>Loading corpus results...</LoadingIndicator>
+			</div>
 			<br />
 		</form>
 		<div class="flex justify-end p-4">
