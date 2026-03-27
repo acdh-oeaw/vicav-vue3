@@ -4,6 +4,7 @@ import { Contact } from "lucide-vue-next";
 import { useTeiHeadersStore } from "@/stores/use-tei-headers-store.ts";
 
 const props = defineProps<{
+	dense?: boolean;
 	textId: string;
 }>();
 
@@ -16,6 +17,21 @@ const teiHeader = computed(() => {
 const publication = computed(() => {
 	return teiHeader.value?.publication;
 });
+
+const toggledSpeakerIndexes = ref<Array<number>>([]);
+
+function isDenseSpeaker(index: number) {
+	return toggledSpeakerIndexes.value.includes(index) ? !props.dense : props.dense;
+}
+
+function toggleSpeakerCard(index: number) {
+	if (toggledSpeakerIndexes.value.includes(index)) {
+		toggledSpeakerIndexes.value = toggledSpeakerIndexes.value.filter((value) => value !== index);
+		return;
+	}
+
+	toggledSpeakerIndexes.value = [...toggledSpeakerIndexes.value, index];
+}
 </script>
 
 <template>
@@ -63,42 +79,59 @@ const publication = computed(() => {
 							<Card
 								v-for="(person, index) in teiHeader?.person"
 								:key="index"
-								class="rounded-sm border-border bg-background shadow-sm ring-1 ring-black/5"
+								:aria-expanded="!isDenseSpeaker(index)"
+								class="cursor-pointer rounded-sm border-border bg-background shadow-sm ring-1 ring-black/5"
+								role="button"
+								tabindex="0"
+								@click="toggleSpeakerCard(index)"
+								@keydown.enter.prevent="toggleSpeakerCard(index)"
+								@keydown.space.prevent="toggleSpeakerCard(index)"
 							>
-								<CardHeader class="rounded-t-lg border-b bg-muted/40 pb-3">
-									<CardTitle class="flex items-center gap-3 text-base leading-tight">
-										<Contact class="size-5 shrink-0" />
-										<span class="ml-auto text-right">{{ person.name }}</span>
-									</CardTitle>
-								</CardHeader>
-								<CardContent class="space-y-2 pt-4">
-									<div
-										class="flex items-center justify-between gap-3 rounded-md border border-border/60 bg-muted/60 px-3 py-1.5"
-									>
-										<p class="text-[11px] font-semibold tracking-[0.14em] uppercase">Age</p>
-										<p class="text-sm font-medium">
-											{{ person.age }}
+								<template v-if="isDenseSpeaker(index)">
+									<CardContent class="flex items-center gap-3 px-3 py-2 whitespace-nowrap">
+										<Contact class="size-4 shrink-0" />
+										<p class="text-sm font-medium">{{ person.name }}</p>
+										<p class="text-muted-foreground text-sm">
+											Age: {{ person.age }} | DOB: {{ person.dob }} | Sex: {{ person.sex }}
 										</p>
-									</div>
-									<div
-										class="flex items-center justify-between gap-3 rounded-md border border-border/60 bg-muted/60 px-3 py-1.5"
-									>
-										<p class="text-[11px] font-semibold tracking-[0.14em] uppercase">
-											Date of Birth
-										</p>
-										<p class="text-sm font-medium">
-											{{ person.dob }}
-										</p>
-									</div>
-									<div
-										class="flex items-center justify-between gap-3 rounded-md border border-border/60 bg-muted/60 px-3 py-1.5"
-									>
-										<p class="text-[11px] font-semibold tracking-[0.14em] uppercase">Sex</p>
-										<p class="text-sm font-medium">
-											{{ person.sex }}
-										</p>
-									</div>
-								</CardContent>
+									</CardContent>
+								</template>
+								<template v-else>
+									<CardHeader class="rounded-t-lg border-b bg-muted/40 pb-3">
+										<CardTitle class="flex items-center gap-3 text-base leading-tight">
+											<Contact class="size-5 shrink-0" />
+											<span class="ml-auto text-right">{{ person.name }}</span>
+										</CardTitle>
+									</CardHeader>
+									<CardContent class="space-y-2 pt-4">
+										<div
+											class="flex items-center justify-between gap-3 rounded-md border border-border/60 bg-muted/60 px-3 py-1.5"
+										>
+											<p class="text-[11px] font-semibold tracking-[0.14em] uppercase">Age</p>
+											<p class="text-sm font-medium">
+												{{ person.age }}
+											</p>
+										</div>
+										<div
+											class="flex items-center justify-between gap-3 rounded-md border border-border/60 bg-muted/60 px-3 py-1.5"
+										>
+											<p class="text-[11px] font-semibold tracking-[0.14em] uppercase">
+												Date of Birth
+											</p>
+											<p class="text-sm font-medium">
+												{{ person.dob }}
+											</p>
+										</div>
+										<div
+											class="flex items-center justify-between gap-3 rounded-md border border-border/60 bg-muted/60 px-3 py-1.5"
+										>
+											<p class="text-[11px] font-semibold tracking-[0.14em] uppercase">Sex</p>
+											<p class="text-sm font-medium">
+												{{ person.sex }}
+											</p>
+										</div>
+									</CardContent>
+								</template>
 							</Card>
 						</div>
 					</td>

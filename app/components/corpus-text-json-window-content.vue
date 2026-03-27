@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import "v3-infinite-loading/lib/style.css";
 
+import { AlignVerticalSpaceBetween, ChevronsLeftRightEllipsis, Languages } from "lucide-vue-next";
 import InfiniteLoading from "v3-infinite-loading";
 import type { StateHandler } from "v3-infinite-loading/lib/types";
 import type { z } from "zod";
@@ -23,6 +24,21 @@ const scrollComplete = ref<boolean>(false);
 const annotationBlocks = ref<Array<Div>>([]);
 const inlineAnnotations = ref<false | true | "indeterminate">(true);
 const inlineTranslations = ref<false | true | "indeterminate">(true);
+const denseTeiHeader = ref<false | true | "indeterminate">(true);
+const enabledOptions = computed<Array<string>>({
+	get() {
+		return [
+			...(inlineAnnotations.value === true ? ["annotations"] : []),
+			...(inlineTranslations.value === true ? ["translations"] : []),
+			...(denseTeiHeader.value === true ? ["dense-tei-header"] : []),
+		];
+	},
+	set(values: Array<string>) {
+		inlineAnnotations.value = values.includes("annotations");
+		inlineTranslations.value = values.includes("translations");
+		denseTeiHeader.value = values.includes("dense-tei-header");
+	},
+});
 
 const api = useApiClient();
 const loadNextPage = async function () {
@@ -80,24 +96,41 @@ const handleInfiniteScroll = async function ($state: StateHandler) {
 
 <template>
 	<div>
-		<div class="sticky top-0 z-10 flex justify-end bg-background p-4">
-			<div>
-				<Checkbox
-					id="switch-annotations"
-					:default-checked="true"
-					@update:checked="inlineAnnotations = !inlineAnnotations"
-				/>
-				<label for="switch-annotations">&nbsp;Inline Annotations</label>
-			</div>
-			&nbsp;
-			<div>
-				<Checkbox
-					id="switch-translations"
-					:default-checked="true"
-					@update:checked="inlineTranslations = !inlineTranslations"
-				/>
-				<label for="switch-translations">&nbsp;Inline Translations</label>
-			</div>
+		<div class="sticky top-0 z-10 flex justify-end bg-white p-4">
+			<TooltipProvider>
+				<ToggleGroup v-model="enabledOptions" type="multiple" variant="outline">
+					<Tooltip>
+						<TooltipTrigger as-child>
+							<ToggleGroupItem class="hover:bg-primary" value="annotations">
+								<ChevronsLeftRightEllipsis class="h-4 w-4" />
+							</ToggleGroupItem>
+						</TooltipTrigger>
+						<TooltipContent class="border-black bg-black text-white">
+							Show inline linguistic annotations in utterances.
+						</TooltipContent>
+					</Tooltip>
+					<Tooltip>
+						<TooltipTrigger as-child>
+							<ToggleGroupItem class="hover:bg-primary" value="translations">
+								<Languages class="h-4 w-4" />
+							</ToggleGroupItem>
+						</TooltipTrigger>
+						<TooltipContent class="border-black bg-black text-white">
+							Show inline translations and translation rows.
+						</TooltipContent>
+					</Tooltip>
+					<Tooltip>
+						<TooltipTrigger as-child>
+							<ToggleGroupItem class="hover:bg-primary" value="dense-tei-header">
+								<AlignVerticalSpaceBetween class="h-4 w-4" />
+							</ToggleGroupItem>
+						</TooltipTrigger>
+						<TooltipContent class="border-black bg-black text-white">
+							Collapse TEI header.
+						</TooltipContent>
+					</Tooltip>
+				</ToggleGroup>
+			</TooltipProvider>
 		</div>
 		<div v-if="params.showCitation">
 			<Citation :header="teiHeader" type="entry" />
@@ -106,7 +139,7 @@ const handleInfiniteScroll = async function ($state: StateHandler) {
 		<div :id="params.textId" ref="utterancesWrapper" class="relative inline-block p-4">
 			<h2 class="m-3 text-lg">{{ props.params.label }}</h2>
 
-			<CorpusTextTeiHeader :text-id="params.textId" />
+			<CorpusTextTeiHeader :dense="denseTeiHeader === true" :text-id="params.textId" />
 			<table class="text-sm text-gray-700">
 				<thead class="bg-primary text-xs text-gray-700 uppercase">
 					<tr>
