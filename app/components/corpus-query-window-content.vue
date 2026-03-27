@@ -162,9 +162,6 @@ const words: Ref<Array<string>> = ref([]);
 			>
 				Query
 			</button>
-			<div v-if="isSearching" class="flex justify-center py-4 text-primary">
-				<LoadingIndicator>Loading corpus results...</LoadingIndicator>
-			</div>
 			<br />
 		</form>
 		<div class="flex justify-end p-4">
@@ -185,6 +182,9 @@ const words: Ref<Array<string>> = ref([]);
 				/>
 				<label for="switch-translations">&nbsp;Inline Translations</label>
 			</div>
+		</div>
+		<div v-if="isSearching" class="flex justify-center py-4 text-primary">
+			<LoadingIndicator>Loading corpus results...</LoadingIndicator>
 		</div>
 		<div v-if="hits && displayHits.length > 0">
 			<div class="my-2">Query: "{{ queryString }}"</div>
@@ -207,6 +207,7 @@ const words: Ref<Array<string>> = ref([]);
 							<CorpusTextJsonUtterance
 								v-for="(uContent, index) in hit.u['$$']"
 								:key="index"
+								:highlight="uContent.w?.['@id'] === hit.hits![0]"
 								:inline-annotation="inlineAnnotations as boolean"
 								:inline-translation="inlineTranslations as boolean"
 								:utterance="uContent"

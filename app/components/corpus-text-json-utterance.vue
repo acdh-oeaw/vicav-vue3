@@ -15,6 +15,7 @@ const props = defineProps<{
 	};
 	inlineAnnotation: boolean;
 	inlineTranslation: boolean;
+	highlight?: boolean;
 }>();
 
 function renderUtterance(u: typeof props.utterance) {
@@ -53,7 +54,7 @@ function openDictWindow(u: typeof props.utterance) {
 		<TooltipProvider v-if="!inlineAnnotation" :delay-duration="0">
 			<Tooltip>
 				<TooltipTrigger @click="openDictWindow(props.utterance)">
-					<div class="flex justify-center text-lg">
+					<div class="flex justify-center text-lg" :class="{ 'text-primary': props.highlight }">
 						{{ renderUtterance(props.utterance) }}
 					</div>
 				</TooltipTrigger>
@@ -67,6 +68,7 @@ function openDictWindow(u: typeof props.utterance) {
 		<div
 			v-if="inlineAnnotation"
 			class="flex flex-col items-center text-lg"
+			:class="{ 'text-primary': props.highlight }"
 			@click="openDictWindow(props.utterance)"
 		>
 			{{ renderUtterance(props.utterance) }}
@@ -76,7 +78,6 @@ function openDictWindow(u: typeof props.utterance) {
 			/>
 		</div>
 		<!-- eslint-enable -->
-		<div class="flex justify-center text-xs text-gray-500"></div>
 		<div v-if="inlineAnnotation" class="flex justify-center text-xs text-gray-500">
 			{{ props.utterance.w.pos }}&nbsp;
 		</div>
@@ -84,7 +85,11 @@ function openDictWindow(u: typeof props.utterance) {
 			{{ props.utterance.w["@msd"] }}&nbsp;
 		</div>
 	</div>
-	<div v-if="props.utterance.pc" class="u flex flex-col text-lg">
+	<div
+		v-if="props.utterance.pc"
+		class="u flex flex-col text-lg"
+		:class="{ 'text-primary': props.highlight }"
+	>
 		<div>{{ props.utterance.pc["$"] }}{{ "&nbsp;" }}</div>
 	</div>
 	<div v-if="props.utterance.gap" class="u flex flex-col py-3 text-lg">
@@ -100,6 +105,7 @@ function openDictWindow(u: typeof props.utterance) {
 		<CorpusTextJsonUtterance
 			v-for="(uContent, index) in props.utterance.seg['$$']"
 			:key="index"
+			:highlight="props.highlight"
 			:inline-annotation="props.inlineAnnotation as boolean"
 			:inline-translation="props.inlineTranslation as boolean"
 			:utterance="uContent"
