@@ -23,11 +23,12 @@ const currentPage = ref(0);
 const scrollComplete = ref<boolean>(false);
 
 async function searchCorpus() {
+	currentPage.value = 0;
 	if (words.value.length > 0) queryString.value = `[word="${words.value.join("|")}"]`;
 
 	const result = await api.vicav.searchCorpus(
 		{
-			query: queryString.value,
+			query: queryString.value.toString(),
 			render: "json",
 		},
 		{ headers: { Accept: "application/json" } },
