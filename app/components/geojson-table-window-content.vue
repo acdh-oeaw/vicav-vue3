@@ -61,7 +61,7 @@ const columnVisibility = computed(() => {
 	};
 });
 
-function applyGlobalFilter(row: Row<FeatureType>, _colId: string, queryString: string) {
+function applyGlobalFilter(row: Row<never>, _colId: string, queryString: string) {
 	const hidableVisibleCells = row.getVisibleCells().filter((cell) => cell.column.getCanHide());
 	if (hidableVisibleCells.length === 0) return true;
 	if (
@@ -204,6 +204,29 @@ async function downloadTable(separator = ",", multivalueSaparator = ";") {
 	hiddenElement.click();
 	document.body.removeChild(hiddenElement);
 }
+
+function jumpToRow(option: { value: string; label: string }) {
+	if (!tableRef.value) return;
+
+	const idx = tableRef.value
+		.getFilteredRowModel()
+		.rows.findIndex((row) => (row.getValue("name") as string) === option.value);
+	if (idx < 0) return;
+	const pageSize = tableRef.value.getState().pagination.pageSize;
+	const targetPage = Math.floor(idx / pageSize);
+	tableRef.value.setPageIndex(targetPage);
+	const rowId = tableRef.value.getFilteredRowModel().rows[idx]?.id;
+	tableRef.value.setRowSelection({ [rowId!]: true });
+}
+
+const searchableLocationNames = computed(() => {
+	return (
+		tableRef.value
+			?.getFilteredRowModel()
+			.rows.map((r) => r.getValue("name") as string)
+			.map((name) => ({ value: name, label: name })) ?? []
+	);
+});
 </script>
 
 <template>
@@ -211,9 +234,17 @@ async function downloadTable(separator = ",", multivalueSaparator = ";") {
 		<Centered v-if="isPending">
 			<LoadingIndicator />
 		</Centered>
-		<div class="flex justify-between justify-items-end py-2">
-			<DataTablePagination v-if="tableRef" :table="tableRef as unknown as Table<never>" />
-
+		<div class="flex justify-between justify-items-end border-b py-2">
+			<!-- <DataTablePagination v-if="tableRef" :table="tableRef as unknown as Table<never>" /> -->
+			<div class="flex px-2">
+				<SearchableCombobox
+					nothing-found="No matching location found."
+					:options="searchableLocationNames"
+					placeholder-text="Jump to location"
+					search-placeholder="Search location..."
+					@select="jumpToRow"
+				/>
+			</div>
 			<div class="flex gap-2">
 				<Toggle v-model:model-value="showAllDetails" class="h-8"
 					><Info class="size-4 stroke-neutral-800 transition-colors" />
@@ -243,7 +274,7 @@ async function downloadTable(separator = ",", multivalueSaparator = ";") {
 			v-if="!isPending"
 			:column-filter-change-fn="onColumnFilterChange"
 			:columns="columns as unknown as Array<ColumnDef<never>>"
-			:enable-filter-on-columns="true"
+			:enable-filter-on-columns="false"
 			:global-filter-fn="applyGlobalFilter"
 			:initial-column-visibility="columnVisibility"
 			:items="fetchedData.get(url)?.features as Array<never>"

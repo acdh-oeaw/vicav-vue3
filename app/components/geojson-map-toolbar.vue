@@ -68,7 +68,7 @@ function addMetaFilterToQuery(key: string, val: string) {
 
 <template>
 	<div class="grid items-center border-b border-border bg-surface px-8 py-2 text-on-surface">
-		<div>
+		<div class="flex justify-end border-b pb-2">
 			<Button class="inline-flex h-8 gap-2 border-0" variant="outline" @click="openGeoJsonTable">
 				<LucideTable class="size-4 stroke-neutral-800 transition-colors" />
 				<span class="line-clamp-1 text-ellipsis">Open table</span>
