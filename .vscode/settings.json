@@ -35,5 +35,8 @@
 		"editor.wordWrap": "on"
 	},
 	"spellright.language": ["en"],
-	"spellright.documentTypes": ["markdown", "latex", "plaintext"]
+	"spellright.documentTypes": ["markdown", "latex", "plaintext"],
+	"playwright.env": {
+		"NUXT_PUBLIC_API_BASE_URL": "https://vicav-dev.acdh.oeaw.ac.at"
+	}
 }
