@@ -1,10 +1,15 @@
 <script lang="ts" setup>
 import type { ColumnDef, Row, Table } from "@tanstack/vue-table";
 import { test } from "liqe";
-import { Download, Info, Map } from "lucide-vue-next";
+import { Download, Info, type Map } from "lucide-vue-next";
 
 import { useGeojsonStore } from "@/stores/use-geojson-store.ts";
-import type { FeatureType, ListMapWindowItem, MarkerType } from "@/types/global.ts";
+import {
+	type FeatureType,
+	GeojsonMapSchema,
+	type ListMapWindowItem,
+	type WindowItem,
+} from "@/types/global.ts";
 
 interface Props {
 	params: ListMapWindowItem["params"];
@@ -17,7 +22,7 @@ const queryString: Ref<string> = ref(params.value.queryString);
 const emit = defineEmits(["updateQueryParam"]);
 
 const GeojsonStore = useGeojsonStore();
-const { addWindow, findWindowByTypeAndParam } = useWindowsStore();
+const openOrUpdateWindow = useOpenOrUpdateWindow();
 const url = "https://raw.githubusercontent.com/wibarab/wibarab-data/main/wibarab_varieties.geojson";
 
 const { isPending } = GeojsonStore.fetchGeojson(url);
@@ -156,23 +161,19 @@ function registerTable(table: Table<FeatureType>) {
 }
 
 function openGeoJsonMap() {
-	const mw = findWindowByTypeAndParam("GeojsonMap", "url", url);
-	if (mw) {
-		mw.winbox.focus();
-		mw.winbox.addClass("highlighted");
-		setTimeout(() => {
-			mw.winbox.removeClass("highlighted");
-		}, 1000);
-	} else {
-		addWindow({
+	openOrUpdateWindow(
+		{
 			targetType: "GeojsonMap",
 			params: {
 				url,
-				markerType: "petal" as MarkerType,
+				markerType: "petal",
 			},
-			title: "Variety Data - Map View",
-		});
-	}
+		} as unknown as WindowItem,
+		"Variety Data - Map View",
+		GeojsonMapSchema.shape.params,
+		"url",
+		false,
+	);
 }
 
 function onRowClick(row: Row<FeatureType>) {
@@ -254,20 +255,6 @@ const searchableLocationNames = computed(() => {
 					<Download class="size-4 stroke-neutral-800 transition-colors" />
 					<span class="line-clamp-1 text-ellipsis">Export table</span>
 				</Button>
-				<Button class="inline-flex h-8 gap-2 border-0" variant="outline" @click="openGeoJsonMap">
-					<Map class="size-4 stroke-neutral-800 transition-colors" />
-					<span class="line-clamp-1 text-ellipsis">Open map</span>
-				</Button>
-				<!-- <DataTableActiveFilters
-					v-if="tableRef"
-					class="inline"
-					:table="tableRef as unknown as Table<never>"
-				></DataTableActiveFilters>
-				<DataTableFilterColumns
-					v-if="tableRef"
-					class="inline"
-					:table="tableRef as unknown as Table<never>"
-				/> -->
 			</div>
 		</div>
 		<DataTable
