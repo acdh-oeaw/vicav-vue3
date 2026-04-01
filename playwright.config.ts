@@ -43,7 +43,7 @@ export default defineConfig({
 	retries: isCI ? 2 : 0,
 	workers: isCI ? 1 : undefined,
 	reporter: "html",
-	testMatch: `${backend}/*.test.ts`,
+	testMatch: `${backend}/**/*.@(test|spec).ts`,
 	use: {
 		baseURL: baseUrl,
 		trace: "on-first-retry",
