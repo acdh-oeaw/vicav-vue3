@@ -4,7 +4,7 @@ import InfiniteLoading from "v3-infinite-loading";
 import type { StateHandler } from "v3-infinite-loading/lib/types";
 import type Zod from "zod";
 
-import type { Div } from "@/lib/api-client";
+import type { Div, MixedUtteranceContent } from "@/lib/api-client";
 import { useTeiHeadersStore } from "@/stores/use-tei-headers-store.ts";
 import type { CorpusQuerySchema } from "@/types/global.ts";
 
@@ -92,6 +92,24 @@ const wordOptions = computed(() => {
 });
 
 const words: Ref<Array<string>> = ref([]);
+
+function splitUtterancesAroundHit(utterances: MixedUtteranceContent, hitId?: string) {
+	const matchIndex = utterances.findIndex((utterance) => utterance.w?.["@id"] === hitId);
+
+	if (matchIndex === -1) {
+		return {
+			before: utterances,
+			match: undefined,
+			after: [],
+		};
+	}
+
+	return {
+		before: utterances.slice(0, matchIndex),
+		match: utterances[matchIndex],
+		after: utterances.slice(matchIndex + 1),
+	};
+}
 </script>
 
 <template>
@@ -203,15 +221,39 @@ const words: Ref<Array<string>> = ref([]);
 						</a>
 					</td>
 					<td>
-						<div v-if="hit.u" class="flex max-w-full flex-row px-6 py-3">
-							<CorpusTextJsonUtterance
-								v-for="(uContent, index) in hit.u['$$']"
-								:key="index"
-								:highlight="uContent.w?.['@id'] === hit.hits![0]"
-								:inline-annotation="inlineAnnotations as boolean"
-								:inline-translation="inlineTranslations as boolean"
-								:utterance="uContent"
-							></CorpusTextJsonUtterance>
+						<div
+							v-if="hit.u"
+							class="grid max-w-full grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-start gap-x-3 px-6 py-3"
+						>
+							<div class="flex flex-wrap justify-end">
+								<CorpusTextJsonUtterance
+									v-for="(uContent, index) in splitUtterancesAroundHit(hit.u['$$'], hit.hits?.[0])
+										.before"
+									:key="`before-${index}`"
+									:inline-annotation="inlineAnnotations as boolean"
+									:inline-translation="inlineTranslations as boolean"
+									:utterance="uContent"
+								></CorpusTextJsonUtterance>
+							</div>
+							<div class="min-w-fit">
+								<CorpusTextJsonUtterance
+									v-if="splitUtterancesAroundHit(hit.u['$$'], hit.hits?.[0]).match"
+									:highlight="true"
+									:inline-annotation="inlineAnnotations as boolean"
+									:inline-translation="inlineTranslations as boolean"
+									:utterance="splitUtterancesAroundHit(hit.u['$$'], hit.hits?.[0]).match!"
+								></CorpusTextJsonUtterance>
+							</div>
+							<div class="flex flex-wrap">
+								<CorpusTextJsonUtterance
+									v-for="(uContent, index) in splitUtterancesAroundHit(hit.u['$$'], hit.hits?.[0])
+										.after"
+									:key="`after-${index}`"
+									:inline-annotation="inlineAnnotations as boolean"
+									:inline-translation="inlineTranslations as boolean"
+									:utterance="uContent"
+								></CorpusTextJsonUtterance>
+							</div>
 						</div>
 						<div
 							v-if="inlineTranslations && hit.Translation_spanGrp"
