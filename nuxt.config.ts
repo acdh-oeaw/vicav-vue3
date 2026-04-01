@@ -119,6 +119,40 @@ export default defineNuxtConfig({
 			cssMinify: "lightningcss",
 		},
 		plugins: [tailwindcss()],
+		optimizeDeps: {
+			include: [
+				"pinia",
+				"@tanstack/vue-query",
+				"nanoid",
+				"zod",
+				"@acdh-oeaw/lib",
+				"colorjs.io/fn",
+				"lucide-vue-next",
+				"radix-vue",
+				"cva",
+				"winbox",
+				"liqe", // CJS
+				"v3-infinite-loading",
+				"@tanstack/vue-table",
+				"lightgallery",
+				"colorjs.io",
+				"@iconify/vue",
+				"@citation-js/plugin-csl",
+				"@citation-js/core",
+				"@maplibre/maplibre-gl-leaflet", // CJS
+				"leaflet", // CJS
+				"maplibre-gl", // CJS
+				"tailwind-merge",
+				"reka-ui",
+				"@jpinsonneau/html-to-image",
+				"@codemirror/language",
+				"@codemirror/view",
+				"vue-codemirror6",
+				"class-variance-authority",
+				"@lezer/highlight",
+				"vee-validate",
+			],
+		},
 	},
 
 	typescript: {
@@ -136,4 +170,6 @@ export default defineNuxtConfig({
 			include: ["../*.config.ts", "../e2e/**/*.ts", "../lib/**/*.ts"],
 		},
 	},
+
+	compatibilityDate: "2026-01-01",
 });
