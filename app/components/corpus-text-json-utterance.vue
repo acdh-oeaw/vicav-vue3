@@ -6,17 +6,23 @@ import type { Gap, Pc, Seg, W } from "@/lib/api-client";
 const windowsStore = useWindowsStore();
 const { addWindow } = windowsStore;
 
-const props = defineProps<{
-	utterance: {
-		w?: W;
-		pc?: Pc;
-		gap?: Gap;
-		seg?: Seg;
-	};
-	inlineAnnotation: boolean;
-	inlineTranslation: boolean;
-	highlight?: boolean;
-}>();
+const props = withDefaults(
+	defineProps<{
+		utterance: {
+			w?: W;
+			pc?: Pc;
+			gap?: Gap;
+			seg?: Seg;
+		};
+		inlineAnnotation: boolean;
+		inlineTranslation: boolean;
+		highlight?: boolean;
+		hits?: string;
+	}>(),
+	{
+		highlight: false,
+	},
+);
 
 function renderUtterance(u: typeof props.utterance) {
 	if (!u.w) return "";
@@ -50,7 +56,11 @@ function openDictWindow(u: typeof props.utterance) {
 </script>
 
 <template>
-	<div v-if="props.utterance.w" class="u flex flex-col">
+	<div
+		v-if="props.utterance.w"
+		:id="props.highlight ? props.utterance.w['@id'] : undefined"
+		class="u flex flex-col"
+	>
 		<TooltipProvider v-if="!inlineAnnotation" :delay-duration="0">
 			<Tooltip>
 				<TooltipTrigger @click="openDictWindow(props.utterance)">
@@ -85,11 +95,7 @@ function openDictWindow(u: typeof props.utterance) {
 			{{ props.utterance.w["@msd"] }}&nbsp;
 		</div>
 	</div>
-	<div
-		v-if="props.utterance.pc"
-		class="u flex flex-col text-lg"
-		:class="{ 'text-primary': props.highlight }"
-	>
+	<div v-if="props.utterance.pc" class="u flex flex-col text-lg">
 		<div>{{ props.utterance.pc["$"] }}{{ "&nbsp;" }}</div>
 	</div>
 	<div v-if="props.utterance.gap" class="u flex flex-col py-3 text-lg">
@@ -105,7 +111,8 @@ function openDictWindow(u: typeof props.utterance) {
 		<CorpusTextJsonUtterance
 			v-for="(uContent, index) in props.utterance.seg['$$']"
 			:key="index"
-			:highlight="props.highlight"
+			:highlight="uContent.w?.['@id'] === props.hits"
+			:hits="props.hits"
 			:inline-annotation="props.inlineAnnotation as boolean"
 			:inline-translation="props.inlineTranslation as boolean"
 			:utterance="uContent"

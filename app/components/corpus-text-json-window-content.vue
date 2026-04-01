@@ -20,6 +20,7 @@ const teiHeader = simpleItems.find((header) => header.id === props.params.textId
 const currentPage = ref(1);
 const infinite = ref<typeof InfiniteLoading | null>(null);
 const scrollComplete = ref<boolean>(false);
+const utterancesWrapper = ref<HTMLElement | null>(null);
 
 const annotationBlocks = ref<Array<Div>>([]);
 const displayAnnotationBlocks = ref<Array<Div>>([]);
@@ -40,8 +41,6 @@ const enabledOptions = computed<Array<string>>({
 		denseTeiHeader.value = values.includes("dense-tei-header");
 	},
 });
-
-console.log(props.params.hits);
 
 const api = useApiClient();
 const loadNextPage = async function () {
@@ -91,8 +90,15 @@ const handleInfiniteScroll = async function ($state: StateHandler) {
 	}
 };
 
-onMounted(() => {
-	loadNextPage();
+onMounted(async () => {
+	await loadNextPage();
+	await nextTick();
+
+	if (props.params.hits) {
+		utterancesWrapper.value
+			?.querySelector<HTMLElement>(`#${CSS.escape(props.params.hits)}`)
+			?.scrollIntoView({ block: "center" });
+	}
 });
 </script>
 
@@ -183,7 +189,6 @@ onMounted(() => {
 								>
 									<CorpusTextJsonUtterance
 										v-for="(uContent, index) in u['$$']"
-										:id="uContent.w?.['@id']"
 										:key="index"
 										:highlight="uContent.w?.['@id'] === props.params.hits"
 										:inline-annotation="inlineAnnotations as boolean"
