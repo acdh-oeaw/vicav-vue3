@@ -1,11 +1,11 @@
 <script lang="ts" setup>
-import type { RouteLocationNormalized } from "vue-router";
+import type { RouteLocationNormalizedLoadedGeneric } from "vue-router";
 
 const router = useRouter();
 
 const message = ref("");
 
-function onChangeMessaqe(to: RouteLocationNormalized) {
+function onChangeMessaqe(to: RouteLocationNormalizedLoadedGeneric) {
 	if (typeof to.meta.title === "string") {
 		message.value = to.meta.title;
 	} else {
