@@ -43,7 +43,7 @@ const WindowState = z.intersection(
 export type WindowState = z.infer<typeof WindowState>;
 
 export const useWindowsStore = defineStore("windows", () => {
-	const registry = ref<WindowRegistry>(new Map());
+	const registry = ref(new Map<WindowItem["id"], WindowItem>());
 	const arrangement = ref<WindowArrangement>("smart-tile");
 
 	const router = useRouter();
