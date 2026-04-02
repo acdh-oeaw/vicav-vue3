@@ -221,38 +221,39 @@ function splitUtterancesAroundHit(utterances: MixedUtteranceContent, hitId?: str
 						</a>
 					</td>
 					<td>
-						<div
-							v-if="hit.u"
-							class="grid max-w-full grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-start gap-x-3 px-6 py-3"
-						>
-							<div class="flex flex-wrap justify-end">
-								<CorpusTextJsonUtterance
-									v-for="(uContent, index) in splitUtterancesAroundHit(hit.u['$$'], hit.hits?.[0])
-										.before"
-									:key="`before-${index}`"
-									:inline-annotation="inlineAnnotations as boolean"
-									:inline-translation="inlineTranslations as boolean"
-									:utterance="uContent"
-								></CorpusTextJsonUtterance>
-							</div>
-							<div class="min-w-fit">
-								<CorpusTextJsonUtterance
-									v-if="splitUtterancesAroundHit(hit.u['$$'], hit.hits?.[0]).match"
-									:highlight="true"
-									:inline-annotation="inlineAnnotations as boolean"
-									:inline-translation="inlineTranslations as boolean"
-									:utterance="splitUtterancesAroundHit(hit.u['$$'], hit.hits?.[0]).match!"
-								></CorpusTextJsonUtterance>
-							</div>
-							<div class="flex flex-wrap">
-								<CorpusTextJsonUtterance
-									v-for="(uContent, index) in splitUtterancesAroundHit(hit.u['$$'], hit.hits?.[0])
-										.after"
-									:key="`after-${index}`"
-									:inline-annotation="inlineAnnotations as boolean"
-									:inline-translation="inlineTranslations as boolean"
-									:utterance="uContent"
-								></CorpusTextJsonUtterance>
+						<div v-if="hit.u" class="overflow-x-auto px-6 py-3">
+							<div
+								class="inline-grid min-w-full grid-cols-[minmax(max-content,1fr)_auto_minmax(max-content,1fr)] items-start gap-x-3"
+							>
+								<div class="flex flex-nowrap justify-end justify-self-end">
+									<CorpusTextJsonUtterance
+										v-for="(uContent, index) in splitUtterancesAroundHit(hit.u['$$'], hit.hits?.[0])
+											.before"
+										:key="`before-${index}`"
+										:inline-annotation="inlineAnnotations as boolean"
+										:inline-translation="inlineTranslations as boolean"
+										:utterance="uContent"
+									></CorpusTextJsonUtterance>
+								</div>
+								<div class="min-w-fit justify-self-center">
+									<CorpusTextJsonUtterance
+										v-if="splitUtterancesAroundHit(hit.u['$$'], hit.hits?.[0]).match"
+										:highlight="true"
+										:inline-annotation="inlineAnnotations as boolean"
+										:inline-translation="inlineTranslations as boolean"
+										:utterance="splitUtterancesAroundHit(hit.u['$$'], hit.hits?.[0]).match!"
+									></CorpusTextJsonUtterance>
+								</div>
+								<div class="flex flex-nowrap justify-self-start">
+									<CorpusTextJsonUtterance
+										v-for="(uContent, index) in splitUtterancesAroundHit(hit.u['$$'], hit.hits?.[0])
+											.after"
+										:key="`after-${index}`"
+										:inline-annotation="inlineAnnotations as boolean"
+										:inline-translation="inlineTranslations as boolean"
+										:utterance="uContent"
+									></CorpusTextJsonUtterance>
+								</div>
 							</div>
 						</div>
 						<div
