@@ -203,8 +203,8 @@ importers:
         specifier: 3.5.13
         version: 3.5.13(typescript@5.9.3)
       vue-codemirror6:
-        specifier: ^1.5.0
-        version: 1.5.0(@codemirror/autocomplete@6.20.1)(@codemirror/commands@6.10.3)(@codemirror/language@6.12.3)(@codemirror/lint@6.9.5)(@codemirror/search@6.6.0)(@codemirror/state@6.6.0)(@codemirror/view@6.40.0)(codemirror@6.0.2)(style-mod@4.1.3)(vue@3.5.13(typescript@5.9.3))
+        specifier: 1.4.3
+        version: 1.4.3(@codemirror/autocomplete@6.20.1)(@codemirror/commands@6.10.3)(@codemirror/language@6.12.3)(@codemirror/lint@6.9.5)(@codemirror/search@6.6.0)(@codemirror/state@6.6.0)(@codemirror/view@6.40.0)(codemirror@6.0.2)(style-mod@4.1.3)(vue@3.5.13(typescript@5.9.3))
       vue-material-design-icons:
         specifier: ^5.3.1
         version: 5.3.1
@@ -7368,8 +7368,8 @@ packages:
   vue-bundle-renderer@2.2.0:
     resolution: {integrity: sha512-sz/0WEdYH1KfaOm0XaBmRZOWgYTEvUDt6yPYaUzl4E52qzgWLlknaPPTTZmp6benaPTlQAI/hN1x3tAzZygycg==}
 
-  vue-codemirror6@1.5.0:
-    resolution: {integrity: sha512-lJ68v6iEwdOVxSSaD8R7ZGBf/oofPfDQVqizu5fJWxI7v07qhAS6RHLOq20vPCHnsXG11dfsNvv7QWPCnn+NWg==}
+  vue-codemirror6@1.4.3:
+    resolution: {integrity: sha512-TLabAapy4vethIEWwPMNtv62/zHjpvTv0kJlGy5RtFavKNlm4NJdT3fPFT2DtVVbQ1ZvHWpHrHM7FCjG2QNGDA==}
     engines: {node: ^20.19.0 || >=22.12.0, pnpm: '>=10.3.0'}
     peerDependencies:
       '@codemirror/autocomplete': ^6.0.0
@@ -15602,7 +15602,7 @@ snapshots:
     dependencies:
       ufo: 1.6.3
 
-  vue-codemirror6@1.5.0(@codemirror/autocomplete@6.20.1)(@codemirror/commands@6.10.3)(@codemirror/language@6.12.3)(@codemirror/lint@6.9.5)(@codemirror/search@6.6.0)(@codemirror/state@6.6.0)(@codemirror/view@6.40.0)(codemirror@6.0.2)(style-mod@4.1.3)(vue@3.5.13(typescript@5.9.3)):
+  vue-codemirror6@1.4.3(@codemirror/autocomplete@6.20.1)(@codemirror/commands@6.10.3)(@codemirror/language@6.12.3)(@codemirror/lint@6.9.5)(@codemirror/search@6.6.0)(@codemirror/state@6.6.0)(@codemirror/view@6.40.0)(codemirror@6.0.2)(style-mod@4.1.3)(vue@3.5.13(typescript@5.9.3)):
     dependencies:
       '@codemirror/autocomplete': 6.20.1
       '@codemirror/commands': 6.10.3
