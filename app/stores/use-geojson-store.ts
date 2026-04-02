@@ -11,13 +11,13 @@ export interface TaxonomyTreeEntry {
 }
 export type TaxonomyTree = Map<string, TaxonomyTreeEntry>;
 export const useGeojsonStore = defineStore("geojson", () => {
-	const fetchedData = ref<Map<string, FeatureCollectionType>>(new Map());
-	const tables = shallowRef<Map<string, Table<FeatureType>>>(new Map());
+	const fetchedData = ref(new Map<string, FeatureCollectionType>());
+	const tables = shallowRef(new Map<string, Table<FeatureType>>());
 
-	const showAllDetails = ref<boolean>(false);
-	const featureValueTaxonomy = shallowRef<
-		Map<string, { label: string | undefined; taxonomy: string } | undefined>
-	>(new Map());
+	const showAllDetails = ref(false);
+	const featureValueTaxonomy = shallowRef(
+		new Map<string, { label: string | undefined; taxonomy: string } | undefined>(),
+	);
 	function buildFeatureTaxonomy(
 		features: Record<string, { values: Record<string, string>; taxonomy: Record<string, string> }>,
 	) {
