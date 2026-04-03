@@ -1,12 +1,17 @@
 <script setup lang="ts">
 import "v3-infinite-loading/lib/style.css";
 
-import { AlignVerticalSpaceBetween, ChevronsLeftRightEllipsis, Languages } from "lucide-vue-next";
+import {
+	AlignVerticalSpaceBetween,
+	ChevronsLeftRightEllipsis,
+	Copy,
+	Languages,
+} from "lucide-vue-next";
 import InfiniteLoading from "v3-infinite-loading";
 import type { StateHandler } from "v3-infinite-loading/lib/types";
 import type { z } from "zod";
 
-import type { Div } from "@/lib/api-client";
+import type { Div, U } from "@/lib/api-client";
 import { useTeiHeadersStore } from "@/stores/use-tei-headers-store.ts";
 import type { CorpusTextSchema } from "@/types/global.ts";
 
@@ -14,6 +19,7 @@ const props = defineProps<{
 	params: z.infer<typeof CorpusTextSchema>["params"] & { label?: string };
 }>();
 
+const toastStore = useToastsStore();
 const { simpleItems } = useTeiHeadersStore();
 const teiHeader = simpleItems.find((header) => header.id === props.params.textId);
 
@@ -43,6 +49,65 @@ const enabledOptions = computed<Array<string>>({
 });
 
 const api = useApiClient();
+
+function getUtterances(div: Div): Array<U> {
+	return [div.u, ...(div.us ?? [])].filter((u) => u !== undefined);
+}
+
+function renderUtteranceTokenText(token: U["$$"][number]): string {
+	if (token.w) {
+		let renderedText = token.w["$"];
+		renderedText +=
+			token.w["@join"] === "right" && token.w["@rendition"] === "rend:dashAfter" ? "-" : "";
+		renderedText += token.w["@rendition"] === "rend:ellipsisAfter" ? "..." : "";
+		renderedText +=
+			token.w["@join"] === "right" && token.w["@rendition"] === "rend:withBowBelow" ? "_" : "";
+		renderedText += token.w["@join"] === "right" ? "" : " ";
+		return renderedText;
+	}
+
+	if (token.pc) {
+		return `${token.pc["$"]} `;
+	}
+
+	if (token.gap) {
+		return token.gap["@rendition"] === "rend:ellipsisInSquareBrackets" ? "[...] " : "";
+	}
+
+	if (token.seg) {
+		return token.seg["$$"].map(renderUtteranceTokenText).join("");
+	}
+
+	return "";
+}
+
+function getRowText(div: Div): string {
+	return getUtterances(div)
+		.map((utterance) =>
+			utterance["$$"].map(renderUtteranceTokenText).join("").replace(/\s+/g, " ").trim(),
+		)
+		.filter(Boolean)
+		.join("\n");
+}
+
+async function copyRowText(div: Div) {
+	try {
+		await navigator.clipboard.writeText(getRowText(div));
+		toastStore.addToast({
+			title: "Copied",
+			description: "Transcription copied to clipboard.",
+			type: "foreground",
+		});
+	} catch (error) {
+		toastStore.addToast({
+			title: "Copy failed",
+			description: error instanceof Error ? error.message : "Could not copy transcription.",
+			type: "foreground",
+			variant: "negative",
+		});
+	}
+}
+
 const loadNextPage = async function () {
 	const text = await api.vicav.getCorpusText(
 		{
@@ -151,8 +216,9 @@ onMounted(async () => {
 			<table class="text-sm text-gray-700">
 				<thead class="bg-primary text-xs text-gray-700 uppercase">
 					<tr>
-						<th class="w-2.5 px-6 py-3" scope="col">Audio</th>
-						<th class="w-30 px-6 py-3" scope="col">SpeakerID</th>
+						<th class="w-[10px] px-6 py-3" scope="col">Audio</th>
+						<th class="w-[10px] px-2 py-3" scope="col"></th>
+						<th class="w-[120px] px-6 py-3" scope="col">SpeakerID</th>
 						<th class="px-6 py-3" scope="col">Utterance</th>
 					</tr>
 				</thead>
@@ -167,11 +233,24 @@ onMounted(async () => {
 						<td>
 							<!-- audio player goes here -->
 						</td>
+						<td class="px-2 align-middle">
+							<TooltipProvider>
+								<Tooltip>
+									<TooltipTrigger as-child>
+										<Button size="icon" variant="ghost" @click="copyRowText(a)">
+											<span class="sr-only">copy transcription</span>
+											<Copy class="size-4" />
+										</Button>
+									</TooltipTrigger>
+									<TooltipContent class="border-black bg-black text-white">
+										copy transcription
+									</TooltipContent>
+								</Tooltip>
+							</TooltipProvider>
+						</td>
 						<td class="min-w-fit px-3 font-bold">
 							<div
-								v-for="(u, uIndex) in [a.u ?? a.u, a.us ?? a.us]
-									.flat()
-									.filter((u) => u !== undefined)"
+								v-for="(u, uIndex) in getUtterances(a)"
 								:key="uIndex"
 								class="flex justify-center"
 							>
@@ -181,9 +260,7 @@ onMounted(async () => {
 						<td>
 							<div class="flex flex-row">
 								<div
-									v-for="(u, uIndex) in [a.u ?? a.u, a.us ?? a.us]
-										.flat()
-										.filter((u) => u !== undefined)"
+									v-for="(u, uIndex) in getUtterances(a)"
 									:key="uIndex"
 									class="flex max-w-full flex-row flex-wrap px-6 py-3"
 								>
