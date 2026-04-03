@@ -13,7 +13,7 @@ import type { z } from "zod";
 
 import type { Div, U } from "@/lib/api-client";
 import { useTeiHeadersStore } from "@/stores/use-tei-headers-store.ts";
-import type { CorpusTextSchema, VicavHTTPError } from "@/types/global.ts";
+import type { CorpusTextSchema } from "@/types/global.ts";
 
 const props = defineProps<{
 	params: z.infer<typeof CorpusTextSchema>["params"] & { label?: string };
@@ -26,8 +26,10 @@ const teiHeader = simpleItems.find((header) => header.id === props.params.textId
 const currentPage = ref(1);
 const infinite = ref<typeof InfiniteLoading | null>(null);
 const scrollComplete = ref<boolean>(false);
+const utterancesWrapper = ref<HTMLElement | null>(null);
 
 const annotationBlocks = ref<Array<Div>>([]);
+const displayAnnotationBlocks = ref<Array<Div>>([]);
 const inlineAnnotations = ref<false | true | "indeterminate">(true);
 const inlineTranslations = ref<false | true | "indeterminate">(true);
 const denseTeiHeader = ref<false | true | "indeterminate">(true);
@@ -110,9 +112,9 @@ const loadNextPage = async function () {
 	const text = await api.vicav.getCorpusText(
 		{
 			id: props.params.textId,
-			hits: props.params.hits,
-			page: currentPage.value,
-			size: 10,
+			hits: props.params.hits, //currently has no effect
+			page: 1,
+			size: 1000,
 			render: "json",
 		},
 		{ headers: { Accept: "application/json" } },
@@ -139,24 +141,30 @@ const loadNextPage = async function () {
 };
 
 const handleInfiniteScroll = async function ($state: StateHandler) {
-	try {
-		const text = await loadNextPage();
+	currentPage.value += 1;
+	const nextHits = annotationBlocks.value.slice(
+		currentPage.value * 10,
+		(currentPage.value + 1) * 10,
+	);
+	if (nextHits.length > 0) {
+		displayAnnotationBlocks.value = displayAnnotationBlocks.value.concat(nextHits);
 		$state.loaded();
-		if ("doc" in text.data && text.data.doc !== undefined && text.data.doc.divs.length < 10) {
-			scrollComplete.value = true;
-			$state.complete();
-		}
-	} catch (e) {
-		const err = e as VicavHTTPError;
-		if (err.status === 404 && err.error?.detail?.indexOf("does not have page") !== -1) {
-			scrollComplete.value = true;
-			$state.complete();
-			return;
-		}
-
-		$state.error();
+	} else {
+		scrollComplete.value = true;
+		$state.complete();
 	}
 };
+
+onMounted(async () => {
+	await loadNextPage();
+	await nextTick();
+
+	if (props.params.hits) {
+		utterancesWrapper.value
+			?.querySelector<HTMLElement>(`#${CSS.escape(props.params.hits)}`)
+			?.scrollIntoView({ block: "center" });
+	}
+});
 </script>
 
 <template>
@@ -259,6 +267,7 @@ const handleInfiniteScroll = async function ($state: StateHandler) {
 									<CorpusTextJsonUtterance
 										v-for="(uContent, index) in u['$$']"
 										:key="index"
+										:highlight="uContent.w?.['@id'] === props.params.hits"
 										:inline-annotation="inlineAnnotations as boolean"
 										:inline-translation="inlineTranslations as boolean"
 										:utterance="uContent"
