@@ -12,6 +12,7 @@ import {
 	type WindowItemTargetType,
 } from "@/types/global.ts";
 import * as arrange from "@/utils/window-arrangement";
+import { enableWindowBodyKeyboardFocus } from "@/utils/window-body-focus.ts";
 
 import { useToastsStore } from "./use-toasts-store.ts";
 
@@ -172,6 +173,7 @@ export const useWindowsStore = defineStore("windows", () => {
 			},
 			root: rootElement,
 		});
+		enableWindowBodyKeyboardFocus(winbox.body);
 
 		const teiSourceParse = TeiSource.safeParse(params);
 		if (teiSourceParse.success) {
