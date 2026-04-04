@@ -3,11 +3,13 @@ import { expect, test } from "@playwright/test";
 test.describe("home page", () => {
 	test("should have document title", async ({ page }) => {
 		await page.goto("/");
+		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
 		await expect(page).toHaveTitle("Home | VICAV3.0 - Vienna Corpus of Arabic Varieties");
 	});
 
 	test("should show initial windows", async ({ page }) => {
 		await page.goto("/");
+		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
 		await expect(
 			page
 				.locator("div")
@@ -30,6 +32,7 @@ test.describe("home page", () => {
 
 	test("should open window menu with appropriate entries", async ({ page }) => {
 		await page.goto("/");
+		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
 		await expect(page.getByRole("menuitem", { name: "Windows" })).toBeVisible();
 		await page.getByRole("menuitem", { name: "Windows" }).click();
 		await expect(page.getByRole("menuitem", { name: "Mission" })).toBeVisible();
@@ -39,11 +42,13 @@ test.describe("home page", () => {
 
 	test("should show footer bar with imprint link", async ({ page }) => {
 		await page.goto("/");
+		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
 		await expect(page.getByRole("link", { name: "Imprint" })).toBeVisible();
 	});
 
 	test("should open extended footer", async ({ page }) => {
 		await page.goto("/");
+		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
 		await page
 			.getByRole("contentinfo")
 			.locator("div")

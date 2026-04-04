@@ -5,6 +5,7 @@ import { expect, test } from "@playwright/test";
 test.describe("Desktop Menu Rendering", () => {
 	test("should render desktop menu items from API on desktop viewport", async ({ page }) => {
 		await page.goto("/");
+		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
 
 		// Verify page loads without errors
 		await expect(page).toHaveTitle(/VICAV/);
@@ -30,6 +31,7 @@ test.describe("Desktop Menu Rendering", () => {
 		// Set viewport to mobile size
 		await page.setViewportSize({ width: 375, height: 667 });
 		await page.goto("/");
+		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
 
 		// Verify desktop menu is NOT visible on mobile viewport (<1024px)
 		// AI did not get this correct, there are two items with role menubar arias (2nd is the layout switch)
@@ -41,6 +43,7 @@ test.describe("Desktop Menu Rendering", () => {
 		// Set viewport to mobile size
 		await page.setViewportSize({ width: 375, height: 667 });
 		await page.goto("/");
+		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
 
 		// Verify mobile menu toggle button is visible
 		await expect(page.getByRole("button", { name: /Toggle menu/i })).toBeVisible();

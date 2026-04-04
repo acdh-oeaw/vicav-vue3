@@ -5,6 +5,7 @@ import { expect, test } from "@playwright/test";
 test.describe("Desktop Menu - All Categories Visible", () => {
 	test("should display all 9 desktop menu categories", async ({ page }) => {
 		await page.goto("/");
+		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
 
 		// Verify all 9 menu categories are visible in the navigation bar
 		const menuCategories = [
