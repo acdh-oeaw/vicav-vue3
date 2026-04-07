@@ -43,8 +43,9 @@ async function searchCorpus() {
 			console.error(result.error);
 			return;
 		}
-		if (!Array.isArray(result.data.hits) && Array.isArray(result.data.hits?.divs)) {
-			hits.value = result.data.hits.divs;
+		if (result.data.hits !== undefined && !Array.isArray(result.data.hits)) {
+			if (Array.isArray(result.data.hits.divs)) hits.value = result.data.hits.divs;
+			else if (result.data.hits.div) hits.value.push(result.data.hits.div);
 			hits.value?.forEach((hit) => {
 				const teiHeader = simpleItems.find((header) => header.id === hit["@docRef"]);
 				hit.label = teiHeader?.label;
