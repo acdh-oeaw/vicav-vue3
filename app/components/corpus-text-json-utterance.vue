@@ -6,16 +6,23 @@ import type { Gap, Pc, Seg, W } from "@/lib/api-client";
 const windowsStore = useWindowsStore();
 const { addWindow } = windowsStore;
 
-const props = defineProps<{
-	utterance: {
-		w?: W;
-		pc?: Pc;
-		gap?: Gap;
-		seg?: Seg;
-	};
-	inlineAnnotation: boolean;
-	inlineTranslation: boolean;
-}>();
+const props = withDefaults(
+	defineProps<{
+		utterance: {
+			w?: W;
+			pc?: Pc;
+			gap?: Gap;
+			seg?: Seg;
+		};
+		inlineAnnotation: boolean;
+		inlineTranslation: boolean;
+		highlight?: boolean;
+		hits?: string;
+	}>(),
+	{
+		highlight: false,
+	},
+);
 
 function renderUtterance(u: typeof props.utterance) {
 	if (!u.w) return "";
@@ -49,11 +56,15 @@ function openDictWindow(u: typeof props.utterance) {
 </script>
 
 <template>
-	<div v-if="props.utterance.w" class="u flex flex-col">
+	<div
+		v-if="props.utterance.w"
+		:id="props.highlight ? props.utterance.w['@id'] : undefined"
+		class="u flex flex-col"
+	>
 		<TooltipProvider v-if="!inlineAnnotation" :delay-duration="0">
 			<Tooltip>
 				<TooltipTrigger @click="openDictWindow(props.utterance)">
-					<div class="flex justify-center text-lg">
+					<div class="flex justify-center text-lg" :class="{ 'text-primary': props.highlight }">
 						{{ renderUtterance(props.utterance) }}
 					</div>
 				</TooltipTrigger>
@@ -67,6 +78,7 @@ function openDictWindow(u: typeof props.utterance) {
 		<div
 			v-if="inlineAnnotation"
 			class="flex flex-col items-center text-lg"
+			:class="{ 'text-primary': props.highlight }"
 			@click="openDictWindow(props.utterance)"
 		>
 			{{ renderUtterance(props.utterance) }}
@@ -76,7 +88,6 @@ function openDictWindow(u: typeof props.utterance) {
 			/>
 		</div>
 		<!-- eslint-enable -->
-		<div class="flex justify-center text-xs text-gray-500"></div>
 		<div v-if="inlineAnnotation" class="flex justify-center text-xs text-gray-500">
 			{{ props.utterance.w.pos }}&nbsp;
 		</div>
@@ -100,6 +111,8 @@ function openDictWindow(u: typeof props.utterance) {
 		<CorpusTextJsonUtterance
 			v-for="(uContent, index) in props.utterance.seg['$$']"
 			:key="index"
+			:highlight="uContent.w?.['@id'] === props.hits"
+			:hits="props.hits"
 			:inline-annotation="props.inlineAnnotation as boolean"
 			:inline-translation="props.inlineTranslation as boolean"
 			:utterance="uContent"
