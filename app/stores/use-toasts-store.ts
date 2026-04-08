@@ -10,7 +10,7 @@ interface Toast {
 }
 
 export const useToastsStore = defineStore("toasts", () => {
-	const toasts = ref<Map<Toast["id"], Toast>>(new Map());
+	const toasts = ref(new Map<Toast["id"], Toast>());
 
 	function addToast(toast: Omit<Toast, "id"> & Partial<Pick<Toast, "id">>) {
 		const id = toast.id ?? nanoid();

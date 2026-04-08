@@ -1,2 +1,5 @@
 # downloaded OpenAPI snapshot
 app/assets/openapi.json
+lib/api-client/index.ts
+# opencode AI specific content
+.opencode/**
