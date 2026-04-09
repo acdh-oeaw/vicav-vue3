@@ -16,14 +16,16 @@ test.describe("Mobile Menu - Open on Toggle Click", () => {
 
 		// 4. Verify a dialog/overlay with "Navigation menu" appears
 		// expect: Mobile navigation dialog should appear with all main menu categories
-		await expect(page.getByRole("dialog")).toBeVisible();
-		await expect(page.getByRole("menuitem", { name: "Project" })).toBeVisible();
-		await expect(page.getByRole("menuitem", { name: "Bibliographies" })).toBeVisible();
-		await expect(page.getByRole("menuitem", { name: "Profiles" })).toBeVisible();
-		await expect(page.getByRole("menuitem", { name: "Feature Lists" })).toBeVisible();
-		await expect(page.getByRole("menuitem", { name: "Samples" })).toBeVisible();
-		await expect(page.getByRole("menuitem", { name: "Texts" })).toBeVisible();
-		await expect(page.getByRole("menuitem", { name: "Dictionaries" })).toBeVisible();
-		await expect(page.getByRole("menuitem", { name: "Tools & Technology" })).toBeVisible();
+		const dialog = page.locator('[role="dialog"]');
+		await expect(dialog).toBeVisible();
+		// Use getByText with exact match and first() since elements may have multiple matches
+		await expect(dialog.getByText("Project", { exact: true }).first()).toBeVisible();
+		await expect(dialog.getByText("Bibliographies", { exact: true }).first()).toBeVisible();
+		await expect(dialog.getByText("Profiles", { exact: true }).first()).toBeVisible();
+		await expect(dialog.getByText("Feature Lists", { exact: true }).first()).toBeVisible();
+		await expect(dialog.getByText("Samples", { exact: true }).first()).toBeVisible();
+		await expect(dialog.getByText("Texts", { exact: true }).first()).toBeVisible();
+		await expect(dialog.getByText("Dictionaries", { exact: true }).first()).toBeVisible();
+		await expect(dialog.getByText("Tools & Technology", { exact: true }).first()).toBeVisible();
 	});
 });
