@@ -51,6 +51,7 @@ const styles = cva({
 			<slot />
 
 			<DialogClose
+				aria-label="Close"
 				class="absolute top-4 right-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-hidden disabled:pointer-events-none data-[state=open]:bg-secondary"
 			>
 				<XIcon class="size-4" />
