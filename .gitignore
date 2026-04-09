@@ -41,3 +41,7 @@ dist
 
 # heroku buildpack specific directory
 /.heroku/**
+
+# opencode
+
+.opencode/*.*
