@@ -6,10 +6,8 @@ This test plan covers the comprehensive testing of the VICAV Vue 3 application's
 system. The menu items are dynamically fetched from an API and cannot be hardcoded in tests. All
 menu interactions, responsive behavior, and edge cases are documented below.
 
-**Application Under Test:** VICAV3.0 - Vienna Corpus of Arabic Varieties  
-**Base URL:** http://localhost:3000  
-**Test Framework:** Playwright  
-**Last Updated:** 2026-04-01
+**Application Under Test:** VICAV3.0 - Vienna Corpus of Arabic Varieties **Base URL:**
+http://localhost:3000 **Test Framework:** Playwright **Last Updated:** 2026-04-01
 
 ---
 
@@ -54,11 +52,11 @@ Each category expands to reveal its sub-items in a collapsible list format.
 
 ### 2.1 Desktop Menu Rendering Tests
 
-**Seed:** `e2e/seed.spec.ts`
+**Seed:** `e2e/seed.test.ts`
 
 #### 2.1.1 Desktop menu renders menu items from API
 
-**File:** `e2e/pages/vicav/menu/desktop-menu-rendering.spec.ts`
+**File:** `e2e/pages/vicav/menu/desktop-menu-rendering.test.ts`
 
 **Steps:**
 
@@ -74,7 +72,7 @@ Each category expands to reveal its sub-items in a collapsible list format.
 
 #### 2.1.2 All Desktop Menu Categories are Visible
 
-**File:** `e2e/pages/vicav/menu/desktop-all-categories.spec.ts`
+**File:** `e2e/pages/vicav/menu/desktop-all-categories.test.ts`
 
 **Steps:**
 
@@ -95,11 +93,11 @@ Each category expands to reveal its sub-items in a collapsible list format.
 
 ### 2.2 Desktop Menu Interaction Tests
 
-**Seed:** `e2e/seed.spec.ts`
+**Seed:** `e2e/seed.test.ts`
 
 #### 2.2.1 Project Menu Dropdown Opens and Displays All Items
 
-**File:** `e2e/pages/vicav/menu/project-dropdown.spec.ts`
+**File:** `e2e/pages/vicav/menu/project-dropdown.test.ts`
 
 **Steps:**
 
@@ -117,7 +115,7 @@ Each category expands to reveal its sub-items in a collapsible list format.
 
 #### 2.2.2 Bibliographies Menu Dropdown Opens and Displays All Items
 
-**File:** `e2e/pages/vicav/menu/bibliographies-dropdown.spec.ts`
+**File:** `e2e/pages/vicav/menu/bibliographies-dropdown.test.ts`
 
 **Steps:**
 
@@ -137,7 +135,7 @@ Each category expands to reveal its sub-items in a collapsible list format.
 
 #### 2.2.3 Profiles Menu Dropdown
 
-**File:** `e2e/pages/vicav/menu/profiles-dropdown.spec.ts`
+**File:** `e2e/pages/vicav/menu/profiles-dropdown.test.ts`
 
 **Steps:**
 
@@ -150,7 +148,7 @@ Each category expands to reveal its sub-items in a collapsible list format.
 
 #### 2.2.4 Feature Lists Menu Dropdown
 
-**File:** `e2e/pages/vicav/menu/feature-lists-dropdown.spec.ts`
+**File:** `e2e/pages/vicav/menu/feature-lists-dropdown.test.ts`
 
 **Steps:**
 
@@ -164,7 +162,7 @@ Each category expands to reveal its sub-items in a collapsible list format.
 
 #### 2.2.5 Samples Menu Dropdown
 
-**File:** `e2e/pages/vicav/menu/samples-dropdown.spec.ts`
+**File:** `e2e/pages/vicav/menu/samples-dropdown.test.ts`
 
 **Steps:**
 
@@ -177,7 +175,7 @@ Each category expands to reveal its sub-items in a collapsible list format.
 
 #### 2.2.6 Texts Menu Dropdown
 
-**File:** `e2e/pages/vicav/menu/texts-dropdown.spec.ts`
+**File:** `e2e/pages/vicav/menu/texts-dropdown.test.ts`
 
 **Steps:**
 
@@ -188,7 +186,7 @@ Each category expands to reveal its sub-items in a collapsible list format.
 
 #### 2.2.7 Dictionaries Menu Dropdown
 
-**File:** `e2e/pages/vicav/menu/dictionaries-dropdown.spec.ts`
+**File:** `e2e/pages/vicav/menu/dictionaries-dropdown.test.ts`
 
 **Steps:**
 
@@ -208,7 +206,7 @@ Each category expands to reveal its sub-items in a collapsible list format.
 
 #### 2.2.8 Tools & Technology Menu Dropdown
 
-**File:** `e2e/pages/vicav/menu/tools-technology-dropdown.spec.ts`
+**File:** `e2e/pages/vicav/menu/tools-technology-dropdown.test.ts`
 
 **Steps:**
 
@@ -234,7 +232,7 @@ Each category expands to reveal its sub-items in a collapsible list format.
 
 #### 2.2.9 Windows Menu Dropdown
 
-**File:** `e2e/pages/vicav/menu/windows-dropdown.spec.ts`
+**File:** `e2e/pages/vicav/menu/windows-dropdown.test.ts`
 
 **Steps:**
 
@@ -254,7 +252,7 @@ Each category expands to reveal its sub-items in a collapsible list format.
 
 #### 2.2.10 Menu Closes When Clicking Outside
 
-**File:** `e2e/pages/vicav/menu/menu-close-outside.spec.ts`
+**File:** `e2e/pages/vicav/menu/menu-close-outside.test.ts`
 
 **Steps:**
 
@@ -265,7 +263,7 @@ Each category expands to reveal its sub-items in a collapsible list format.
 
 #### 2.2.11 Only One Menu Dropdown Open at a Time
 
-**File:** `e2e/pages/vicav/menu/single-menu-open.spec.ts`
+**File:** `e2e/pages/vicav/menu/single-menu-open.test.ts`
 
 **Steps:**
 
@@ -278,11 +276,11 @@ Each category expands to reveal its sub-items in a collapsible list format.
 
 ### 2.3 Mobile Menu Tests
 
-**Seed:** `e2e/seed.spec.ts`
+**Seed:** `e2e/seed.test.ts`
 
 #### 2.3.1 Mobile Menu Renders Menu Items from API
 
-**File:** `e2e/pages/vicav/menu/mobile-menu-rendering.spec.ts`
+**File:** `e2e/pages/vicav/menu/mobile-menu-rendering.test.ts`
 
 **Steps:**
 
@@ -297,7 +295,7 @@ Each category expands to reveal its sub-items in a collapsible list format.
 
 #### 2.3.2 Mobile Toggle Button is Visible Below 1024px
 
-**File:** `e2e/pages/vicav/menu/mobile-toggle-visible.spec.ts`
+**File:** `e2e/pages/vicav/menu/mobile-toggle-visible.test.ts`
 
 **Steps:**
 
@@ -308,7 +306,7 @@ Each category expands to reveal its sub-items in a collapsible list format.
 
 #### 2.3.3 Mobile Menu Opens on Toggle Click
 
-**File:** `e2e/pages/vicav/menu/mobile-menu-open.spec.ts`
+**File:** `e2e/pages/vicav/menu/mobile-menu-open.test.ts`
 
 **Steps:**
 
@@ -320,7 +318,7 @@ Each category expands to reveal its sub-items in a collapsible list format.
 
 #### 2.3.4 Mobile Menu Displays All Categories
 
-**File:** `e2e/pages/vicav/menu/mobile-categories.spec.ts`
+**File:** `e2e/pages/vicav/menu/mobile-categories.test.ts`
 
 **Steps:**
 
@@ -338,7 +336,7 @@ Each category expands to reveal its sub-items in a collapsible list format.
 
 #### 2.3.5 Mobile Menu Categories Expand on Click
 
-**File:** `e2e/pages/vicav/menu/mobile-category-expand.spec.ts`
+**File:** `e2e/pages/vicav/menu/mobile-category-expand.test.ts`
 
 **Steps:**
 
@@ -357,7 +355,7 @@ Each category expands to reveal its sub-items in a collapsible list format.
 
 #### 2.3.6 Mobile Menu Closes on Close Button
 
-**File:** `e2e/pages/vicav/menu/mobile-menu-close.spec.ts`
+**File:** `e2e/pages/vicav/menu/mobile-menu-close.test.ts`
 
 **Steps:**
 
@@ -368,7 +366,7 @@ Each category expands to reveal its sub-items in a collapsible list format.
 
 #### 2.3.7 Mobile Menu Closes When Clicking a Menu Item
 
-**File:** `e2e/pages/vicav/menu/mobile-selection-close.spec.ts`
+**File:** `e2e/pages/vicav/menu/mobile-selection-close.test.ts`
 
 **Steps:**
 
@@ -381,11 +379,11 @@ Each category expands to reveal its sub-items in a collapsible list format.
 
 ### 2.4 Responsive Behavior Tests
 
-**Seed:** `e2e/seed.spec.ts`
+**Seed:** `e2e/seed.test.ts`
 
 #### 2.4.1 Menu switches between desktop and mobile at 1024px breakpoint
 
-**File:** `e2e/pages/vicav/menu/responsive-breakpoint.spec.ts`
+**File:** `e2e/pages/vicav/menu/responsive-breakpoint.test.ts`
 
 **Steps:**
 
@@ -404,7 +402,7 @@ Each category expands to reveal its sub-items in a collapsible list format.
 
 #### 2.4.2 Window list dropdown visible on both desktop and mobile
 
-**File:** `e2e/pages/vicav/menu/responsive-window-list.spec.ts`
+**File:** `e2e/pages/vicav/menu/responsive-window-list.test.ts`
 
 **Steps:**
 
@@ -421,11 +419,11 @@ Each category expands to reveal its sub-items in a collapsible list format.
 
 ### 2.5 Keyboard Navigation Tests
 
-**Seed:** `e2e/seed.spec.ts`
+**Seed:** `e2e/seed.test.ts`
 
 #### 2.5.1 Tab Navigation Through Menu Items
 
-**File:** `e2e/pages/vicav/menu/keyboard-tab-navigation.spec.ts`
+**File:** `e2e/pages/vicav/menu/keyboard-tab-navigation.test.ts`
 
 **Steps:**
 
@@ -436,7 +434,7 @@ Each category expands to reveal its sub-items in a collapsible list format.
 
 #### 2.5.2 Enter Key Opens Focused Menu
 
-**File:** `e2e/pages/vicav/menu/keyboard-enter.spec.ts`
+**File:** `e2e/pages/vicav/menu/keyboard-enter.test.ts`
 
 **Steps:**
 
@@ -448,7 +446,7 @@ Each category expands to reveal its sub-items in a collapsible list format.
 
 #### 2.5.3 Escape Key Closes Open Dropdown
 
-**File:** `e2e/pages/vicav/menu/keyboard-escape.spec.ts`
+**File:** `e2e/pages/vicav/menu/keyboard-escape.test.ts`
 
 **Steps:**
 
@@ -460,7 +458,7 @@ Each category expands to reveal its sub-items in a collapsible list format.
 
 #### 2.5.4 Arrow Keys Navigate Within Dropdown
 
-**File:** `e2e/pages/vicav/menu/keyboard-arrow-navigation.spec.ts`
+**File:** `e2e/pages/vicav/menu/keyboard-arrow-navigation.test.ts`
 
 **Steps:**
 
@@ -473,11 +471,11 @@ Each category expands to reveal its sub-items in a collapsible list format.
 
 ### 2.6 Menu Item Interaction Tests
 
-**Seed:** `e2e/seed.spec.ts`
+**Seed:** `e2e/seed.test.ts`
 
 #### 2.6.1 Clicking Project > Mission Opens Mission Window
 
-**File:** `e2e/pages/vicav/menu/project-mission.spec.ts`
+**File:** `e2e/pages/vicav/menu/project-mission.test.ts`
 
 **Steps:**
 
@@ -489,7 +487,7 @@ Each category expands to reveal its sub-items in a collapsible list format.
 
 #### 2.6.2 Clicking Project > News Opens News Window
 
-**File:** `e2e/pages/vicav/menu/project-news.spec.ts`
+**File:** `e2e/pages/vicav/menu/project-news.test.ts`
 
 **Steps:**
 
@@ -501,7 +499,7 @@ Each category expands to reveal its sub-items in a collapsible list format.
 
 #### 2.6.3 Windows Menu Item Selection
 
-**File:** `e2e/pages/vicav/menu/windows-selection.spec.ts`
+**File:** `e2e/pages/vicav/menu/windows-selection.test.ts`
 
 **Steps:**
 
@@ -513,7 +511,7 @@ Each category expands to reveal its sub-items in a collapsible list format.
 
 #### 2.6.4 Windows Arrangement - Cascade
 
-**File:** `e2e/pages/vicav/menu/windows-arrangement-cascade.spec.ts`
+**File:** `e2e/pages/vicav/menu/windows-arrangement-cascade.test.ts`
 
 **Steps:**
 
@@ -525,7 +523,7 @@ Each category expands to reveal its sub-items in a collapsible list format.
 
 #### 2.6.5 Windows Arrangement - Tile
 
-**File:** `e2e/pages/vicav/menu/windows-arrangement-tile.spec.ts`
+**File:** `e2e/pages/vicav/menu/windows-arrangement-tile.test.ts`
 
 **Steps:**
 
@@ -537,7 +535,7 @@ Each category expands to reveal its sub-items in a collapsible list format.
 
 #### 2.6.6 Windows Arrangement - Smart Tile
 
-**File:** `e2e/pages/vicav/menu/windows-arrangement-smart-tile.spec.ts`
+**File:** `e2e/pages/vicav/menu/windows-arrangement-smart-tile.test.ts`
 
 **Steps:**
 
@@ -551,36 +549,37 @@ Each category expands to reveal its sub-items in a collapsible list format.
 
 ### 2.7 Edge Cases and Error Handling
 
-**Seed:** `e2e/seed.spec.ts`
+**Seed:** `e2e/seed.test.ts`
 
 #### 2.7.1 Menu handles empty API response gracefully
 
-**File:** `e2e/pages/vicav/menu/empty-menu.spec.ts`
+**File:** `e2e/pages/vicav/menu/empty-menu.test.ts`
 
 **Steps:**
 
 1. Mock API to return empty menu array and navigate to homepage
    - expect: Page should load without errors even if menu API returns empty array
+   - expect: #window-root never to appear
 2. Verify menu components are conditionally rendered
-   - expect: No menu should be rendered when menus array is empty
-   - expect: Desktop menu should not be visible
-   - expect: Mobile menu toggle should not be visible
+   - expect: Main menu items are rendered because of SSR
+   - expect: The items are not clickable
 
 #### 2.7.2 Menu handles API errors gracefully
 
-**File:** `e2e/pages/vicav/menu/api-error-handling.spec.ts`
+**File:** `e2e/pages/vicav/menu/api-error-handling.test.ts`
 
 **Steps:**
 
 1. Mock API to return error and navigate to homepage
    - expect: Page should load even if API request fails
+   - expect: #window-root never to appear
 2. Verify page still displays header, footer, and other content
-   - expect: Menu should not render when API request fails
-   - expect: Page should remain functional with other elements
+   - expect: Main menu items are rendered because of SSR
+   - expect: The items are not clickable
 
 #### 2.7.3 Menu handles loading state during API fetch
 
-**File:** `e2e/pages/vicav/menu/loading-state.spec.ts`
+**File:** `e2e/pages/vicav/menu/loading-state.test.ts`
 
 **Steps:**
 
@@ -592,7 +591,7 @@ Each category expands to reveal its sub-items in a collapsible list format.
 
 #### 2.7.4 Rapid Menu Clicking
 
-**File:** `e2e/pages/vicav/menu/rapid-clicking.spec.ts`
+**File:** `e2e/pages/vicav/menu/rapid-clicking.test.ts`
 
 **Steps:**
 
@@ -603,7 +602,7 @@ Each category expands to reveal its sub-items in a collapsible list format.
 
 #### 2.7.5 Menu Works After Page Refresh
 
-**File:** `e2e/pages/vicav/menu/refresh.spec.ts`
+**File:** `e2e/pages/vicav/menu/refresh.test.ts`
 
 **Steps:**
 
@@ -615,7 +614,7 @@ Each category expands to reveal its sub-items in a collapsible list format.
 
 #### 2.7.6 Long Menu Item Names
 
-**File:** `e2e/pages/vicav/menu/long-items.spec.ts`
+**File:** `e2e/pages/vicav/menu/long-items.test.ts`
 
 **Steps:**
 
@@ -628,11 +627,11 @@ Each category expands to reveal its sub-items in a collapsible list format.
 
 ### 2.8 Accessibility Tests
 
-**Seed:** `e2e/seed.spec.ts`
+**Seed:** `e2e/seed.test.ts`
 
 #### 2.8.1 Desktop menu has proper ARIA attributes
 
-**File:** `e2e/pages/vicav/menu/desktop-menu-accessibility.spec.ts`
+**File:** `e2e/pages/vicav/menu/desktop-menu-accessibility.test.ts`
 
 **Steps:**
 
@@ -647,7 +646,7 @@ Each category expands to reveal its sub-items in a collapsible list format.
 
 #### 2.8.2 Mobile menu has proper ARIA attributes
 
-**File:** `e2e/pages/vicav/menu/mobile-menu-accessibility.spec.ts`
+**File:** `e2e/pages/vicav/menu/mobile-menu-accessibility.test.ts`
 
 **Steps:**
 
@@ -664,11 +663,11 @@ Each category expands to reveal its sub-items in a collapsible list format.
 
 ### 2.9 Menu Separators Tests
 
-**Seed:** `e2e/seed.spec.ts`
+**Seed:** `e2e/seed.test.ts`
 
 #### 2.9.1 Desktop menu renders separators correctly
 
-**File:** `e2e/pages/vicav/menu/desktop-menu-separators.spec.ts`
+**File:** `e2e/pages/vicav/menu/desktop-menu-separators.test.ts`
 
 **Steps:**
 
@@ -680,7 +679,7 @@ Each category expands to reveal its sub-items in a collapsible list format.
 
 #### 2.9.2 Mobile menu renders separators correctly
 
-**File:** `e2e/pages/vicav/menu/mobile-menu-separators.spec.ts`
+**File:** `e2e/pages/vicav/menu/mobile-menu-separators.test.ts`
 
 **Steps:**
 
@@ -694,11 +693,11 @@ Each category expands to reveal its sub-items in a collapsible list format.
 
 ### 2.10 Windows Integration Tests
 
-**Seed:** `e2e/seed.spec.ts`
+**Seed:** `e2e/seed.test.ts`
 
 #### 2.10.1 Windows dropdown shows open windows
 
-**File:** `e2e/pages/vicav/menu/windows-integration.spec.ts`
+**File:** `e2e/pages/vicav/menu/windows-integration.test.ts`
 
 **Steps:**
 
@@ -713,7 +712,7 @@ Each category expands to reveal its sub-items in a collapsible list format.
 
 #### 2.10.2 Window arrangement options in desktop menu
 
-**File:** `e2e/pages/vicav/menu/window-arrangement.spec.ts`
+**File:** `e2e/pages/vicav/menu/window-arrangement.test.ts`
 
 **Steps:**
 
