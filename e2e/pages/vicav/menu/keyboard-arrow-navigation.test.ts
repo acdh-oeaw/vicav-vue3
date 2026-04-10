@@ -11,6 +11,7 @@ test.describe("Keyboard Navigation - Arrow Keys", () => {
 		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
 
 		await page.getByRole("menuitem", { name: "Project" }).click();
+		await page.keyboard.press("ArrowDown");
 
 		// Verify first item is focused
 		await expect(page.getByRole("menuitem", { name: "Mission" })).toBeFocused();
