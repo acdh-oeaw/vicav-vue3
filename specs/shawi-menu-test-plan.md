@@ -146,10 +146,13 @@ all menu functionality, window management, navigation, and user interactions.
 
 **Steps:**
 
-1. 1. Click on About menu to open it
-2. Click on Profiles menu
+1. Click on About menu to open it
+2. Move the mouse over to the Profiles menu
 3. Verify About menu is closed and Profiles menu is open
    - expect: Only one dropdown menu should be open at a time when clicking different menu items
+4. Click on the Profiles menu
+5. Verify that About menu and Profiles menu are closed
+   - expect: Neither dropdown is visible
 
 #### 2.8. Desktop Menu - Close Menu When Clicking Outside
 
