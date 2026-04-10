@@ -24,8 +24,10 @@ test.describe("Mobile Menu - All Categories Visible", () => {
 			"Tools & Technology",
 		];
 
+		// Mobile menu items don't have menuitem role, use getByText within the dialog
+		const dialog = page.locator('[role="dialog"]');
 		for (const category of expectedCategories) {
-			await expect(page.getByRole("menuitem", { name: category })).toBeVisible();
+			await expect(dialog.getByText(category, { exact: true }).first()).toBeVisible();
 		}
 
 		// expect: All 8 menu categories are visible in the mobile navigation

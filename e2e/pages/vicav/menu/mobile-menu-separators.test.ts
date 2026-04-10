@@ -13,11 +13,30 @@ test.describe("Menu Separators - Mobile", () => {
 		// expect: Page should load with mobile menu visible
 		// 2. Open mobile menu and expand a category with separators
 		await page.getByRole("button", { name: /Toggle menu/i }).click();
-		await page.getByRole("menuitem", { name: "Dictionaries" }).click();
+		// Mobile menu items don't have menuitem role, use getByText within the dialog
+		const dialog = page.locator('[role="dialog"]');
+		await dialog.getByText("Dictionaries", { exact: true }).first().click();
+
+		// Wait a moment for the animation to complete
+		await page.waitForTimeout(500);
 
 		// expect: Menu items with type='separator' should render as visual separators
-		await expect(page.locator("[role='separator']")).toBeVisible();
+		// Check that there's at least one visible separator in the dialog
+		const separators = dialog.locator("[role='separator']");
+		const count = await separators.count();
+		expect(count).toBeGreaterThan(0);
+
+		// Verify at least one separator is visible
+		let hasVisibleSeparator = false;
+		for (let i = 0; i < count; i++) {
+			if (await separators.nth(i).isVisible()) {
+				hasVisibleSeparator = true;
+				break;
+			}
+		}
+		expect(hasVisibleSeparator).toBe(true);
+
 		// expect: Separators should be visible as horizontal lines between menu items
-		await expect(page.locator("[role='separator']").first()).toHaveAttribute("role", "separator");
+		await expect(separators.first()).toHaveAttribute("role", "separator");
 	});
 });

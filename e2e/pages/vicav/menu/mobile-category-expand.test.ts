@@ -12,8 +12,11 @@ test.describe("Mobile Menu - Category Expand", () => {
 
 		await page.getByRole("button", { name: /Toggle menu/i }).click();
 
+		// Mobile menu items don't have menuitem role, use getByText within the dialog
+		const dialog = page.locator('[role="dialog"]');
+
 		// 2. Click on "Bibliographies" category
-		await page.getByRole("menuitem", { name: "Bibliographies" }).click();
+		await dialog.getByText("Bibliographies", { exact: true }).first().click();
 
 		// 3. Verify sub-items are displayed:
 		const expectedItems = [
@@ -28,7 +31,7 @@ test.describe("Mobile Menu - Category Expand", () => {
 		];
 
 		for (const item of expectedItems) {
-			await expect(page.getByRole("menuitem", { name: item })).toBeVisible();
+			await expect(dialog.getByText(item, { exact: true }).first()).toBeVisible();
 		}
 
 		// expect: Category expands to show all sub-items in a list

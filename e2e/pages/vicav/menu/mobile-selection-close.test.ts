@@ -15,11 +15,14 @@ test.describe("Mobile Menu - Close on Selection", () => {
 		// Verify mobile menu is open
 		await expect(page.getByRole("dialog")).toBeVisible();
 
+		// Mobile menu items don't have menuitem role, use getByText within the dialog
+		const dialog = page.locator('[role="dialog"]');
+
 		// 2. Click on "Project" menu item to expand it
-		await page.getByRole("menuitem", { name: "Project" }).click();
+		await dialog.getByText("Project", { exact: true }).first().click();
 
 		// Click on "Mission" sub-item
-		await page.getByRole("menuitem", { name: "Mission" }).click();
+		await dialog.getByText("Mission", { exact: true }).first().click();
 
 		// 3. Verify the mobile menu dialog closes
 		// expect: Mobile navigation dialog should close after selecting an item
