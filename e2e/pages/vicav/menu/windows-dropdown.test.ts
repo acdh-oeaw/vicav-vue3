@@ -15,16 +15,18 @@ test.describe("Desktop Menu - Windows Dropdown", () => {
 		await page.getByRole("menuitem", { name: "Windows" }).click();
 
 		// 2. Verify dropdown contains open windows:
-		await expect(page.getByRole("menuitem", { name: "Mission" })).toBeVisible();
-		await expect(page.getByRole("menuitem", { name: "News" })).toBeVisible();
-		await expect(page.getByRole("menuitem", { name: "All Bibl. Locations on Map" })).toBeVisible();
+		await expect(page.getByRole("menuitem", { name: "Mission", exact: true })).toBeVisible();
+		await expect(page.getByRole("menuitem", { name: "News", exact: true })).toBeVisible();
+		await expect(
+			page.getByRole("menuitem", { name: "All Bibl. Locations on Map", exact: true }),
+		).toBeVisible();
 
 		// Verify arrangement section is visible
-		await expect(page.getByRole("menuitem", { name: "None" })).toBeVisible();
-		await expect(page.getByRole("menuitem", { name: "Cascade" })).toBeVisible();
-		await expect(page.getByRole("menuitem", { name: "Tile" })).toBeVisible();
-		await expect(page.getByRole("menuitem", { name: "Smart tile" })).toBeVisible();
-		await expect(page.getByRole("menuitem", { name: "Column 5 Flex" })).toBeVisible();
+		await expect(page.getByRole("menuitem", { name: "None", exact: true })).toBeVisible();
+		await expect(page.getByRole("menuitem", { name: "Cascade", exact: true })).toBeVisible();
+		await expect(page.getByRole("menuitem", { name: "Tile", exact: true })).toBeVisible();
+		await expect(page.getByRole("menuitem", { name: "Smart tile", exact: true })).toBeVisible();
+		await expect(page.getByRole("menuitem", { name: "Column 5 Flex", exact: true })).toBeVisible();
 
 		// expect: Windows menu displays open windows and arrangement options
 	});

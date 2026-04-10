@@ -19,7 +19,8 @@ test.describe("Menu Item - Windows Arrangement Smart Tile", () => {
 
 		// 4. Verify windows are arranged in smart tile pattern
 		// expect: Windows are arranged in a smart tile pattern
-		const windows = page.locator("[class*='window']");
+		const windows = page.locator("[class*='winbox']");
 		await expect(windows).toHaveCount(3);
+		// TODO: How to actually check this?
 	});
 });

@@ -38,11 +38,8 @@ test.describe("Windows Integration", () => {
 		await page.getByRole("menuitem", { name: "Cascade" }).click();
 		await page.getByRole("menuitem", { name: "Windows" }).click();
 		await page.getByRole("menuitem", { name: "Mission" }).click();
-		await expect(
-			page
-				.locator("div")
-				.filter({ hasText: /^Mission$/ })
-				.nth(1),
-		).toBeFocused();
+
+		// expect: The Mission window should now be focused (check for focus class on the window)
+		await expect(page.locator(".winbox.focus .wb-title", { hasText: "Mission" })).toBeVisible();
 	});
 });

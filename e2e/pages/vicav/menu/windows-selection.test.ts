@@ -14,16 +14,10 @@ test.describe("Menu Item - Windows Selection", () => {
 		// 2. Click on "Windows" menu
 		await page.getByRole("menuitem", { name: "Windows" }).click();
 
-		// 3. Click on "Mission" in the Windows dropdown
-		await page.getByRole("menuitem", { name: "Mission" }).click();
+		// 3. Click on "News" in the Windows dropdown
+		await page.getByRole("menuitem", { name: "News" }).click();
 
-		// 4. Verify focus moves to the Mission window
-		// expect: Mission window should receive focus
-		await expect(
-			page
-				.locator("div")
-				.filter({ hasText: /^Mission$/ })
-				.nth(1),
-		).toBeFocused();
+		// 4. The Mission window should now be focused (check for focus class on the window)
+		await expect(page.locator(".winbox.focus .wb-title", { hasText: "News" })).toBeVisible();
 	});
 });

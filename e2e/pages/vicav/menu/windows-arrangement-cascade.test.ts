@@ -20,7 +20,7 @@ test.describe("Menu Item - Windows Arrangement Cascade", () => {
 		// 4. Verify windows are arranged in cascade pattern
 		// expect: Windows are visually cascaded on the page
 		// The arrangement should be applied - windows should have different positions
-		const windows = page.locator("[class*='window']");
+		const windows = page.locator("[class*='winbox']");
 		await expect(windows).toHaveCount(3);
 	});
 });
