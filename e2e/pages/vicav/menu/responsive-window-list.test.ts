@@ -30,7 +30,6 @@ test.describe("Responsive Behavior - Window List", () => {
 		await expect(page.getByRole("menuitem", { name: "Mission" })).toBeVisible();
 
 		await page.getByRole("button", { name: /Toggle menu/i }).click();
-		await expect(page.locator("//details[@name='menu-accordion'][1]")).toBeVisible()
-
+		await expect(page.locator("//details[@name='menu-accordion'][1]")).toBeVisible();
 	});
 });
