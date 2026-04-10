@@ -12,6 +12,9 @@ test.describe("Desktop Menu - Dictionaries Dropdown", () => {
 
 		await page.getByRole("menuitem", { name: "Dictionaries" }).click();
 
+		// Get reference to the dropdown menu
+		const dropdown = page.locator("[role='menu']").last();
+
 		// 2. Verify dropdown contains:
 		const expectedItems = [
 			"All Dictionaries in Bibl. on Map",
@@ -27,11 +30,11 @@ test.describe("Desktop Menu - Dictionaries Dropdown", () => {
 		];
 
 		for (const item of expectedItems) {
-			await expect(page.getByRole("menuitem", { name: item })).toBeVisible();
+			await expect(dropdown.getByRole("menuitem", { name: item })).toBeVisible();
 		}
 
 		// expect: All 10 menu items are visible with proper separators
-		const dropdownItems = page.locator("[role='menu'] >> role=menuitem");
+		const dropdownItems = dropdown.locator("[role='menuitem']");
 		await expect(dropdownItems).toHaveCount(10);
 	});
 });

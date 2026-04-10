@@ -12,15 +12,18 @@ test.describe("Desktop Menu - Samples Dropdown", () => {
 
 		await page.getByRole("menuitem", { name: "Samples" }).click();
 
+		// Get reference to the dropdown menu
+		const dropdown = page.locator("[role='menu']").last();
+
 		// 2. Verify dropdown contains:
 		const expectedItems = ["Explanation", "Show All Samples on Map", "Contribute a Sample Text"];
 
 		for (const item of expectedItems) {
-			await expect(page.getByRole("menuitem", { name: item })).toBeVisible();
+			await expect(dropdown.getByRole("menuitem", { name: item })).toBeVisible();
 		}
 
 		// expect: All 3 menu items are visible and clickable
-		const dropdownItems = page.locator("[role='menu'] >> role=menuitem");
+		const dropdownItems = dropdown.locator("[role='menuitem']");
 		await expect(dropdownItems).toHaveCount(3);
 	});
 });

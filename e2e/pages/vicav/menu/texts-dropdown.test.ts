@@ -12,11 +12,16 @@ test.describe("Desktop Menu - Texts Dropdown", () => {
 
 		await page.getByRole("menuitem", { name: "Texts" }).click();
 
+		// Get reference to the dropdown menu
+		const dropdown = page.locator("[role='menu']").last();
+
 		// 2. Verify dropdown contains:
-		await expect(page.getByRole("menuitem", { name: "Explanation and Overview" })).toBeVisible();
+		await expect(
+			dropdown.getByRole("menuitem", { name: "Explanation and Overview" }),
+		).toBeVisible();
 
 		// expect: Single menu item is visible
-		const dropdownItems = page.locator("[role='menu'] >> role=menuitem");
+		const dropdownItems = dropdown.locator("[role='menuitem']");
 		await expect(dropdownItems).toHaveCount(1);
 	});
 });

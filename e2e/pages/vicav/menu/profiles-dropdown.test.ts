@@ -12,6 +12,9 @@ test.describe("Desktop Menu - Profiles Dropdown", () => {
 
 		await page.getByRole("menuitem", { name: "Profiles" }).click();
 
+		// Get reference to the dropdown menu
+		const dropdown = page.locator("[role='menu']").last();
+
 		// 2. Verify dropdown contains:
 		const expectedItems = [
 			"Explanation + List",
@@ -20,11 +23,11 @@ test.describe("Desktop Menu - Profiles Dropdown", () => {
 		];
 
 		for (const item of expectedItems) {
-			await expect(page.getByRole("menuitem", { name: item })).toBeVisible();
+			await expect(dropdown.getByRole("menuitem", { name: item })).toBeVisible();
 		}
 
 		// expect: All 3 menu items are visible and clickable
-		const dropdownItems = page.locator("[role='menu'] >> role=menuitem");
+		const dropdownItems = dropdown.locator("[role='menuitem']");
 		await expect(dropdownItems).toHaveCount(3);
 	});
 });
