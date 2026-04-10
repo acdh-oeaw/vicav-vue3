@@ -28,23 +28,54 @@ all menu functionality, window management, navigation, and user interactions.
 1. Navigate to http://127.0.0.1:3000/ and wait for page load
    - expect: Page should have title 'Home | SHAWI'
 
-#### 1.2. Home Page - Main Heading
+**Status:** Implemented
+
+#### 1.2. Home Page - Initial Windows
 
 **File:** `e2e/pages/shawi/index.test.ts`
 
 **Steps:**
 
-1. Navigate to http://127.0.0.1:3000/ and locate the main heading element
-   - expect: Should display heading 'VICAV - Vienna Corpus of Arabic Varieties'
+1. Navigate to http://127.0.0.1:3000/ and wait for page load
+   - expect: Initial windows should be visible
 
-#### 1.3. Home Page - Skip to Main Content Link
+**Status:** Not yet implemented (test is skipped)
+
+#### 1.3. Home Page - Window Menu
 
 **File:** `e2e/pages/shawi/index.test.ts`
 
 **Steps:**
 
-1. Navigate to home page and verify skip link presence
-   - expect: Skip to main content link should be visible and accessible
+1. Navigate to http://127.0.0.1:3000/ and verify window menu
+   - expect: Window menu should have appropriate entries
+
+**Status:** Not yet implemented (test is skipped)
+
+#### 1.4. Home Page - Footer Bar with Imprint Link
+
+**File:** `e2e/pages/shawi/index.test.ts`
+
+**Steps:**
+
+1. Navigate to http://127.0.0.1:3000/
+2. Verify Imprint link is visible in footer
+   - expect: Imprint link should be visible in footer
+
+**Status:** Implemented
+
+#### 1.5. Home Page - Extended Footer on Hover
+
+**File:** `e2e/pages/shawi/index.test.ts`
+
+**Steps:**
+
+1. Navigate to http://127.0.0.1:3000/
+2. Hover over footer area
+3. Verify CONTACT section becomes visible
+   - expect: Extended footer with CONTACT should be visible on hover
+
+**Status:** Implemented
 
 ### 2. Menu Bar - Desktop
 
