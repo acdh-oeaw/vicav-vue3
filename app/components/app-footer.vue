@@ -20,7 +20,7 @@ const funders = computed(() => config.value?.projectConfig?.funders ?? []);
 			<span class="flex gap-1">
 				<span>&copy; {{ new Date().getUTCFullYear() }}</span>
 				<a class="hover:underline hover:underline-offset-2" href="https://www.oeaw.ac.at/acdh">
-					ACDH-CH
+					ACDH
 				</a>
 			</span>
 			<span>|</span>
@@ -92,11 +92,9 @@ const funders = computed(() => config.value?.projectConfig?.funders ?? []);
 					>
 						<div>
 							<p class="mt-0 mb-4 block">
-								ACDH-CH
+								ACDH
 								<br />
 								Austrian Centre for Digital Humanities
-								<br />
-								and Cultural Heritage
 								<br />
 								Austrian Academy of Sciences
 							</p>
@@ -109,7 +107,7 @@ const funders = computed(() => config.value?.projectConfig?.funders ?? []);
 								T: +43 1 51581-2200
 								<br />
 								E:
-								<a href="mailto:acdh-ch@oeaw.ac.at">acdh-ch@oeaw.ac.at</a>
+								<a href="mailto:acdh-office@oeaw.ac.at">acdh-office@oeaw.ac.at</a>
 							</p>
 						</div>
 					</div>
@@ -120,13 +118,13 @@ const funders = computed(() => config.value?.projectConfig?.funders ?? []);
 					>
 						<h6 class="mb-2 block font-bold">HELPDESK</h6>
 						<p class="mt-0 mb-4 block">
-							ACDH-CH runs a helpdesk offering advice for questions related to various digital
+							ACDH runs a helpdesk offering advice for questions related to various digital
 							humanities topics.
 						</p>
 						<p class="mt-0 mb-4 block">
 							<a
 								class="block max-w-xs rounded-3xl border border-[#88dbdf] bg-white px-5 py-1 text-xs font-semibold text-[#88dbdf] transition-colors duration-200 ease-in-out hover:bg-[#88dbdf] hover:text-white"
-								href="mailto:acdh-ch-helpdesk@oeaw.ac.at"
+								href="mailto:acdh-helpdesk@oeaw.ac.at"
 							>
 								ASK US!
 							</a>

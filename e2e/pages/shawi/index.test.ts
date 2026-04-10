@@ -2,36 +2,28 @@ import { expect, test } from "@playwright/test";
 
 test.describe("home page", () => {
 	test("should have document title", async ({ page }) => {
+		await page.setViewportSize({ width: 1280, height: 720 });
 		await page.goto("/");
+		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
 		await expect(page).toHaveTitle("Home | SHAWI");
 	});
 
 	// We have not decided what initial windows should be visible
 	// eslint-disable-next-line playwright/no-skipped-test
 	test.skip("should show initial windows", async ({ page }) => {
+		await page.setViewportSize({ width: 1280, height: 720 });
 		await page.goto("/");
-		await expect(
-			page
-				.locator("div")
-				.filter({ hasText: /^Mission$/ })
-				.nth(1),
-		).toBeVisible();
-		await expect(
-			page
-				.locator("div")
-				.filter({ hasText: /^News$/ })
-				.nth(1),
-		).toBeVisible();
+		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
+		// TODO: extend when there are any initial windows
 	});
 
 	// We have not decided what initial windows should be visible
 	// eslint-disable-next-line playwright/no-skipped-test
 	test.skip("should open window menu with appropriate entries", async ({ page }) => {
+		await page.setViewportSize({ width: 1280, height: 720 });
 		await page.goto("/");
-		await expect(page.getByRole("menuitem", { name: "Windows" })).toBeVisible();
-		await page.getByRole("menuitem", { name: "Windows" }).click();
-		await expect(page.getByRole("menuitem", { name: "Mission" })).toBeVisible();
-		await expect(page.getByRole("menuitem", { name: "News" })).toBeVisible();
+		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
+		// TODO: extend when there are any initial windows
 	});
 
 	test("should show footer bar with imprint link", async ({ page }) => {
@@ -44,7 +36,7 @@ test.describe("home page", () => {
 		await page
 			.getByRole("contentinfo")
 			.locator("div")
-			.filter({ hasText: "© 2026 ACDH-CH |Imprint|" })
+			.filter({ hasText: "© 2026 ACDH |Imprint|" })
 			.locator("div")
 			.first()
 			.hover();
