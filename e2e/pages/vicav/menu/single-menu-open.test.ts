@@ -16,11 +16,16 @@ test.describe("Desktop Menu - Single Menu Open", () => {
 		await expect(page.getByRole("menuitem", { name: "Mission" })).toBeVisible();
 
 		// 2. Click on "Bibliographies" menu
-		await page.getByRole("menuitem", { name: "Bibliographies" }).click();
+		await page.getByRole("menuitem", { name: "Bibliographies" }).hover();
 
 		// 3. Verify that Project menu is closed and Bibliographies is open
 		// expect: Only one dropdown should be open at a time
 		await expect(page.getByRole("menuitem", { name: "Mission" })).toBeHidden();
 		await expect(page.getByRole("menuitem", { name: "Explanation" })).toBeVisible();
+
+		// 4. Clicking the Profiles menu closes the menu
+		await page.getByRole("menuitem", { name: "Bibliographies" }).click();
+		await expect(page.getByRole("menuitem", { name: "Mission" })).toBeHidden();
+		await expect(page.getByRole("menuitem", { name: "Explanation" })).toBeHidden();
 	});
 });
