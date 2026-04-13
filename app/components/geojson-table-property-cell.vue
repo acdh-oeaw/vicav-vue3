@@ -205,7 +205,7 @@ function onValueClick(val: Array<Record<string, unknown>>, title: string) {
 					class="h-auto flex-shrink-0 truncate p-0 !text-black"
 					:class="{
 						'font-medium': flattenedHighlightedValues?.includes(key),
-						'font-light': !flattenedHighlightedValues?.includes(key),
+						'font-normal': !flattenedHighlightedValues?.includes(key),
 					}"
 					variant="link"
 					@click="onValueClick(val, key)"
