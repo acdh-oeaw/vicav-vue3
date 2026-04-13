@@ -16,6 +16,11 @@ const tableContent: Array<{ key: string; displayHeader?: string }> = [
 	{ key: "taxonomy" },
 	{ key: "desc" },
 	{ key: "feature" },
+	{ key: "examples" },
+	{ key: "note" },
+	{ key: "remarks" },
+	{ key: "constraints" },
+	{ key: "exceptions" },
 	{ key: "place" },
 	{ key: "variety" },
 	{ key: "source" },
@@ -32,11 +37,6 @@ const tableContent: Array<{ key: string; displayHeader?: string }> = [
 		key: "source_representations",
 		displayHeader: "Original transcription",
 	},
-	{ key: "examples" },
-	{ key: "note" },
-	{ key: "remarks" },
-	{ key: "constraints" },
-	{ key: "exceptions" },
 	{ key: "resp", displayHeader: "Entered by" },
 ];
 
