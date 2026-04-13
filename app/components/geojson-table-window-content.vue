@@ -144,6 +144,42 @@ function onColumnFilterChange(columnFilters: Array<{ id: string; value: Map<stri
 const { parseSearchString, normalizeOperators } = useFilterParser();
 
 const tableRef = ref<Table<FeatureType>>();
+
+function getExportRows(multivalueSeparator = ";") {
+	const headers = tableRef.value?.getHeaderGroups().slice(-1)[0]?.headers ?? [];
+	const headerNames = headers.map((header) =>
+		String(header.column.columnDef.header ?? header.column.id),
+	);
+	const rows =
+		tableRef.value?.getFilteredRowModel().rows.map((row) =>
+			headers.map((header) => {
+				const value = row.getValue(header.column.id);
+				if (value === null || value === undefined) return "";
+				if (Array.isArray(value)) return value.join(multivalueSeparator);
+				if (typeof value === "object") return JSON.stringify(value);
+				return String(value);
+			}),
+		) ?? [];
+	return { headerNames, rows };
+}
+
+function sanitizeExportFileName(fileName: string, fallback = "table-export") {
+	const baseName = fileName
+		.trim()
+		.split("")
+		.filter((char) => {
+			const code = char.charCodeAt(0);
+			return code >= 32 && !`<>:"/\\|?*,`.includes(char);
+		})
+		.join("")
+		.replace(/\s+/g, "_")
+		.normalize("NFD")
+		.replace(/[\u0300-\u036f]/g, "")
+		.replace(/[^\w\s-]/g, "")
+		.slice(0, 120);
+	return baseName.length > 0 ? baseName : fallback;
+}
+
 function registerTable(table: Table<FeatureType>) {
 	buildFeatureTaxonomy(
 		projectData.value?.projectConfig?.staticData?.table?.[0] as Record<string, never>,
@@ -186,24 +222,33 @@ function updateQueryParams(newFilter: string) {
 	emit("updateQueryParam", queryString.value);
 }
 
-async function downloadTable(separator = ",", multivalueSaparator = ";") {
-	const headers = tableRef.value?.getHeaderGroups().slice(-1)[0]?.headers;
-	const rows = tableRef.value?.getFilteredRowModel().rows;
-	const mappedRows = rows?.map((row) =>
-		headers
-			?.map((header) => row.getValue(header.column.id))
-			.map((val) => (Array.isArray(val) ? val.join(multivalueSaparator) : val)),
-	);
+async function downloadTable(format: "csv" | "xlsx", csvSeparator = ",") {
+	if (!tableRef.value) return;
+
+	const { headerNames, rows } = getExportRows();
+	const exportName = sanitizeExportFileName(tableRef.value.getState().globalFilter ?? "");
+	const blob = await $fetch<Blob>("/api/export-table-xlsx", {
+		body: {
+			csvSeparator,
+			fileName: exportName,
+			format,
+			headers: headerNames,
+			rows,
+			sheetName: "Table",
+		},
+		method: "POST",
+		responseType: "blob",
+	});
+
+	const downloadUrl = URL.createObjectURL(blob);
 	const hiddenElement = document.createElement("a");
-	hiddenElement.href = `data:text/csv;charset=utf-8,${encodeURI(
-		`${headers!.map((h) => h.column.columnDef.header).join(separator)}\n${mappedRows!.join("\n")}`,
-	)}`;
-	hiddenElement.target = "_blank";
-	hiddenElement.download = `${tableRef.value?.getState().globalFilter}.csv`;
+	hiddenElement.href = downloadUrl;
+	hiddenElement.download = `${exportName}.${format}`;
 	hiddenElement.style.display = "none";
 	document.body.appendChild(hiddenElement);
 	hiddenElement.click();
 	document.body.removeChild(hiddenElement);
+	URL.revokeObjectURL(downloadUrl);
 }
 
 function jumpToRow(option: { value: string; label: string }) {
@@ -251,10 +296,30 @@ const searchableLocationNames = computed(() => {
 					><Info class="size-4 stroke-neutral-800 transition-colors" />
 					<span class="line-clamp-1 text-ellipsis">Show details</span></Toggle
 				>
-				<Button class="inline-flex h-8 gap-2 border-0" variant="outline" @click="downloadTable">
-					<Download class="size-4 stroke-neutral-800 transition-colors" />
-					<span class="line-clamp-1 text-ellipsis">Export table</span>
-				</Button>
+				<DropdownMenu>
+					<DropdownMenuTrigger as-child>
+						<Button class="inline-flex h-8 gap-2 border-0" variant="outline">
+							<Download class="size-4 stroke-neutral-800 transition-colors" />
+							<span class="line-clamp-1 text-ellipsis">Export data</span>
+						</Button>
+					</DropdownMenuTrigger>
+					<DropdownMenuContent align="end" class="flex w-fit flex-col items-center">
+						<Button
+							class="inline-flex h-8 w-full gap-2 border-0"
+							variant="outline"
+							@click="downloadTable('csv')"
+						>
+							<span class="line-clamp-1 text-ellipsis">CSV</span>
+						</Button>
+						<Button
+							class="inline-flex h-8 w-full gap-2 border-0"
+							variant="outline"
+							@click="downloadTable('xlsx')"
+						>
+							<span class="line-clamp-1 text-ellipsis">Excel</span>
+						</Button>
+					</DropdownMenuContent>
+				</DropdownMenu>
 			</div>
 		</div>
 		<div class="min-h-0 flex-1 overflow-auto">
