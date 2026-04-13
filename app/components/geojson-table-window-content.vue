@@ -231,11 +231,11 @@ const searchableLocationNames = computed(() => {
 </script>
 
 <template>
-	<div>
+	<div class="flex h-full min-h-0 flex-col">
 		<Centered v-if="isPending">
 			<LoadingIndicator />
 		</Centered>
-		<div class="flex justify-between justify-items-end border-b py-2">
+		<div class="flex justify-between justify-items-end border-b bg-white py-2">
 			<!-- <DataTablePagination v-if="tableRef" :table="tableRef as unknown as Table<never>" /> -->
 			<div class="flex px-2">
 				<SearchableCombobox
@@ -257,22 +257,29 @@ const searchableLocationNames = computed(() => {
 				</Button>
 			</div>
 		</div>
-		<DataTable
-			v-if="!isPending"
-			:column-filter-change-fn="onColumnFilterChange"
-			:columns="columns as unknown as Array<ColumnDef<never>>"
-			:enable-filter-on-columns="false"
-			:global-filter-fn="applyGlobalFilter"
-			:initial-column-visibility="columnVisibility"
-			:items="fetchedData.get(url)?.features as Array<never>"
-			:min-header-depth="2"
-			:visibility-change-fn="onVisibilityChange"
-			@global-filter-change="updateQueryParams"
-			@row-click="onRowClick"
-			@table-ready="registerTable"
-		></DataTable>
+		<div class="min-h-0 flex-1 overflow-auto">
+			<DataTable
+				v-if="!isPending"
+				:column-filter-change-fn="onColumnFilterChange"
+				:columns="columns as unknown as Array<ColumnDef<never>>"
+				:enable-filter-on-columns="false"
+				:global-filter-fn="applyGlobalFilter"
+				:initial-column-visibility="columnVisibility"
+				:items="fetchedData.get(url)?.features as Array<never>"
+				:min-header-depth="2"
+				:sticky-header="true"
+				:visibility-change-fn="onVisibilityChange"
+				@global-filter-change="updateQueryParams"
+				@row-click="onRowClick"
+				@table-ready="registerTable"
+			></DataTable>
+		</div>
 		<div class="grid justify-items-end py-2">
-			<DataTablePagination v-if="tableRef" :table="tableRef as unknown as Table<never>" />
+			<DataTablePagination
+				v-if="tableRef"
+				open-to-side="top"
+				:table="tableRef as unknown as Table<never>"
+			/>
 		</div>
 	</div>
 </template>

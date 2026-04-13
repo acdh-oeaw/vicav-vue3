@@ -27,6 +27,7 @@ interface Props {
 	visibilityChangeFn?: Function;
 	// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 	columnFilterChangeFn?: Function;
+	stickyHeader?: boolean;
 }
 
 const props = defineProps<Props>();
@@ -108,16 +109,24 @@ onMounted(() => {
 </script>
 
 <template>
-	<Table>
+	<Table
+		:class="{ 'border-separate border-spacing-0': stickyHeader }"
+		:style="{ overflow: stickyHeader ? 'unset' : '' }"
+	>
 		<TableHeader class="bg-primary font-bold text-on-primary">
 			<TableRow
-				v-for="headerGroup in table
+				v-for="(headerGroup, headerGroupIndex) in table
 					.getHeaderGroups()
 					.filter((header) => header.depth >= (props.minHeaderDepth ?? 0))"
 				:key="headerGroup.id"
 				class="hover:bg-primary"
 			>
-				<TableHead v-for="header in headerGroup.headers" :key="header.id">
+				<TableHead
+					v-for="header in headerGroup.headers"
+					:key="header.id"
+					:class="{ 'sticky z-20 bg-primary': stickyHeader }"
+					:style="stickyHeader ? { top: `${headerGroupIndex * 3}rem` } : undefined"
+				>
 					{{ header.column.columnDef.header }}
 					<DataTableFacetedFilter
 						v-if="enableFilterOnColumns && header.column.getCanFilter()"

@@ -9,6 +9,7 @@ import {
 
 interface DataTablePaginationProps {
 	table: Table<never>;
+	openToSide?: "top" | "right" | "bottom" | "left";
 }
 
 defineProps<DataTablePaginationProps>();
@@ -27,7 +28,7 @@ defineProps<DataTablePaginationProps>();
 					<SelectTrigger class="h-8 w-[70px]">
 						<SelectValue :placeholder="`${table.getState().pagination.pageSize}`" />
 					</SelectTrigger>
-					<SelectContent class="bg-white">
+					<SelectContent class="bg-white" :side="openToSide">
 						<SelectItem
 							v-for="(pageSize, index) in [10, 20, 30, 40, 50] as Array<never>"
 							:key="index"
