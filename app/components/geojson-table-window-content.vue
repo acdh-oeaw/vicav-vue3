@@ -274,7 +274,11 @@ const searchableLocationNames = computed(() => {
 				@table-ready="registerTable"
 			></DataTable>
 		</div>
-		<div class="grid justify-items-end py-2">
+		<div class="flex items-center justify-between py-2">
+			<div class="text-sm">
+				<span class="mx-2 font-medium">Total:</span
+				><span> {{ tableRef?.getFilteredRowModel().flatRows.length }} rows</span>
+			</div>
 			<DataTablePagination
 				v-if="tableRef"
 				open-to-side="top"
