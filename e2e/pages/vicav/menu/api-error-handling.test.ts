@@ -6,7 +6,11 @@ import { expect, test } from "@playwright/test";
 test.describe("Edge Cases - API Error Handling", () => {
 	test("should handle API errors gracefully", async ({ page }) => {
 		// 1. Mock API to return error and navigate to homepage
-		await page.route("**/api/**", async (route) => {
+		await page.route("**/vicav/**", async (route) => {
+			// Abort the request to simulate network/API error
+			await route.abort("failed");
+		});
+		await page.route("**/_nuxt/**", async (route) => {
 			// Abort the request to simulate network/API error
 			await route.abort("failed");
 		});
