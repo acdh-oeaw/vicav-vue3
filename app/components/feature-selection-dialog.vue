@@ -307,10 +307,10 @@ function deselectColumn() {
 					<Button class="ml-auto w-fit" type="button" variant="outline" @click="toggleAllValues"
 						>{{ allValuesSelected ? "Deselect" : "Select" }} all values</Button
 					>
-					<FormItem class="overflow-auto">
+					<FormItem class="-mt-px overflow-auto">
 						<div
 							v-if="selectedCombinedFilters.size > 0 || (filterSuggestion?.count ?? 0) > 0"
-							class="relative rounded bg-secondary p-2.5"
+							class="sticky top-0 -mt-px rounded bg-secondary p-2.5"
 						>
 							<div class="relative -mt-2 mb-1 -ml-1 text-xs font-light">Combined filters</div>
 							<FeatureSelectionDialogEntry
@@ -360,7 +360,7 @@ function deselectColumn() {
 						</div>
 
 						<!-- Regular Feature Values -->
-						<div class="ml-2.5">
+						<div class="mt-1 ml-2.5">
 							<template v-for="[key, entry] in taxonomyTree.entries()" :key="key">
 								<FeatureSelectionDialogEntry
 									:facets="facets"
