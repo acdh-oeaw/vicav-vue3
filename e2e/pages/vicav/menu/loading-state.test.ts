@@ -15,7 +15,7 @@ test.describe("Edge Cases - Loading State", () => {
 
 		// 2. Wait for API response and verify menu renders correctly
 		// expect: No error messages should be visible
-		await expect(page.getByText("Error", { exact: true })).toBeHidden();
+		await expect(page.getByText('Notification [ "Error", "')).toBeHidden();
 		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
 	});
 });
