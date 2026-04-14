@@ -6,7 +6,7 @@ import { expect, test } from "@playwright/test";
 test.describe("Edge Cases - Loading State", () => {
 	test("should handle loading state during API fetch", async ({ page }) => {
 		// 1. Navigate to homepage with slow network simulation
-		await page.setViewportSize({ width: 1280, height: 720 });
+		await page.setViewportSize({ width: 1920, height: 1080 });
 		await page.goto("/");
 
 		// expect: Initial page load should show loading state or skeleton while API fetches

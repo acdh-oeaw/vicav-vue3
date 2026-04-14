@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 test.describe("home page", () => {
 	test("should have document title", async ({ page }) => {
-		await page.setViewportSize({ width: 1280, height: 720 });
+		await page.setViewportSize({ width: 1920, height: 1080 });
 		await page.goto("/");
 		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
 		await expect(page).toHaveTitle("Home | SHAWI");
@@ -11,7 +11,7 @@ test.describe("home page", () => {
 	// We have not decided what initial windows should be visible
 	// eslint-disable-next-line playwright/no-skipped-test
 	test.skip("should show initial windows", async ({ page }) => {
-		await page.setViewportSize({ width: 1280, height: 720 });
+		await page.setViewportSize({ width: 1920, height: 1080 });
 		await page.goto("/");
 		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
 		// TODO: extend when there are any initial windows
@@ -20,7 +20,7 @@ test.describe("home page", () => {
 	// We have not decided what initial windows should be visible
 	// eslint-disable-next-line playwright/no-skipped-test
 	test.skip("should open window menu with appropriate entries", async ({ page }) => {
-		await page.setViewportSize({ width: 1280, height: 720 });
+		await page.setViewportSize({ width: 1920, height: 1080 });
 		await page.goto("/");
 		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
 		// TODO: extend when there are any initial windows

@@ -6,7 +6,7 @@ import { expect, test } from "@playwright/test";
 test.describe("Keyboard Navigation - Enter", () => {
 	test("should open dropdown when Enter is pressed", async ({ page }) => {
 		// 1. Navigate to homepage
-		await page.setViewportSize({ width: 1280, height: 720 });
+		await page.setViewportSize({ width: 1920, height: 1080 });
 		await page.goto("/?w=W10=&a=smart-tile");
 		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
 

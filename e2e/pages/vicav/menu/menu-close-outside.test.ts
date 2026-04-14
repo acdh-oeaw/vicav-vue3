@@ -6,7 +6,7 @@ import { expect, test } from "@playwright/test";
 test.describe("Desktop Menu - Close on Outside Click", () => {
 	test("should close dropdown when clicking outside the menu", async ({ page }) => {
 		// 1. Open any menu dropdown (e.g., Project)
-		await page.setViewportSize({ width: 1280, height: 720 });
+		await page.setViewportSize({ width: 1920, height: 1080 });
 		await page.goto("/");
 		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
 

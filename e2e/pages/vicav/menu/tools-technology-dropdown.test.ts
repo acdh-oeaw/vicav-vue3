@@ -6,7 +6,7 @@ import { expect, test } from "@playwright/test";
 test.describe("Desktop Menu - Tools & Technology Dropdown", () => {
 	test("should open Tools & Technology menu and display all 16 items", async ({ page }) => {
 		// 1. Click on "Tools & Technology" menu item
-		await page.setViewportSize({ width: 1280, height: 720 });
+		await page.setViewportSize({ width: 1920, height: 1080 });
 		await page.goto("/");
 		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
 

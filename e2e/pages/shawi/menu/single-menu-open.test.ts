@@ -6,7 +6,7 @@ import { expect, test } from "@playwright/test";
 test.describe("Desktop Menu - Single Menu Open", () => {
 	test("should only open one dropdown at a time", async ({ page }) => {
 		// 1. Click on About menu to open it
-		await page.setViewportSize({ width: 1280, height: 720 });
+		await page.setViewportSize({ width: 1920, height: 1080 });
 		await page.goto("/");
 		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
 

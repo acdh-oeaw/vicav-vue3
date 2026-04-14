@@ -6,7 +6,7 @@ import { expect, test } from "@playwright/test";
 test.describe("Responsive Behavior - Window List", () => {
 	test("should show Windows dropdown in both desktop and mobile views", async ({ page }) => {
 		// 1. Navigate to homepage at 1280x720
-		await page.setViewportSize({ width: 1280, height: 720 });
+		await page.setViewportSize({ width: 1920, height: 1080 });
 		await page.goto("/");
 		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
 

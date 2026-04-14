@@ -6,7 +6,7 @@ import { expect, test } from "@playwright/test";
 test.describe("Desktop Menu - Bibliographies Dropdown", () => {
 	test("should open Bibliographies menu and display all 8 items", async ({ page }) => {
 		// 1. Navigate to the homepage
-		await page.setViewportSize({ width: 1280, height: 720 });
+		await page.setViewportSize({ width: 1920, height: 1080 });
 		await page.goto("/");
 		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
 

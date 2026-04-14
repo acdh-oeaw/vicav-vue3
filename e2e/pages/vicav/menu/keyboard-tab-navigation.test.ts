@@ -7,7 +7,7 @@ test.describe("Keyboard Navigation - Tab", () => {
 	test("should tab through menu items in order", async ({ page }) => {
 		// browserName
 		// 1. Navigate to homepage
-		await page.setViewportSize({ width: 1280, height: 720 });
+		await page.setViewportSize({ width: 1920, height: 1080 });
 		await page.goto("/");
 		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
 

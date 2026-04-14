@@ -15,7 +15,7 @@ test.describe("Edge Cases - API Error Handling", () => {
 			await route.abort("failed");
 		});
 
-		await page.setViewportSize({ width: 1280, height: 720 });
+		await page.setViewportSize({ width: 1920, height: 1080 });
 		await page.goto("/");
 
 		// expect: Page should load even if API request fails

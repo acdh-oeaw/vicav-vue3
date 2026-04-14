@@ -6,7 +6,7 @@ import { expect, test } from "@playwright/test";
 test.describe("Menu Item - Windows Selection", () => {
 	test("should focus window when clicking Windows menu item", async ({ page }) => {
 		// 1. First, open Mission and News windows (via Project menu)
-		await page.setViewportSize({ width: 1280, height: 720 });
+		await page.setViewportSize({ width: 1920, height: 1080 });
 		await page.goto("/");
 		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
 

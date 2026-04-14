@@ -6,7 +6,7 @@ import { expect, test } from "@playwright/test";
 test.describe("Desktop Menu - All Categories Visible", () => {
 	test("should display About menu with correct submenu items", async ({ page }) => {
 		// 1. Click on About menu item and verify submenu items
-		await page.setViewportSize({ width: 1280, height: 720 });
+		await page.setViewportSize({ width: 1920, height: 1080 });
 		await page.goto("/");
 		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
 
@@ -22,7 +22,7 @@ test.describe("Desktop Menu - All Categories Visible", () => {
 
 	test("should display Profiles menu with correct submenu items", async ({ page }) => {
 		// 1. Click on Profiles menu item and verify submenu items
-		await page.setViewportSize({ width: 1280, height: 720 });
+		await page.setViewportSize({ width: 1920, height: 1080 });
 		await page.goto("/");
 		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
 
@@ -37,7 +37,7 @@ test.describe("Desktop Menu - All Categories Visible", () => {
 
 	test("should display Corpus menu with correct submenu items", async ({ page }) => {
 		// 1. Click on Corpus menu item and verify submenu items
-		await page.setViewportSize({ width: 1280, height: 720 });
+		await page.setViewportSize({ width: 1920, height: 1080 });
 		await page.goto("/");
 		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
 
@@ -53,7 +53,7 @@ test.describe("Desktop Menu - All Categories Visible", () => {
 
 	test("should display Glossary menu with correct submenu items", async ({ page }) => {
 		// 1. Click on Glossary menu item and verify submenu items
-		await page.setViewportSize({ width: 1280, height: 720 });
+		await page.setViewportSize({ width: 1920, height: 1080 });
 		await page.goto("/");
 		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
 
@@ -70,7 +70,7 @@ test.describe("Desktop Menu - All Categories Visible", () => {
 
 	test("should display Windows menu with correct submenu items", async ({ page }) => {
 		// 1. Click on Windows menu item and verify submenu items
-		await page.setViewportSize({ width: 1280, height: 720 });
+		await page.setViewportSize({ width: 1920, height: 1080 });
 		await page.goto("/");
 		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
 

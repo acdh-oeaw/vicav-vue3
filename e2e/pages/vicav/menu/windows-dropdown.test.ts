@@ -8,7 +8,7 @@ test.describe("Desktop Menu - Windows Dropdown", () => {
 		page,
 	}) => {
 		// 1. Click on "Windows" menu item
-		await page.setViewportSize({ width: 1280, height: 720 });
+		await page.setViewportSize({ width: 1920, height: 1080 });
 		await page.goto("/");
 		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
 

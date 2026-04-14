@@ -6,7 +6,7 @@ import { expect, test } from "@playwright/test";
 test.describe("Desktop Menu Rendering", () => {
 	test("should display all five desktop menu items", async ({ page }) => {
 		// 1. Navigate to home page and verify menu bar contains About, Profiles, Corpus, Glossary, Windows menu items
-		await page.setViewportSize({ width: 1280, height: 720 });
+		await page.setViewportSize({ width: 1920, height: 1080 });
 		await page.goto("/");
 		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
 

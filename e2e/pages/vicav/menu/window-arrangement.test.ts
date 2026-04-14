@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 test.describe("Windows Arrangement", () => {
 	test("arrangement options in desktop menu", async ({ page }) => {
-		await page.setViewportSize({ width: 1280, height: 720 });
+		await page.setViewportSize({ width: 1920, height: 1080 });
 		await page.goto("/");
 		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
 

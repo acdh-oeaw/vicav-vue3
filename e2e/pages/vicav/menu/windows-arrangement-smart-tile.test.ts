@@ -6,7 +6,7 @@ import { expect, test } from "@playwright/test";
 test.describe("Menu Item - Windows Arrangement Smart Tile", () => {
 	test("should arrange windows in smart tile pattern", async ({ page }) => {
 		// 1. Open multiple windows
-		await page.setViewportSize({ width: 1280, height: 720 });
+		await page.setViewportSize({ width: 1920, height: 1080 });
 		await page.goto("/");
 		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
 

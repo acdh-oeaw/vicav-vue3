@@ -18,7 +18,7 @@ test.describe("Responsive Behavior - Breakpoint", () => {
 		await expect(page.getByRole("button", { name: /Toggle menu/i })).toBeHidden();
 
 		// 3. Resize viewport to 1280x720 and verify desktop menu
-		await page.setViewportSize({ width: 1280, height: 720 });
+		await page.setViewportSize({ width: 1920, height: 1080 });
 		// expect: Desktop menu should remain visible at widths > 1024px
 		await expect(page.locator("(//*[@role='menubar'])[1]/..")).toBeVisible();
 

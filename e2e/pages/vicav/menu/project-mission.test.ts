@@ -6,7 +6,7 @@ import { expect, test } from "@playwright/test";
 test.describe("Menu Item - Project Mission", () => {
 	test("should open Mission window when clicking Project > Mission", async ({ page }) => {
 		// 1. Navigate to homepage
-		await page.setViewportSize({ width: 1280, height: 720 });
+		await page.setViewportSize({ width: 1920, height: 1080 });
 		await page.goto("/");
 		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
 
