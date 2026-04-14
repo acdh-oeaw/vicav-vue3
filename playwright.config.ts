@@ -40,7 +40,6 @@ export default defineConfig({
 	testDir: "./e2e",
 	fullyParallel: true,
 	forbidOnly: isCI,
-	failOnFlakyTests: false, // in mit April 2026 there are strange errors in Firefox
 	retries: isCI ? 2 : 0,
 	workers: isCI ? 1 : undefined,
 	reporter: "html",
