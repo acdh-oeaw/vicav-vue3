@@ -39,30 +39,31 @@ const backend = (() => {
 export default defineConfig({
 	testDir: "./e2e",
 	fullyParallel: true,
+	failOnFlakyTests: isCI,
 	forbidOnly: isCI,
 	retries: isCI ? 2 : 0,
-	workers: isCI ? 1 : undefined,
+	workers: isCI ? 3 : undefined,
 	reporter: "html",
 	testMatch: `${backend}/**/*.@(test|spec).ts`,
 	use: {
 		baseURL: baseUrl,
 		trace: "on-first-retry",
 		video: {
-			mode: 'on-first-retry',
+			mode: "on-first-retry",
 			size: { width: 1920, height: 1080 },
 			show: {
 				actions: {
 					duration: 500,
-					position: 'bottom-right',
+					position: "bottom-right",
 					fontSize: 14,
 				},
 				test: {
-					level: 'step',
-					position: 'bottom-left',
+					level: "step",
+					position: "bottom-left",
 					fontSize: 12,
-				}
+				},
 			},
-		}
+		},
 	},
 	projects: [
 		{
