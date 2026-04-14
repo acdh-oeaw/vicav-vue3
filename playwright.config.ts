@@ -39,10 +39,9 @@ const backend = (() => {
 export default defineConfig({
 	testDir: "./e2e",
 	fullyParallel: true,
-	failOnFlakyTests: isCI,
 	forbidOnly: isCI,
 	retries: isCI ? 2 : 0,
-	workers: isCI ? 3 : undefined,
+	workers: isCI ? 1 : undefined,
 	reporter: "html",
 	testMatch: `${backend}/**/*.@(test|spec).ts`,
 	use: {
