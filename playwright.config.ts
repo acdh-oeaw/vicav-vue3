@@ -47,6 +47,22 @@ export default defineConfig({
 	use: {
 		baseURL: baseUrl,
 		trace: "on-first-retry",
+		video: {
+			mode: 'on-first-retry',
+			size: { width: 1920, height: 1080 },
+			show: {
+				actions: {
+					duration: 500,
+					position: 'bottom-right',
+					fontSize: 14,
+				},
+				test: {
+					level: 'step',
+					position: 'bottom-left',
+					fontSize: 12,
+				}
+			},
+		}
 	},
 	projects: [
 		{
