@@ -12,8 +12,12 @@ const interactiveContentSelector = [
 	"[contenteditable='true']",
 	"[role='button']",
 	"[role='checkbox']",
+	"[role='combobox']",
 	"[role='link']",
+	"[role='listbox']",
 	"[role='menuitem']",
+	"[role='option']",
+	"[role='textbox']",
 	"[tabindex]:not([tabindex='-1'])",
 ].join(", ");
 
