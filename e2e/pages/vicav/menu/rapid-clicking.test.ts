@@ -11,11 +11,21 @@ test.describe("Edge Cases - Rapid Clicking", () => {
 		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
 
 		// 2. Rapidly click through different menu categories
+		await page.getByRole("menuitem", { name: "Project" }).click();
 		for (let i = 0; i < 10; i++) {
-			await page.getByRole("menuitem", { name: "Project" }).click();
-			await page.getByRole("menuitem", { name: "Bibliographies" }).click();
-			await page.getByRole("menuitem", { name: "Profiles" }).click();
-			await page.getByRole("menuitem", { name: "Feature Lists" }).click();
+			for (const name of [
+				"Project",
+				"Bibliographies",
+				"Profiles",
+				"Feature Lists",
+				"Samples",
+				"Tools & Technology",
+			]) {
+				await page.getByRole("menuitem", { name: name, exact: true }).hover();
+				await expect(
+					page.getByRole("menuitem", { name: name, exact: true }).first(),
+				).toHaveAttribute("aria-expanded", "true");
+			}
 		}
 
 		// 3. Verify no JavaScript errors occur
