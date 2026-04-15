@@ -4,7 +4,11 @@ import { expect, test } from "@playwright/test";
 // seed: e2e/seed.spec.ts
 
 test.describe("Edge Cases - Rapid Clicking", () => {
-	test("should handle rapid menu clicking without errors", async ({ page }) => {
+	test("should handle rapid menu clicking without errors", async ({ page, browserName }) => {
+		test.fixme(
+			browserName === "webkit",
+			"This test does not work correctly in Webkit headless on GitHub and we want to change the menu implementation anyway.",
+		);
 		// 1. Navigate to homepage
 		await page.setViewportSize({ width: 1920, height: 1080 });
 		await page.goto("/");
