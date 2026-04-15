@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import type Zod from "zod";
 
+import type {
+	DictChange,
+	DictEntry,
+	DictExample,
+	RestVLEEntry,
+	TranslationCit,
+} from "@/lib/api-client";
 import type { DictQuerySchema } from "@/types/global.ts";
 
 const props = defineProps<{
@@ -26,7 +33,7 @@ const id = ref<string | null | undefined>(params.value.queryParams?.id);
 const ids = ref<string | null | undefined>(params.value.queryParams?.ids);
 const sort = ref<"asc" | "desc" | "none" | null | undefined>(params.value.queryParams?.sort);
 const altLemma = ref<string | null | undefined>(params.value.queryParams?.altLemma);
-const format = ref<string | null | undefined>(params.value.queryParams?.format ?? "html");
+const format = ref<string | null | undefined>("json");
 
 /* filter criteria editor */
 const filterCriteria = ref<Map<string, string>>(new Map([]));
@@ -82,32 +89,37 @@ const updateFilterCriteria = () => {
 
 /* data fetch initialization */
 const queryParams = ref<Parameters<typeof useDictsEntries>[0]["queryParams"]>({});
+const setQueryParam = <K extends keyof NonNullable<typeof queryParams.value>>(
+	queryParamsValue: NonNullable<typeof queryParams.value>,
+	key: K,
+	value: NonNullable<typeof queryParams.value>[K],
+) => {
+	if (value) {
+		queryParamsValue[key] = value;
+	} else {
+		Reflect.deleteProperty(queryParamsValue, key);
+	}
+};
+
 const updateQueryParams = () => {
-	if (queryParams.value === undefined) return;
-	if (q.value) queryParams.value.q = q.value;
-	else delete queryParams.value.q;
+	const queryParamsValue = queryParams.value;
+	if (queryParamsValue === undefined) return;
+	setQueryParam(queryParamsValue, "q", q.value);
 	if (params.value.isTextInputManual) {
 		updateFilterCriteria();
 	} else {
 		params.value.queryTemplateTextInput ??= "";
 	}
-	if (page.value) queryParams.value.page = page.value;
-	else delete queryParams.value.page;
-	if (pageSize.value) queryParams.value.pageSize = pageSize.value;
-	else delete queryParams.value.pageSize;
-	if (id.value) queryParams.value.id = id.value;
-	else delete queryParams.value.id;
-	if (ids.value) queryParams.value.ids = ids.value;
-	else delete queryParams.value.ids;
-	if (sort.value) queryParams.value.sort = sort.value;
-	else delete queryParams.value.sort;
-	if (altLemma.value) queryParams.value.altLemma = altLemma.value;
-	else delete queryParams.value.altLemma;
-	if (format.value) queryParams.value.format = format.value;
-	else delete queryParams.value.format;
-	params.value.queryParams = queryParams.value;
+	setQueryParam(queryParamsValue, "page", page.value);
+	setQueryParam(queryParamsValue, "pageSize", pageSize.value);
+	setQueryParam(queryParamsValue, "id", id.value);
+	setQueryParam(queryParamsValue, "ids", ids.value);
+	setQueryParam(queryParamsValue, "sort", sort.value);
+	setQueryParam(queryParamsValue, "altLemma", altLemma.value);
+	setQueryParam(queryParamsValue, "format", format.value);
+	params.value.queryParams = queryParamsValue;
 	// There is a label passed from the TEI description text. Can we use it?
-	params.value.queryString = `${params.value.textId ?? ""}: ${queryParams.value.q ?? ""}`;
+	params.value.queryString = `${params.value.textId ?? ""}: ${queryParamsValue.q ?? ""}`;
 	emit("updateQueryParam", params.value.queryString);
 };
 updateQueryParams();
@@ -120,6 +132,442 @@ watch(data, (newData) => {
 	if (!newData) return;
 	page.value = parseInt(newData.page);
 	pageSize.value = parseInt(newData.page_size);
+});
+
+interface RenderedTranslation {
+	lang?: string;
+	text: string;
+}
+
+interface RenderedLocation {
+	place?: string;
+	tribe?: string;
+}
+
+interface RenderedEditor {
+	action: "change" | "create";
+	status?: string;
+	when?: string;
+	who?: string;
+}
+
+interface ExampleLike {
+	"@id"?: string;
+	"@type"?: string;
+	"@vutlsk"?: string;
+	feature?: DictChange;
+	features?: Array<DictChange>;
+	geographic_usg?: {
+		tribe_name?: {
+			$: string;
+		};
+		place_name?: {
+			$: string;
+		};
+	};
+	quote?: {
+		"@lang"?: string;
+		$: string;
+	};
+	translation_cit?: TranslationCit;
+	translation_cits?: Array<TranslationCit>;
+	listBibl?: Array<{
+		"@id"?: string;
+		title?: {
+			"@ref"?: string;
+		};
+		biblScope?: {
+			"@unit"?: string;
+			$: string;
+		};
+	}>;
+}
+
+interface GrammarLike {
+	pos_gram?: { $?: string };
+	derivedVerbClass_gram?: { $?: string };
+	synRoot_gram?: { $?: string };
+	diaRoot_gram?: { $?: string };
+	root_gram?: { $?: string };
+	number_gram?: { $?: string };
+	person_gram?: { $?: string };
+	aspect_gram?: { $?: string };
+	gender_gram?: { $?: string };
+	mood_gram?: { $?: string };
+	voice_gram?: { $?: string };
+	degree_gram?: { $?: string };
+	inflectionType_gram?: { $?: string };
+	constraint_gram?: { $?: string };
+	morphPattern_gram?: { $?: string };
+}
+
+interface EntryLocationLike {
+	place_name?: {
+		$: string;
+	};
+	tribe_name?: {
+		$: string;
+	};
+}
+
+interface EntryFormLike {
+	"@subtype"?: string;
+	orth?: {
+		"@lang"?: string;
+		$?: string;
+	};
+	geographic_usg?: EntryLocationLike;
+	geographic_usgs?: Array<EntryLocationLike>;
+}
+
+interface TranslationEquivalentLike {
+	form?: {
+		orth?: {
+			"@lang"?: string;
+			$?: string;
+		};
+	};
+	gloss?: {
+		$: string;
+	};
+}
+
+interface RelatedXrLike {
+	example_cit?: ExampleLike;
+}
+
+interface SenseLike {
+	"@id"?: string;
+	translationEquivalent_cit?: TranslationEquivalentLike;
+	translationEquivalent_cits?: Array<TranslationEquivalentLike>;
+	related_xr?: RelatedXrLike;
+	related_xrs?: Array<RelatedXrLike>;
+}
+
+interface EntryPayloadLike {
+	"@id"?: string;
+	"@lang"?: string;
+	lemma_form?: EntryFormLike;
+	inflected_form?: {
+		orth?: {
+			"@lang"?: string;
+			$?: string;
+		};
+		gramGrp?: GrammarLike;
+		geographic_usg?: EntryLocationLike;
+		geographic_usgs?: Array<EntryLocationLike>;
+	};
+	inflected_forms?: Array<{
+		orth?: {
+			"@lang"?: string;
+			$?: string;
+		};
+		gramGrp?: GrammarLike;
+		geographic_usg?: EntryLocationLike;
+		geographic_usgs?: Array<EntryLocationLike>;
+	}>;
+	gramGrp?: GrammarLike;
+	sense?: SenseLike;
+	senses?: Array<SenseLike>;
+	notes?: Array<{
+		$?: string;
+	}>;
+	features?: Array<DictChange>;
+}
+
+interface RenderedDictEntry {
+	id?: string;
+	sid?: string;
+	lemma?: string;
+	status?: string;
+	type?: string;
+	html?: string;
+	location?: string;
+	locations: Array<RenderedLocation>;
+	quote?: RenderedTranslation;
+	translations: Array<RenderedTranslation>;
+	editors: Array<RenderedEditor>;
+	selfHref?: string;
+	grammar: Array<string>;
+	inflectedForms: Array<{
+		label: string;
+		grammar: Array<string>;
+		locations: Array<RenderedLocation>;
+	}>;
+	senses: Array<{
+		id?: string;
+		translations: Array<RenderedTranslation>;
+		relatedExamples: Array<{
+			id?: string;
+			quote?: RenderedTranslation;
+			locations: Array<RenderedLocation>;
+			translations: Array<RenderedTranslation>;
+			editors: Array<RenderedEditor>;
+			bibliography: Array<string>;
+		}>;
+	}>;
+	notes: Array<string>;
+	raw: RestVLEEntry;
+}
+
+function asArray<T>(value: T | Array<T> | null | undefined): Array<T> {
+	if (value == null) return [];
+	return Array.isArray(value) ? value : [value];
+}
+
+function collectChanges(
+	changes: DictChange | Array<DictChange> | undefined,
+): Array<RenderedEditor> {
+	const renderedChanges: Array<RenderedEditor> = [];
+
+	for (const item of asArray(changes)) {
+		if (item.change != null) {
+			renderedChanges.push({ action: "change", ...item.change });
+			continue;
+		}
+
+		if (item.create != null) {
+			renderedChanges.push({
+				action: "create",
+				status: item.create.status,
+				when: item.create.when,
+				who: item.create.who,
+			});
+		}
+	}
+
+	return renderedChanges;
+}
+
+function collectTranslations(
+	single: TranslationCit | undefined,
+	multiple: Array<TranslationCit> | undefined,
+): Array<RenderedTranslation> {
+	return [...asArray(single), ...asArray(multiple)]
+		.map((translation) => {
+			return {
+				lang: translation["@lang"],
+				text: translation.quote?.$ ?? "",
+			};
+		})
+		.filter((translation) => translation.text !== "");
+}
+
+function collectLocations(
+	single:
+		| {
+				place_name?: {
+					$: string;
+				};
+				tribe_name?: {
+					$: string;
+				};
+		  }
+		| undefined,
+	multiple:
+		| Array<{
+				place_name?: {
+					$: string;
+				};
+				tribe_name?: {
+					$: string;
+				};
+		  }>
+		| undefined,
+): Array<RenderedLocation> {
+	return [...asArray(single), ...asArray(multiple)]
+		.map((location) => {
+			return {
+				place: location.place_name?.$,
+				tribe: location.tribe_name?.$,
+			};
+		})
+		.filter((location) => location.place != null || location.tribe != null);
+}
+
+function formatLocation(location: RenderedLocation) {
+	return [location.place, location.tribe].filter(Boolean).join(" / ");
+}
+
+function collectGrammar(grammar: GrammarLike | undefined): Array<string> {
+	if (grammar == null) return [];
+
+	const items = [
+		["Part of speech", grammar.pos_gram?.$],
+		["Class", grammar.derivedVerbClass_gram?.$],
+		["Syn root", grammar.synRoot_gram?.$],
+		["Dia root", grammar.diaRoot_gram?.$],
+		["Root", grammar.root_gram?.$],
+		["Aspect", grammar.aspect_gram?.$],
+		["Number", grammar.number_gram?.$],
+		["Person", grammar.person_gram?.$],
+		["Gender", grammar.gender_gram?.$],
+		["Mood", grammar.mood_gram?.$],
+		["Voice", grammar.voice_gram?.$],
+		["Degree", grammar.degree_gram?.$],
+		["Inflection", grammar.inflectionType_gram?.$],
+		["Constraint", grammar.constraint_gram?.$],
+		["Pattern", grammar.morphPattern_gram?.$],
+	];
+
+	return items
+		.filter(([, value]) => value != null && value !== "")
+		.map(([label, value]) => `${label}: ${value}`);
+}
+
+function collectTranslationEquivalents(
+	single: TranslationEquivalentLike | undefined,
+	multiple: Array<TranslationEquivalentLike> | undefined,
+): Array<RenderedTranslation> {
+	return [...asArray(single), ...asArray(multiple)]
+		.map((translation) => {
+			return {
+				lang: translation.form?.orth?.["@lang"],
+				text: translation.form?.orth?.$ ?? translation.gloss?.$ ?? "",
+			};
+		})
+		.filter((translation) => translation.text !== "");
+}
+
+function collectBibliography(example: ExampleLike | undefined): Array<string> {
+	return asArray(example?.listBibl).flatMap((item) => {
+		const title = item.title?.["@ref"];
+		const scope = item.biblScope?.$;
+		const unit = item.biblScope?.["@unit"];
+		const suffix = [unit, scope].filter(Boolean).join(": ");
+
+		if (title == null && suffix === "") return [];
+		return [suffix === "" ? String(title) : `${title} (${suffix})`];
+	});
+}
+
+function collectRelatedExamples(
+	single: RelatedXrLike | undefined,
+	multiple: Array<RelatedXrLike> | undefined,
+) {
+	return [...asArray(single), ...asArray(multiple)].flatMap((related) => {
+		const example = related.example_cit;
+		if (example == null) return [];
+
+		return [
+			{
+				id: example["@id"],
+				quote: example.quote?.$
+					? {
+							lang: example.quote?.["@lang"],
+							text: example.quote.$,
+						}
+					: undefined,
+				locations: collectLocations(example.geographic_usg, undefined),
+				translations: collectTranslations(example.translation_cit, example.translation_cits),
+				editors: [...collectChanges(example.feature), ...collectChanges(example.features)],
+				bibliography: collectBibliography(example),
+			},
+		];
+	});
+}
+
+function normalizeEntry(entry: RestVLEEntry): RenderedDictEntry {
+	if (typeof entry.entry === "string") {
+		return {
+			id: entry.id,
+			sid: entry.sid,
+			lemma: entry.lemma,
+			status: entry.status,
+			type: entry.type,
+			html: entry.entry,
+			locations: [],
+			translations: [],
+			editors: [],
+			grammar: [],
+			inflectedForms: [],
+			senses: [],
+			notes: [],
+			selfHref: entry._links?.self?.href,
+			raw: entry,
+		};
+	}
+
+	const payload = entry.entry as DictEntry | DictExample | undefined;
+	const normalizedPayload =
+		((payload as { entry?: EntryPayloadLike } | undefined)?.entry as
+			| EntryPayloadLike
+			| undefined) ?? (payload as EntryPayloadLike | undefined);
+	const example =
+		((payload as DictEntry | undefined)?.example_cit as ExampleLike | undefined) ??
+		(payload as ExampleLike | undefined);
+	const quote = example?.quote?.$;
+	const quoteLang = example?.quote?.["@lang"];
+	const translations = collectTranslations(example?.translation_cit, example?.translation_cits);
+	const editors = [
+		...collectChanges(example?.feature),
+		...collectChanges(example?.features),
+		...collectChanges((payload as DictEntry | undefined)?.feature),
+		...collectChanges((payload as DictEntry | undefined)?.features),
+	];
+	const location =
+		(payload as DictEntry | undefined)?.geographic_usg?.place_name?.$ ??
+		example?.geographic_usg?.place_name?.$;
+	const locations = collectLocations(
+		normalizedPayload?.lemma_form?.geographic_usg,
+		normalizedPayload?.lemma_form?.geographic_usgs,
+	)
+		.concat(collectLocations((payload as DictEntry | undefined)?.geographic_usg, undefined))
+		.concat(collectLocations(example?.geographic_usg, undefined));
+	const grammar = collectGrammar(normalizedPayload?.gramGrp);
+	const inflectedForms = [
+		...asArray(normalizedPayload?.inflected_form),
+		...asArray(normalizedPayload?.inflected_forms),
+	].flatMap((form) => {
+		const label = form.orth?.$;
+		if (label == null || label === "") return [];
+
+		return [
+			{
+				label,
+				grammar: collectGrammar(form.gramGrp),
+				locations: collectLocations(form.geographic_usg, form.geographic_usgs),
+			},
+		];
+	});
+	const senses = [...asArray(normalizedPayload?.sense), ...asArray(normalizedPayload?.senses)].map(
+		(sense) => {
+			return {
+				id: sense["@id"],
+				translations: collectTranslationEquivalents(
+					sense.translationEquivalent_cit,
+					sense.translationEquivalent_cits,
+				),
+				relatedExamples: collectRelatedExamples(sense.related_xr, sense.related_xrs),
+			};
+		},
+	);
+	const notes = asArray(normalizedPayload?.notes)
+		.map((note) => note.$ ?? "")
+		.filter((note) => note !== "");
+
+	return {
+		id: entry.id,
+		sid: entry.sid,
+		lemma: entry.lemma,
+		status: entry.status,
+		type: entry.type,
+		location,
+		locations,
+		quote: quote ? { lang: quoteLang, text: quote } : undefined,
+		translations,
+		editors,
+		selfHref: entry._links?.self?.href,
+		grammar,
+		inflectedForms,
+		senses,
+		notes,
+		raw: entry,
+	};
+}
+
+const renderedEntries = computed(() => {
+	return data.value?._embedded?.entries.map((entry) => normalizeEntry(entry)) ?? [];
 });
 
 /* window behaviour */
@@ -363,7 +811,6 @@ const api = useApiClient(); */
 			</CollapsibleContent>
 		</Collapsible>
 
-		<!-- eslint-disable-next-line vue/no-v-html, vuejs-accessibility/click-events-have-key-events, vuejs-accessibility/no-static-element-interactions -->
 		<div v-if="data" class="prose mb-auto max-w-3xl p-8">
 			<Toggle v-model="debug">
 				<div v-if="data.total_items">Total items: {{ data.total_items }}</div>
@@ -372,14 +819,254 @@ const api = useApiClient(); */
 			<div v-if="debug && data.page_count">
 				<pre>{{ JSON.stringify(data._links, null, "  ") }}</pre>
 			</div>
-			<div v-if="data._embedded && data._embedded.entries">
-				<div v-for="(e, i) in data._embedded.entries" :key="i">
+			<div v-if="renderedEntries.length > 0" class="space-y-4">
+				<div v-for="(e, i) in renderedEntries" :key="e.id ?? i">
 					<div v-if="debug" class="text-sm">
-						<pre>{{ JSON.stringify(e, null, "  ") }}</pre>
-						<pre>{{ e.entry }} </pre>
+						<pre>{{ JSON.stringify(e.raw, null, "  ") }}</pre>
 					</div>
 					<!-- eslint-disable-next-line vue/no-v-html -->
-					<div v-if="typeof e.entry === 'string'" v-html="e.entry" />
+					<div v-if="e.html" v-html="e.html" />
+					<Card v-else class="overflow-hidden border-border/70 shadow-sm">
+						<CardHeader class="gap-3 border-b bg-muted/30">
+							<div class="flex flex-wrap items-start justify-between gap-3">
+								<div class="space-y-1">
+									<CardTitle class="text-base leading-snug">
+										{{ e.quote?.text ?? e.lemma ?? e.id ?? "Dictionary entry" }}
+									</CardTitle>
+									<CardDescription
+										v-if="e.location"
+										class="text-sm font-medium tracking-[0.08em] uppercase"
+									>
+										{{ e.location }}
+									</CardDescription>
+								</div>
+								<div class="flex flex-wrap gap-2">
+									<Badge v-if="e.type" variant="outline">{{ e.type }}</Badge>
+									<Badge v-if="e.status" variant="outline">{{ e.status }}</Badge>
+								</div>
+							</div>
+						</CardHeader>
+						<CardContent class="pt-4">
+							<Table>
+								<TableBody>
+									<TableRow v-if="e.id || e.sid || e.selfHref">
+										<TableCell class="w-32 font-semibold">Identifiers</TableCell>
+										<TableCell>
+											<div class="flex flex-wrap items-center gap-2">
+												<Badge v-if="e.id" variant="outline">id: {{ e.id }}</Badge>
+												<Badge v-if="e.sid" variant="outline">sid: {{ e.sid }}</Badge>
+												<Badge v-if="e.selfHref" variant="outline">{{ e.selfHref }}</Badge>
+											</div>
+										</TableCell>
+									</TableRow>
+									<TableRow v-if="e.locations.length > 0">
+										<TableCell class="w-32 font-semibold">Locations</TableCell>
+										<TableCell>
+											<div class="flex flex-wrap gap-2">
+												<Badge
+													v-for="location in e.locations"
+													:key="formatLocation(location)"
+													variant="outline"
+												>
+													{{ formatLocation(location) }}
+												</Badge>
+											</div>
+										</TableCell>
+									</TableRow>
+									<TableRow v-if="e.grammar.length > 0">
+										<TableCell class="w-32 font-semibold">Grammar</TableCell>
+										<TableCell>
+											<div class="flex flex-wrap gap-2">
+												<Badge v-for="item in e.grammar" :key="item" variant="outline">
+													{{ item }}
+												</Badge>
+											</div>
+										</TableCell>
+									</TableRow>
+									<TableRow v-if="e.quote">
+										<TableCell class="w-32 font-semibold">Quote</TableCell>
+										<TableCell>
+											<div class="space-y-2">
+												<p class="m-0">{{ e.quote.text }}</p>
+												<Badge v-if="e.quote.lang" variant="outline">{{ e.quote.lang }}</Badge>
+											</div>
+										</TableCell>
+									</TableRow>
+									<TableRow v-if="e.translations.length > 0">
+										<TableCell class="w-32 font-semibold">Translations</TableCell>
+										<TableCell>
+											<div class="space-y-2">
+												<div
+													v-for="translation in e.translations"
+													:key="`${translation.lang}-${translation.text}`"
+													class="flex flex-wrap items-center gap-2"
+												>
+													<Badge v-if="translation.lang" variant="outline">
+														{{ translation.lang }}
+													</Badge>
+													<span>{{ translation.text }}</span>
+												</div>
+											</div>
+										</TableCell>
+									</TableRow>
+									<TableRow v-if="e.inflectedForms.length > 0">
+										<TableCell class="w-32 font-semibold">Inflected Forms</TableCell>
+										<TableCell>
+											<div class="space-y-3">
+												<Card
+													v-for="inflected in e.inflectedForms"
+													:key="inflected.label"
+													class="border-border/60 shadow-none"
+												>
+													<CardContent class="space-y-2 pt-4">
+														<p class="font-medium">{{ inflected.label }}</p>
+														<div v-if="inflected.grammar.length > 0" class="flex flex-wrap gap-2">
+															<Badge
+																v-for="item in inflected.grammar"
+																:key="item"
+																variant="outline"
+															>
+																{{ item }}
+															</Badge>
+														</div>
+														<div v-if="inflected.locations.length > 0" class="flex flex-wrap gap-2">
+															<Badge
+																v-for="location in inflected.locations"
+																:key="formatLocation(location)"
+																variant="outline"
+															>
+																{{ formatLocation(location) }}
+															</Badge>
+														</div>
+													</CardContent>
+												</Card>
+											</div>
+										</TableCell>
+									</TableRow>
+									<TableRow v-if="e.editors.length > 0">
+										<TableCell class="w-32 font-semibold">Editors</TableCell>
+										<TableCell>
+											<div class="space-y-2">
+												<div
+													v-for="(editor, editorIndex) in e.editors"
+													:key="`${editor.action}-${editor.when}-${editor.who}-${editorIndex}`"
+													class="flex flex-wrap items-center gap-2"
+												>
+													<span class="font-medium">{{ editor.who ?? "Unknown" }}</span>
+													<span>({{ editor.action }})</span>
+													<span v-if="editor.when">{{ editor.when }}</span>
+													<Badge v-if="editor.status" variant="outline">
+														{{ editor.status }}
+													</Badge>
+												</div>
+											</div>
+										</TableCell>
+									</TableRow>
+									<TableRow v-if="e.senses.length > 0">
+										<TableCell class="w-32 font-semibold">Senses</TableCell>
+										<TableCell>
+											<div class="space-y-4">
+												<Card
+													v-for="sense in e.senses"
+													:key="sense.id ?? sense.translations.map((item) => item.text).join('|')"
+													class="border-border/60 shadow-none"
+												>
+													<CardContent class="space-y-3 pt-4">
+														<div class="flex flex-wrap items-center gap-2">
+															<span class="font-medium">{{ sense.id ?? "Sense" }}</span>
+														</div>
+														<div v-if="sense.translations.length > 0" class="space-y-2">
+															<div
+																v-for="translation in sense.translations"
+																:key="`${sense.id}-${translation.lang}-${translation.text}`"
+																class="flex flex-wrap items-center gap-2"
+															>
+																<Badge v-if="translation.lang" variant="outline">
+																	{{ translation.lang }}
+																</Badge>
+																<span>{{ translation.text }}</span>
+															</div>
+														</div>
+														<div v-if="sense.relatedExamples.length > 0" class="space-y-3">
+															<p class="text-sm font-semibold">Related Examples</p>
+															<Card
+																v-for="related in sense.relatedExamples"
+																:key="related.id ?? related.quote?.text"
+																class="border-border/60 bg-muted/20 shadow-none"
+															>
+																<CardContent class="space-y-2 pt-4">
+																	<p v-if="related.quote" class="m-0 font-medium">
+																		{{ related.quote.text }}
+																	</p>
+																	<div
+																		v-if="related.locations.length > 0"
+																		class="flex flex-wrap gap-2"
+																	>
+																		<Badge
+																			v-for="location in related.locations"
+																			:key="formatLocation(location)"
+																			variant="outline"
+																		>
+																			{{ formatLocation(location) }}
+																		</Badge>
+																	</div>
+																	<div v-if="related.translations.length > 0" class="space-y-1">
+																		<div
+																			v-for="translation in related.translations"
+																			:key="`${related.id}-${translation.lang}-${translation.text}`"
+																			class="flex flex-wrap items-center gap-2"
+																		>
+																			<Badge v-if="translation.lang" variant="outline">
+																				{{ translation.lang }}
+																			</Badge>
+																			<span>{{ translation.text }}</span>
+																		</div>
+																	</div>
+																	<div v-if="related.bibliography.length > 0" class="space-y-1">
+																		<p class="text-sm font-semibold">Bibliography</p>
+																		<div class="flex flex-wrap gap-2">
+																			<Badge
+																				v-for="item in related.bibliography"
+																				:key="item"
+																				variant="outline"
+																			>
+																				{{ item }}
+																			</Badge>
+																		</div>
+																	</div>
+																	<div v-if="related.editors.length > 0" class="space-y-1">
+																		<div
+																			v-for="(editor, relatedEditorIndex) in related.editors"
+																			:key="`${related.id}-${editor.action}-${editor.when}-${relatedEditorIndex}`"
+																			class="flex flex-wrap items-center gap-2 text-sm"
+																		>
+																			<span>{{ editor.who ?? "Unknown" }}</span>
+																			<span>({{ editor.action }})</span>
+																			<span v-if="editor.when">{{ editor.when }}</span>
+																		</div>
+																	</div>
+																</CardContent>
+															</Card>
+														</div>
+													</CardContent>
+												</Card>
+											</div>
+										</TableCell>
+									</TableRow>
+									<TableRow v-if="e.notes.length > 0">
+										<TableCell class="w-32 font-semibold">Notes</TableCell>
+										<TableCell>
+											<div class="space-y-2">
+												<p v-for="note in e.notes" :key="note" class="m-0">
+													{{ note }}
+												</p>
+											</div>
+										</TableCell>
+									</TableRow>
+								</TableBody>
+							</Table>
+						</CardContent>
+					</Card>
 				</div>
 			</div>
 		</div>
