@@ -27,28 +27,37 @@ onScopeDispose(() => {
 </script>
 
 <template>
-	<Menubar v-model="currentMenu" class="w-full border-none">
-		<MenubarMenu v-for="menu of menus" :key="menu.id">
-			<MenubarTrigger>
-				{{ menu.title }}
-			</MenubarTrigger>
-			<MenubarContent>
-				<template v-for="(item, index) of menu.item">
-					<MenubarItem
-						v-if="item.type === 'item'"
-						:key="item.id"
-						@select="
-							() => {
-								emit('select-menu-item', item);
-							}
-						"
-					>
-						{{ item.title }}
-					</MenubarItem>
-					<MenubarSeparator v-else-if="item.type === 'separator'" :key="`separator-${index}`" />
-				</template>
-			</MenubarContent>
-		</MenubarMenu>
+	<NavigationMenu v-model="currentMenu" class="w-full max-w-full justify-between border-none">
+		<NavigationMenuList>
+			<NavigationMenuItem v-for="menu of menus" :key="menu.id">
+				<NavigationMenuTrigger
+					class="bg-transparent hover:bg-accent/50 focus:bg-accent/50 data-[state=open]:hover:bg-accent/50 data-[state=open]:focus:bg-accent/50"
+				>
+					{{ menu.title }}
+				</NavigationMenuTrigger>
+				<NavigationMenuContent class="min-w-32 bg-background text-on-background">
+					<template v-for="(item, index) of menu.item">
+						<NavigationMenuLink
+							v-if="item.type === 'item'"
+							:key="item.id"
+							as="div"
+							class="cursor-pointer"
+							@select="
+								() => {
+									emit('select-menu-item', item);
+								}
+							"
+						>
+							{{ item.title }}
+						</NavigationMenuLink>
+						<NavigationMenuSeparator
+							v-else-if="item.type === 'separator'"
+							:key="`separator-${index}`"
+						/>
+					</template>
+				</NavigationMenuContent>
+			</NavigationMenuItem>
+		</NavigationMenuList>
 		<WindowListDropdown :is-mobile="false" />
-	</Menubar>
+	</NavigationMenu>
 </template>

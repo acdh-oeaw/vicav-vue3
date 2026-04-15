@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ChevronRightIcon, MenuIcon } from "lucide-vue-next";
+import { MenuIcon } from "lucide-vue-next";
 
 import type { ItemType, MainItemType } from "@/lib/api-client";
 
@@ -14,9 +14,11 @@ const emit = defineEmits<{
 const { menus } = toRefs(props);
 
 const isSidepanelOpen = ref(false);
+const currentMenu = ref("");
 
 function close() {
 	isSidepanelOpen.value = false;
+	currentMenu.value = "";
 }
 
 onMounted(() => {
@@ -30,26 +32,37 @@ onScopeDispose(() => {
 
 <template>
 	<Sheet v-model:open="isSidepanelOpen">
-		<Menubar class="w-full border-none">
+		<NavigationMenu
+			v-model="currentMenu"
+			class="w-full max-w-full justify-between border-none"
+			orientation="vertical"
+		>
 			<WindowListDropdown :is-mobile="true" />
-		</Menubar>
-		<SheetTrigger aria-label="Toggle menu" class="cursor-default">
-			<MenuIcon class="mx-3 my-1.5 size-5" />
-		</SheetTrigger>
-		<SheetContent class="overflow-y-auto">
-			<SheetTitle class="sr-only">Navigation menu</SheetTitle>
-			<div class="grid divide-y divide-border py-8">
-				<details v-for="menu of menus" :key="menu.id" class="group py-4" name="menu-accordion">
-					<summary class="flex cursor-pointer list-none items-center justify-between font-medium">
-						{{ menu.title }}
-						<ChevronRightIcon class="size-4 transition group-open:rotate-90" />
-					</summary>
-					<ul class="mt-2 grid gap-1" role="list">
-						<template v-for="(item, index) of menu.item">
-							<li v-if="item.type === 'item'" :key="item.id">
-								<button
-									class="cursor-default py-1 text-on-background/75 transition hover:text-on-background"
-									@click="
+
+			<SheetTrigger aria-label="Toggle menu" class="cursor-default">
+				<MenuIcon class="mx-3 my-1.5 size-5" />
+			</SheetTrigger>
+			<SheetContent class="overflow-y-auto">
+				<SheetHeader>
+					<SheetTitle class="sr-only">Navigation menu</SheetTitle>
+				</SheetHeader>
+				<NavigationMenuList class="relative flex-col">
+					<NavigationMenuItem v-for="menu of menus" :key="menu.id" class="w-full">
+						<NavigationMenuTrigger
+							class="w-full bg-transparent hover:bg-accent/50 focus:bg-accent/50 data-[state=open]:hover:bg-accent/50 data-[state=open]:focus:bg-accent/50"
+						>
+							<!-- <summary class="flex cursor-pointer list-none items-center justify-between font-medium"> -->
+							{{ menu.title }}
+							<!-- </summary> -->
+						</NavigationMenuTrigger>
+						<NavigationMenuContent class="min-w-32 bg-background text-on-background">
+							<template v-for="(item, index) of menu.item">
+								<NavigationMenuLink
+									v-if="item.type === 'item'"
+									:key="item.id"
+									as="div"
+									class="cursor-pointer"
+									@select="
 										() => {
 											emit('select-menu-item', item);
 											isSidepanelOpen = false;
@@ -57,18 +70,17 @@ onScopeDispose(() => {
 									"
 								>
 									{{ item.title }}
-								</button>
-							</li>
-							<li
-								v-else-if="item.type === 'separator'"
-								:key="`separator-${index}`"
-								class="-mx-1 my-1 h-px bg-muted"
-								role="separator"
-							/>
-						</template>
-					</ul>
-				</details>
-			</div>
-		</SheetContent>
+								</NavigationMenuLink>
+								<NavigationMenuSeparator
+									v-else-if="item.type === 'separator'"
+									:key="`separator-${index}`"
+								/>
+							</template>
+						</NavigationMenuContent>
+					</NavigationMenuItem>
+					<NavigationMenuViewport />
+				</NavigationMenuList>
+			</SheetContent>
+		</NavigationMenu>
 	</Sheet>
 </template>
