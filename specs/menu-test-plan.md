@@ -1,5 +1,10 @@
 # VICAV Vue 3 Application - Menu Test Plan
 
+This plan was generated using AI (MiniMax-m2.5, March 2026) and opencode. Prompt:
+
+> Make a test plan for the menu as it is rendered at the moment in the browser. The menu items are
+> fetched using the API, the menu items can not be found in the code. Use @playwright-test-planner !
+
 ## Overview
 
 This test plan covers the comprehensive testing of the VICAV Vue 3 application's navigation menu
