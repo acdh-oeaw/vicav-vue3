@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { BookA } from "lucide-vue-next";
 import type Zod from "zod";
 
 import type {
@@ -144,6 +145,11 @@ interface RenderedLocation {
 	tribe?: string;
 }
 
+interface RenderedGrammarItem {
+	label: string;
+	value: string;
+}
+
 interface RenderedEditor {
 	action: "change" | "create";
 	status?: string;
@@ -277,7 +283,6 @@ interface EntryPayloadLike {
 
 interface RenderedDictEntry {
 	id?: string;
-	sid?: string;
 	lemma?: string;
 	status?: string;
 	type?: string;
@@ -287,11 +292,10 @@ interface RenderedDictEntry {
 	quote?: RenderedTranslation;
 	translations: Array<RenderedTranslation>;
 	editors: Array<RenderedEditor>;
-	selfHref?: string;
-	grammar: Array<string>;
+	grammar: Array<RenderedGrammarItem>;
 	inflectedForms: Array<{
 		label: string;
-		grammar: Array<string>;
+		grammar: Array<RenderedGrammarItem>;
 		locations: Array<RenderedLocation>;
 	}>;
 	senses: Array<{
@@ -389,10 +393,10 @@ function formatLocation(location: RenderedLocation) {
 	return [location.place, location.tribe].filter(Boolean).join(" / ");
 }
 
-function collectGrammar(grammar: GrammarLike | undefined): Array<string> {
+function collectGrammar(grammar: GrammarLike | undefined): Array<RenderedGrammarItem> {
 	if (grammar == null) return [];
 
-	const items = [
+	const items: Array<[string, string | undefined]> = [
 		["Part of speech", grammar.pos_gram?.$],
 		["Class", grammar.derivedVerbClass_gram?.$],
 		["Syn root", grammar.synRoot_gram?.$],
@@ -412,7 +416,7 @@ function collectGrammar(grammar: GrammarLike | undefined): Array<string> {
 
 	return items
 		.filter(([, value]) => value != null && value !== "")
-		.map(([label, value]) => `${label}: ${value}`);
+		.map(([label, value]) => ({ label, value: String(value) }));
 }
 
 function collectTranslationEquivalents(
@@ -471,7 +475,6 @@ function normalizeEntry(entry: RestVLEEntry): RenderedDictEntry {
 	if (typeof entry.entry === "string") {
 		return {
 			id: entry.id,
-			sid: entry.sid,
 			lemma: entry.lemma,
 			status: entry.status,
 			type: entry.type,
@@ -483,7 +486,6 @@ function normalizeEntry(entry: RestVLEEntry): RenderedDictEntry {
 			inflectedForms: [],
 			senses: [],
 			notes: [],
-			selfHref: entry._links?.self?.href,
 			raw: entry,
 		};
 	}
@@ -548,7 +550,6 @@ function normalizeEntry(entry: RestVLEEntry): RenderedDictEntry {
 
 	return {
 		id: entry.id,
-		sid: entry.sid,
 		lemma: entry.lemma,
 		status: entry.status,
 		type: entry.type,
@@ -557,7 +558,6 @@ function normalizeEntry(entry: RestVLEEntry): RenderedDictEntry {
 		quote: quote ? { lang: quoteLang, text: quote } : undefined,
 		translations,
 		editors,
-		selfHref: entry._links?.self?.href,
 		grammar,
 		inflectedForms,
 		senses,
@@ -827,20 +827,29 @@ const api = useApiClient(); */
 					<!-- eslint-disable-next-line vue/no-v-html -->
 					<div v-if="e.html" v-html="e.html" />
 					<Card v-else class="overflow-hidden border-border/70 shadow-sm">
-						<CardHeader class="gap-3 border-b bg-muted/30">
-							<div class="flex flex-wrap items-start justify-between gap-3">
-								<div class="space-y-1">
-									<CardTitle class="text-base leading-snug">
-										{{ e.quote?.text ?? e.lemma ?? e.id ?? "Dictionary entry" }}
-									</CardTitle>
-									<CardDescription
-										v-if="e.location"
-										class="text-sm font-medium tracking-[0.08em] uppercase"
-									>
-										{{ e.location }}
-									</CardDescription>
+						<CardHeader class="gap-3 border-b border-primary/15 bg-primary/10">
+							<div class="flex items-start justify-between gap-3">
+								<div class="min-w-0 flex-1">
+									<div class="flex items-start gap-3">
+										<div
+											class="flex size-10 shrink-0 items-center justify-center rounded-md border border-primary/20 bg-primary text-on-primary shadow-sm"
+										>
+											<BookA class="size-5" />
+										</div>
+										<div class="min-w-0 space-y-1">
+											<CardTitle class="text-lg leading-snug text-primary">
+												{{ e.lemma ?? e.quote?.text ?? e.id ?? "Dictionary entry" }}
+											</CardTitle>
+											<CardDescription
+												v-if="e.location"
+												class="text-sm font-semibold tracking-[0.08em] text-primary/80 uppercase"
+											>
+												{{ e.location }}
+											</CardDescription>
+										</div>
+									</div>
 								</div>
-								<div class="flex flex-wrap gap-2">
+								<div class="ml-4 flex shrink-0 flex-wrap justify-end gap-2 self-start">
 									<Badge v-if="e.type" variant="outline">{{ e.type }}</Badge>
 									<Badge v-if="e.status" variant="outline">{{ e.status }}</Badge>
 								</div>
@@ -849,13 +858,11 @@ const api = useApiClient(); */
 						<CardContent class="pt-4">
 							<Table>
 								<TableBody>
-									<TableRow v-if="e.id || e.sid || e.selfHref">
+									<TableRow v-if="e.id">
 										<TableCell class="w-32 font-semibold">Identifiers</TableCell>
 										<TableCell>
 											<div class="flex flex-wrap items-center gap-2">
 												<Badge v-if="e.id" variant="outline">id: {{ e.id }}</Badge>
-												<Badge v-if="e.sid" variant="outline">sid: {{ e.sid }}</Badge>
-												<Badge v-if="e.selfHref" variant="outline">{{ e.selfHref }}</Badge>
 											</div>
 										</TableCell>
 									</TableRow>
@@ -876,10 +883,19 @@ const api = useApiClient(); */
 									<TableRow v-if="e.grammar.length > 0">
 										<TableCell class="w-32 font-semibold">Grammar</TableCell>
 										<TableCell>
-											<div class="flex flex-wrap gap-2">
-												<Badge v-for="item in e.grammar" :key="item" variant="outline">
-													{{ item }}
-												</Badge>
+											<div class="space-y-1.5">
+												<div
+													v-for="item in e.grammar"
+													:key="item.label"
+													class="flex items-start gap-4"
+												>
+													<div class="w-36 shrink-0 text-sm font-semibold tracking-[0.02em]">
+														{{ item.label }}
+													</div>
+													<div class="min-w-0 flex-1 text-sm font-normal">
+														{{ item.value }}
+													</div>
+												</div>
 											</div>
 										</TableCell>
 									</TableRow>
@@ -920,14 +936,19 @@ const api = useApiClient(); */
 												>
 													<CardContent class="space-y-2 pt-4">
 														<p class="font-medium">{{ inflected.label }}</p>
-														<div v-if="inflected.grammar.length > 0" class="flex flex-wrap gap-2">
-															<Badge
+														<div v-if="inflected.grammar.length > 0" class="space-y-1.5">
+															<div
 																v-for="item in inflected.grammar"
-																:key="item"
-																variant="outline"
+																:key="`${inflected.label}-${item.label}`"
+																class="flex items-start gap-4"
 															>
-																{{ item }}
-															</Badge>
+																<div class="w-36 shrink-0 text-sm font-semibold tracking-[0.02em]">
+																	{{ item.label }}
+																</div>
+																<div class="min-w-0 flex-1 text-sm font-normal">
+																	{{ item.value }}
+																</div>
+															</div>
 														</div>
 														<div v-if="inflected.locations.length > 0" class="flex flex-wrap gap-2">
 															<Badge
