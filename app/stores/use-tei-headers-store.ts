@@ -222,9 +222,7 @@ function extractPersons(
 	});
 }
 
-function extractPersonList(
-	corpusMetadata: TeiHeader | undefined,
-): Array<Person> {
+function extractPersonList(corpusMetadata: TeiHeader | undefined): Array<Person> {
 	return corpusMetadata?.profileDesc?.particDesc?.listPerson ?? [];
 }
 
@@ -553,7 +551,7 @@ export const useTeiHeadersStore = defineStore("use-tei-headers-store", () => {
 
 			rawItems.value = parsedRawItems;
 			simpleItems.value = buildSimpleItems(parsedRawItems);
-			persons.value = extractPersonList(findCorpusMetadata(rawItems.value))
+			persons.value = extractPersonList(findCorpusMetadata(rawItems.value));
 		})();
 
 		await initializationPromise;
