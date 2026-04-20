@@ -222,6 +222,12 @@ function extractPersons(
 	});
 }
 
+function extractPersonList(
+	corpusMetadata: TeiHeader | undefined,
+): Array<Person> {
+	return corpusMetadata?.profileDesc?.particDesc?.listPerson ?? [];
+}
+
 function resolveResponsiblePeople(
 	itemRespStmt: RespStmt,
 	corpusMetadata: TeiHeader,
@@ -526,6 +532,7 @@ export const useTeiHeadersStore = defineStore("use-tei-headers-store", () => {
 	const { data: projectData, suspense } = useProjectInfo();
 	const rawItems = ref<Array<TeiCorpus>>([]);
 	const simpleItems = ref<Array<simpleTEIMetadata>>([]);
+	const persons = ref<Array<Person>>([]);
 	let initializationPromise: Promise<void> | null = null;
 
 	/**
@@ -546,6 +553,7 @@ export const useTeiHeadersStore = defineStore("use-tei-headers-store", () => {
 
 			rawItems.value = parsedRawItems;
 			simpleItems.value = buildSimpleItems(parsedRawItems);
+			persons.value = extractPersonList(findCorpusMetadata(rawItems.value))
 		})();
 
 		await initializationPromise;
@@ -555,5 +563,6 @@ export const useTeiHeadersStore = defineStore("use-tei-headers-store", () => {
 		initialize,
 		rawItems,
 		simpleItems,
+		persons,
 	};
 });

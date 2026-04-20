@@ -20,8 +20,15 @@ const props = defineProps<{
 }>();
 
 const toastStore = useToastsStore();
-const { simpleItems } = useTeiHeadersStore();
+const { simpleItems, persons } = useTeiHeadersStore();
 const teiHeader = simpleItems.find((header) => header.id === props.params.textId);
+const resolvePersonNameById = computed(() => {
+	return function (personId: string | undefined): string | undefined {
+		if (!personId) return undefined;
+
+		return persons.find((person) => person["@id"] === personId)?.name?.$;
+	};
+});
 
 const currentPage = ref(1);
 const infinite = ref<typeof InfiniteLoading | null>(null);
@@ -254,7 +261,11 @@ onMounted(async () => {
 								:key="uIndex"
 								class="flex justify-center"
 							>
-								{{ u["@who"]?.replace("corpus:", "") || "N/A" }}
+								{{
+									resolvePersonNameById(u["@who"]?.replace("corpus:", "")) ??
+									u["@who"]?.replace("corpus:", "") ??
+									"N/A"
+								}}
 							</div>
 						</td>
 						<td>
