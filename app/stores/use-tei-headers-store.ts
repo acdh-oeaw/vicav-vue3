@@ -6,7 +6,7 @@ import {
 	type AuthorRef,
 	BiblStructType,
 	type Person,
-	type Responsibility,
+	Responsibility,
 	type RespStmt,
 	type Taxonomy,
 	type TEI,
@@ -21,9 +21,22 @@ const TeiSchema = z.fromJSONSchema(useOpenapiSchema("TEI")) as z.ZodType<TEI>;
 const AuthorRefSchema = z.fromJSONSchema(useOpenapiSchema("AuthorRef")) as z.ZodType<AuthorRef>;
 const AuthorSchema = z.fromJSONSchema(useOpenapiSchema("Author")) as z.ZodType<Author>;
 
+const supportedResponsibilities = [
+	Responsibility.Author,
+	Responsibility.Recording,
+	Responsibility.Principal2,
+	Responsibility.Transcription1,
+	Responsibility.TransferToELAN,
+] as const satisfies Array<Responsibility>;
+
 interface ObjectWithID {
 	"@id": string;
 }
+
+type ResponsibilityPeople = Partial<
+	Record<Responsibility, Array<{ given: string; family: string }>>
+>;
+type PublicationMetadata = simpleTEIMetadata["publication"];
 
 function hasIDAttribute(item: unknown): item is ObjectWithID {
 	return Object.prototype.hasOwnProperty.call(item, "@id");
@@ -33,55 +46,491 @@ function isTeiCorpus(item: unknown): item is TeiCorpus {
 	return Object.prototype.hasOwnProperty.call(item, "TEIs");
 }
 
+function logInvalidCorpusItem(item: unknown, itemIndex: number, error: z.ZodError): void {
+	if (hasIDAttribute(item)) {
+		console.error(`Error parsing item ${itemIndex.toString()} with @id: ${item["@id"]}`);
+	} else {
+		console.error("Error parsing item without @id attribute");
+	}
+
+	console.error(error);
+}
+
+function logInvalidTeiItem(
+	parsedCorpus: TeiCorpus,
+	tei: unknown,
+	itemIndex: number,
+	teiIndex: number,
+	error: z.ZodError,
+): void {
+	if (hasIDAttribute(parsedCorpus)) {
+		console.error(`Error parsing item ${itemIndex.toString()} with @id: ${parsedCorpus["@id"]}`);
+	}
+
+	if (hasIDAttribute(tei)) {
+		console.error(`Error parsing TEIs[${teiIndex.toString()}] with @id: ${tei["@id"]}`);
+	} else {
+		console.error(`Error parsing TEIs[${teiIndex.toString()}] without @id attribute`);
+	}
+
+	console.error(error);
+}
+
+function parseTeisForCorpusItem(item: TeiCorpus, itemIndex: number): Array<TEI> {
+	return (item.TEIs ?? []).flatMap((tei, teiIndex) => {
+		const parsedTei = TeiSchema.safeParse(tei);
+
+		if (parsedTei.success) {
+			return [parsedTei.data];
+		}
+
+		logInvalidTeiItem(item, tei, itemIndex, teiIndex, parsedTei.error);
+
+		return [];
+	});
+}
+
+function parseCorpusItem(item: TeiCorpus, itemIndex: number): TeiCorpus | null {
+	const parsedCorpus = TeiCorpusSchema.safeParse(item);
+
+	if (!parsedCorpus.success) {
+		logInvalidCorpusItem(item, itemIndex, parsedCorpus.error);
+		return null;
+	}
+
+	return {
+		...parsedCorpus.data,
+		TEIs: parseTeisForCorpusItem(parsedCorpus.data, itemIndex),
+	};
+}
+
+function parseRawItems(table: Array<unknown>): Array<TeiCorpus> {
+	return table.flatMap((item, itemIndex) => {
+		if (!isTeiCorpus(item)) return [];
+
+		const parsedCorpus = parseCorpusItem(item, itemIndex);
+
+		return parsedCorpus ? [parsedCorpus] : [];
+	});
+}
+
+function resolveDataType(dataTypeCollection: string): string {
+	const matchedDataType = Object.values(dataTypes).find(
+		(dataTypeObject) => dataTypeObject.collection === dataTypeCollection,
+	);
+
+	return matchedDataType ? matchedDataType.targetType : "Text";
+}
+
+function parseDurationInSeconds(item: TEI): number | undefined {
+	const durationIso = item.teiHeader?.fileDesc.sourceDesc.recordingStmt?.recording["@dur-iso"];
+
+	if (!durationIso) return undefined;
+
+	return Number.parseInt(durationIso.replace("PT", "").replace(".0", ""), 10);
+}
+
+function formatDuration(durationInSeconds: number | undefined): string | undefined {
+	if (!durationInSeconds) return undefined;
+
+	const hours = Math.floor(durationInSeconds / 3600);
+	const seconds = Math.floor(durationInSeconds % 60);
+	const minutes = Math.floor((durationInSeconds % 3600) / 60);
+
+	return `${hours ? `${String(hours).padStart(2, "0")}:` : ""}${String(minutes).padStart(
+		2,
+		"0",
+	)}:${String(seconds).padStart(2, "0")}`;
+}
+
+function resolveAuthorReference(value: unknown): string | undefined {
+	return AuthorRefSchema.safeParse(value).data?.["@ref"];
+}
+
+function resolveAuthorFromRespStmt(respStmt: RespStmt | undefined): Author | undefined {
+	return respStmt ? AuthorSchema.safeParse(respStmt.persName).data : undefined;
+}
+
+function resolveAuthorDisplayName(author: Author | undefined): string | undefined {
+	if (author?.forename && author.surname) {
+		return `${author.forename.$} ${author.surname.$}`;
+	}
+
+	return author?.name?.$;
+}
+
+function resolveRecordingResponsibilityName(
+	item: TEI,
+	corpusMetadata: TeiHeader | undefined,
+): string {
+	const recording = item.teiHeader?.fileDesc.sourceDesc.recordingStmt?.recording;
+	const persName = recording?.respStmt?.persName ?? recording?.p?.$ ?? "Recording record malformed";
+
+	if (!corpusMetadata) {
+		return resolveAuthorReference(persName)?.replace("corpus:", "") ?? "";
+	}
+
+	const matchingRespStmt = corpusMetadata.fileDesc.titleStmt.respStmts?.find((respStmt) => {
+		return resolveAuthorReference(respStmt.persName) === resolveAuthorReference(persName);
+	});
+	const matchingAuthor = resolveAuthorFromRespStmt(matchingRespStmt);
+
+	return (
+		resolveAuthorDisplayName(matchingAuthor) ??
+		resolveAuthorReference(persName)?.replace("corpus:", "") ??
+		""
+	);
+}
+
+function resolvePlaceSettlement(item: TEI): string | undefined {
+	const place = item.teiHeader?.profileDesc?.settingDesc?.place;
+
+	if (place?.placeName?.$) return place.placeName.$;
+
+	const firstSettlementName = place?.settlement?.name.at(0);
+	if (firstSettlementName?.$) return firstSettlementName.$;
+
+	return place?.settlement?.name.find((name) => name["@lang"] === "en")?.$;
+}
+
+function buildSimplePerson(person: Person) {
+	return {
+		name: person["@id"] ?? "",
+		sex: person["@sex"] ?? person.sex?.$ ?? "n/a",
+		age: person["@age"] ?? "n/a",
+		dob: person.birth?.$ ?? person.birth?.date?.$ ?? "n/a",
+	};
+}
+
+function extractPersons(
+	item: TEI,
+	corpusMetadata: TeiHeader | undefined,
+): Array<simpleTEIMetadata["person"][number]> {
+	const corpusPersons = corpusMetadata?.profileDesc?.particDesc?.listPerson;
+	const teiPersons = item.teiHeader?.profileDesc?.particDesc?.listPerson;
+
+	if (!corpusPersons || !teiPersons) return [];
+
+	const referencedPersonIds = teiPersons
+		.map((person) => (person["@sameAs"] ?? person.$ ?? "").replace("corpus:", ""))
+		.filter(Boolean);
+
+	return referencedPersonIds.flatMap((personId) => {
+		const matchingPerson = corpusPersons.find((person) => person["@id"] === personId);
+
+		return matchingPerson ? [buildSimplePerson(matchingPerson)] : [];
+	});
+}
+
+function resolveResponsiblePeople(
+	itemRespStmt: RespStmt,
+	corpusMetadata: TeiHeader,
+): { given: string; family: string } {
+	const matchingRespStmt = corpusMetadata.fileDesc.titleStmt.respStmts?.find((corpusRespStmt) => {
+		return (
+			resolveAuthorReference(itemRespStmt.persName) ===
+			resolveAuthorReference(corpusRespStmt.persName)
+		);
+	});
+	const author = resolveAuthorFromRespStmt(matchingRespStmt);
+
+	if (author?.forename && author.surname) {
+		return { given: author.forename.$, family: author.surname.$ };
+	}
+
+	if (author?.name?.$) {
+		return { given: author.name.$, family: "" };
+	}
+
+	return { family: "", given: "" };
+}
+
+function buildResponsibilityData(
+	item: TEI,
+	corpusMetadata: TeiHeader | undefined,
+): ResponsibilityPeople {
+	const respStmts = item.teiHeader?.fileDesc.titleStmt.respStmts;
+
+	if (!respStmts || !corpusMetadata) return {};
+
+	return supportedResponsibilities.reduce<ResponsibilityPeople>(
+		(responsibilityData, responsibility) => {
+			const matchingRespStmts = respStmts.filter((respStmt) => respStmt.resp.$ === responsibility);
+
+			if (matchingRespStmts.length === 0) {
+				return responsibilityData;
+			}
+
+			return {
+				...responsibilityData,
+				[responsibility]: matchingRespStmts.map((respStmt) =>
+					resolveResponsiblePeople(respStmt, corpusMetadata),
+				),
+			};
+		},
+		{},
+	);
+}
+
+function createEmptyPublication(): PublicationMetadata {
+	return {
+		refType: "external",
+		type: "",
+		bibl: {
+			author: [],
+			title: "",
+			issued: [],
+		},
+	};
+}
+
+function resolveBiblScopeValue(item: TEI, unit: Unit): string | undefined {
+	return item.teiHeader?.fileDesc.sourceDesc.biblStruct?.monogr?.imprint.biblScopes?.find(
+		(scope) => scope["@unit"] === unit,
+	)?.$;
+}
+
+function buildBookSectionPublication(item: TEI): PublicationMetadata {
+	const biblStruct = item.teiHeader!.fileDesc.sourceDesc.biblStruct!;
+
+	return {
+		refType: "external",
+		type: "chapter",
+		bibl: {
+			"container-title": biblStruct.monogr?.title?.$,
+			title: biblStruct.analytic?.title?.$ ?? "",
+			author: [
+				{
+					given: biblStruct.analytic?.author?.forename?.$ ?? "",
+					family: biblStruct.analytic?.author?.surname?.$ ?? "",
+				},
+			],
+			editor: [
+				{
+					given: biblStruct.monogr?.editor?.forename?.$ ?? "",
+					family: biblStruct.monogr?.editor?.surname?.$ ?? "",
+				},
+			],
+			issued: [biblStruct.monogr?.imprint.date.$ ?? ""],
+			publisherPlace: biblStruct.monogr?.imprint.pubPlace?.$,
+			page: resolveBiblScopeValue(item, Unit.Page),
+		},
+	};
+}
+
+function buildJournalArticlePublication(item: TEI): PublicationMetadata {
+	const biblStruct = item.teiHeader!.fileDesc.sourceDesc.biblStruct!;
+
+	return {
+		refType: "external",
+		type: "journalArticle",
+		bibl: {
+			"container-title": biblStruct.monogr?.title?.$,
+			title: biblStruct.analytic?.title?.$ ?? "",
+			author: [
+				{
+					given: biblStruct.analytic?.author?.forename?.$ ?? "",
+					family: biblStruct.analytic?.author?.surname?.$ ?? "",
+				},
+			],
+			editor: [
+				{
+					given: biblStruct.monogr?.editor?.forename?.$ ?? "",
+					family: biblStruct.monogr?.editor?.surname?.$ ?? "",
+				},
+			],
+			issued: [biblStruct.monogr?.imprint.date.$ ?? ""],
+			publisherPlace: biblStruct.monogr?.imprint.pubPlace?.$,
+			volume: resolveBiblScopeValue(item, Unit.Volume),
+			page: resolveBiblScopeValue(item, Unit.Page),
+		},
+	};
+}
+
+function buildThesisPublication(item: TEI): PublicationMetadata {
+	const biblStruct = item.teiHeader!.fileDesc.sourceDesc.biblStruct!;
+
+	return {
+		refType: "external",
+		type: "book",
+		bibl: {
+			title: biblStruct.monogr?.title?.$ ?? "",
+			author: [
+				{
+					given: biblStruct.monogr?.author?.forename?.$ ?? "",
+					family: biblStruct.monogr?.author?.surname?.$ ?? "",
+				},
+			],
+			issued: [biblStruct.monogr?.imprint.date.$ ?? ""],
+			publisherPlace: biblStruct.monogr?.imprint.pubPlace?.$,
+		},
+	};
+}
+
+function buildPublication(item: TEI): PublicationMetadata {
+	const biblType = item.teiHeader?.fileDesc.sourceDesc.biblStruct?.["@type"];
+
+	if (biblType === BiblStructType.BookSection) return buildBookSectionPublication(item);
+	if (biblType === BiblStructType.JournalArticle) return buildJournalArticlePublication(item);
+	if (biblType === BiblStructType.Thesis) return buildThesisPublication(item);
+
+	return createEmptyPublication();
+}
+
+function mergeCorpusTaxonomies(corpusMetadata: TeiHeader | undefined): Taxonomy {
+	return (
+		corpusMetadata?.encodingDesc?.classDecl?.taxonomies.reduce<Taxonomy>(
+			(mergedTaxonomy, taxonomy) => {
+				return {
+					categories: mergedTaxonomy.categories.concat(taxonomy.categories),
+				};
+			},
+			{ categories: [] },
+		) ?? { categories: [] }
+	);
+}
+
+function resolveCategory(
+	item: TEI,
+	resolvedDataType: string,
+	corpusMetadata: TeiHeader | undefined,
+): string {
+	if (resolvedDataType !== "CorpusText" || !corpusMetadata) return "";
+	if (!item.teiHeader) return "Unknown";
+
+	const firstCategoryReference = item.teiHeader.profileDesc?.textClass?.catRefs.at(0);
+	const categoryTarget = firstCategoryReference ? firstCategoryReference["@target"] : undefined;
+	const categoryId = categoryTarget ? categoryTarget.replace("corpus:", "") : undefined;
+	const matchingCategory = mergeCorpusTaxonomies(corpusMetadata).categories.find(
+		(category) => category["@id"] === categoryId,
+	);
+
+	if (matchingCategory?.catDesc.name?.$) return matchingCategory.catDesc.name.$;
+	if (matchingCategory?.catDesc.$) return matchingCategory.catDesc.$;
+
+	return "Unknown";
+}
+
+function resolveLabel(
+	item: TEI,
+	resolvedDataType: string,
+	persons: Array<simpleTEIMetadata["person"][number]>,
+	placeSettlement: string | undefined,
+): string {
+	const teiHeader = item.teiHeader;
+	const title = teiHeader?.fileDesc.titleStmt.titles?.at(0)?.$;
+
+	if (resolvedDataType === "CorpusText" && title) return title;
+	if (persons.at(0)) return persons[0]!.name;
+	if (title) return title;
+	if (!persons.at(0)?.name) {
+		return item["@id"] ?? teiHeader?.fileDesc.publicationStmt.idno?.$ ?? "no_id";
+	}
+
+	return placeSettlement ?? "";
+}
+
+function resolveTitle(
+	item: TEI,
+	label: string,
+	persons: Array<simpleTEIMetadata["person"][number]>,
+): string {
+	const title = item.teiHeader?.fileDesc.titleStmt.titles?.at(0)?.$;
+
+	if (!title) return label;
+	if (!persons.at(0)?.name) return title;
+
+	return `${title} – ${persons[0]!.name}`;
+}
+
+function resolveAudioAvailability(
+	item: TEI,
+	resolvedDataType: string,
+	durationInSeconds: number | undefined,
+): string {
+	if (!durationInSeconds || resolvedDataType === "Feature" || resolvedDataType === "Profile") {
+		return "restricted";
+	}
+
+	return item.teiHeader?.fileDesc.publicationStmt.availability?.["@status"] ?? "unknown";
+}
+
+function extractMetadata(
+	item: TEI,
+	dataTypeCollection: string,
+	corpusMetadata: TeiHeader | undefined,
+): simpleTEIMetadata | null {
+	const teiHeader = item.teiHeader;
+	const resolvedDataType = resolveDataType(dataTypeCollection);
+	const durationInSeconds = parseDurationInSeconds(item);
+	const placeSettlement = resolvePlaceSettlement(item);
+	const persons = extractPersons(item, corpusMetadata);
+	const label = resolveLabel(item, resolvedDataType, persons, placeSettlement);
+	const title = resolveTitle(item, label, persons);
+	const responsibilityData = buildResponsibilityData(item, corpusMetadata);
+	const parsedItem = SimpleTEIMetadataSchema.safeParse({
+		id: item["@id"] ?? teiHeader?.fileDesc.publicationStmt.idno?.$ ?? "no_id",
+		recordingDate: teiHeader?.fileDesc.sourceDesc.recordingStmt?.recording.date?.["@when"],
+		pubDate: teiHeader?.fileDesc.publicationStmt.date?.$ ?? "unknown",
+		dataType: resolvedDataType,
+		label,
+		title,
+		author: responsibilityData.author ?? [],
+		recording: responsibilityData.recording ?? [],
+		principal: responsibilityData.principal ?? [],
+		transcription: responsibilityData.transcription ?? [],
+		"transfer to ELAN": responsibilityData["transfer to ELAN"] ?? [],
+		place: {
+			settlement: placeSettlement,
+			country: teiHeader?.profileDesc?.settingDesc?.place?.country?.$ ?? undefined,
+			region: teiHeader?.profileDesc?.settingDesc?.place?.region?.$ ?? undefined,
+		},
+		person: persons,
+		resp:
+			resolvedDataType === "CorpusText" &&
+			!teiHeader?.fileDesc.sourceDesc.recordingStmt?.recording.respStmt
+				? "Unknown"
+				: resolveRecordingResponsibilityName(item, corpusMetadata),
+		category: resolveCategory(item, resolvedDataType, corpusMetadata),
+		duration: formatDuration(durationInSeconds),
+		audioAvailability: resolveAudioAvailability(item, resolvedDataType, durationInSeconds),
+		"@hasTEIw": item["@hasTEIw"] === "true" ? "true" : "false",
+		teiHeader,
+		publication: buildPublication(item),
+	});
+
+	if (parsedItem.success) {
+		return parsedItem.data;
+	}
+
+	return null;
+}
+
+function findCorpusMetadata(items: Array<TeiCorpus>): TeiHeader | undefined {
+	return items.find((item) => item.teiHeader && item["@id"] === "vicav_corpus")?.teiHeader;
+}
+
+function buildSimpleItems(items: Array<TeiCorpus>): Array<simpleTEIMetadata> {
+	const corpusMetadata = findCorpusMetadata(items);
+
+	return items.flatMap((teiCorpus) => {
+		return (teiCorpus.TEIs ?? []).flatMap((tei) => {
+			const metadata = extractMetadata(tei, teiCorpus["@id"] ?? "", corpusMetadata);
+
+			return metadata ? [metadata] : [];
+		});
+	});
+}
+
 export const useTeiHeadersStore = defineStore("use-tei-headers-store", () => {
 	const { data: projectData, suspense } = useProjectInfo();
 	const rawItems = ref<Array<TeiCorpus>>([]);
 	const simpleItems = ref<Array<simpleTEIMetadata>>([]);
 	let initializationPromise: Promise<void> | null = null;
 
-	const parseRawItems = function (table: Array<unknown>) {
-		const parsedItems: Array<TeiCorpus> = [];
-		table.forEach((item, itemIndex) => {
-			if (!isTeiCorpus(item)) return;
-			const TEIs = item.TEIs ?? [];
-			// We want to check the teiCorpus teiHeader first and throw away all the data if that is
-			// invalid.
-			const parsedItem = TeiCorpusSchema.safeParse(item);
-			if (parsedItem.success) {
-				parsedItem.data.TEIs = [];
-				// We need to parse the TEIs one by one to get more detailed error messages about which TEI
-				// at which position is not valid and why
-				TEIs.forEach((tei, teiIndex) => {
-					const parsedTEI = TeiSchema.safeParse(tei);
-					if (parsedTEI.success) {
-						parsedItem.data.TEIs?.push(parsedTEI.data);
-					} else {
-						if (hasIDAttribute(parsedItem.data)) {
-							console.log(
-								`Error parsing item ${itemIndex.toString()} with @id: ${parsedItem.data["@id"]}`,
-							);
-						}
-						if (hasIDAttribute(tei)) {
-							console.log(`Error parsing TEIs[${teiIndex.toString()}] with @id: ${tei["@id"]}`);
-						} else {
-							console.log(`Error parsing TEIs[${teiIndex.toString()}] without @id attribute`);
-						}
-						console.log(parsedTEI.error);
-					}
-				});
-				parsedItems.push(parsedItem.data);
-			} else {
-				if (hasIDAttribute(item)) {
-					console.log(`Error parsing item ${itemIndex.toString()} with @id: ${item["@id"]}`);
-				} else {
-					console.log("Error parsing item without @id attribute");
-				}
-				console.log(parsedItem.error);
-			}
-		});
-		return parsedItems;
-	};
-
+	/**
+	 * Initializes the TEI header cache once from project static data.
+	 */
 	const initialize = async function () {
 		if (initializationPromise) {
 			await initializationPromise;
@@ -90,338 +539,16 @@ export const useTeiHeadersStore = defineStore("use-tei-headers-store", () => {
 
 		initializationPromise = (async () => {
 			await suspense();
-			rawItems.value = parseRawItems(projectData.value?.projectConfig?.staticData?.table ?? []);
-			simpleItems.value = buildSimpleItems(rawItems.value);
+
+			const parsedRawItems = parseRawItems(
+				projectData.value?.projectConfig?.staticData?.table ?? [],
+			);
+
+			rawItems.value = parsedRawItems;
+			simpleItems.value = buildSimpleItems(parsedRawItems);
 		})();
 
 		await initializationPromise;
-	};
-
-	const extractPersons = function (item: TEI, corpusMetadata: TeiHeader | undefined) {
-		const corpusPersons = corpusMetadata?.profileDesc?.particDesc?.listPerson;
-		const results = [];
-		if (corpusPersons && item.teiHeader?.profileDesc?.particDesc?.listPerson) {
-			const persons = item.teiHeader.profileDesc.particDesc.listPerson
-				.map((item: Person) => {
-					return (item["@sameAs"] ?? item.$ ?? "").replace("corpus:", "");
-				})
-				.filter((item: string | undefined) => item);
-			for (const personId of persons) {
-				const person = corpusPersons.find((item: Person) => item["@id"] === personId);
-				if (person)
-					results.push({
-						name: person["@id"] ?? "",
-						sex: person["@sex"] ?? person.sex?.$ ?? "n/a",
-						age: person["@age"] ?? "n/a",
-						dob: person.birth?.$ ?? person.birth?.date?.$ ?? "n/a",
-					});
-			}
-		}
-		return results;
-	};
-
-	const extractMetadata = function (
-		item: TEI,
-		dataType: string,
-		corpusMetadata: TeiHeader | undefined,
-	) {
-		const dataTypeObject = Object.values(dataTypes).find(
-			(dataTypeObject) => dataTypeObject.collection === dataType,
-		);
-		const resolvedDataType = dataTypeObject ? dataTypeObject.targetType : "Text";
-		const h = item.teiHeader;
-
-		// duration
-		const duration = h?.fileDesc.sourceDesc.recordingStmt?.recording
-			? parseInt(
-					h.fileDesc.sourceDesc.recordingStmt.recording["@dur-iso"]
-						.replace("PT", "")
-						.replace(".0", ""),
-				)
-			: undefined;
-		const durHours = duration ? Math.floor(duration / 3600) : undefined;
-		const durSeconds = duration ? Math.floor(duration % 60) : undefined;
-		const durMinutes = duration ? Math.floor(((duration % 3600) - durSeconds!) / 60) : undefined;
-
-		// resp
-		const persName =
-			h?.fileDesc.sourceDesc.recordingStmt?.recording.respStmt?.persName ??
-			h?.fileDesc.sourceDesc.recordingStmt?.recording.p?.$ ??
-			"Recording record malformed";
-		const respPerson = corpusMetadata?.fileDesc.titleStmt.respStmts?.find((resp) => {
-			const resp1 = AuthorRefSchema.safeParse(resp.persName).data?.["@ref"];
-			const resp2 = AuthorRefSchema.safeParse(persName).data?.["@ref"];
-			return resp1 === resp2;
-		});
-		const respRef = AuthorRefSchema.safeParse(persName);
-		const respAuthor = respPerson ? AuthorSchema.safeParse(respPerson.persName).data : undefined;
-		const respName =
-			respAuthor?.forename && respAuthor.surname
-				? `${respAuthor.forename.$} ${respAuthor.surname.$}`
-				: (respAuthor?.name?.$ ??
-					(respRef.success ? respRef.data["@ref"].replace("corpus:", "") : undefined));
-
-		// place
-		const place = h?.profileDesc?.settingDesc?.place;
-		let placeSettlement;
-		if (place?.placeName?.$) {
-			placeSettlement = place.placeName.$;
-		} else if (place?.settlement?.name) {
-			const placeName = place.settlement.name.find((n) => n["@lang"] === "en");
-			if (placeName) placeSettlement = placeName.$;
-		}
-		const placeName =
-			place?.settlement?.name.at(0) ??
-			(place?.settlement?.name
-				? place.settlement.name.find((n) => n["@lang"] === "en")
-				: undefined);
-		if (placeName) placeSettlement = placeName.$;
-
-		// responsibilities
-		const responsibilityData: Partial<
-			Record<Responsibility, Array<{ given: string; family: string }>>
-		> = {};
-		(
-			[
-				"author",
-				"recording",
-				"principal",
-				"transcription",
-				"transfer to ELAN",
-			] as Array<Responsibility>
-		).forEach((responsibility) => {
-			if (
-				h?.fileDesc.titleStmt.respStmts?.find((r) => r.resp.$ === responsibility) &&
-				corpusMetadata
-			) {
-				responsibilityData[responsibility] = h.fileDesc.titleStmt.respStmts
-					.filter((r) => responsibility === r.resp.$)
-					.map((resp) => {
-						const respPerson = corpusMetadata.fileDesc.titleStmt.respStmts?.find(
-							(resp2: RespStmt) => {
-								const respRef = AuthorRefSchema.safeParse(resp.persName);
-								const resp2Ref = AuthorRefSchema.safeParse(resp2.persName);
-								return (
-									respRef.success &&
-									resp2Ref.success &&
-									respRef.data["@ref"] === resp2Ref.data["@ref"]
-								);
-							},
-						);
-						const author = respPerson
-							? AuthorSchema.safeParse(respPerson.persName).data
-							: undefined;
-						if (author?.forename && author.surname) {
-							return { given: author.forename.$, family: author.surname.$ };
-						}
-						if (author?.name?.$) return { given: author.name.$, family: "" };
-						return { family: "", given: "" };
-					});
-			}
-		});
-
-		// publication
-		let publication: simpleTEIMetadata["publication"] | undefined;
-		if (h?.fileDesc.sourceDesc.biblStruct?.["@type"] === BiblStructType.BookSection) {
-			publication = {
-				refType: "external",
-				type: "chapter",
-				bibl: {
-					"container-title": h.fileDesc.sourceDesc.biblStruct.monogr?.title?.$,
-					title: h.fileDesc.sourceDesc.biblStruct.analytic?.title?.$ ?? "",
-					author: [
-						{
-							given: h.fileDesc.sourceDesc.biblStruct.analytic?.author?.forename?.$ ?? "",
-							family: h.fileDesc.sourceDesc.biblStruct.analytic?.author?.surname?.$ ?? "",
-						},
-					],
-					editor: [
-						{
-							given: h.fileDesc.sourceDesc.biblStruct.monogr?.editor?.forename?.$ ?? "",
-							family: h.fileDesc.sourceDesc.biblStruct.monogr?.editor?.surname?.$ ?? "",
-						},
-					],
-					issued: [h.fileDesc.sourceDesc.biblStruct.monogr?.imprint.date.$ ?? ""],
-					publisherPlace: h.fileDesc.sourceDesc.biblStruct.monogr?.imprint.pubPlace?.$,
-					page: h.fileDesc.sourceDesc.biblStruct.monogr?.imprint.biblScopes?.find(
-						(s) => s["@unit"] === Unit.Page,
-					)?.$,
-				},
-			};
-		} else if (h?.fileDesc.sourceDesc.biblStruct?.["@type"] === BiblStructType.JournalArticle) {
-			publication = {
-				refType: "external",
-				type: "journalArticle",
-				bibl: {
-					"container-title": h.fileDesc.sourceDesc.biblStruct.monogr?.title?.$,
-					title: h.fileDesc.sourceDesc.biblStruct.analytic?.title?.$ ?? "",
-					author: [
-						{
-							given: h.fileDesc.sourceDesc.biblStruct.analytic?.author?.forename?.$ ?? "",
-							family: h.fileDesc.sourceDesc.biblStruct.analytic?.author?.surname?.$ ?? "",
-						},
-					],
-					editor: [
-						{
-							given: h.fileDesc.sourceDesc.biblStruct.monogr?.editor?.forename?.$ ?? "",
-							family: h.fileDesc.sourceDesc.biblStruct.monogr?.editor?.surname?.$ ?? "",
-						},
-					],
-					issued: [h.fileDesc.sourceDesc.biblStruct.monogr?.imprint.date.$ ?? ""],
-					publisherPlace: h.fileDesc.sourceDesc.biblStruct.monogr?.imprint.pubPlace?.$,
-					volume: h.fileDesc.sourceDesc.biblStruct.monogr?.imprint.biblScopes?.find(
-						(s) => s["@unit"] === Unit.Volume,
-					)?.$,
-					page: h.fileDesc.sourceDesc.biblStruct.monogr?.imprint.biblScopes?.find(
-						(s) => s["@unit"] === Unit.Page,
-					)?.$,
-				},
-			};
-		} else if (h?.fileDesc.sourceDesc.biblStruct?.["@type"] === BiblStructType.Thesis) {
-			publication = {
-				refType: "external",
-				type: "book",
-				bibl: {
-					title: h.fileDesc.sourceDesc.biblStruct.monogr?.title?.$ ?? "",
-					author: [
-						{
-							given: h.fileDesc.sourceDesc.biblStruct.monogr?.author?.forename?.$ ?? "",
-							family: h.fileDesc.sourceDesc.biblStruct.monogr?.author?.surname?.$ ?? "",
-						},
-					],
-					issued: [h.fileDesc.sourceDesc.biblStruct.monogr?.imprint.date.$ ?? ""],
-					publisherPlace: h.fileDesc.sourceDesc.biblStruct.monogr?.imprint.pubPlace?.$,
-				},
-			};
-		}
-		const safePublication =
-			publication ??
-			({
-				refType: "external",
-				type: "",
-				bibl: {
-					author: [],
-					title: "",
-					issued: [],
-				},
-			} as simpleTEIMetadata["publication"]);
-
-		// category
-		let category = "";
-		if (resolvedDataType === "CorpusText" && corpusMetadata) {
-			const categoryId = h?.profileDesc?.textClass?.catRefs
-				? h.profileDesc.textClass.catRefs.at(0)?.["@target"]
-				: "";
-
-			const mergedTaxonomies: Taxonomy = {
-				categories: [],
-			};
-			corpusMetadata.encodingDesc?.classDecl?.taxonomies.forEach((t) => {
-				mergedTaxonomies.categories = mergedTaxonomies.categories.concat(t.categories);
-				return mergedTaxonomies;
-			});
-			const categoryItem = mergedTaxonomies.categories.find(
-				(cat) => cat["@id"] === categoryId?.replace("corpus:", ""),
-			);
-			if (categoryItem?.catDesc.name) {
-				category = categoryItem.catDesc.name.$;
-			} else if (categoryItem?.catDesc.$) {
-				category = categoryItem.catDesc.$;
-			} else {
-				category = "Unknown";
-			}
-		}
-
-		// label/title
-		const persons = extractPersons(item, corpusMetadata);
-		let label;
-		if (!persons.at(0)?.name) {
-			label = item["@id"] ?? h?.fileDesc.publicationStmt.idno?.$ ?? "no_id";
-		} else if (h?.fileDesc.titleStmt.titles?.at(0)?.$) {
-			label = h.fileDesc.titleStmt.titles.at(0)!.$!;
-		} else {
-			label = placeSettlement;
-		}
-		if (resolvedDataType === "CorpusText" && h?.fileDesc.titleStmt.titles?.at(0)) {
-			label = h.fileDesc.titleStmt.titles[0]!.$!;
-		} else if (persons.at(0)) {
-			label = persons[0]!.name;
-		} else if (h?.fileDesc.titleStmt.titles?.at(0)) {
-			label = h.fileDesc.titleStmt.titles[0]!.$;
-		}
-		const title = h?.fileDesc.titleStmt.titles?.at(0)
-			? persons.at(0)?.name
-				? `${h.fileDesc.titleStmt.titles[0]!.$} – ${persons.at(0)?.name ?? ""}`
-				: h.fileDesc.titleStmt.titles[0]!.$
-			: label;
-		const safeLabel = label ?? "";
-		const safeTitle = title ?? safeLabel;
-
-		const audioAvailability =
-			duration && resolvedDataType !== "Feature" && resolvedDataType !== "Profile"
-				? (h?.fileDesc.publicationStmt.availability?.["@status"] ?? "unknown")
-				: "restricted";
-
-		const parsedItem = SimpleTEIMetadataSchema.safeParse({
-			id: item["@id"] ?? h?.fileDesc.publicationStmt.idno?.$ ?? "no_id",
-			recordingDate: h?.fileDesc.sourceDesc.recordingStmt?.recording.date
-				? h.fileDesc.sourceDesc.recordingStmt.recording.date["@when"]
-				: undefined,
-			pubDate: h?.fileDesc.publicationStmt.date?.$ ?? "unknown",
-			dataType: resolvedDataType,
-			label: safeLabel,
-			title: safeTitle,
-			author: responsibilityData.author ?? [],
-			recording: responsibilityData.recording ?? [],
-			principal: responsibilityData.principal ?? [],
-			transcription: responsibilityData.transcription ?? [],
-			"transfer to ELAN": responsibilityData["transfer to ELAN"] ?? [],
-			place: {
-				settlement: placeSettlement,
-				country: place?.country?.$ ?? undefined,
-				region: place?.region?.$ ?? undefined,
-			},
-			person: persons,
-			resp:
-				resolvedDataType === "CorpusText" &&
-				!h?.fileDesc.sourceDesc.recordingStmt?.recording.respStmt
-					? "Unknown"
-					: (respName ?? ""),
-			category,
-			duration: duration
-				? `${durHours ? `${String(durHours).padStart(2, "0")}:` : ""}${String(durMinutes).padStart(
-						2,
-						"0",
-					)}:${String(durSeconds).padStart(2, "0")}`
-				: undefined,
-			audioAvailability,
-			"@hasTEIw": item["@hasTEIw"] === "true" ? "true" : "false",
-			teiHeader: h,
-			publication: safePublication,
-		});
-		if (parsedItem.success) return parsedItem.data;
-		else return null;
-	};
-
-	const buildSimpleItems = function (items: Array<TeiCorpus>) {
-		const corpusMetadata = items.find(
-			(item) => item.teiHeader && item["@id"] === "vicav_corpus",
-		)?.teiHeader;
-		const data = items
-			.map((dataTypeTEIs) => {
-				return dataTypeTEIs.TEIs?.map((item) =>
-					extractMetadata(item, dataTypeTEIs["@id"] ?? "", corpusMetadata),
-				);
-			})
-			.filter((i) => i !== undefined);
-
-		return (
-			([] as Array<simpleTEIMetadata>)
-				// @ts-expect-error type inference faulty
-				.concat(...data)
-				// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-				.filter((item) => item !== null)
-		);
 	};
 
 	return {
