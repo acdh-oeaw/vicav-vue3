@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useDebounce } from "@vueuse/core";
-import { Eye, EyeOff, PaintBucket } from "lucide-vue-next";
+import { Eye, EyeOff, Palette } from "lucide-vue-next";
 import type { SVGAttributes } from "vue";
 
 import { iconsData } from "./icons-data.ts";
@@ -44,6 +44,7 @@ const emit = defineEmits([
 	"update:color",
 	"update:hidden",
 	"apply-style-to-underlying",
+	"generate-color-variants",
 ]);
 
 const isOpen = ref(false);
@@ -105,9 +106,12 @@ function updateHidden(hidden: boolean) {
 
 function applyToUnderlyingFeatureValues() {
 	emit("apply-style-to-underlying", {
-		colorCode: localColor.value,
 		icon: currentIcon.value,
 	});
+}
+
+function generateColorVariants() {
+	emit("generate-color-variants");
 }
 </script>
 
@@ -186,26 +190,40 @@ function applyToUnderlyingFeatureValues() {
 			</div>
 			<Button
 				v-if="enableApplyToUnderlyingFeatureValues"
-				class="mt-2 ml-auto flex h-8 w-full items-center justify-between px-2 text-xs"
+				class="mt-2 ml-auto flex h-fit w-full items-center gap-2 px-2 text-left text-xs whitespace-normal"
+				:disabled="hidden"
 				variant="outline"
 				@click.prevent.stop="applyToUnderlyingFeatureValues()"
 			>
-				<span>Apply style to all feature values</span>
-				<span class="flex size-5 items-center justify-center rounded-sm">
-					<PaintBucket class="size-3.5" />
-				</span>
+				<Icon
+					v-if="currentIcon"
+					:additional-attributes="currentIcon.additionalAttributes"
+					class="size-3.5"
+					:is-custom-icon="currentIcon.custom"
+					:name="currentIcon.name"
+					:style="{ stroke: '#000', fill: currentIcon.custom ? '#000' : null }"
+				/>
+				<span>Apply icon to all feature values</span>
+			</Button>
+			<Button
+				v-if="enableApplyToUnderlyingFeatureValues"
+				class="mt-2 ml-auto flex h-fit w-full items-center gap-2 px-2 text-left text-xs whitespace-normal"
+				:disabled="hidden"
+				variant="outline"
+				@click.prevent.stop="generateColorVariants()"
+			>
+				<Palette class="size-4.5" /> <span>Generate color variants for feature values</span>
 			</Button>
 			<Button
 				v-if="enableHideToggle"
-				class="mt-2 ml-auto flex h-8 w-full items-center justify-between px-2 text-xs"
+				class="mt-2 ml-auto flex h-fit w-full items-center justify-between gap-2 px-2 text-left text-xs"
 				variant="outline"
 				@click.prevent.stop="updateHidden(!(hidden ?? false))"
 			>
+				<Eye v-if="hidden" class="size-3.5" />
+				<EyeOff v-else class="size-3.5 text-neutral-500" />
+
 				<span>{{ hidden ? "Show in markers and legend" : "Hide from markers and legend" }}</span>
-				<span class="flex size-5 items-center justify-center rounded-sm">
-					<Eye v-if="hidden" class="size-3.5" />
-					<EyeOff v-else class="size-3.5 text-neutral-500" />
-				</span>
 			</Button>
 		</PopoverContent>
 	</Popover>

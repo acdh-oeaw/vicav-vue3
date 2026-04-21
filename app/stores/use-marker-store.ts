@@ -15,8 +15,13 @@ interface MarkerInterface {
 	hidden?: boolean;
 }
 interface MarkerStyleInterface {
-	icon: IconType;
-	colorCode: string;
+	icon?: IconType;
+	colorCode?: string;
+}
+function buildVariantColor(baseColor: string) {
+	const newColor = new Color(baseColor).to("lch");
+	newColor.l = Math.random() * 60 + 20; //lightness values from 20 to 80
+	return newColor.toGamut({ space: "srgb" }).to("srgb").toString({ format: "hex" });
 }
 
 export const useMarkerStore = defineStore("markers", () => {
@@ -85,13 +90,25 @@ export const useMarkerStore = defineStore("markers", () => {
 			}
 			const updatedEntry: MarkerInterface = {
 				...entry,
-				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-				icon: style.icon,
-				colorCode: style.colorCode,
+				...style,
 			};
 			markers.value.set(id, updatedEntry);
-			updateCssVariable({ id, colorCode: style.colorCode });
-			updateColorValue({ id, colorCode: style.colorCode });
+			if (style.colorCode) {
+				updateCssVariable({ id, colorCode: style.colorCode });
+				updateColorValue({ id, colorCode: style.colorCode });
+			}
+		});
+	}
+
+	function generateColorVariantsForFeatureValues(featureId: string) {
+		if (!markers.value.has(featureId)) addColor(featureId);
+		const baseColor = markers.value.get(featureId)?.colorCode;
+		assert(baseColor != null, `Base marker color not found for ${featureId}`);
+
+		forEachUnderlyingFeatureValue(featureId, (_entry, id) => {
+			const colorCode = buildVariantColor(baseColor);
+			updateCssVariable({ id, colorCode });
+			updateColorValue({ id, colorCode });
 		});
 	}
 
@@ -168,13 +185,11 @@ export const useMarkerStore = defineStore("markers", () => {
 	function addColorVariant(baseId: ColorInterface["id"], subId: ColorInterface["id"]) {
 		if (!markers.value.has(baseId)) addColor(baseId);
 		const baseColor = markers.value.get(baseId)?.colorCode;
-
-		const newColor = new Color(baseColor!).to("lch");
-		newColor.l = Math.random() * 60 + 20; //lightness values from 20 to 80
+		assert(baseColor != null, `Base marker color not found for ${baseId}`);
 
 		const color: ColorInterface = {
 			id: buildFeatureValueId(baseId, subId),
-			colorCode: newColor.toGamut({ space: "srgb" }).to("srgb").toString({ format: "hex" }),
+			colorCode: buildVariantColor(baseColor),
 		};
 		updateCssVariable(color);
 		updateColorValue(color);
@@ -237,6 +252,7 @@ export const useMarkerStore = defineStore("markers", () => {
 		addDefaultMarker,
 		setMarker,
 		applyStyleToUnderlyingFeatureValues,
+		generateColorVariantsForFeatureValues,
 		hasUnderlyingFeatureValues,
 		removeMarker,
 		markers,

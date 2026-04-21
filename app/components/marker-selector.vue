@@ -26,7 +26,11 @@ const props = withDefaults(
 );
 
 const emit = defineEmits(["update:modelValue"]);
-const { applyStyleToUnderlyingFeatureValues, hasUnderlyingFeatureValues } = useMarkerStore();
+const {
+	applyStyleToUnderlyingFeatureValues,
+	generateColorVariantsForFeatureValues,
+	hasUnderlyingFeatureValues,
+} = useMarkerStore();
 
 function updateColor(color: string) {
 	emit("update:modelValue", { ...props.modelValue, colorCode: color });
@@ -41,6 +45,10 @@ function updateHidden(hidden: boolean) {
 function applyStyleToUnderlying(style: { colorCode: string; icon: IconType }) {
 	applyStyleToUnderlyingFeatureValues(props.modelValue.id, style);
 	emit("update:modelValue", { ...props.modelValue, ...style });
+}
+
+function generateColorVariants() {
+	generateColorVariantsForFeatureValues(props.modelValue.id);
 }
 
 const localColor = ref(props.modelValue.colorCode ?? "#cccccc");
@@ -105,6 +113,7 @@ const customIcons = [
 			:use-popover-modal="usePopoverModal"
 			:use-popover-portal="usePopoverPortal"
 			@apply-style-to-underlying="applyStyleToUnderlying"
+			@generate-color-variants="generateColorVariants"
 			@update:color="updateColor"
 			@update:hidden="updateHidden"
 			@update:icon="updateIcon"
