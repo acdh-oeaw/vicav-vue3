@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useMarkerStore } from "@/stores/use-marker-store";
+
 import type { IconType } from "./ui/icon-picker/IconPicker.vue";
 
 type SelectorType = "color" | "icon";
@@ -24,6 +26,8 @@ const props = withDefaults(
 );
 
 const emit = defineEmits(["update:modelValue"]);
+const { applyStyleToUnderlyingFeatureValues, hasUnderlyingFeatureValues } = useMarkerStore();
+
 function updateColor(color: string) {
 	emit("update:modelValue", { ...props.modelValue, colorCode: color });
 }
@@ -32,6 +36,11 @@ function updateIcon(icon: IconType) {
 }
 function updateHidden(hidden: boolean) {
 	emit("update:modelValue", { ...props.modelValue, hidden });
+}
+
+function applyStyleToUnderlying(style: { colorCode: string; icon: IconType }) {
+	applyStyleToUnderlyingFeatureValues(props.modelValue.id, style);
+	emit("update:modelValue", { ...props.modelValue, ...style });
 }
 
 const localColor = ref(props.modelValue.colorCode ?? "#cccccc");
@@ -85,9 +94,9 @@ const customIcons = [
 	<div class="flex items-center gap-1.5">
 		<IconPicker
 			v-if="props.type?.includes('icon')"
-			:id="modelValue.id"
 			:color="modelValue.colorCode"
 			:custom-icons="customIcons"
+			:enable-apply-to-underlying-feature-values="hasUnderlyingFeatureValues(modelValue.id)"
 			:enable-hide-toggle="enableHideToggle"
 			:hidden="modelValue.hidden"
 			:icon="modelValue.icon"
@@ -95,6 +104,7 @@ const customIcons = [
 			search-placeholder="Search for an alternative icon..."
 			:use-popover-modal="usePopoverModal"
 			:use-popover-portal="usePopoverPortal"
+			@apply-style-to-underlying="applyStyleToUnderlying"
 			@update:color="updateColor"
 			@update:hidden="updateHidden"
 			@update:icon="updateIcon"

@@ -8,7 +8,7 @@ import { ensureFilterValueMap } from "@/utils/filter-value-map";
 
 import type { SelectionEntry } from "./marker-selector.vue";
 
-const { getMarkerSVG, getCircleSVG } = usePetalMarker();
+const { getMarkerSVG } = usePetalMarker();
 
 interface Props {
 	params: Zod.infer<typeof GeojsonMapSchema>["params"];
@@ -100,14 +100,7 @@ function shouldShowOtherFeatureValues(feature: ColumnType) {
 		<CollapsibleContent class="max-h-full !overflow-auto">
 			<div v-for="feature in activeFeatures" :key="feature.id" class="my-1">
 				<div class="flex items-start gap-2" :class="{ 'opacity-45': isMarkerHidden(feature.id) }">
-					<svg
-						v-if="activeFeatures?.length === 1 && markerSettings.showCenter"
-						class="mt-0.5 size-3.5 shrink-0"
-						view-box="0 0 18 18 "
-						v-html="getCircleSVG(`var(--${feature.id})`, true, 14).outerHTML"
-					></svg>
 					<MarkerSelector
-						v-else-if="getActiveFilterValues(feature).length === 0"
 						:icon-categories="['shapes']"
 						:model-value="markers.get(feature.id)!"
 						:use-popover-portal="true"

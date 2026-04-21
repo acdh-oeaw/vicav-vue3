@@ -14,6 +14,10 @@ interface MarkerInterface {
 	colorCode: string;
 	hidden?: boolean;
 }
+interface MarkerStyleInterface {
+	icon: IconType;
+	colorCode: string;
+}
 
 export const useMarkerStore = defineStore("markers", () => {
 	const markers = ref<Map<MarkerInterface["id"], MarkerInterface>>(new Map());
@@ -46,12 +50,48 @@ export const useMarkerStore = defineStore("markers", () => {
 			`${columnId}-${(feature ?? "").replaceAll(/[`~!@#$%^&*()_|+\-=?;:'",.<>{}[\]\\/]/g, "")}`,
 		).replaceAll(/[()%\\]/g, "");
 
-	function setUnderlyingFeatureValuesHidden(featureId: string, hidden: boolean) {
+	function forEachUnderlyingFeatureValue(
+		featureId: string,
+		updateEntry: (entry: MarkerInterface, id: string) => void,
+	) {
 		const featureValuePrefix = buildFeatureValueId(featureId, "");
 		markers.value.forEach((entry, id) => {
-			if (id !== featureId && id.startsWith(featureValuePrefix) && entry.hidden !== hidden) {
+			if (id !== featureId && id.startsWith(featureValuePrefix)) {
+				updateEntry(entry, id);
+			}
+		});
+	}
+
+	function hasUnderlyingFeatureValues(featureId: string) {
+		let hasUnderlyingValues = false;
+		forEachUnderlyingFeatureValue(featureId, () => {
+			hasUnderlyingValues = true;
+		});
+		return hasUnderlyingValues;
+	}
+
+	function setUnderlyingFeatureValuesHidden(featureId: string, hidden: boolean) {
+		forEachUnderlyingFeatureValue(featureId, (entry, id) => {
+			if (entry.hidden !== hidden) {
 				markers.value.set(id, { ...entry, hidden });
 			}
+		});
+	}
+
+	function applyStyleToUnderlyingFeatureValues(featureId: string, style: MarkerStyleInterface) {
+		forEachUnderlyingFeatureValue(featureId, (entry, id) => {
+			if (entry.icon !== style.icon) {
+				markerSettings.value.triggerRepaint = true;
+			}
+			const updatedEntry: MarkerInterface = {
+				...entry,
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+				icon: style.icon,
+				colorCode: style.colorCode,
+			};
+			markers.value.set(id, updatedEntry);
+			updateCssVariable({ id, colorCode: style.colorCode });
+			updateColorValue({ id, colorCode: style.colorCode });
 		});
 	}
 
@@ -196,6 +236,8 @@ export const useMarkerStore = defineStore("markers", () => {
 		buildFeatureValueId,
 		addDefaultMarker,
 		setMarker,
+		applyStyleToUnderlyingFeatureValues,
+		hasUnderlyingFeatureValues,
 		removeMarker,
 		markers,
 		markerSettings,

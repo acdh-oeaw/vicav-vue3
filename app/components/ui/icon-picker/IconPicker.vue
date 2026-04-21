@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useDebounce } from "@vueuse/core";
-import { Eye, EyeOff } from "lucide-vue-next";
+import { Eye, EyeOff, PaintBucket } from "lucide-vue-next";
 import type { SVGAttributes } from "vue";
 
 import { iconsData } from "./icons-data.ts";
@@ -26,6 +26,7 @@ const props = withDefaults(
 		color?: string;
 		hidden?: boolean;
 		enableHideToggle?: boolean;
+		enableApplyToUnderlyingFeatureValues?: boolean;
 		usePopoverPortal?: boolean;
 		usePopoverModal?: boolean;
 	}>(),
@@ -38,15 +39,17 @@ const props = withDefaults(
 	},
 );
 
-const emit = defineEmits(["update:icon", "update:color", "update:hidden"]);
+const emit = defineEmits([
+	"update:icon",
+	"update:color",
+	"update:hidden",
+	"apply-style-to-underlying",
+]);
 
 const isOpen = ref(false);
 const searchRaw = ref("");
 const search = useDebounce(searchRaw, 100);
 const selectedIcon = ref<IconType | null>();
-// const categories = computed(() => {
-// 	return [...new Set(icons.value.flatMap((i) => i.categories))];
-// });
 
 const icons = ref<Array<IconType>>(iconsData);
 
@@ -76,10 +79,19 @@ const filteredIcons = computed(() => {
 function selectIcon(icon: IconType) {
 	selectedIcon.value = icon;
 	emit("update:icon", icon);
-	isOpen.value = false;
+	if (!props.enableApplyToUnderlyingFeatureValues) isOpen.value = false;
 }
 
 const localColor = ref(props.color ?? "#cccccc");
+const currentIcon = computed(() => selectedIcon.value ?? props.icon ?? null);
+
+watch(
+	() => props.color,
+	(newColor) => {
+		if (newColor) localColor.value = newColor;
+	},
+);
+
 watch(
 	() => localColor.value,
 	(newColor) => {
@@ -89,6 +101,13 @@ watch(
 
 function updateHidden(hidden: boolean) {
 	emit("update:hidden", hidden);
+}
+
+function applyToUnderlyingFeatureValues() {
+	emit("apply-style-to-underlying", {
+		colorCode: localColor.value,
+		icon: currentIcon.value,
+	});
 }
 </script>
 
@@ -123,6 +142,7 @@ function updateHidden(hidden: boolean) {
 				</label>
 
 				<div class="my-2 h-[1px] w-full bg-neutral-200"></div>
+
 				<div class="mt-0.5 w-full">
 					<label
 						><input
@@ -164,6 +184,17 @@ function updateHidden(hidden: boolean) {
 					</Button>
 				</div>
 			</div>
+			<Button
+				v-if="enableApplyToUnderlyingFeatureValues"
+				class="mt-2 ml-auto flex h-8 w-full items-center justify-between px-2 text-xs"
+				variant="outline"
+				@click.prevent.stop="applyToUnderlyingFeatureValues()"
+			>
+				<span>Apply style to all feature values</span>
+				<span class="flex size-5 items-center justify-center rounded-sm">
+					<PaintBucket class="size-3.5" />
+				</span>
+			</Button>
 			<Button
 				v-if="enableHideToggle"
 				class="mt-2 ml-auto flex h-8 w-full items-center justify-between px-2 text-xs"
