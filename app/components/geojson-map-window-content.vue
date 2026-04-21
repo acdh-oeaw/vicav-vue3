@@ -16,6 +16,8 @@ const { params } = toRefs(props);
 const GeojsonStore = useGeojsonStore();
 
 const { tables } = storeToRefs(GeojsonStore);
+const labelDisplayMode = ref<"on" | "off" | "default">("default");
+const defaultDisplayLabelsZoom = 10;
 
 const filteredMarkers = computed(() => {
 	return tables.value
@@ -62,7 +64,8 @@ function onMarkerClick(feature: Feature) {
 		>
 			<GeoMap
 				v-if="filteredMarkers"
-				:display-labels="10"
+				:default-display-labels-zoom="defaultDisplayLabelsZoom"
+				:display-labels="labelDisplayMode"
 				:height="height"
 				:marker-type="params.markerType"
 				:markers="filteredMarkers as Array<Feature<Point, MarkerProperties>>"
@@ -79,7 +82,11 @@ function onMarkerClick(feature: Feature) {
 				class="absolute bottom-0 left-0 max-h-full"
 				:params="params"
 			></GeojsonMapLegend>
-			<GeojsonMapControls class="absolute top-0 left-0"></GeojsonMapControls>
+			<GeojsonMapControls
+				class="absolute top-0 left-0"
+				:display-labels="labelDisplayMode"
+				@update:display-labels="labelDisplayMode = $event"
+			></GeojsonMapControls>
 		</VisualisationContainer>
 	</div>
 </template>

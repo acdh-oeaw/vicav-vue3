@@ -1,11 +1,44 @@
 <script setup lang="ts">
 import { Download, Settings } from "lucide-vue-next";
 
+interface Props {
+	displayLabels?: "on" | "off" | "default";
+}
+
+const props = defineProps<Props>();
+
+const emit = defineEmits<{
+	(event: "update:displayLabels", value: "on" | "off" | "default"): void;
+}>();
+
 const { markerSettings } = storeToRefs(useMarkerStore());
 const { exportNodeAsPng } = useHtmlToImageExport();
 const fileFormat = ref("png");
 const printLegend = ref(true);
 const exportInProgress = ref(false);
+
+const labelDisplaySelectValue = computed({
+	get() {
+		switch (props.displayLabels ?? "default") {
+			case "on":
+				return "always";
+			case "off":
+				return "never";
+			default:
+				return "on zoom";
+		}
+	},
+	set(value: "always" | "never" | "on zoom") {
+		if (value === "always") {
+			emit("update:displayLabels", "on");
+		} else if (value === "never") {
+			emit("update:displayLabels", "off");
+		} else {
+			emit("update:displayLabels", "default");
+		}
+	},
+});
+
 function download() {
 	let node = document.querySelector("[data-geo-map]");
 	if (printLegend.value) node = node?.parentElement ?? node;
@@ -44,6 +77,20 @@ function downloadLegend() {
 			<PopoverContent align="start" class="flex w-auto flex-col gap-1 bg-white" side="right">
 				<span class="font-medium">Marker settings</span>
 
+				<div class="mt-1 flex items-center gap-2">
+					<span id="displayLabelsLabel" class="whitespace-nowrap">Show labels</span>
+					<Select v-model="labelDisplaySelectValue" aria-labelledby="displayLabelsLabel">
+						<SelectTrigger class="h-fit min-w-34 px-1 py-1 text-xs">
+							<SelectValue placeholder="Select a label mode" />
+						</SelectTrigger>
+						<SelectContent class="bg-white">
+							<SelectItem class="text-xs" value="always">always</SelectItem>
+							<SelectItem class="text-xs" value="never">never</SelectItem>
+							<SelectItem class="text-xs" value="on zoom">on zoom</SelectItem>
+						</SelectContent>
+					</Select>
+				</div>
+				<div class="my-0.5 w-full border-b-[1px]"></div>
 				<label class="flex items-center justify-between gap-2"
 					><span>Greyscale markers</span> <input v-model="markerSettings.greyscale" type="checkbox"
 				/></label>
