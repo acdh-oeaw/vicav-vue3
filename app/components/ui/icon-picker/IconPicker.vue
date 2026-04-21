@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useDebounce } from "@vueuse/core";
+import { Eye, EyeOff } from "lucide-vue-next";
 import type { SVGAttributes } from "vue";
 
 import { iconsData } from "./icons-data.ts";
@@ -23,13 +24,21 @@ const props = withDefaults(
 		showTooltip?: boolean;
 		customIcons?: Array<IconType>;
 		color?: string;
+		hidden?: boolean;
+		enableHideToggle?: boolean;
 		usePopoverPortal?: boolean;
 		usePopoverModal?: boolean;
 	}>(),
-	{ searchable: true, categorized: true, showTooltip: false, usePopoverModal: false },
+	{
+		searchable: true,
+		categorized: true,
+		showTooltip: false,
+		enableHideToggle: false,
+		usePopoverModal: false,
+	},
 );
 
-const emit = defineEmits(["update:icon", "update:color"]);
+const emit = defineEmits(["update:icon", "update:color", "update:hidden"]);
 
 const isOpen = ref(false);
 const searchRaw = ref("");
@@ -77,6 +86,10 @@ watch(
 		emit("update:color", newColor);
 	},
 );
+
+function updateHidden(hidden: boolean) {
+	emit("update:hidden", hidden);
+}
 </script>
 
 <template>
@@ -95,57 +108,74 @@ watch(
 			</Button>
 		</PopoverTrigger>
 		<PopoverContent class="max-w-56 bg-white p-2 text-sm" :use-portal="usePopoverPortal">
-			<label class="flex grow-0 basis-0 items-center p-0" @click.capture.stop>
-				<span class="mr-2 text-neutral-800">Pick a marker color</span>
-				<div
-					class="size-4 rounded"
-					:style="{
-						backgroundColor: localColor,
-						stroke: localColor,
-					}"
-				></div>
-				<input v-model="localColor" class="size-0" type="color" @click.capture.stop />
-				<span class="sr-only">Select color</span>
-			</label>
-			<div class="my-2 h-[1px] w-full bg-neutral-200"></div>
-			<div class="mt-0.5 w-full">
-				<label
-					><input
-						v-if="searchable !== false"
-						v-model="searchRaw"
-						class="mb-2 w-full p-0.5"
-						:placeholder="searchPlaceholder || 'Search for an icon...'"
-						type="text"
-				/></label>
+			<div :aria-disabled="hidden" :class="hidden ? 'opacity-45 pointer-events-none' : ''">
+				<label class="flex grow-0 basis-0 items-center p-0" @click.capture.stop>
+					<span class="mr-2 text-neutral-800">Pick a marker color</span>
+					<div
+						class="size-4 rounded"
+						:style="{
+							backgroundColor: localColor,
+							stroke: localColor,
+						}"
+					></div>
+					<input v-model="localColor" class="size-0" type="color" @click.capture.stop />
+					<span class="sr-only">Select color</span>
+				</label>
+
+				<div class="my-2 h-[1px] w-full bg-neutral-200"></div>
+				<div class="mt-0.5 w-full">
+					<label
+						><input
+							v-if="searchable !== false"
+							v-model="searchRaw"
+							class="mb-2 w-full p-0.5"
+							:placeholder="searchPlaceholder || 'Search for an icon...'"
+							type="text"
+					/></label>
+				</div>
+				<div class="grid max-h-60 grid-cols-5 gap-2 overflow-auto">
+					<TooltipProvider v-if="props.showTooltip">
+						<Tooltip v-for="iconOption in filteredIcons" :key="iconOption.name">
+							<TooltipTrigger @click="selectIcon(iconOption)">
+								<div
+									class="flex items-center justify-center rounded-md border p-2 hover:bg-gray-100"
+								>
+									<Icon :name="iconOption.name" />
+								</div>
+							</TooltipTrigger>
+							<TooltipContent class="bg-white">{{ iconOption.name }}</TooltipContent>
+						</Tooltip>
+					</TooltipProvider>
+					<Button
+						v-for="iconOption in filteredIcons"
+						v-else
+						:key="iconOption.name"
+						class="flex aspect-square h-auto items-center justify-center rounded-md border p-1 hover:bg-gray-100"
+						variant="outline"
+						@click.prevent.stop="selectIcon(iconOption)"
+					>
+						<Icon
+							:additional-attributes="iconOption.additionalAttributes"
+							:is-custom-icon="iconOption.custom"
+							:name="iconOption.name"
+							:size="16"
+							:style="{ stroke: localColor, fill: iconOption.custom ? localColor : null }"
+						/>
+					</Button>
+				</div>
 			</div>
-			<div class="grid max-h-60 grid-cols-5 gap-2 overflow-auto">
-				<TooltipProvider v-if="props.showTooltip">
-					<Tooltip v-for="icon in filteredIcons" :key="icon.name">
-						<TooltipTrigger @click="selectIcon(icon)">
-							<div class="flex items-center justify-center rounded-md border p-2 hover:bg-gray-100">
-								<Icon :name="icon.name" />
-							</div>
-						</TooltipTrigger>
-						<TooltipContent class="bg-white">{{ icon.name }}</TooltipContent>
-					</Tooltip>
-				</TooltipProvider>
-				<Button
-					v-for="icon in filteredIcons"
-					v-else
-					:key="icon.name"
-					class="flex aspect-square h-auto items-center justify-center rounded-md border p-1 hover:bg-gray-100"
-					variant="outline"
-					@click.prevent.stop="selectIcon(icon)"
-				>
-					<Icon
-						:additional-attributes="icon.additionalAttributes"
-						:is-custom-icon="icon.custom"
-						:name="icon.name"
-						:size="16"
-						:style="{ stroke: localColor, fill: icon.custom ? localColor : null }"
-					/>
-				</Button>
-			</div>
+			<Button
+				v-if="enableHideToggle"
+				class="mt-2 ml-auto flex h-8 w-full items-center justify-between px-2 text-xs"
+				variant="outline"
+				@click.prevent.stop="updateHidden(!(hidden ?? false))"
+			>
+				<span>{{ hidden ? "Show in markers and legend" : "Hide from markers and legend" }}</span>
+				<span class="flex size-5 items-center justify-center rounded-sm">
+					<Eye v-if="hidden" class="size-3.5" />
+					<EyeOff v-else class="size-3.5 text-neutral-500" />
+				</span>
+			</Button>
 		</PopoverContent>
 	</Popover>
 </template>

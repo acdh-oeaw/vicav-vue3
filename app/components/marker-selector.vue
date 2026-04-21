@@ -6,16 +6,19 @@ export interface SelectionEntry {
 	colorCode: string;
 	icon: IconType;
 	id: string;
+	hidden?: boolean;
 }
 const props = withDefaults(
 	defineProps<{
 		type?: Array<SelectorType>;
 		iconCategories?: Array<string>;
 		modelValue: SelectionEntry;
+		enableHideToggle?: boolean;
 		usePopoverPortal?: boolean;
 		usePopoverModal?: boolean;
 	}>(),
 	{
+		enableHideToggle: true,
 		type: () => ["color", "icon"] as Array<SelectorType>,
 	},
 );
@@ -26,6 +29,9 @@ function updateColor(color: string) {
 }
 function updateIcon(icon: IconType) {
 	emit("update:modelValue", { ...props.modelValue, icon });
+}
+function updateHidden(hidden: boolean) {
+	emit("update:modelValue", { ...props.modelValue, hidden });
 }
 
 const localColor = ref(props.modelValue.colorCode ?? "#cccccc");
@@ -76,33 +82,38 @@ const customIcons = [
 </script>
 
 <template>
-	<IconPicker
-		v-if="props.type?.includes('icon')"
-		:id="modelValue.id"
-		:color="modelValue.colorCode"
-		:custom-icons="customIcons"
-		:icon="modelValue.icon"
-		:limit-to-categories="iconCategories"
-		search-placeholder="Search for an alternative icon..."
-		:use-popover-modal="usePopoverModal"
-		:use-popover-portal="usePopoverPortal"
-		@update:color="updateColor"
-		@update:icon="updateIcon"
-	></IconPicker>
-	<label
-		v-else-if="props.type.includes('color')"
-		class="flex grow-0 basis-0 items-center p-0"
-		@click.capture.stop
-	>
-		<span class="sr-only mr-2 text-neutral-800">Pick a marker color</span>
-		<div
-			class="size-4 rounded"
-			:style="{
-				backgroundColor: localColor,
-				stroke: localColor,
-			}"
-		></div>
-		<input v-model="localColor" class="size-0" type="color" @click.capture.stop />
-		<span class="sr-only">Select color</span>
-	</label>
+	<div class="flex items-center gap-1.5">
+		<IconPicker
+			v-if="props.type?.includes('icon')"
+			:id="modelValue.id"
+			:color="modelValue.colorCode"
+			:custom-icons="customIcons"
+			:enable-hide-toggle="enableHideToggle"
+			:hidden="modelValue.hidden"
+			:icon="modelValue.icon"
+			:limit-to-categories="iconCategories"
+			search-placeholder="Search for an alternative icon..."
+			:use-popover-modal="usePopoverModal"
+			:use-popover-portal="usePopoverPortal"
+			@update:color="updateColor"
+			@update:hidden="updateHidden"
+			@update:icon="updateIcon"
+		></IconPicker>
+		<label
+			v-else-if="props.type.includes('color')"
+			class="flex grow-0 basis-0 items-center p-0"
+			@click.capture.stop
+		>
+			<span class="sr-only mr-2 text-neutral-800">Pick a marker color</span>
+			<div
+				class="size-4 rounded"
+				:style="{
+					backgroundColor: localColor,
+					stroke: localColor,
+				}"
+			></div>
+			<input v-model="localColor" class="size-0" type="color" @click.capture.stop />
+			<span class="sr-only">Select color</span>
+		</label>
+	</div>
 </template>

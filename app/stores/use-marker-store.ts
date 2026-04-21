@@ -12,6 +12,7 @@ interface MarkerInterface {
 	id: string;
 	icon: IconType;
 	colorCode: string;
+	hidden?: boolean;
 }
 
 export const useMarkerStore = defineStore("markers", () => {
@@ -44,6 +45,15 @@ export const useMarkerStore = defineStore("markers", () => {
 		encodeURIComponent(
 			`${columnId}-${(feature ?? "").replaceAll(/[`~!@#$%^&*()_|+\-=?;:'",.<>{}[\]\\/]/g, "")}`,
 		).replaceAll(/[()%\\]/g, "");
+
+	function setUnderlyingFeatureValuesHidden(featureId: string, hidden: boolean) {
+		const featureValuePrefix = buildFeatureValueId(featureId, "");
+		markers.value.forEach((entry, id) => {
+			if (id !== featureId && id.startsWith(featureValuePrefix) && entry.hidden !== hidden) {
+				markers.value.set(id, { ...entry, hidden });
+			}
+		});
+	}
 
 	/* General Marker Settings */
 	function updateSettingVariables() {
@@ -137,6 +147,7 @@ export const useMarkerStore = defineStore("markers", () => {
 
 	function addDefaultMarker(baseId: MarkerInterface["id"], subId?: MarkerInterface["id"]) {
 		if (subId && !markers.value.has(baseId)) addDefaultMarker(baseId);
+		const inheritedHidden = subId ? (markers.value.get(baseId)?.hidden ?? false) : false;
 		if (markers.value.get(baseId)) {
 			assert(markers.value.get(baseId) != null);
 			setMarker({
@@ -144,12 +155,14 @@ export const useMarkerStore = defineStore("markers", () => {
 				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 				icon: markers.value.get(baseId)!.icon,
 				colorCode: "",
+				hidden: inheritedHidden,
 			});
 		} else
 			setMarker({
 				id: subId ? buildFeatureValueId(baseId, subId) : baseId,
 				icon: defaultMarkers.petal,
 				colorCode: "",
+				hidden: inheritedHidden,
 			});
 		if (subId) addColorVariant(baseId, subId);
 		else addColor(baseId);
@@ -158,7 +171,11 @@ export const useMarkerStore = defineStore("markers", () => {
 	function setMarker(marker: MarkerInterface) {
 		let repaint = false;
 		if (markers.value.get(marker.id)?.icon !== marker.icon) repaint = true;
-		markers.value.set(marker.id, marker);
+		if (markers.value.get(marker.id)?.hidden !== marker.hidden) repaint = true;
+		markers.value.set(marker.id, { hidden: false, ...marker });
+		if (!marker.id.includes("-")) {
+			setUnderlyingFeatureValuesHidden(marker.id, marker.hidden ?? false);
+		}
 		if (marker.colorCode !== "") {
 			setColor(marker);
 		}

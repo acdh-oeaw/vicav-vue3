@@ -75,6 +75,16 @@ function hasActiveFilters(column: ColumnType) {
 function updateMarker(markerSelection: SelectionEntry) {
 	setMarker(markerSelection);
 }
+function isMarkerHidden(id: string) {
+	return markers.value.get(id)?.hidden ?? false;
+}
+function shouldShowOtherFeatureValues(feature: ColumnType) {
+	return (
+		hasActiveFilters(feature) &&
+		!getAllFacetsActive(feature) &&
+		markerSettings.value.showOtherFeatureValues
+	);
+}
 </script>
 
 <template>
@@ -89,7 +99,7 @@ function updateMarker(markerSelection: SelectionEntry) {
 		></CollapsibleTrigger>
 		<CollapsibleContent class="max-h-full !overflow-auto">
 			<div v-for="feature in activeFeatures" :key="feature.id" class="my-1">
-				<div class="flex items-start gap-2">
+				<div class="flex items-start gap-2" :class="{ 'opacity-45': isMarkerHidden(feature.id) }">
 					<svg
 						v-if="activeFeatures?.length === 1 && markerSettings.showCenter"
 						class="mt-0.5 size-3.5 shrink-0"
@@ -107,8 +117,13 @@ function updateMarker(markerSelection: SelectionEntry) {
 				</div>
 				<div
 					v-for="filter in getCombinedFilters(feature)"
-					:key="filter.join('')"
+					:key="filter.join(AND_OPERATOR)"
 					class="ml-4 flex items-center gap-2"
+					:class="{
+						'opacity-45': isMarkerHidden(
+							buildFeatureValueId(feature.id, filter.join(AND_OPERATOR)),
+						),
+					}"
 				>
 					<MarkerSelector
 						:icon-categories="['shapes']"
@@ -116,13 +131,6 @@ function updateMarker(markerSelection: SelectionEntry) {
 						:use-popover-portal="true"
 						@update:model-value="(props) => updateMarker(props)"
 					></MarkerSelector>
-					<!-- <svg
-							class="mt-0.5 size-3.5 shrink-0"
-							v-html="
-								getMarkerSVG({ id: buildFeatureValueId(feature.id, filter.join(AND_OPERATOR)) })
-									.outerHTML
-							"
-						></svg> -->
 					<span>
 						<span v-for="(fv, idx) in filter" :key="fv"
 							>{{ fv
@@ -137,6 +145,7 @@ function updateMarker(markerSelection: SelectionEntry) {
 						v-for="[value, count] in getActiveFilterValues(feature)"
 						:key="value"
 						class="flex items-center gap-2"
+						:class="{ 'opacity-45': isMarkerHidden(buildFeatureValueId(feature.id, value)) }"
 					>
 						<MarkerSelector
 							:icon-categories="['shapes']"
@@ -144,19 +153,12 @@ function updateMarker(markerSelection: SelectionEntry) {
 							:use-popover-portal="true"
 							@update:model-value="(props) => updateMarker(props)"
 						></MarkerSelector>
-						<!-- <svg
-								class="mt-0.5 size-3.5 shrink-0"
-								v-html="getMarkerSVG({ id: buildFeatureValueId(feature.id, value) }).outerHTML"
-							></svg> -->
 						<span>{{ value }} ({{ count }})</span>
 					</div>
 					<div
-						v-if="
-							hasActiveFilters(feature) &&
-							!getAllFacetsActive(feature) &&
-							markerSettings.showOtherFeatureValues
-						"
+						v-if="shouldShowOtherFeatureValues(feature)"
 						class="flex items-center gap-2"
+						:class="{ 'opacity-45': isMarkerHidden(feature.id) }"
 					>
 						<svg
 							class="mt-0.5 size-3.5 shrink-0"

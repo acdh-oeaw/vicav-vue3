@@ -232,6 +232,7 @@ function computeMarkerData() {
 			id,
 			colorCode: markers.value.get(id)!.colorCode,
 			icon: markers.value.get(id)!.icon,
+			hidden: markers.value.get(id)!.hidden ?? false,
 		};
 	});
 	markerData.value = data;
@@ -288,7 +289,6 @@ function deselectColumn() {
 					:model-value="markers.get(column.id)!"
 					:type="['icon']"
 					:use-popover-modal="true"
-					@click.capture.stop
 					@update:model-value="(props) => updateMarker(props)"
 				></MarkerSelector>
 			</div>
