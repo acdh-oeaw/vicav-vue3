@@ -2,14 +2,8 @@
 import { BookA } from "lucide-vue-next";
 import type Zod from "zod";
 
-import type {
-	DictChange,
-	DictEntry,
-	DictExample,
-	RestVLEEntry,
-	TranslationCit,
-} from "@/lib/api-client";
 import type { DictQuerySchema } from "@/types/global.ts";
+import { formatLocation, normalizeEntry } from "@/utils/dict-entry-rendering";
 
 const props = defineProps<{
 	params: Zod.infer<typeof DictQuerySchema>["params"];
@@ -134,437 +128,6 @@ watch(data, (newData) => {
 	page.value = parseInt(newData.page);
 	pageSize.value = parseInt(newData.page_size);
 });
-
-interface RenderedTranslation {
-	lang?: string;
-	text: string;
-}
-
-interface RenderedLocation {
-	place?: string;
-	tribe?: string;
-}
-
-interface RenderedGrammarItem {
-	label: string;
-	value: string;
-}
-
-interface RenderedEditor {
-	action: "change" | "create";
-	status?: string;
-	when?: string;
-	who?: string;
-}
-
-interface ExampleLike {
-	"@id"?: string;
-	"@type"?: string;
-	"@vutlsk"?: string;
-	feature?: DictChange;
-	features?: Array<DictChange>;
-	geographic_usg?: {
-		tribe_name?: {
-			$: string;
-		};
-		place_name?: {
-			$: string;
-		};
-	};
-	quote?: {
-		"@lang"?: string;
-		$: string;
-	};
-	translation_cit?: TranslationCit;
-	translation_cits?: Array<TranslationCit>;
-	listBibl?: Array<{
-		"@id"?: string;
-		title?: {
-			"@ref"?: string;
-		};
-		biblScope?: {
-			"@unit"?: string;
-			$: string;
-		};
-	}>;
-}
-
-interface GrammarLike {
-	pos_gram?: { $?: string };
-	derivedVerbClass_gram?: { $?: string };
-	synRoot_gram?: { $?: string };
-	diaRoot_gram?: { $?: string };
-	root_gram?: { $?: string };
-	number_gram?: { $?: string };
-	person_gram?: { $?: string };
-	aspect_gram?: { $?: string };
-	gender_gram?: { $?: string };
-	mood_gram?: { $?: string };
-	voice_gram?: { $?: string };
-	degree_gram?: { $?: string };
-	inflectionType_gram?: { $?: string };
-	constraint_gram?: { $?: string };
-	morphPattern_gram?: { $?: string };
-}
-
-interface EntryLocationLike {
-	place_name?: {
-		$: string;
-	};
-	tribe_name?: {
-		$: string;
-	};
-}
-
-interface EntryFormLike {
-	"@subtype"?: string;
-	orth?: {
-		"@lang"?: string;
-		$?: string;
-	};
-	geographic_usg?: EntryLocationLike;
-	geographic_usgs?: Array<EntryLocationLike>;
-}
-
-interface TranslationEquivalentLike {
-	form?: {
-		orth?: {
-			"@lang"?: string;
-			$?: string;
-		};
-	};
-	gloss?: {
-		$: string;
-	};
-}
-
-interface RelatedXrLike {
-	example_cit?: ExampleLike;
-}
-
-interface SenseLike {
-	"@id"?: string;
-	translationEquivalent_cit?: TranslationEquivalentLike;
-	translationEquivalent_cits?: Array<TranslationEquivalentLike>;
-	related_xr?: RelatedXrLike;
-	related_xrs?: Array<RelatedXrLike>;
-}
-
-interface EntryPayloadLike {
-	"@id"?: string;
-	"@lang"?: string;
-	lemma_form?: EntryFormLike;
-	inflected_form?: {
-		orth?: {
-			"@lang"?: string;
-			$?: string;
-		};
-		gramGrp?: GrammarLike;
-		geographic_usg?: EntryLocationLike;
-		geographic_usgs?: Array<EntryLocationLike>;
-	};
-	inflected_forms?: Array<{
-		orth?: {
-			"@lang"?: string;
-			$?: string;
-		};
-		gramGrp?: GrammarLike;
-		geographic_usg?: EntryLocationLike;
-		geographic_usgs?: Array<EntryLocationLike>;
-	}>;
-	gramGrp?: GrammarLike;
-	sense?: SenseLike;
-	senses?: Array<SenseLike>;
-	notes?: Array<{
-		$?: string;
-	}>;
-	features?: Array<DictChange>;
-}
-
-interface RenderedDictEntry {
-	id?: string;
-	lemma?: string;
-	status?: string;
-	type?: string;
-	html?: string;
-	location?: string;
-	locations: Array<RenderedLocation>;
-	quote?: RenderedTranslation;
-	translations: Array<RenderedTranslation>;
-	editors: Array<RenderedEditor>;
-	grammar: Array<RenderedGrammarItem>;
-	inflectedForms: Array<{
-		label: string;
-		grammar: Array<RenderedGrammarItem>;
-		locations: Array<RenderedLocation>;
-	}>;
-	senses: Array<{
-		id?: string;
-		translations: Array<RenderedTranslation>;
-		relatedExamples: Array<{
-			id?: string;
-			quote?: RenderedTranslation;
-			locations: Array<RenderedLocation>;
-			translations: Array<RenderedTranslation>;
-			editors: Array<RenderedEditor>;
-			bibliography: Array<string>;
-		}>;
-	}>;
-	notes: Array<string>;
-	raw: RestVLEEntry;
-}
-
-function asArray<T>(value: T | Array<T> | null | undefined): Array<T> {
-	if (value == null) return [];
-	return Array.isArray(value) ? value : [value];
-}
-
-function collectChanges(
-	changes: DictChange | Array<DictChange> | undefined,
-): Array<RenderedEditor> {
-	const renderedChanges: Array<RenderedEditor> = [];
-
-	for (const item of asArray(changes)) {
-		if (item.change != null) {
-			renderedChanges.push({ action: "change", ...item.change });
-			continue;
-		}
-
-		if (item.create != null) {
-			renderedChanges.push({
-				action: "create",
-				status: item.create.status,
-				when: item.create.when,
-				who: item.create.who,
-			});
-		}
-	}
-
-	return renderedChanges;
-}
-
-function collectTranslations(
-	single: TranslationCit | undefined,
-	multiple: Array<TranslationCit> | undefined,
-): Array<RenderedTranslation> {
-	return [...asArray(single), ...asArray(multiple)]
-		.map((translation) => {
-			return {
-				lang: translation["@lang"],
-				text: translation.quote?.$ ?? "",
-			};
-		})
-		.filter((translation) => translation.text !== "");
-}
-
-function collectLocations(
-	single:
-		| {
-				place_name?: {
-					$: string;
-				};
-				tribe_name?: {
-					$: string;
-				};
-		  }
-		| undefined,
-	multiple:
-		| Array<{
-				place_name?: {
-					$: string;
-				};
-				tribe_name?: {
-					$: string;
-				};
-		  }>
-		| undefined,
-): Array<RenderedLocation> {
-	return [...asArray(single), ...asArray(multiple)]
-		.map((location) => {
-			return {
-				place: location.place_name?.$,
-				tribe: location.tribe_name?.$,
-			};
-		})
-		.filter((location) => location.place != null || location.tribe != null);
-}
-
-function formatLocation(location: RenderedLocation) {
-	return [location.place, location.tribe].filter(Boolean).join(" / ");
-}
-
-function collectGrammar(grammar: GrammarLike | undefined): Array<RenderedGrammarItem> {
-	if (grammar == null) return [];
-
-	const items: Array<[string, string | undefined]> = [
-		["Part of speech", grammar.pos_gram?.$],
-		["Class", grammar.derivedVerbClass_gram?.$],
-		["Syn root", grammar.synRoot_gram?.$],
-		["Dia root", grammar.diaRoot_gram?.$],
-		["Root", grammar.root_gram?.$],
-		["Aspect", grammar.aspect_gram?.$],
-		["Number", grammar.number_gram?.$],
-		["Person", grammar.person_gram?.$],
-		["Gender", grammar.gender_gram?.$],
-		["Mood", grammar.mood_gram?.$],
-		["Voice", grammar.voice_gram?.$],
-		["Degree", grammar.degree_gram?.$],
-		["Inflection", grammar.inflectionType_gram?.$],
-		["Constraint", grammar.constraint_gram?.$],
-		["Pattern", grammar.morphPattern_gram?.$],
-	];
-
-	return items
-		.filter(([, value]) => value != null && value !== "")
-		.map(([label, value]) => ({ label, value: String(value) }));
-}
-
-function collectTranslationEquivalents(
-	single: TranslationEquivalentLike | undefined,
-	multiple: Array<TranslationEquivalentLike> | undefined,
-): Array<RenderedTranslation> {
-	return [...asArray(single), ...asArray(multiple)]
-		.map((translation) => {
-			return {
-				lang: translation.form?.orth?.["@lang"],
-				text: translation.form?.orth?.$ ?? translation.gloss?.$ ?? "",
-			};
-		})
-		.filter((translation) => translation.text !== "");
-}
-
-function collectBibliography(example: ExampleLike | undefined): Array<string> {
-	return asArray(example?.listBibl).flatMap((item) => {
-		const title = item.title?.["@ref"];
-		const scope = item.biblScope?.$;
-		const unit = item.biblScope?.["@unit"];
-		const suffix = [unit, scope].filter(Boolean).join(": ");
-
-		if (title == null && suffix === "") return [];
-		return [suffix === "" ? String(title) : `${title} (${suffix})`];
-	});
-}
-
-function collectRelatedExamples(
-	single: RelatedXrLike | undefined,
-	multiple: Array<RelatedXrLike> | undefined,
-) {
-	return [...asArray(single), ...asArray(multiple)].flatMap((related) => {
-		const example = related.example_cit;
-		if (example == null) return [];
-
-		return [
-			{
-				id: example["@id"],
-				quote: example.quote?.$
-					? {
-							lang: example.quote?.["@lang"],
-							text: example.quote.$,
-						}
-					: undefined,
-				locations: collectLocations(example.geographic_usg, undefined),
-				translations: collectTranslations(example.translation_cit, example.translation_cits),
-				editors: [...collectChanges(example.feature), ...collectChanges(example.features)],
-				bibliography: collectBibliography(example),
-			},
-		];
-	});
-}
-
-function normalizeEntry(entry: RestVLEEntry): RenderedDictEntry {
-	if (typeof entry.entry === "string") {
-		return {
-			id: entry.id,
-			lemma: entry.lemma,
-			status: entry.status,
-			type: entry.type,
-			html: entry.entry,
-			locations: [],
-			translations: [],
-			editors: [],
-			grammar: [],
-			inflectedForms: [],
-			senses: [],
-			notes: [],
-			raw: entry,
-		};
-	}
-
-	const payload = entry.entry as DictEntry | DictExample | undefined;
-	const normalizedPayload =
-		((payload as { entry?: EntryPayloadLike } | undefined)?.entry as
-			| EntryPayloadLike
-			| undefined) ?? (payload as EntryPayloadLike | undefined);
-	const example =
-		((payload as DictEntry | undefined)?.example_cit as ExampleLike | undefined) ??
-		(payload as ExampleLike | undefined);
-	const quote = example?.quote?.$;
-	const quoteLang = example?.quote?.["@lang"];
-	const translations = collectTranslations(example?.translation_cit, example?.translation_cits);
-	const editors = [
-		...collectChanges(example?.feature),
-		...collectChanges(example?.features),
-		...collectChanges((payload as DictEntry | undefined)?.feature),
-		...collectChanges((payload as DictEntry | undefined)?.features),
-	];
-	const location =
-		(payload as DictEntry | undefined)?.geographic_usg?.place_name?.$ ??
-		example?.geographic_usg?.place_name?.$;
-	const locations = collectLocations(
-		normalizedPayload?.lemma_form?.geographic_usg,
-		normalizedPayload?.lemma_form?.geographic_usgs,
-	)
-		.concat(collectLocations((payload as DictEntry | undefined)?.geographic_usg, undefined))
-		.concat(collectLocations(example?.geographic_usg, undefined));
-	const grammar = collectGrammar(normalizedPayload?.gramGrp);
-	const inflectedForms = [
-		...asArray(normalizedPayload?.inflected_form),
-		...asArray(normalizedPayload?.inflected_forms),
-	].flatMap((form) => {
-		const label = form.orth?.$;
-		if (label == null || label === "") return [];
-
-		return [
-			{
-				label,
-				grammar: collectGrammar(form.gramGrp),
-				locations: collectLocations(form.geographic_usg, form.geographic_usgs),
-			},
-		];
-	});
-	const senses = [...asArray(normalizedPayload?.sense), ...asArray(normalizedPayload?.senses)].map(
-		(sense) => {
-			return {
-				id: sense["@id"],
-				translations: collectTranslationEquivalents(
-					sense.translationEquivalent_cit,
-					sense.translationEquivalent_cits,
-				),
-				relatedExamples: collectRelatedExamples(sense.related_xr, sense.related_xrs),
-			};
-		},
-	);
-	const notes = asArray(normalizedPayload?.notes)
-		.map((note) => note.$ ?? "")
-		.filter((note) => note !== "");
-
-	return {
-		id: entry.id,
-		lemma: entry.lemma,
-		status: entry.status,
-		type: entry.type,
-		location,
-		locations,
-		quote: quote ? { lang: quoteLang, text: quote } : undefined,
-		translations,
-		editors,
-		grammar,
-		inflectedForms,
-		senses,
-		notes,
-		raw: entry,
-	};
-}
 
 const renderedEntries = computed(() => {
 	return data.value?._embedded?.entries.map((entry) => normalizeEntry(entry)) ?? [];
@@ -838,7 +401,7 @@ const api = useApiClient(); */
 										</div>
 										<div class="min-w-0 space-y-1">
 											<CardTitle class="text-lg leading-snug text-primary">
-												{{ e.lemma ?? e.quote?.text ?? e.id ?? "Dictionary entry" }}
+												{{ e.title }}
 											</CardTitle>
 											<CardDescription
 												v-if="e.location"
@@ -858,11 +421,112 @@ const api = useApiClient(); */
 						<CardContent class="pt-4">
 							<Table>
 								<TableBody>
-									<TableRow v-if="e.id">
+									<TableRow v-if="e.id || e.sid || e.xmlId || e.selfHref">
 										<TableCell class="w-32 font-semibold">Identifiers</TableCell>
 										<TableCell>
 											<div class="flex flex-wrap items-center gap-2">
 												<Badge v-if="e.id" variant="outline">id: {{ e.id }}</Badge>
+												<Badge v-if="e.sid" variant="outline">sid: {{ e.sid }}</Badge>
+												<Badge v-if="e.xmlId" variant="outline">xml:id: {{ e.xmlId }}</Badge>
+												<a
+													v-if="e.selfHref"
+													class="text-sm text-primary underline-offset-2 hover:underline"
+													:href="e.selfHref"
+												>
+													self
+												</a>
+											</div>
+										</TableCell>
+									</TableRow>
+									<TableRow v-if="e.metadata.length > 0">
+										<TableCell class="w-32 font-semibold">Metadata</TableCell>
+										<TableCell>
+											<div class="flex flex-wrap items-center gap-2">
+												<Badge
+													v-for="item in e.metadata"
+													:key="`${item.label}-${item.value}`"
+													variant="outline"
+												>
+													{{ item.label }}: {{ item.value }}
+												</Badge>
+											</div>
+										</TableCell>
+									</TableRow>
+									<TableRow v-if="e.lemmaForms.length > 0 || e.variantForms.length > 0">
+										<TableCell class="w-32 font-semibold">Forms</TableCell>
+										<TableCell>
+											<div class="space-y-3">
+												<div
+													v-for="(form, formIndex) in e.lemmaForms"
+													:key="`lemma-${formIndex}`"
+													class="space-y-2"
+												>
+													<div class="flex flex-wrap items-center gap-2">
+														<Badge
+															v-for="item in form.metadata"
+															:key="`lemma-${formIndex}-${item.label}-${item.value}`"
+															variant="outline"
+														>
+															{{ item.label }}: {{ item.value }}
+														</Badge>
+													</div>
+													<div class="flex flex-wrap items-center gap-2">
+														<span
+															v-for="orthography in form.orthographies"
+															:key="`lemma-${formIndex}-${orthography.lang}-${orthography.text}`"
+															class="inline-flex items-center gap-2"
+															:class="{ 'text-muted-foreground': orthography.isMissing }"
+														>
+															<Badge v-if="orthography.lang" variant="outline">
+																{{ orthography.lang }}
+															</Badge>
+															<span>{{ orthography.text }}</span>
+														</span>
+													</div>
+												</div>
+												<div
+													v-for="(form, formIndex) in e.variantForms"
+													:key="`variant-${formIndex}`"
+													class="space-y-2 border-t border-border/60 pt-3"
+												>
+													<div class="flex flex-wrap items-center gap-2">
+														<span class="text-sm font-semibold">Variant</span>
+														<Badge
+															v-for="item in form.metadata"
+															:key="`variant-${formIndex}-${item.label}-${item.value}`"
+															variant="outline"
+														>
+															{{ item.label }}: {{ item.value }}
+														</Badge>
+													</div>
+													<div class="flex flex-wrap items-center gap-2">
+														<span
+															v-for="orthography in form.orthographies"
+															:key="`variant-${formIndex}-${orthography.lang}-${orthography.text}`"
+															class="inline-flex items-center gap-2"
+															:class="{ 'text-muted-foreground': orthography.isMissing }"
+														>
+															<Badge v-if="orthography.lang" variant="outline">
+																{{ orthography.lang }}
+															</Badge>
+															<span>{{ orthography.text }}</span>
+														</span>
+													</div>
+													<div v-if="form.grammar.length > 0" class="space-y-1.5">
+														<div
+															v-for="item in form.grammar"
+															:key="`variant-${formIndex}-${item.label}`"
+															class="flex items-start gap-4"
+														>
+															<div class="w-36 shrink-0 text-sm font-semibold tracking-[0.02em]">
+																{{ item.label }}
+															</div>
+															<div class="min-w-0 flex-1 text-sm font-normal">
+																{{ item.value }}
+															</div>
+														</div>
+													</div>
+												</div>
 											</div>
 										</TableCell>
 									</TableRow>
@@ -930,16 +594,37 @@ const api = useApiClient(); */
 										<TableCell>
 											<div class="space-y-3">
 												<Card
-													v-for="inflected in e.inflectedForms"
-													:key="inflected.label"
+													v-for="(inflected, inflectedIndex) in e.inflectedForms"
+													:key="`inflected-${inflectedIndex}`"
 													class="border-border/60 shadow-none"
 												>
 													<CardContent class="space-y-2 pt-4">
-														<p class="font-medium">{{ inflected.label }}</p>
+														<div class="flex flex-wrap items-center gap-2">
+															<Badge
+																v-for="item in inflected.metadata"
+																:key="`inflected-${inflectedIndex}-${item.label}-${item.value}`"
+																variant="outline"
+															>
+																{{ item.label }}: {{ item.value }}
+															</Badge>
+														</div>
+														<div class="flex flex-wrap items-center gap-2">
+															<span
+																v-for="orthography in inflected.orthographies"
+																:key="`inflected-${inflectedIndex}-${orthography.lang}-${orthography.text}`"
+																class="inline-flex items-center gap-2 font-medium"
+																:class="{ 'text-muted-foreground': orthography.isMissing }"
+															>
+																<Badge v-if="orthography.lang" variant="outline">
+																	{{ orthography.lang }}
+																</Badge>
+																<span>{{ orthography.text }}</span>
+															</span>
+														</div>
 														<div v-if="inflected.grammar.length > 0" class="space-y-1.5">
 															<div
 																v-for="item in inflected.grammar"
-																:key="`${inflected.label}-${item.label}`"
+																:key="`inflected-${inflectedIndex}-${item.label}`"
 																class="flex items-start gap-4"
 															>
 																<div class="w-36 shrink-0 text-sm font-semibold tracking-[0.02em]">
@@ -995,12 +680,35 @@ const api = useApiClient(); */
 													<CardContent class="space-y-3 pt-4">
 														<div class="flex flex-wrap items-center gap-2">
 															<span class="font-medium">{{ sense.id ?? "Sense" }}</span>
+															<Badge v-if="sense.ana" variant="outline">{{ sense.ana }}</Badge>
+															<Badge
+																v-for="item in sense.metadata"
+																:key="`${sense.id}-${item.label}-${item.value}`"
+																variant="outline"
+															>
+																{{ item.label }}: {{ item.value }}
+															</Badge>
+														</div>
+														<div v-if="sense.definitions.length > 0" class="space-y-2">
+															<p class="text-sm font-semibold">Definitions</p>
+															<div
+																v-for="definition in sense.definitions"
+																:key="`${sense.id}-${definition.lang}-${definition.text}`"
+																class="flex flex-wrap items-center gap-2"
+																:class="{ 'text-muted-foreground': definition.isMissing }"
+															>
+																<Badge v-if="definition.lang" variant="outline">
+																	{{ definition.lang }}
+																</Badge>
+																<span>{{ definition.text }}</span>
+															</div>
 														</div>
 														<div v-if="sense.translations.length > 0" class="space-y-2">
 															<div
 																v-for="translation in sense.translations"
 																:key="`${sense.id}-${translation.lang}-${translation.text}`"
 																class="flex flex-wrap items-center gap-2"
+																:class="{ 'text-muted-foreground': translation.isMissing }"
 															>
 																<Badge v-if="translation.lang" variant="outline">
 																	{{ translation.lang }}
@@ -1008,34 +716,62 @@ const api = useApiClient(); */
 																<span>{{ translation.text }}</span>
 															</div>
 														</div>
-														<div v-if="sense.relatedExamples.length > 0" class="space-y-3">
-															<p class="text-sm font-semibold">Related Examples</p>
+														<div v-if="sense.grammar.length > 0" class="space-y-1.5">
+															<div
+																v-for="item in sense.grammar"
+																:key="`${sense.id}-${item.label}`"
+																class="flex items-start gap-4"
+															>
+																<div class="w-36 shrink-0 text-sm font-semibold tracking-[0.02em]">
+																	{{ item.label }}
+																</div>
+																<div class="min-w-0 flex-1 text-sm font-normal">
+																	{{ item.value }}
+																</div>
+															</div>
+														</div>
+														<div v-if="sense.examples.length > 0" class="space-y-3">
+															<p class="text-sm font-semibold">Examples</p>
 															<Card
-																v-for="related in sense.relatedExamples"
-																:key="related.id ?? related.quote?.text"
+																v-for="example in sense.examples"
+																:key="`${example.kind}-${example.id ?? example.quote?.text}`"
 																class="border-border/60 bg-muted/20 shadow-none"
 															>
 																<CardContent class="space-y-2 pt-4">
-																	<p v-if="related.quote" class="m-0 font-medium">
-																		{{ related.quote.text }}
-																	</p>
+																	<div class="flex flex-wrap items-center gap-2">
+																		<Badge variant="outline">{{ example.kind }}</Badge>
+																		<Badge
+																			v-for="item in example.metadata"
+																			:key="`${example.id}-${item.label}-${item.value}`"
+																			variant="outline"
+																		>
+																			{{ item.label }}: {{ item.value }}
+																		</Badge>
+																	</div>
+																	<div v-if="example.quote" class="space-y-2">
+																		<p class="m-0 font-medium">{{ example.quote.text }}</p>
+																		<Badge v-if="example.quote.lang" variant="outline">
+																			{{ example.quote.lang }}
+																		</Badge>
+																	</div>
 																	<div
-																		v-if="related.locations.length > 0"
+																		v-if="example.locations.length > 0"
 																		class="flex flex-wrap gap-2"
 																	>
 																		<Badge
-																			v-for="location in related.locations"
+																			v-for="location in example.locations"
 																			:key="formatLocation(location)"
 																			variant="outline"
 																		>
 																			{{ formatLocation(location) }}
 																		</Badge>
 																	</div>
-																	<div v-if="related.translations.length > 0" class="space-y-1">
+																	<div v-if="example.translations.length > 0" class="space-y-1">
 																		<div
-																			v-for="translation in related.translations"
-																			:key="`${related.id}-${translation.lang}-${translation.text}`"
+																			v-for="translation in example.translations"
+																			:key="`${example.id}-${translation.lang}-${translation.text}`"
 																			class="flex flex-wrap items-center gap-2"
+																			:class="{ 'text-muted-foreground': translation.isMissing }"
 																		>
 																			<Badge v-if="translation.lang" variant="outline">
 																				{{ translation.lang }}
@@ -1043,11 +779,11 @@ const api = useApiClient(); */
 																			<span>{{ translation.text }}</span>
 																		</div>
 																	</div>
-																	<div v-if="related.bibliography.length > 0" class="space-y-1">
+																	<div v-if="example.bibliography.length > 0" class="space-y-1">
 																		<p class="text-sm font-semibold">Bibliography</p>
 																		<div class="flex flex-wrap gap-2">
 																			<Badge
-																				v-for="item in related.bibliography"
+																				v-for="item in example.bibliography"
 																				:key="item"
 																				variant="outline"
 																			>
@@ -1055,10 +791,10 @@ const api = useApiClient(); */
 																			</Badge>
 																		</div>
 																	</div>
-																	<div v-if="related.editors.length > 0" class="space-y-1">
+																	<div v-if="example.editors.length > 0" class="space-y-1">
 																		<div
-																			v-for="(editor, relatedEditorIndex) in related.editors"
-																			:key="`${related.id}-${editor.action}-${editor.when}-${relatedEditorIndex}`"
+																			v-for="(editor, exampleEditorIndex) in example.editors"
+																			:key="`${example.id}-${editor.action}-${editor.when}-${exampleEditorIndex}`"
 																			class="flex flex-wrap items-center gap-2 text-sm"
 																		>
 																			<span>{{ editor.who ?? "Unknown" }}</span>
