@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { BookA } from "lucide-vue-next";
+import { BookA, Braces, Code, MessageSquareQuote } from "lucide-vue-next";
 import type Zod from "zod";
 
 import type { DictQuerySchema } from "@/types/global.ts";
@@ -472,11 +472,26 @@ const api = useApiClient(); */
 							<div class="flex items-start justify-between gap-3">
 								<div class="min-w-0 flex-1">
 									<div class="flex items-start gap-3">
-										<div
-											class="flex size-10 shrink-0 items-center justify-center rounded-sm border border-on-primary/40 bg-on-primary text-primary shadow-sm"
+										<TooltipProvider
+											v-if="e.type === 'entry' || e.type === 'example'"
+											:delay-duration="0"
 										>
-											<BookA class="size-5" />
-										</div>
+											<Tooltip>
+												<TooltipTrigger as-child>
+													<button
+														:aria-label="e.type"
+														class="flex size-10 shrink-0 items-center justify-center rounded-sm border border-on-primary/40 bg-on-primary text-primary shadow-sm"
+														type="button"
+													>
+														<BookA v-if="e.type === 'entry'" class="size-5" />
+														<MessageSquareQuote v-else class="size-5" />
+													</button>
+												</TooltipTrigger>
+												<TooltipContent class="border-black bg-black text-white" side="bottom">
+													{{ e.type }}
+												</TooltipContent>
+											</Tooltip>
+										</TooltipProvider>
 										<div class="min-w-0 space-y-1">
 											<CardTitle class="text-lg leading-snug text-on-primary">
 												{{ e.title }}
@@ -490,23 +505,53 @@ const api = useApiClient(); */
 										</div>
 									</div>
 								</div>
-								<div class="ml-4 flex shrink-0 flex-wrap justify-end gap-2 self-start">
-									<Badge v-if="e.type" variant="outline">{{ e.type }}</Badge>
-									<Badge v-if="e.status" variant="outline">{{ e.status }}</Badge>
+								<div class="ml-4 flex shrink-0 flex-col items-end gap-2 self-start">
+									<div class="flex items-center justify-end gap-2">
+										<TooltipProvider :delay-duration="0">
+											<Tooltip>
+												<TooltipTrigger as-child>
+													<button
+														aria-label="entry as xml"
+														class="flex size-8 items-center justify-center rounded-sm border border-on-primary/40 text-on-primary hover:bg-on-primary hover:text-primary"
+														type="button"
+													>
+														<Code class="size-4" />
+													</button>
+												</TooltipTrigger>
+												<TooltipContent class="border-black bg-black text-white" side="bottom">
+													entry as xml
+												</TooltipContent>
+											</Tooltip>
+										</TooltipProvider>
+										<TooltipProvider :delay-duration="0">
+											<Tooltip>
+												<TooltipTrigger as-child>
+													<button
+														aria-label="entry as JSON"
+														class="flex size-8 items-center justify-center rounded-sm border border-on-primary/40 text-on-primary hover:bg-on-primary hover:text-primary"
+														type="button"
+													>
+														<Braces class="size-4" />
+													</button>
+												</TooltipTrigger>
+												<TooltipContent class="border-black bg-black text-white" side="bottom">
+													entry as JSON
+												</TooltipContent>
+											</Tooltip>
+										</TooltipProvider>
+									</div>
+									<div class="flex flex-wrap justify-end gap-2">
+										<Badge v-if="e.id" variant="outline">id: {{ e.id }}</Badge>
+										<Badge v-if="e.status && e.status !== 'released'" variant="outline">
+											{{ e.status }}
+										</Badge>
+									</div>
 								</div>
 							</div>
 						</CardHeader>
 						<CardContent class="pt-4">
 							<Table>
 								<TableBody>
-									<TableRow v-if="e.id">
-										<TableCell class="w-32 font-semibold">Identifiers</TableCell>
-										<TableCell>
-											<div class="flex flex-wrap items-center gap-2">
-												<Badge v-if="e.id" variant="outline">id: {{ e.id }}</Badge>
-											</div>
-										</TableCell>
-									</TableRow>
 									<TableRow v-if="e.metadata.length > 0">
 										<TableCell class="w-32 font-semibold">Metadata</TableCell>
 										<TableCell>
