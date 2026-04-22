@@ -185,7 +185,7 @@ const api = useApiClient(); */
 		:class="{ 'opacity-50 grayscale': isLoading }"
 	>
 		<!-- eslint-disable vuejs-accessibility/form-control-has-label, tailwindcss/no-custom-classname -->
-		<Collapsible v-model:open="params.isQueryVisible" class="prose max-w-3xl px-8 pt-8 pb-4">
+		<Collapsible v-model:open="params.isQueryVisible" class="prose max-w-6xl px-8 pt-8 pb-4">
 			<CollapsibleTrigger
 				class="flex w-full items-baseline bg-primary p-4 pt-0 pb-0 text-on-primary"
 			>
@@ -231,7 +231,7 @@ const api = useApiClient(); */
 					</div>
 				</div>
 			</CollapsibleTrigger>
-			<CollapsibleContent :id="formId" class="max-w-3xl bg-gray-200 p-4">
+			<CollapsibleContent :id="formId" class="max-w-6xl bg-gray-200 p-4">
 				<div>
 					<label class="relative inline-flex cursor-pointer items-center">
 						<input v-model="params.isTextInputManual" class="peer sr-only" type="checkbox" />
@@ -291,7 +291,7 @@ const api = useApiClient(); */
 					</div>
 				</div>
 				<div class="mt-4">
-					<Collapsible v-model:open="isExtendedFormOpen" class="prose max-w-3xl px-8 pt-8 pb-4">
+					<Collapsible v-model:open="isExtendedFormOpen" class="prose max-w-6xl px-8 pt-8 pb-4">
 						<CollapsibleTrigger class="dvStats flex w-full items-baseline">
 							Extended options:s
 							<div class="relative top-1 mr-4 ml-auto">
@@ -404,7 +404,7 @@ const api = useApiClient(); */
 
 		<div
 			v-if="data"
-			class="mx-8 mb-2 flex max-w-3xl flex-wrap items-end gap-3 border-y border-border/60 py-3"
+			class="mx-8 mb-2 flex max-w-6xl flex-wrap items-end gap-3 border-y border-border/60 py-3"
 		>
 			<label class="flex flex-col gap-1 text-sm font-medium">
 				<span>Page</span>
@@ -452,7 +452,7 @@ const api = useApiClient(); */
 			</div>
 		</div>
 
-		<div v-if="data" class="prose mb-auto max-w-3xl p-8">
+		<div v-if="data" class="prose mb-auto max-w-6xl p-8">
 			<Toggle v-model="debug">
 				<div v-if="data.total_items">Total items: {{ data.total_items }}</div>
 				<div v-if="data.took">Search duration: {{ data.took }} ms</div>
@@ -905,7 +905,7 @@ const api = useApiClient(); */
 			<LoadingIndicator />
 		</Centered>
 	</div>
-	<div v-else class="relative isolate prose size-full max-w-3xl overflow-auto px-8 pt-8 pb-4">
+	<div v-else class="relative isolate prose size-full max-w-6xl overflow-auto px-8 pt-8 pb-4">
 		Error: Dictionary "{{ params.textId }}" could not be loaded.
 	</div>
 </template>
