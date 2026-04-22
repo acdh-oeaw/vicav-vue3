@@ -129,6 +129,40 @@ watch(data, (newData) => {
 	pageSize.value = parseInt(newData.page_size);
 });
 
+const pageCount = computed(() => {
+	const count = data.value?.page_count;
+	if (count == null) return undefined;
+
+	const parsed = parseInt(count);
+	return Number.isNaN(parsed) ? undefined : parsed;
+});
+
+const totalItems = computed(() => {
+	const total = data.value?.total_items;
+	if (total == null) return undefined;
+
+	const parsed = parseInt(total);
+	return Number.isNaN(parsed) ? undefined : parsed;
+});
+
+const canGoToPreviousPage = computed(() => page.value > 1);
+const canGoToNextPage = computed(() => {
+	if (pageCount.value == null) return false;
+	return page.value < pageCount.value;
+});
+
+const goToPreviousPage = () => {
+	if (!canGoToPreviousPage.value) return;
+	page.value -= 1;
+	updateQueryParams();
+};
+
+const goToNextPage = () => {
+	if (!canGoToNextPage.value) return;
+	page.value += 1;
+	updateQueryParams();
+};
+
 const renderedEntries = computed(() => {
 	return data.value?._embedded?.entries.map((entry) => normalizeEntry(entry)) ?? [];
 });
@@ -139,12 +173,6 @@ const isLoading = computed(() => {
 });
 
 const isExtendedFormOpen = ref(false);
-
-/* pagination
-const goToPage = (newPage: number) => {
-	page.value = newPage;
-	updateQueryParams();
-}; */
 
 /* TODO: only for testing; not intended for production
 const api = useApiClient(); */
@@ -374,6 +402,56 @@ const api = useApiClient(); */
 			</CollapsibleContent>
 		</Collapsible>
 
+		<div
+			v-if="data"
+			class="mx-8 mb-2 flex max-w-3xl flex-wrap items-end gap-3 border-y border-border/60 py-3"
+		>
+			<label class="flex flex-col gap-1 text-sm font-medium">
+				<span>Page</span>
+				<input
+					v-model.number="page"
+					class="h-9 w-24 rounded-sm border border-input bg-background px-2 text-sm"
+					:max="pageCount"
+					min="1"
+					type="number"
+					@change="updateQueryParams"
+				/>
+			</label>
+			<label class="flex flex-col gap-1 text-sm font-medium">
+				<span>Page size</span>
+				<input
+					v-model.number="pageSize"
+					class="h-9 w-28 rounded-sm border border-input bg-background px-2 text-sm"
+					min="1"
+					type="number"
+					@change="updateQueryParams"
+				/>
+			</label>
+			<div class="flex items-center gap-2">
+				<button
+					class="h-9 rounded-sm border border-primary px-3 text-sm font-semibold text-primary disabled:border-gray-300 disabled:text-gray-400"
+					:disabled="!canGoToPreviousPage"
+					type="button"
+					@click="goToPreviousPage"
+				>
+					Previous
+				</button>
+				<button
+					class="h-9 rounded-sm border border-primary px-3 text-sm font-semibold text-primary disabled:border-gray-300 disabled:text-gray-400"
+					:disabled="!canGoToNextPage"
+					type="button"
+					@click="goToNextPage"
+				>
+					Next
+				</button>
+			</div>
+			<div class="text-muted-foreground text-sm">
+				<span>Page {{ page }}</span>
+				<span v-if="pageCount"> of {{ pageCount }}</span>
+				<span v-if="totalItems != null">, {{ totalItems }} items</span>
+			</div>
+		</div>
+
 		<div v-if="data" class="prose mb-auto max-w-3xl p-8">
 			<Toggle v-model="debug">
 				<div v-if="data.total_items">Total items: {{ data.total_items }}</div>
@@ -389,23 +467,23 @@ const api = useApiClient(); */
 					</div>
 					<!-- eslint-disable-next-line vue/no-v-html -->
 					<div v-if="e.html" v-html="e.html" />
-					<Card v-else class="overflow-hidden border-border/70 shadow-sm">
-						<CardHeader class="gap-3 border-b border-primary/15 bg-primary/10">
+					<Card v-else class="overflow-hidden rounded-sm border-2 border-primary/40 shadow-sm">
+						<CardHeader class="gap-3 border-b border-primary bg-primary text-on-primary">
 							<div class="flex items-start justify-between gap-3">
 								<div class="min-w-0 flex-1">
 									<div class="flex items-start gap-3">
 										<div
-											class="flex size-10 shrink-0 items-center justify-center rounded-md border border-primary/20 bg-primary text-on-primary shadow-sm"
+											class="flex size-10 shrink-0 items-center justify-center rounded-sm border border-on-primary/40 bg-on-primary text-primary shadow-sm"
 										>
 											<BookA class="size-5" />
 										</div>
 										<div class="min-w-0 space-y-1">
-											<CardTitle class="text-lg leading-snug text-primary">
+											<CardTitle class="text-lg leading-snug text-on-primary">
 												{{ e.title }}
 											</CardTitle>
 											<CardDescription
 												v-if="e.location"
-												class="text-sm font-semibold tracking-[0.08em] text-primary/80 uppercase"
+												class="text-sm font-semibold tracking-[0.08em] text-on-primary/80 uppercase"
 											>
 												{{ e.location }}
 											</CardDescription>
@@ -421,20 +499,11 @@ const api = useApiClient(); */
 						<CardContent class="pt-4">
 							<Table>
 								<TableBody>
-									<TableRow v-if="e.id || e.sid || e.xmlId || e.selfHref">
+									<TableRow v-if="e.id">
 										<TableCell class="w-32 font-semibold">Identifiers</TableCell>
 										<TableCell>
 											<div class="flex flex-wrap items-center gap-2">
 												<Badge v-if="e.id" variant="outline">id: {{ e.id }}</Badge>
-												<Badge v-if="e.sid" variant="outline">sid: {{ e.sid }}</Badge>
-												<Badge v-if="e.xmlId" variant="outline">xml:id: {{ e.xmlId }}</Badge>
-												<a
-													v-if="e.selfHref"
-													class="text-sm text-primary underline-offset-2 hover:underline"
-													:href="e.selfHref"
-												>
-													self
-												</a>
 											</div>
 										</TableCell>
 									</TableRow>
@@ -596,7 +665,7 @@ const api = useApiClient(); */
 												<Card
 													v-for="(inflected, inflectedIndex) in e.inflectedForms"
 													:key="`inflected-${inflectedIndex}`"
-													class="border-border/60 shadow-none"
+													class="rounded-sm border border-primary/30 shadow-none"
 												>
 													<CardContent class="space-y-2 pt-4">
 														<div class="flex flex-wrap items-center gap-2">
@@ -675,7 +744,7 @@ const api = useApiClient(); */
 												<Card
 													v-for="sense in e.senses"
 													:key="sense.id ?? sense.translations.map((item) => item.text).join('|')"
-													class="border-border/60 shadow-none"
+													class="rounded-sm border border-primary/30 shadow-none"
 												>
 													<CardContent class="space-y-3 pt-4">
 														<div class="flex flex-wrap items-center gap-2">
@@ -735,7 +804,7 @@ const api = useApiClient(); */
 															<Card
 																v-for="example in sense.examples"
 																:key="`${example.kind}-${example.id ?? example.quote?.text}`"
-																class="border-border/60 bg-muted/20 shadow-none"
+																class="rounded-sm border border-primary/25 bg-muted/20 shadow-none"
 															>
 																<CardContent class="space-y-2 pt-4">
 																	<div class="flex flex-wrap items-center gap-2">
@@ -748,11 +817,13 @@ const api = useApiClient(); */
 																			{{ item.label }}: {{ item.value }}
 																		</Badge>
 																	</div>
-																	<div v-if="example.quote" class="space-y-2">
-																		<p class="m-0 font-medium">{{ example.quote.text }}</p>
-																		<Badge v-if="example.quote.lang" variant="outline">
-																			{{ example.quote.lang }}
-																		</Badge>
+																	<div v-if="example.quote" class="grid grid-cols-[3rem_1fr] gap-2">
+																		<div>
+																			<Badge v-if="example.quote.lang" variant="outline">
+																				{{ example.quote.lang }}
+																			</Badge>
+																		</div>
+																		<span>{{ example.quote.text }}</span>
 																	</div>
 																	<div
 																		v-if="example.locations.length > 0"
@@ -770,12 +841,14 @@ const api = useApiClient(); */
 																		<div
 																			v-for="translation in example.translations"
 																			:key="`${example.id}-${translation.lang}-${translation.text}`"
-																			class="flex flex-wrap items-center gap-2"
+																			class="grid grid-cols-[3rem_1fr] gap-2"
 																			:class="{ 'text-muted-foreground': translation.isMissing }"
 																		>
-																			<Badge v-if="translation.lang" variant="outline">
-																				{{ translation.lang }}
-																			</Badge>
+																			<div>
+																				<Badge v-if="translation.lang" variant="outline">
+																					{{ translation.lang }}
+																				</Badge>
+																			</div>
 																			<span>{{ translation.text }}</span>
 																		</div>
 																	</div>
