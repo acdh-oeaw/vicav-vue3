@@ -7,9 +7,12 @@ taken from [app/types/global.ts](../app/types/global.ts).
 ## Shared helper fields
 
 - `TextId`: `{ textId: string }`
-- `TeiSource`: `{ teiSource?: string }`
-- `ShowCitation`: `{ showCitation?: boolean }`
+- `TeiSource`: `{ teiSource: string }`
+- `ShowCitation`: `{ showCitation: boolean }`
 - `QueryString`: `{ queryString: string }`
+
+Schemas commonly include `TeiSource` and `ShowCitation` through `.partial()`, which makes those
+fields optional in the window params documented below.
 
 ## Implemented window types
 
@@ -152,6 +155,8 @@ Rendered as
 }
 ```
 
+- Event wired by `window-content.vue`: `update-query-param` updates the window query string.
+
 ### `DictQuery`
 
 Rendered as [dict-query-window-content.vue](../app/components/dict-query-window-content.vue).
@@ -174,10 +179,12 @@ Rendered as [dict-query-window-content.vue](../app/components/dict-query-window-
   queryString: string;
   queryTemplateTextInput?: string;
   queryTemplate?: string;
-  isTextInputManual?: boolean;
-  isQueryVisible?: boolean;
+  isTextInputManual?: boolean; // defaults to false
+  isQueryVisible?: boolean; // defaults to true
 }
 ```
+
+- Event wired by `window-content.vue`: `update-query-param` updates the window query string.
 
 ### `ListMap`
 
@@ -187,9 +194,11 @@ Rendered as [geojson-table-window-content.vue](../app/components/geojson-table-w
 
 ```ts
 {
-	queryString: string;
+	queryString: string; // defaults to ""
 }
 ```
+
+- Event wired by `window-content.vue`: `update-query-param` updates the window query string.
 
 ### `GeojsonMap`
 
@@ -311,4 +320,32 @@ Rendered as
   textId?: string;
   showCitation?: boolean;
 }
+```
+
+## Schema And Render Coverage
+
+Every `targetType` in the `Schema` discriminated union is currently rendered by
+[window-content.vue](../app/components/window-content.vue), and every concrete render branch in
+`window-content.vue` has schema coverage in [app/types/global.ts](../app/types/global.ts).
+
+## Maintenance Prompt
+
+Use this prompt after changing window schemas, target types, or `window-content.vue` render
+branches:
+
+```text
+Review app/types/global.ts and app/components/window-content.vue.
+Update docs/windowTypes.md so it accurately documents the current implemented window targetType
+values, the component rendered for each targetType, the params shape for each schema, and any
+additional props or events passed by window-content.vue.
+
+Include:
+- newly added, removed, or renamed targetType values
+- changed params fields, optional/default behavior, and enum values
+- changes to shared helper fields such as TextId, TeiSource, ShowCitation, and QueryString
+- changed rendered component names, extra props, or emitted events wired in window-content.vue
+- schema targetTypes that exist but are not rendered, or rendered branches that lack schema coverage
+
+Keep the document concise, table/list driven, and consistent with the existing format. Do not change
+application code.
 ```
