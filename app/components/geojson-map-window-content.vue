@@ -79,7 +79,7 @@ function onMarkerClick(feature: Feature) {
 			</Centered>
 			<GeojsonMapLegend
 				v-if="filteredMarkers"
-				class="absolute bottom-0 left-0 max-h-full"
+				class="absolute bottom-4 left-4 max-h-[50%] rounded-md shadow-lg"
 				:params="params"
 			></GeojsonMapLegend>
 			<GeojsonMapControls

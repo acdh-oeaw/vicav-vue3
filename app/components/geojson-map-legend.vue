@@ -90,16 +90,25 @@ function shouldShowOtherFeatureValues(feature: ColumnType) {
 <template>
 	<Collapsible
 		v-model:open="collapsibleOpen"
-		class="flex h-fit w-48 flex-col bg-white/80 p-3 text-xs"
+		class="flex h-fit w-56 flex-col bg-white p-4 text-xs"
 		data-geo-map-legend
 	>
 		<CollapsibleTrigger class="flex w-full justify-between"
 			><b>{{ activeRows?.length }} total markers</b
-			><ChevronDown class="size-4" :class="collapsibleOpen ? '' : 'rotate-180'"></ChevronDown
+			><ChevronDown
+				class="size-4 text-on-muted"
+				:class="collapsibleOpen ? '' : 'rotate-180'"
+			></ChevronDown
 		></CollapsibleTrigger>
-		<CollapsibleContent class="max-h-full !overflow-auto">
+		<CollapsibleContent
+			class="max-h-full !overflow-auto border-muted"
+			:class="{ 'mt-2 border-t pt-1': activeFeatures?.length }"
+		>
 			<div v-for="feature in activeFeatures" :key="feature.id" class="my-1">
-				<div class="flex items-start gap-2" :class="{ 'opacity-45': isMarkerHidden(feature.id) }">
+				<div
+					class="my-2 flex items-start gap-2"
+					:class="{ 'opacity-45': isMarkerHidden(feature.id) }"
+				>
 					<MarkerSelector
 						:icon-categories="['shapes']"
 						:model-value="markers.get(feature.id)!"
@@ -111,7 +120,7 @@ function shouldShowOtherFeatureValues(feature: ColumnType) {
 				<div
 					v-for="filter in getCombinedFilters(feature)"
 					:key="filter.join(AND_OPERATOR)"
-					class="ml-4 flex items-center gap-2"
+					class="ml-5 flex items-center gap-2"
 					:class="{
 						'opacity-45': isMarkerHidden(
 							buildFeatureValueId(feature.id, filter.join(AND_OPERATOR)),
@@ -133,11 +142,11 @@ function shouldShowOtherFeatureValues(feature: ColumnType) {
 						</span>
 					</span>
 				</div>
-				<div v-if="feature.getIsFiltered() && hasActiveFilters(feature)" class="ml-4">
+				<div v-if="feature.getIsFiltered() && hasActiveFilters(feature)" class="ml-5">
 					<div
 						v-for="[value, count] in getActiveFilterValues(feature)"
 						:key="value"
-						class="flex items-center gap-2"
+						class="my-1 flex items-center gap-2"
 						:class="{ 'opacity-45': isMarkerHidden(buildFeatureValueId(feature.id, value)) }"
 					>
 						<MarkerSelector
