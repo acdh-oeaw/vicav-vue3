@@ -282,7 +282,7 @@ const searchableLocationNames = computed(() => {
 		</Centered>
 		<div class="flex justify-between justify-items-end border-b bg-white py-2">
 			<!-- <DataTablePagination v-if="tableRef" :table="tableRef as unknown as Table<never>" /> -->
-			<div class="flex px-2">
+			<div class="flex px-2 text-neutral-700">
 				<SearchableCombobox
 					nothing-found="No matching location found."
 					:options="searchableLocationNames"
@@ -292,13 +292,13 @@ const searchableLocationNames = computed(() => {
 				/>
 			</div>
 			<div class="flex gap-2">
-				<Toggle v-model:model-value="showAllDetails" class="h-8"
+				<Toggle v-model:model-value="showAllDetails" class="h-8 text-neutral-700"
 					><Info class="size-4 stroke-neutral-800 transition-colors" />
 					<span class="line-clamp-1 text-ellipsis">Show details</span></Toggle
 				>
 				<DropdownMenu>
 					<DropdownMenuTrigger as-child>
-						<Button class="inline-flex h-8 gap-2 border-0" variant="outline">
+						<Button class="inline-flex h-8 gap-2 border-0 text-neutral-700" variant="outline">
 							<Download class="size-4 stroke-neutral-800 transition-colors" />
 							<span class="line-clamp-1 text-ellipsis">Export data</span>
 						</Button>

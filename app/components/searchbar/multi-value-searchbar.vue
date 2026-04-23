@@ -178,7 +178,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-	<div class="grid w-full max-w-full grid-cols-[1fr_auto] gap-x-2">
+	<div class="grid w-full max-w-full grid-cols-[1fr_auto]">
 		<ComboboxRoot
 			v-model:open="open"
 			class="flex w-full flex-col overflow-x-hidden"
@@ -188,7 +188,7 @@ onBeforeUnmount(() => {
 		>
 			<Label class="sr-only text-sm font-semibold" for="search"> search </Label>
 
-			<div class="flex w-full rounded-md border border-muted">
+			<div class="flex w-full rounded-md rounded-r-none border border-muted">
 				<ComboboxInput id="search" :as-child="true" autocomplete="off" class="w-full p-2">
 					<CodeMirror
 						ref="textareaRef"
@@ -216,7 +216,7 @@ onBeforeUnmount(() => {
 				</ComboboxInput>
 				<ComboboxCancel as-child>
 					<Button
-						class="self-center p-2"
+						class="h-full self-center rounded-none p-2"
 						variant="ghost"
 						@click="
 							value = '';
@@ -254,7 +254,7 @@ onBeforeUnmount(() => {
 		</ComboboxRoot>
 
 		<Button
-			class="h-full self-end bg-header text-white hover:bg-primary"
+			class="h-full self-end rounded-l-none bg-header text-white hover:bg-primary"
 			variant="outline"
 			@click="submitSearch"
 			>Search</Button

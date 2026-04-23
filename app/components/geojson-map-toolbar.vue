@@ -43,8 +43,8 @@ function addMetaFilterToQuery(key: string, val: string) {
 </script>
 
 <template>
-	<div class="grid items-center border-b border-border bg-surface px-8 py-2 text-on-surface">
-		<div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm font-medium text-on-surface/75">
+	<div class="grid items-center border-b border-border bg-surface px-0 py-2 text-on-surface">
+		<div class="mb-1 flex flex-wrap items-center gap-y-1 px-2 font-medium text-neutral-700">
 			<div v-for="(group, catIdx) in categories?.slice(0, -2)" :key="group.id">
 				<DropdownMenu v-slot="{ open }" v-model:open="isMenuOpen[catIdx]">
 					<DropdownMenuTrigger class="flex w-full items-center gap-1 p-2 text-sm">
@@ -70,7 +70,7 @@ function addMetaFilterToQuery(key: string, val: string) {
 			</div>
 		</div>
 		<div
-			class="my-4 flex flex-wrap items-center gap-x-4 gap-y-1 bg-secondary text-sm font-medium text-on-surface/75"
+			class="flex flex-wrap items-center gap-y-1 bg-muted px-2 py-1 font-medium text-neutral-700"
 		>
 			<div v-for="group in categories?.slice(-2)" :key="group.id" class="inline-block">
 				<FeatureSelectionDialog
@@ -132,7 +132,7 @@ function addMetaFilterToQuery(key: string, val: string) {
 			</DropdownMenu>
 		</div>
 		<div
-			class="flex flex-wrap items-center gap-x-4 gap-y-1 overflow-x-clip overflow-y-visible text-sm font-medium text-on-surface/75"
+			class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 overflow-x-clip overflow-y-visible px-2 text-sm font-medium text-neutral-700"
 		>
 			<MultiValueSearchbar
 				v-if="table"
