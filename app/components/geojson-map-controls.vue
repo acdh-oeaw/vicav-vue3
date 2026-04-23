@@ -65,13 +65,10 @@ function downloadLegend() {
 </script>
 
 <template>
-	<div
-		class="mt-1 ml-1 flex flex-col justify-end gap-1 text-xs"
-		:class="{ hidden: exportInProgress }"
-	>
+	<div class="flex flex-col justify-end gap-1 text-xs" :class="{ hidden: exportInProgress }">
 		<Popover>
 			<PopoverTrigger as-child
-				><Button class="p-2" variant="outline"
+				><Button class="aspect-square border-0 p-2 shadow-lg" variant="outline"
 					><span class="sr-only">Settings</span><Settings class="size-4"></Settings></Button
 			></PopoverTrigger>
 			<PopoverContent align="start" class="flex w-auto flex-col gap-1 bg-white" side="right">
@@ -115,7 +112,7 @@ function downloadLegend() {
 		</Popover>
 		<Popover>
 			<PopoverTrigger as-child
-				><Button class="px-2 py-2" variant="outline"
+				><Button class="aspect-square border-0 p-2 shadow-lg" variant="outline"
 					><span class="sr-only">Download</span><Download class="size-4"></Download></Button
 			></PopoverTrigger>
 			<PopoverContent align="start" class="flex w-auto flex-col gap-1 bg-white" side="right">

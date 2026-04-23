@@ -94,7 +94,7 @@ function shouldShowOtherFeatureValues(feature: ColumnType) {
 		data-geo-map-legend
 	>
 		<CollapsibleTrigger class="flex w-full justify-between"
-			><b>{{ activeRows?.length }} total markers</b
+			><span class="font-medium">{{ activeRows?.length }} total markers</span
 			><ChevronDown
 				class="size-4 text-on-muted"
 				:class="collapsibleOpen ? '' : 'rotate-180'"
