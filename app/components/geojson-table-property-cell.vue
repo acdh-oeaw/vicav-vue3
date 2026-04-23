@@ -12,9 +12,9 @@ import {
 	VenusAndMars,
 } from "lucide-vue-next";
 import type { DefineComponent } from "vue";
-import ChurchOutlineIcon from "vue-material-design-icons/ChurchOutline.vue";
-import MosqueOutlineIcon from "vue-material-design-icons/MosqueOutline.vue";
-import SynagogueOutlineIcon from "vue-material-design-icons/SynagogueOutline.vue";
+import CrossOutlineIcon from "vue-material-design-icons/CrossOutline.vue";
+import StarCrescentIcon from "vue-material-design-icons/StarCrescent.vue";
+import StarDavidIcon from "vue-material-design-icons/StarDavid.vue";
 
 import type { WindowItem } from "@/types/global.ts";
 
@@ -50,9 +50,9 @@ const iconMap: Record<string, Record<string, LucideIcon | DefineComponent>> = {
 		"#default": UsersRound,
 	},
 	religion: {
-		Jews: SynagogueOutlineIcon,
-		Christians: ChurchOutlineIcon,
-		"#default": MosqueOutlineIcon,
+		Jews: StarDavidIcon,
+		Christians: CrossOutlineIcon,
+		"#default": StarCrescentIcon,
 	},
 	source_representations: {
 		"#default": Languages,
@@ -101,7 +101,7 @@ function getPersonGroupIcon(personGroup: Record<string, string>) {
 	for (const key in personGroup) {
 		if (iconMap[key]) {
 			if (iconMap[key][personGroup[key]!])
-				return { icon: iconMap[key][personGroup[key]!], hideValue: true };
+				return { icon: iconMap[key][personGroup[key]!], hideValue: key !== "religion" };
 			else if (iconMap[key]["#default"])
 				return { icon: iconMap[key]["#default"], hideValue: false };
 		}
