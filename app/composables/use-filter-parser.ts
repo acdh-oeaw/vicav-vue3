@@ -429,6 +429,7 @@ function isInQuery(query: LiqeQuery | string, filter: LiqeQuery | string): boole
 
 function assembleFilter(columnId: string, key: string) {
 	let assembledFilter = `${columnId}:"${key}"`;
+	if (key === "*") assembledFilter = `${columnId}:ANY`;
 	if (key.includes(AND_OPERATOR)) {
 		assembledFilter = key
 			.split(AND_OPERATOR)
