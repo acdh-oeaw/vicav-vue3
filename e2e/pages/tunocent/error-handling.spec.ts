@@ -32,7 +32,8 @@ test.describe("Error Handling & Edge Cases", () => {
 	});
 
 	test("TC-036: Invalid URL", async ({ page }) => {
-		const response = await page.goto("/invalid-page-12345");
-		expect([200, 404]).toContain(response?.status());
+		test.slow();
+		const response = await page.goto("/invalid-page-12345", { timeout: 40000 });
+		expect(response?.status()).toBe(404);
 	});
 });

@@ -8,13 +8,13 @@ test.describe("Imprint & Footer", () => {
 
 	test("TC-024: Imprint Page Navigation", async ({ page }) => {
 		await page.getByRole("link", { name: "Imprint" }).click();
-		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
+		await expect(page.getByRole("heading", { name: "Imprint" })).toBeInViewport();
 		await expect(page).toHaveURL(/imprint/);
 	});
 
 	test("TC-025: Imprint Page Content", async ({ page }) => {
 		await page.goto("/imprint", { waitUntil: "domcontentloaded" });
-		await expect(page.locator("h1").first()).toBeVisible({ timeout: 20000 });
+		await expect(page.getByRole("heading", { name: "Imprint" })).toBeInViewport();
 	});
 
 	test("TC-026: Footer Contact Link", async ({ page }) => {
