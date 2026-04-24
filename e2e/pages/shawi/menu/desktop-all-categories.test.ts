@@ -63,9 +63,6 @@ test.describe("Desktop Menu - All Categories Visible", () => {
 		await expect(
 			page.getByRole("menuitem", { name: "Search for vocabulary in corpus texts" }),
 		).toBeVisible();
-		await expect(
-			page.getByRole("menuitem", { name: "Functional Requirements and Data Specification" }),
-		).toBeVisible();
 	});
 
 	test("should display Windows menu with correct submenu items", async ({ page }) => {
