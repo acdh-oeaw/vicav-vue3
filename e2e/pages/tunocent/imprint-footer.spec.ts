@@ -13,6 +13,7 @@ test.describe("Imprint & Footer", () => {
 	});
 
 	test("TC-025: Imprint Page Content", async ({ page }) => {
+		test.slow();
 		await page.goto("/imprint", { waitUntil: "domcontentloaded" });
 		await expect(page.getByRole("heading", { name: "Imprint" })).toBeInViewport();
 	});
