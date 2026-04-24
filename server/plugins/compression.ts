@@ -22,6 +22,8 @@ export default defineNitroPlugin((nitro) => {
 		// 	console.log('Using br compression')
 		// 	compressStream(event, response, 'br');
 		// }
+		// event.statusCode = 200 !?!
+		if (event.context.matchedRoute?.path === "/__nuxt_error") return;
 		if (encoding?.includes("gzip")) {
 			//			console.log('Using GZIP compression')
 			compressStream(event, response, "gzip");
