@@ -11,6 +11,7 @@ const props = defineProps<{
 const { params } = toRefs(props);
 
 const emit = defineEmits(["updateQueryParam"]);
+const env = useRuntimeConfig();
 
 const dictStore = useDictStore();
 await dictStore.initialize();
@@ -150,6 +151,9 @@ const canGoToNextPage = computed(() => {
 	if (pageCount.value == null) return false;
 	return page.value < pageCount.value;
 });
+const showPagination = computed(() => {
+	return (pageCount.value ?? 0) > 1;
+});
 
 const goToPreviousPage = () => {
 	if (!canGoToPreviousPage.value) return;
@@ -166,6 +170,22 @@ const goToNextPage = () => {
 const renderedEntries = computed(() => {
 	return data.value?._embedded?.entries.map((entry) => normalizeEntry(entry)) ?? [];
 });
+
+const getEntryLink = (entryId: string | number | null | undefined, responseFormat?: "json") => {
+	if (entryId == null || myDict?.id == null) return undefined;
+
+	const path = `/restvle/dicts/${myDict.id}/entries`;
+	const url = env.public.apiBaseUrl
+		? new URL(path, env.public.apiBaseUrl)
+		: new URL(path, "http://localhost");
+	url.searchParams.set("id", String(entryId));
+
+	if (responseFormat != null) {
+		url.searchParams.set("format", responseFormat);
+	}
+
+	return env.public.apiBaseUrl ? url.toString() : `${path}${url.search}`;
+};
 
 /* window behaviour */
 const isLoading = computed(() => {
@@ -236,7 +256,7 @@ const api = useApiClient(); */
 					<label class="relative inline-flex cursor-pointer items-center">
 						<input v-model="params.isTextInputManual" class="peer sr-only" type="checkbox" />
 						<div
-							class="peer relative h-4 w-10 flex-auto shrink-0 rounded-[5px] bg-gray-500 peer-checked:bg-primary peer-focus:ring-4 peer-focus:ring-primary/50 peer-focus:outline-hidden after:absolute after:start-[2px] after:top-px after:m-0.5 after:h-3 after:w-4 after:rounded-[3px] after:border after:border-gray-500/50 after:bg-on-primary after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-primary/50 peer-checked:rtl:after:-translate-x-full dark:border-gray-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800"
+							class="peer relative h-4 w-10 flex-auto shrink-0 rounded-[5px] bg-gray-500 peer-checked:bg-primary peer-focus:ring-4 peer-focus:ring-primary/50 peer-focus:outline-hidden after:absolute after:inset-s-0.5 after:top-px after:m-0.5 after:h-3 after:w-4 after:rounded-[3px] after:border after:border-gray-500/50 after:bg-on-primary after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-primary/50 peer-checked:rtl:after:-translate-x-full dark:border-gray-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800"
 						></div>
 						<span class="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300">
 							Manual edit
@@ -403,7 +423,7 @@ const api = useApiClient(); */
 		</Collapsible>
 
 		<div
-			v-if="data"
+			v-if="data && showPagination"
 			class="mx-8 mb-2 flex max-w-6xl flex-wrap items-end gap-3 border-y border-border/60 py-3"
 		>
 			<label class="flex flex-col gap-1 text-sm font-medium">
@@ -510,32 +530,38 @@ const api = useApiClient(); */
 										<TooltipProvider :delay-duration="0">
 											<Tooltip>
 												<TooltipTrigger as-child>
-													<button
+													<NuxtLink
 														aria-label="entry as xml"
 														class="flex size-8 items-center justify-center rounded-sm border border-on-primary/40 text-on-primary hover:bg-on-primary hover:text-primary"
-														type="button"
+														external
+														rel="noopener noreferrer"
+														target="_blank"
+														:to="getEntryLink(e.id)"
 													>
 														<Code class="size-4" />
-													</button>
+													</NuxtLink>
 												</TooltipTrigger>
 												<TooltipContent class="border-black bg-black text-white" side="bottom">
-													entry as xml
+													view as xml
 												</TooltipContent>
 											</Tooltip>
 										</TooltipProvider>
 										<TooltipProvider :delay-duration="0">
 											<Tooltip>
 												<TooltipTrigger as-child>
-													<button
+													<NuxtLink
 														aria-label="entry as JSON"
 														class="flex size-8 items-center justify-center rounded-sm border border-on-primary/40 text-on-primary hover:bg-on-primary hover:text-primary"
-														type="button"
+														external
+														rel="noopener noreferrer"
+														target="_blank"
+														:to="getEntryLink(e.id, 'json')"
 													>
 														<Braces class="size-4" />
-													</button>
+													</NuxtLink>
 												</TooltipTrigger>
 												<TooltipContent class="border-black bg-black text-white" side="bottom">
-													entry as JSON
+													view as JSON
 												</TooltipContent>
 											</Tooltip>
 										</TooltipProvider>
@@ -763,25 +789,6 @@ const api = useApiClient(); */
 											</div>
 										</TableCell>
 									</TableRow>
-									<TableRow v-if="e.editors.length > 0">
-										<TableCell class="w-32 font-semibold">Editors</TableCell>
-										<TableCell>
-											<div class="space-y-2">
-												<div
-													v-for="(editor, editorIndex) in e.editors"
-													:key="`${editor.action}-${editor.when}-${editor.who}-${editorIndex}`"
-													class="flex flex-wrap items-center gap-2"
-												>
-													<span class="font-medium">{{ editor.who ?? "Unknown" }}</span>
-													<span>({{ editor.action }})</span>
-													<span v-if="editor.when">{{ editor.when }}</span>
-													<Badge v-if="editor.status" variant="outline">
-														{{ editor.status }}
-													</Badge>
-												</div>
-											</div>
-										</TableCell>
-									</TableRow>
 									<TableRow v-if="e.senses.length > 0">
 										<TableCell class="w-32 font-semibold">Senses</TableCell>
 										<TableCell>
@@ -935,6 +942,25 @@ const api = useApiClient(); */
 												<p v-for="note in e.notes" :key="note" class="m-0">
 													{{ note }}
 												</p>
+											</div>
+										</TableCell>
+									</TableRow>
+									<TableRow v-if="e.editors.length > 0">
+										<TableCell class="w-32 font-semibold">Editors</TableCell>
+										<TableCell>
+											<div class="space-y-2">
+												<div
+													v-for="(editor, editorIndex) in e.editors"
+													:key="`${editor.action}-${editor.when}-${editor.who}-${editorIndex}`"
+													class="flex flex-wrap items-center gap-2"
+												>
+													<span class="font-medium">{{ editor.who ?? "Unknown" }}</span>
+													<span>({{ editor.action }})</span>
+													<span v-if="editor.when">{{ editor.when }}</span>
+													<Badge v-if="editor.status" variant="outline">
+														{{ editor.status }}
+													</Badge>
+												</div>
 											</div>
 										</TableCell>
 									</TableRow>
