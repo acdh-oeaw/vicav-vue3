@@ -1,5 +1,10 @@
 # TUNOCENT Test Plan
 
+This plan was generated using AI (MiniMax-m2.5) and _kilocode_ using the prompt
+
+> Using @playwright-test-planner inspect http://127.0.0.1:3000 and create a third test plan
+> `specs/tunocent-menu-test-plan.md`.
+
 ## Overview
 
 This document outlines a comprehensive test plan for the TUNOCENT application - a linguistic
@@ -7,8 +12,7 @@ research database for Tunisia's Arabic varieties. The application provides acces
 profiles, linguistic feature lists, sample texts, and corpus texts with geographic visualization
 capabilities.
 
-**Application URL**: http://127.0.0.1:3000  
-**Backend API**: https://tunocent-api.acdh-dev.oeaw.ac.at  
+**Application URL**: http://127.0.0.1:3000 **Backend API**: https://tunocent-api.acdh-dev.oeaw.ac.at
 **Application Type**: Web-based linguistic research database with windowed interface
 
 ---
