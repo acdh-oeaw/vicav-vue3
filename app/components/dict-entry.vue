@@ -251,7 +251,7 @@ const formatAvailableCount = (count: number, label: string) => {
 				<Table>
 					<TableBody>
 						<TableRow v-if="e.lemmaForms.length > 0 || e.variantForms.length > 0">
-							<TableCell :class="sectionHeadingClass">Forms</TableCell>
+							<TableCell :class="sectionHeadingClass">Lemma</TableCell>
 							<TableCell>
 								<div class="space-y-3">
 									<div
