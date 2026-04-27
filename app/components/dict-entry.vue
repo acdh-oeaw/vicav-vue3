@@ -1,5 +1,13 @@
 <script setup lang="ts">
-import { BookA, Braces, ChevronDown, ChevronUp, Code, MessageSquareQuote } from "lucide-vue-next";
+import {
+	BookA,
+	Braces,
+	ChevronDown,
+	ChevronUp,
+	Code,
+	MapPin,
+	MessageSquareQuote,
+} from "lucide-vue-next";
 
 import type { RestVLEEntry } from "@/lib/api-client";
 import {
@@ -327,8 +335,10 @@ const formatAvailableCount = (count: number, label: string) => {
 									<Badge
 										v-for="location in e.locations"
 										:key="formatLocation(location)"
+										class="inline-flex items-center gap-1"
 										variant="outline"
 									>
+										<MapPin class="size-3" />
 										{{ formatLocation(location) }}
 									</Badge>
 								</div>
@@ -370,14 +380,30 @@ const formatAvailableCount = (count: number, label: string) => {
 										class="rounded-sm border border-primary/30 shadow-none"
 									>
 										<CardContent class="space-y-2 pt-4">
-											<div class="flex flex-wrap items-center gap-2">
-												<Badge
-													v-for="item in inflected.metadata"
-													:key="`inflected-${inflectedIndex}-${item.label}-${item.value}`"
-													variant="outline"
+											<div class="flex flex-wrap items-start justify-between gap-2">
+												<div class="flex flex-wrap items-center gap-2">
+													<Badge
+														v-for="item in inflected.metadata"
+														:key="`inflected-${inflectedIndex}-${item.label}-${item.value}`"
+														variant="outline"
+													>
+														{{ item.label }}: {{ item.value }}
+													</Badge>
+												</div>
+												<div
+													v-if="inflected.locations.length > 0"
+													class="ml-auto flex flex-wrap justify-end gap-2"
 												>
-													{{ item.label }}: {{ item.value }}
-												</Badge>
+													<Badge
+														v-for="location in inflected.locations"
+														:key="formatLocation(location)"
+														class="inline-flex items-center gap-1"
+														variant="outline"
+													>
+														<MapPin class="size-3" />
+														{{ formatLocation(location) }}
+													</Badge>
+												</div>
 											</div>
 											<div class="flex flex-wrap items-center gap-2">
 												<span
@@ -405,15 +431,6 @@ const formatAvailableCount = (count: number, label: string) => {
 														{{ item.value }}
 													</div>
 												</div>
-											</div>
-											<div v-if="inflected.locations.length > 0" class="flex flex-wrap gap-2">
-												<Badge
-													v-for="location in inflected.locations"
-													:key="formatLocation(location)"
-													variant="outline"
-												>
-													{{ formatLocation(location) }}
-												</Badge>
 											</div>
 										</CardContent>
 									</Card>
@@ -497,14 +514,18 @@ const formatAvailableCount = (count: number, label: string) => {
 													class="rounded-sm border border-primary/25 bg-muted/20 shadow-none"
 												>
 													<CardContent class="space-y-2 pt-4">
-														<div class="flex flex-wrap items-center gap-2">
-															<Badge variant="outline">{{ example.kind }}</Badge>
+														<div
+															v-if="example.locations.length > 0"
+															class="flex flex-wrap justify-end gap-2"
+														>
 															<Badge
-																v-for="item in example.metadata"
-																:key="`${example.id}-${item.label}-${item.value}`"
+																v-for="location in example.locations"
+																:key="formatLocation(location)"
+																class="inline-flex items-center gap-1"
 																variant="outline"
 															>
-																{{ item.label }}: {{ item.value }}
+																<MapPin class="size-3" />
+																{{ formatLocation(location) }}
 															</Badge>
 														</div>
 														<div v-if="example.quote" class="grid grid-cols-[3rem_1fr] gap-2">
@@ -514,15 +535,6 @@ const formatAvailableCount = (count: number, label: string) => {
 																</Badge>
 															</div>
 															<span>{{ example.quote.text }}</span>
-														</div>
-														<div v-if="example.locations.length > 0" class="flex flex-wrap gap-2">
-															<Badge
-																v-for="location in example.locations"
-																:key="formatLocation(location)"
-																variant="outline"
-															>
-																{{ formatLocation(location) }}
-															</Badge>
 														</div>
 														<div v-if="example.translations.length > 0" class="space-y-1">
 															<div
