@@ -119,10 +119,14 @@ function getPetalMarker(feature: GeoJsonFeature<Point, MarkerProperties>, latlng
 		.filter(
 			(col) => col.getCanFilter() && Object.keys(feature.properties).find((k) => k === col.id),
 		);
+	const filteredFeaturesCount = table
+		?.getVisibleLeafColumns()
+		.filter((col) => col.getCanFilter()).length;
 	let unfilteredFeatures =
 		features?.filter((col) => !col.getIsFiltered() || !hasActiveFilters(col)) ?? [];
 	if (features?.length === 1 && unfilteredFeatures.length === 1) unfilteredFeatures = [];
-	const flowerCenter = features?.length === 1 ? features[0] : undefined;
+	const flowerCenter =
+		features?.length === 1 && filteredFeaturesCount === 1 ? features[0] : undefined;
 
 	const featureValues = table
 		?.getVisibleLeafColumns()
