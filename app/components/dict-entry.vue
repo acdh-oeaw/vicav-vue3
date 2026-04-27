@@ -481,7 +481,10 @@ const formatAvailableCount = (count: number, label: string) => {
 													<Badge v-if="translation.lang" variant="outline">
 														{{ translation.lang }}
 													</Badge>
-													<span>{{ translation.text }}</span>
+													<span>
+														{{ translation.text }}
+														<span v-if="translation.gloss">({{ translation.gloss }})</span>
+													</span>
 												</div>
 											</div>
 											<div v-if="sense.grammar.length > 0" class="space-y-1.5">

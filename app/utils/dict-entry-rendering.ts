@@ -2,6 +2,7 @@ import type { DictChange, DictEntry, DictExample, RestVLEEntry } from "@/lib/api
 
 export interface RenderedText {
 	lang?: string;
+	gloss?: string;
 	text: string;
 	isMissing?: boolean;
 }
@@ -310,9 +311,21 @@ function collectTranslationEquivalents(
 ): Array<RenderedText> {
 	return [...asArray(single), ...asArray(multiple)].flatMap((translation) => {
 		const lang = translation.form?.orth?.["@lang"] ?? translation["@lang"];
-		const text = translation.form?.orth?.$?.trim() ?? translation.gloss?.$?.trim();
-		if (text != null && text !== "") return [{ lang, text }];
-		if (lang != null && lang !== "") return [{ lang, text: "No text", isMissing: true }];
+		const text = translation.form?.orth?.$?.trim();
+		const gloss = translation.gloss?.$?.trim();
+
+		if (text != null && text !== "") {
+			return [{ lang, gloss, text }];
+		}
+
+		if (gloss != null && gloss !== "") {
+			return [{ lang, text: gloss }];
+		}
+
+		if (lang != null && lang !== "") {
+			return [{ lang, text: "No text", isMissing: true }];
+		}
+
 		return [];
 	});
 }
