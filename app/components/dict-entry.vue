@@ -114,9 +114,9 @@ const formatAvailableCount = (count: number, label: string) => {
 		<div v-if="e.html" v-html="e.html" />
 		<Card v-else class="overflow-hidden rounded-sm border-2 border-primary/40 shadow-sm">
 			<CardHeader class="gap-3 border-b border-primary bg-primary text-on-primary">
-				<div class="flex items-start justify-between gap-3">
+				<div class="flex items-stretch justify-between gap-3">
 					<div class="min-w-0 flex-[1_1_70%]">
-						<div class="flex items-start gap-3">
+						<div class="flex h-full items-start gap-3">
 							<TooltipProvider
 								v-if="e.type === 'entry' || e.type === 'example'"
 								:delay-duration="0"
@@ -137,17 +137,21 @@ const formatAvailableCount = (count: number, label: string) => {
 									</TooltipContent>
 								</Tooltip>
 							</TooltipProvider>
-							<div class="min-w-0 space-y-1">
-								<CardTitle class="text-lg leading-snug text-on-primary">
-									{{ e.title }}
-								</CardTitle>
-								<CardDescription
-									v-if="e.location"
-									class="text-sm font-semibold tracking-[0.08em] text-on-primary/80 uppercase"
-								>
-									{{ e.location }}
-								</CardDescription>
-								<div v-if="e.grammar.length > 0" class="mt-2 flex flex-wrap gap-1.5">
+							<div class="flex min-w-0 flex-1 self-stretch flex-col">
+								<div class="space-y-1">
+									<CardTitle
+										class="max-w-full break-words text-2xl leading-tight font-black tracking-normal text-on-primary underline decoration-on-primary/40 decoration-2 underline-offset-4 [overflow-wrap:anywhere]"
+									>
+										{{ e.title }}
+									</CardTitle>
+									<CardDescription
+										v-if="e.location"
+										class="text-sm font-semibold tracking-[0.08em] text-on-primary/80 uppercase"
+									>
+										{{ e.location }}
+									</CardDescription>
+								</div>
+								<div v-if="e.grammar.length > 0" class="mt-auto flex flex-wrap gap-1.5 pt-2">
 									<div
 										v-for="(item, itemIndex) in e.grammar"
 										:key="`header-grammar-${item.label}-${item.value}`"
@@ -170,9 +174,7 @@ const formatAvailableCount = (count: number, label: string) => {
 							</div>
 						</div>
 					</div>
-					<div
-						class="ml-4 flex min-w-0 max-w-[16rem] flex-[0_1_16rem] flex-col items-end gap-2 self-start"
-					>
+					<div class="ml-4 flex min-w-0 max-w-[16rem] flex-[0_1_16rem] flex-col items-end gap-2">
 						<div class="flex items-center justify-end gap-2">
 							<TooltipProvider :delay-duration="0">
 								<Tooltip>
