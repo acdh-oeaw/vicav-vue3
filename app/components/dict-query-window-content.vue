@@ -3,7 +3,11 @@ import { BookA, Braces, Code, MessageSquareQuote } from "lucide-vue-next";
 import type Zod from "zod";
 
 import type { DictQuerySchema } from "@/types/global.ts";
-import { formatLocation, normalizeEntry } from "@/utils/dict-entry-rendering";
+import {
+	formatLocation,
+	normalizeEntry,
+	type RenderedMetadataItem,
+} from "@/utils/dict-entry-rendering";
 
 const props = defineProps<{
 	params: Zod.infer<typeof DictQuerySchema>["params"];
@@ -186,6 +190,40 @@ const getEntryLink = (entryId: string | number | null | undefined, responseForma
 
 	return env.public.apiBaseUrl ? url.toString() : `${path}${url.search}`;
 };
+
+const shouldRenderFormMetadata = (item: RenderedMetadataItem) => {
+	return !(item.label === "type" && item.value === "lemma");
+};
+
+const grammarHeaderStyles = [
+	{
+		label: "bg-amber-200 text-amber-950",
+		value: "bg-amber-50/95 text-amber-950",
+	},
+	{
+		label: "bg-sky-200 text-sky-950",
+		value: "bg-sky-50/95 text-sky-950",
+	},
+	{
+		label: "bg-emerald-200 text-emerald-950",
+		value: "bg-emerald-50/95 text-emerald-950",
+	},
+	{
+		label: "bg-rose-200 text-rose-950",
+		value: "bg-rose-50/95 text-rose-950",
+	},
+	{
+		label: "bg-violet-200 text-violet-950",
+		value: "bg-violet-50/95 text-violet-950",
+	},
+];
+
+const getGrammarHeaderStyle = (index: number) => {
+	return grammarHeaderStyles[index % grammarHeaderStyles.length]!;
+};
+
+const sectionHeadingClass =
+	"w-36 border-l-4 border-primary bg-primary/10 align-top text-xs font-black tracking-[0.12em] text-primary uppercase";
 
 /* window behaviour */
 const isLoading = computed(() => {
@@ -522,6 +560,26 @@ const api = useApiClient(); */
 											>
 												{{ e.location }}
 											</CardDescription>
+											<div v-if="e.grammar.length > 0" class="mt-2 flex flex-wrap gap-1.5">
+												<div
+													v-for="(item, itemIndex) in e.grammar"
+													:key="`header-grammar-${item.label}-${item.value}`"
+													class="inline-flex overflow-hidden rounded-sm border border-on-primary/30 text-xs shadow-sm"
+												>
+													<span
+														class="px-2 py-1 font-black tracking-[0.08em] uppercase"
+														:class="getGrammarHeaderStyle(itemIndex).label"
+													>
+														{{ item.label }}
+													</span>
+													<span
+														class="px-2 py-1 font-semibold"
+														:class="getGrammarHeaderStyle(itemIndex).value"
+													>
+														{{ item.value }}
+													</span>
+												</div>
+											</div>
 										</div>
 									</div>
 								</div>
@@ -579,7 +637,7 @@ const api = useApiClient(); */
 							<Table>
 								<TableBody>
 									<TableRow v-if="e.metadata.length > 0">
-										<TableCell class="w-32 font-semibold">Metadata</TableCell>
+										<TableCell :class="sectionHeadingClass">Metadata</TableCell>
 										<TableCell>
 											<div class="flex flex-wrap items-center gap-2">
 												<Badge
@@ -593,7 +651,7 @@ const api = useApiClient(); */
 										</TableCell>
 									</TableRow>
 									<TableRow v-if="e.lemmaForms.length > 0 || e.variantForms.length > 0">
-										<TableCell class="w-32 font-semibold">Forms</TableCell>
+										<TableCell :class="sectionHeadingClass">Forms</TableCell>
 										<TableCell>
 											<div class="space-y-3">
 												<div
@@ -603,7 +661,7 @@ const api = useApiClient(); */
 												>
 													<div class="flex flex-wrap items-center gap-2">
 														<Badge
-															v-for="item in form.metadata"
+															v-for="item in form.metadata.filter(shouldRenderFormMetadata)"
 															:key="`lemma-${formIndex}-${item.label}-${item.value}`"
 															variant="outline"
 														>
@@ -632,7 +690,7 @@ const api = useApiClient(); */
 													<div class="flex flex-wrap items-center gap-2">
 														<span class="text-sm font-semibold">Variant</span>
 														<Badge
-															v-for="item in form.metadata"
+															v-for="item in form.metadata.filter(shouldRenderFormMetadata)"
 															:key="`variant-${formIndex}-${item.label}-${item.value}`"
 															variant="outline"
 														>
@@ -671,7 +729,7 @@ const api = useApiClient(); */
 										</TableCell>
 									</TableRow>
 									<TableRow v-if="e.locations.length > 0">
-										<TableCell class="w-32 font-semibold">Locations</TableCell>
+										<TableCell :class="sectionHeadingClass">Locations</TableCell>
 										<TableCell>
 											<div class="flex flex-wrap gap-2">
 												<Badge
@@ -684,27 +742,8 @@ const api = useApiClient(); */
 											</div>
 										</TableCell>
 									</TableRow>
-									<TableRow v-if="e.grammar.length > 0">
-										<TableCell class="w-32 font-semibold">Grammar</TableCell>
-										<TableCell>
-											<div class="space-y-1.5">
-												<div
-													v-for="item in e.grammar"
-													:key="item.label"
-													class="flex items-start gap-4"
-												>
-													<div class="w-36 shrink-0 text-sm font-semibold tracking-[0.02em]">
-														{{ item.label }}
-													</div>
-													<div class="min-w-0 flex-1 text-sm font-normal">
-														{{ item.value }}
-													</div>
-												</div>
-											</div>
-										</TableCell>
-									</TableRow>
 									<TableRow v-if="e.quote">
-										<TableCell class="w-32 font-semibold">Quote</TableCell>
+										<TableCell :class="sectionHeadingClass">Quote</TableCell>
 										<TableCell>
 											<div class="space-y-2">
 												<p class="m-0">{{ e.quote.text }}</p>
@@ -713,7 +752,7 @@ const api = useApiClient(); */
 										</TableCell>
 									</TableRow>
 									<TableRow v-if="e.translations.length > 0">
-										<TableCell class="w-32 font-semibold">Translations</TableCell>
+										<TableCell :class="sectionHeadingClass">Translations</TableCell>
 										<TableCell>
 											<div class="space-y-2">
 												<div
@@ -730,7 +769,7 @@ const api = useApiClient(); */
 										</TableCell>
 									</TableRow>
 									<TableRow v-if="e.inflectedForms.length > 0">
-										<TableCell class="w-32 font-semibold">Inflected Forms</TableCell>
+										<TableCell :class="sectionHeadingClass">Inflected Forms</TableCell>
 										<TableCell>
 											<div class="space-y-3">
 												<Card
@@ -790,7 +829,7 @@ const api = useApiClient(); */
 										</TableCell>
 									</TableRow>
 									<TableRow v-if="e.senses.length > 0">
-										<TableCell class="w-32 font-semibold">Senses</TableCell>
+										<TableCell :class="sectionHeadingClass">Senses</TableCell>
 										<TableCell>
 											<div class="space-y-4">
 												<Card
@@ -800,7 +839,6 @@ const api = useApiClient(); */
 												>
 													<CardContent class="space-y-3 pt-4">
 														<div class="flex flex-wrap items-center gap-2">
-															<span class="font-medium">{{ sense.id ?? "Sense" }}</span>
 															<Badge v-if="sense.ana" variant="outline">{{ sense.ana }}</Badge>
 															<Badge
 																v-for="item in sense.metadata"
@@ -936,7 +974,7 @@ const api = useApiClient(); */
 										</TableCell>
 									</TableRow>
 									<TableRow v-if="e.notes.length > 0">
-										<TableCell class="w-32 font-semibold">Notes</TableCell>
+										<TableCell :class="sectionHeadingClass">Notes</TableCell>
 										<TableCell>
 											<div class="space-y-2">
 												<p v-for="note in e.notes" :key="note" class="m-0">
@@ -946,7 +984,7 @@ const api = useApiClient(); */
 										</TableCell>
 									</TableRow>
 									<TableRow v-if="e.editors.length > 0">
-										<TableCell class="w-32 font-semibold">Editors</TableCell>
+										<TableCell :class="sectionHeadingClass">Editors</TableCell>
 										<TableCell>
 											<div class="space-y-2">
 												<div
