@@ -5,6 +5,7 @@ import {
 	ChevronDown,
 	ChevronUp,
 	Code,
+	Languages,
 	MapPin,
 	MessageSquareQuote,
 } from "lucide-vue-next";
@@ -15,6 +16,50 @@ import {
 	normalizeEntry,
 	type RenderedMetadataItem,
 } from "@/utils/dict-entry-rendering";
+
+interface GrammarHeaderStyle {
+	label: string;
+	value: string;
+}
+
+const grammarHeaderStyles: Record<string, GrammarHeaderStyle> = {
+	"Part of speech": {
+		label: "bg-sky-200 text-sky-950",
+		value: "bg-sky-50/95 text-sky-950",
+	},
+	Class: {
+		label: "bg-violet-200 text-violet-950",
+		value: "bg-violet-50/95 text-violet-950",
+	},
+	"Syn root": {
+		label: "bg-orange-200 text-orange-950",
+		value: "bg-orange-50/95 text-orange-950",
+	},
+	"Dia root": {
+		label: "bg-green-200 text-green-950",
+		value: "bg-green-50/95 text-green-950",
+	},
+};
+
+const neutralGrammarHeaderStyle: GrammarHeaderStyle = {
+	label: "bg-slate-200 text-slate-950",
+	value: "bg-slate-50/95 text-slate-950",
+};
+
+const languageBadgeBaseClass = "inline-flex items-center gap-1 font-semibold";
+
+const languageBadgeStyles: Record<string, string> = {
+	ar: "border-amber-300 bg-amber-50 text-amber-950",
+	"ar-latn": "border-red-300 bg-red-50 text-red-950",
+	de: "border-emerald-300 bg-emerald-50 text-emerald-950",
+	en: "border-sky-300 bg-sky-50 text-sky-950",
+	fr: "border-violet-300 bg-violet-50 text-violet-950",
+};
+
+const neutralLanguageBadgeStyle = "border-slate-300 bg-slate-50 text-slate-950";
+
+const sectionHeadingClass =
+	"w-36 border-l-4 border-primary bg-primary/10 align-top text-xs font-black tracking-[0.12em] text-primary uppercase";
 
 const props = withDefaults(
 	defineProps<{
@@ -58,38 +103,25 @@ const getEntryLink = (entryId: string | number | null | undefined, responseForma
 };
 
 const shouldRenderFormMetadata = (item: RenderedMetadataItem) => {
-	return !(item.label === "type" && item.value === "lemma");
+	return !(
+		item.label === "type" &&
+		(item.value === "lemma" || item.value === "variant" || item.value === "inflected")
+	);
 };
 
-const grammarHeaderStyles = [
-	{
-		label: "bg-amber-200 text-amber-950",
-		value: "bg-amber-50/95 text-amber-950",
-	},
-	{
-		label: "bg-sky-200 text-sky-950",
-		value: "bg-sky-50/95 text-sky-950",
-	},
-	{
-		label: "bg-emerald-200 text-emerald-950",
-		value: "bg-emerald-50/95 text-emerald-950",
-	},
-	{
-		label: "bg-rose-200 text-rose-950",
-		value: "bg-rose-50/95 text-rose-950",
-	},
-	{
-		label: "bg-violet-200 text-violet-950",
-		value: "bg-violet-50/95 text-violet-950",
-	},
-];
-
-const getGrammarHeaderStyle = (index: number) => {
-	return grammarHeaderStyles[index % grammarHeaderStyles.length]!;
+const getGrammarHeaderStyle = (label: string): GrammarHeaderStyle => {
+	return grammarHeaderStyles[label] ?? neutralGrammarHeaderStyle;
 };
 
-const sectionHeadingClass =
-	"w-36 border-l-4 border-primary bg-primary/10 align-top text-xs font-black tracking-[0.12em] text-primary uppercase";
+const getLanguageBadgeClass = (language: string) => {
+	const normalizedLanguage = language.toLocaleLowerCase();
+
+	return languageBadgeStyles[normalizedLanguage] ?? neutralLanguageBadgeStyle;
+};
+
+const shouldRenderAsLanguageBadge = (item: RenderedMetadataItem) => {
+	return item.label === "lang" || item.label === "entry language";
+};
 
 const toggleExpanded = () => {
 	isExpanded.value = !isExpanded.value;
@@ -153,19 +185,19 @@ const formatAvailableCount = (count: number, label: string) => {
 								</div>
 								<div v-if="e.grammar.length > 0" class="mt-auto flex flex-wrap gap-1.5 pt-2">
 									<div
-										v-for="(item, itemIndex) in e.grammar"
+										v-for="item in e.grammar"
 										:key="`header-grammar-${item.label}-${item.value}`"
 										class="inline-flex overflow-hidden rounded-sm border border-on-primary/30 text-xs shadow-sm"
 									>
 										<span
 											class="px-2 py-1 font-black tracking-[0.08em] uppercase"
-											:class="getGrammarHeaderStyle(itemIndex).label"
+											:class="getGrammarHeaderStyle(item.label).label"
 										>
 											{{ item.label }}
 										</span>
 										<span
 											class="px-2 py-1 font-semibold"
-											:class="getGrammarHeaderStyle(itemIndex).value"
+											:class="getGrammarHeaderStyle(item.label).value"
 										>
 											{{ item.value }}
 										</span>
@@ -265,8 +297,14 @@ const formatAvailableCount = (count: number, label: string) => {
 											<Badge
 												v-for="item in form.metadata.filter(shouldRenderFormMetadata)"
 												:key="`lemma-${formIndex}-${item.label}-${item.value}`"
+												:class="
+													shouldRenderAsLanguageBadge(item)
+														? [languageBadgeBaseClass, getLanguageBadgeClass(item.value)]
+														: undefined
+												"
 												variant="outline"
 											>
+												<Languages v-if="shouldRenderAsLanguageBadge(item)" class="size-3" />
 												{{ item.label }}: {{ item.value }}
 											</Badge>
 										</div>
@@ -277,7 +315,12 @@ const formatAvailableCount = (count: number, label: string) => {
 												class="inline-flex items-center gap-2"
 												:class="{ 'text-muted-foreground': orthography.isMissing }"
 											>
-												<Badge v-if="orthography.lang" variant="outline">
+												<Badge
+													v-if="orthography.lang"
+													:class="[languageBadgeBaseClass, getLanguageBadgeClass(orthography.lang)]"
+													variant="outline"
+												>
+													<Languages class="size-3" />
 													{{ orthography.lang }}
 												</Badge>
 												<span>{{ orthography.text }}</span>
@@ -294,8 +337,14 @@ const formatAvailableCount = (count: number, label: string) => {
 											<Badge
 												v-for="item in form.metadata.filter(shouldRenderFormMetadata)"
 												:key="`variant-${formIndex}-${item.label}-${item.value}`"
+												:class="
+													shouldRenderAsLanguageBadge(item)
+														? [languageBadgeBaseClass, getLanguageBadgeClass(item.value)]
+														: undefined
+												"
 												variant="outline"
 											>
+												<Languages v-if="shouldRenderAsLanguageBadge(item)" class="size-3" />
 												{{ item.label }}: {{ item.value }}
 											</Badge>
 										</div>
@@ -306,7 +355,12 @@ const formatAvailableCount = (count: number, label: string) => {
 												class="inline-flex items-center gap-2"
 												:class="{ 'text-muted-foreground': orthography.isMissing }"
 											>
-												<Badge v-if="orthography.lang" variant="outline">
+												<Badge
+													v-if="orthography.lang"
+													:class="[languageBadgeBaseClass, getLanguageBadgeClass(orthography.lang)]"
+													variant="outline"
+												>
+													<Languages class="size-3" />
 													{{ orthography.lang }}
 												</Badge>
 												<span>{{ orthography.text }}</span>
@@ -351,7 +405,14 @@ const formatAvailableCount = (count: number, label: string) => {
 							<TableCell>
 								<div class="space-y-2">
 									<p class="m-0">{{ e.quote.text }}</p>
-									<Badge v-if="e.quote.lang" variant="outline">{{ e.quote.lang }}</Badge>
+									<Badge
+										v-if="e.quote.lang"
+										:class="[languageBadgeBaseClass, getLanguageBadgeClass(e.quote.lang)]"
+										variant="outline"
+									>
+										<Languages class="size-3" />
+										{{ e.quote.lang }}
+									</Badge>
 								</div>
 							</TableCell>
 						</TableRow>
@@ -364,7 +425,12 @@ const formatAvailableCount = (count: number, label: string) => {
 										:key="`${translation.lang}-${translation.text}`"
 										class="flex flex-wrap items-center gap-2"
 									>
-										<Badge v-if="translation.lang" variant="outline">
+										<Badge
+											v-if="translation.lang"
+											:class="[languageBadgeBaseClass, getLanguageBadgeClass(translation.lang)]"
+											variant="outline"
+										>
+											<Languages class="size-3" />
 											{{ translation.lang }}
 										</Badge>
 										<span>{{ translation.text }}</span>
@@ -385,10 +451,16 @@ const formatAvailableCount = (count: number, label: string) => {
 											<div class="flex flex-wrap items-start justify-between gap-2">
 												<div class="flex flex-wrap items-center gap-2">
 													<Badge
-														v-for="item in inflected.metadata"
+														v-for="item in inflected.metadata.filter(shouldRenderFormMetadata)"
 														:key="`inflected-${inflectedIndex}-${item.label}-${item.value}`"
+														:class="
+															shouldRenderAsLanguageBadge(item)
+																? [languageBadgeBaseClass, getLanguageBadgeClass(item.value)]
+																: undefined
+														"
 														variant="outline"
 													>
+														<Languages v-if="shouldRenderAsLanguageBadge(item)" class="size-3" />
 														{{ item.label }}: {{ item.value }}
 													</Badge>
 												</div>
@@ -414,7 +486,15 @@ const formatAvailableCount = (count: number, label: string) => {
 													class="inline-flex items-center gap-2 font-medium"
 													:class="{ 'text-muted-foreground': orthography.isMissing }"
 												>
-													<Badge v-if="orthography.lang" variant="outline">
+													<Badge
+														v-if="orthography.lang"
+														:class="[
+															languageBadgeBaseClass,
+															getLanguageBadgeClass(orthography.lang),
+														]"
+														variant="outline"
+													>
+														<Languages class="size-3" />
 														{{ orthography.lang }}
 													</Badge>
 													<span>{{ orthography.text }}</span>
@@ -467,7 +547,15 @@ const formatAvailableCount = (count: number, label: string) => {
 													class="flex flex-wrap items-center gap-2"
 													:class="{ 'text-muted-foreground': definition.isMissing }"
 												>
-													<Badge v-if="definition.lang" variant="outline">
+													<Badge
+														v-if="definition.lang"
+														:class="[
+															languageBadgeBaseClass,
+															getLanguageBadgeClass(definition.lang),
+														]"
+														variant="outline"
+													>
+														<Languages class="size-3" />
 														{{ definition.lang }}
 													</Badge>
 													<span>{{ definition.text }}</span>
@@ -480,7 +568,15 @@ const formatAvailableCount = (count: number, label: string) => {
 													class="flex flex-wrap items-center gap-2"
 													:class="{ 'text-muted-foreground': translation.isMissing }"
 												>
-													<Badge v-if="translation.lang" variant="outline">
+													<Badge
+														v-if="translation.lang"
+														:class="[
+															languageBadgeBaseClass,
+															getLanguageBadgeClass(translation.lang),
+														]"
+														variant="outline"
+													>
+														<Languages class="size-3" />
 														{{ translation.lang }}
 													</Badge>
 													<span>
@@ -533,9 +629,17 @@ const formatAvailableCount = (count: number, label: string) => {
 																{{ formatLocation(location) }}
 															</Badge>
 														</div>
-														<div v-if="example.quote" class="grid grid-cols-[3rem_1fr] gap-2">
+														<div v-if="example.quote" class="grid grid-cols-[4.5rem_1fr] gap-2">
 															<div>
-																<Badge v-if="example.quote.lang" variant="outline">
+																<Badge
+																	v-if="example.quote.lang"
+																	:class="[
+																		languageBadgeBaseClass,
+																		getLanguageBadgeClass(example.quote.lang),
+																	]"
+																	variant="outline"
+																>
+																	<Languages class="size-3" />
 																	{{ example.quote.lang }}
 																</Badge>
 															</div>
@@ -545,11 +649,19 @@ const formatAvailableCount = (count: number, label: string) => {
 															<div
 																v-for="translation in example.translations"
 																:key="`${example.id}-${translation.lang}-${translation.text}`"
-																class="grid grid-cols-[3rem_1fr] gap-2"
+																class="grid grid-cols-[4.5rem_1fr] gap-2"
 																:class="{ 'text-muted-foreground': translation.isMissing }"
 															>
 																<div>
-																	<Badge v-if="translation.lang" variant="outline">
+																	<Badge
+																		v-if="translation.lang"
+																		:class="[
+																			languageBadgeBaseClass,
+																			getLanguageBadgeClass(translation.lang),
+																		]"
+																		variant="outline"
+																	>
+																		<Languages class="size-3" />
 																		{{ translation.lang }}
 																	</Badge>
 																</div>
