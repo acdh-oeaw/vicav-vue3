@@ -142,6 +142,8 @@ interface GrammarLike {
 	collocate_gram?: { $?: string };
 	valency_gram?: { $?: string };
 	government_gram?: { $?: string };
+	arguments_gram?: TextNodeLike;
+	arguments_grams?: Array<TextNodeLike>;
 	subc_gram?: { $?: string };
 	socioCultural_usg?: { $?: string };
 	temporal_usg?: { $?: string };
@@ -376,6 +378,11 @@ function collectGrammar(grammar: GrammarLike | string | undefined): Array<Render
 		["Collocate", grammar.collocate_gram?.$],
 		["Valency", grammar.valency_gram?.$],
 		["Government", grammar.government_gram?.$],
+		["Argument", grammar.arguments_gram?.$],
+		...asArray(grammar.arguments_grams).map((argument, index): [string, string | undefined] => [
+			`Argument ${String(index + 1)}`,
+			argument.$,
+		]),
 		["Subclass", grammar.subc_gram?.$],
 		["Socio-cultural", grammar.socioCultural_usg?.$],
 		["Temporal", grammar.temporal_usg?.$],
