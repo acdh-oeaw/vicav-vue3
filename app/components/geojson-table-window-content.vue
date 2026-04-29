@@ -347,6 +347,7 @@ const searchableLocationNames = computed(() => {
 			<DataTablePagination
 				v-if="tableRef"
 				open-to-side="top"
+				page-select
 				:table="tableRef as unknown as Table<never>"
 			/>
 		</div>

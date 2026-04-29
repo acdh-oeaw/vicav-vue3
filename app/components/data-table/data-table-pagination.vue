@@ -10,6 +10,7 @@ import {
 interface DataTablePaginationProps {
 	table: Table<never>;
 	openToSide?: "top" | "right" | "bottom" | "left";
+	pageSelect?: boolean;
 }
 
 defineProps<DataTablePaginationProps>();
@@ -39,9 +40,31 @@ defineProps<DataTablePaginationProps>();
 					</SelectContent>
 				</Select>
 			</div>
-			<div class="flex w-[100px] items-center justify-center text-sm font-medium">
-				Page {{ table.getState().pagination.pageIndex + 1 }} of
-				{{ table.getPageCount() }}
+			<div class="flex items-center space-x-2 text-sm font-medium">
+				<template v-if="pageSelect">
+					<label for="pageSelect">Page</label>
+					<Select
+						aria-labelledby="pageSelect"
+						:model-value="`${table.getState().pagination.pageIndex + 1}`"
+						@update:model-value="table.setPageIndex(parseInt($event) - 1)"
+					>
+						<SelectTrigger id="pageSelect" class="h-8 w-17.5">
+							<SelectValue :placeholder="`${table.getState().pagination.pageIndex + 1}`" />
+						</SelectTrigger>
+						<SelectContent class="bg-white" :side="openToSide">
+							<SelectItem v-for="page in table.getPageCount()" :key="page" :value="`${page}`">
+								{{ page }}
+							</SelectItem>
+						</SelectContent>
+					</Select>
+					<span>of {{ table.getPageCount() }}</span>
+				</template>
+				<template v-else>
+					<span
+						>Page {{ table.getState().pagination.pageIndex + 1 }} of
+						{{ table.getPageCount() }}</span
+					>
+				</template>
 			</div>
 			<div class="flex items-center space-x-2">
 				<Button
