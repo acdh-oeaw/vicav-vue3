@@ -26,7 +26,7 @@ const id = ref<string | null | undefined>(params.value.queryParams?.id);
 const ids = ref<string | null | undefined>(params.value.queryParams?.ids);
 const sort = ref<"asc" | "desc" | "none" | null | undefined>(params.value.queryParams?.sort);
 const altLemma = ref<string | null | undefined>(params.value.queryParams?.altLemma);
-const format = ref<string | null | undefined>(params.value.queryParams?.format ?? "html");
+const format = ref<string | null | undefined>("json");
 
 /* filter criteria editor */
 const filterCriteria = ref<Map<string, string>>(new Map([]));
@@ -82,32 +82,37 @@ const updateFilterCriteria = () => {
 
 /* data fetch initialization */
 const queryParams = ref<Parameters<typeof useDictsEntries>[0]["queryParams"]>({});
+const setQueryParam = <K extends keyof NonNullable<typeof queryParams.value>>(
+	queryParamsValue: NonNullable<typeof queryParams.value>,
+	key: K,
+	value: NonNullable<typeof queryParams.value>[K],
+) => {
+	if (value) {
+		queryParamsValue[key] = value;
+	} else {
+		Reflect.deleteProperty(queryParamsValue, key);
+	}
+};
+
 const updateQueryParams = () => {
-	if (queryParams.value === undefined) return;
-	if (q.value) queryParams.value.q = q.value;
-	else delete queryParams.value.q;
+	const queryParamsValue = queryParams.value;
+	if (queryParamsValue === undefined) return;
+	setQueryParam(queryParamsValue, "q", q.value);
 	if (params.value.isTextInputManual) {
 		updateFilterCriteria();
 	} else {
 		params.value.queryTemplateTextInput ??= "";
 	}
-	if (page.value) queryParams.value.page = page.value;
-	else delete queryParams.value.page;
-	if (pageSize.value) queryParams.value.pageSize = pageSize.value;
-	else delete queryParams.value.pageSize;
-	if (id.value) queryParams.value.id = id.value;
-	else delete queryParams.value.id;
-	if (ids.value) queryParams.value.ids = ids.value;
-	else delete queryParams.value.ids;
-	if (sort.value) queryParams.value.sort = sort.value;
-	else delete queryParams.value.sort;
-	if (altLemma.value) queryParams.value.altLemma = altLemma.value;
-	else delete queryParams.value.altLemma;
-	if (format.value) queryParams.value.format = format.value;
-	else delete queryParams.value.format;
-	params.value.queryParams = queryParams.value;
+	setQueryParam(queryParamsValue, "page", page.value);
+	setQueryParam(queryParamsValue, "pageSize", pageSize.value);
+	setQueryParam(queryParamsValue, "id", id.value);
+	setQueryParam(queryParamsValue, "ids", ids.value);
+	setQueryParam(queryParamsValue, "sort", sort.value);
+	setQueryParam(queryParamsValue, "altLemma", altLemma.value);
+	setQueryParam(queryParamsValue, "format", format.value);
+	params.value.queryParams = queryParamsValue;
 	// There is a label passed from the TEI description text. Can we use it?
-	params.value.queryString = `${params.value.textId ?? ""}: ${queryParams.value.q ?? ""}`;
+	params.value.queryString = `${params.value.textId ?? ""}: ${queryParamsValue.q ?? ""}`;
 	emit("updateQueryParam", params.value.queryString);
 };
 updateQueryParams();
@@ -122,18 +127,49 @@ watch(data, (newData) => {
 	pageSize.value = parseInt(newData.page_size);
 });
 
+const pageCount = computed(() => {
+	const count = data.value?.page_count;
+	if (count == null) return undefined;
+
+	const parsed = parseInt(count);
+	return Number.isNaN(parsed) ? undefined : parsed;
+});
+
+const totalItems = computed(() => {
+	const total = data.value?.total_items;
+	if (total == null) return undefined;
+
+	const parsed = parseInt(total);
+	return Number.isNaN(parsed) ? undefined : parsed;
+});
+
+const canGoToPreviousPage = computed(() => page.value > 1);
+const canGoToNextPage = computed(() => {
+	if (pageCount.value == null) return false;
+	return page.value < pageCount.value;
+});
+const showPagination = computed(() => {
+	return (pageCount.value ?? 0) > 1;
+});
+
+const goToPreviousPage = () => {
+	if (!canGoToPreviousPage.value) return;
+	page.value -= 1;
+	updateQueryParams();
+};
+
+const goToNextPage = () => {
+	if (!canGoToNextPage.value) return;
+	page.value += 1;
+	updateQueryParams();
+};
+
 /* window behaviour */
 const isLoading = computed(() => {
 	return isPending.value || isPlaceholderData.value;
 });
 
 const isExtendedFormOpen = ref(false);
-
-/* pagination
-const goToPage = (newPage: number) => {
-	page.value = newPage;
-	updateQueryParams();
-}; */
 
 /* TODO: only for testing; not intended for production
 const api = useApiClient(); */
@@ -146,7 +182,7 @@ const api = useApiClient(); */
 		:class="{ 'opacity-50 grayscale': isLoading }"
 	>
 		<!-- eslint-disable vuejs-accessibility/form-control-has-label, tailwindcss/no-custom-classname -->
-		<Collapsible v-model:open="params.isQueryVisible" class="prose max-w-3xl px-8 pt-8 pb-4">
+		<Collapsible v-model:open="params.isQueryVisible" class="prose max-w-6xl px-8 pt-8 pb-4">
 			<CollapsibleTrigger
 				class="flex w-full items-baseline bg-primary p-4 pt-0 pb-0 text-on-primary"
 			>
@@ -192,12 +228,12 @@ const api = useApiClient(); */
 					</div>
 				</div>
 			</CollapsibleTrigger>
-			<CollapsibleContent :id="formId" class="max-w-3xl bg-gray-200 p-4">
+			<CollapsibleContent :id="formId" class="max-w-6xl bg-gray-200 p-4">
 				<div>
 					<label class="relative inline-flex cursor-pointer items-center">
 						<input v-model="params.isTextInputManual" class="peer sr-only" type="checkbox" />
 						<div
-							class="peer relative h-4 w-10 flex-auto shrink-0 rounded-[5px] bg-gray-500 peer-checked:bg-primary peer-focus:ring-4 peer-focus:ring-primary/50 peer-focus:outline-hidden after:absolute after:start-[2px] after:top-px after:m-0.5 after:h-3 after:w-4 after:rounded-[3px] after:border after:border-gray-500/50 after:bg-on-primary after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-primary/50 peer-checked:rtl:after:-translate-x-full dark:border-gray-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800"
+							class="peer relative h-4 w-10 flex-auto shrink-0 rounded-[5px] bg-gray-500 peer-checked:bg-primary peer-focus:ring-4 peer-focus:ring-primary/50 peer-focus:outline-hidden after:absolute after:inset-s-0.5 after:top-px after:m-0.5 after:h-3 after:w-4 after:rounded-[3px] after:border after:border-gray-500/50 after:bg-on-primary after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-primary/50 peer-checked:rtl:after:-translate-x-full dark:border-gray-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800"
 						></div>
 						<span class="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300">
 							Manual edit
@@ -252,7 +288,7 @@ const api = useApiClient(); */
 					</div>
 				</div>
 				<div class="mt-4">
-					<Collapsible v-model:open="isExtendedFormOpen" class="prose max-w-3xl px-8 pt-8 pb-4">
+					<Collapsible v-model:open="isExtendedFormOpen" class="prose max-w-6xl px-8 pt-8 pb-4">
 						<CollapsibleTrigger class="dvStats flex w-full items-baseline">
 							Extended options:s
 							<div class="relative top-1 mr-4 ml-auto">
@@ -363,8 +399,57 @@ const api = useApiClient(); */
 			</CollapsibleContent>
 		</Collapsible>
 
-		<!-- eslint-disable-next-line vue/no-v-html, vuejs-accessibility/click-events-have-key-events, vuejs-accessibility/no-static-element-interactions -->
-		<div v-if="data" class="prose mb-auto max-w-3xl p-8">
+		<div
+			v-if="data && showPagination"
+			class="mx-8 mb-2 flex max-w-6xl flex-wrap items-end gap-3 border-y border-border/60 py-3"
+		>
+			<label class="flex flex-col gap-1 text-sm font-medium">
+				<span>Page</span>
+				<input
+					v-model.number="page"
+					class="h-9 w-24 rounded-sm border border-input bg-background px-2 text-sm"
+					:max="pageCount"
+					min="1"
+					type="number"
+					@change="updateQueryParams"
+				/>
+			</label>
+			<label class="flex flex-col gap-1 text-sm font-medium">
+				<span>Page size</span>
+				<input
+					v-model.number="pageSize"
+					class="h-9 w-28 rounded-sm border border-input bg-background px-2 text-sm"
+					min="1"
+					type="number"
+					@change="updateQueryParams"
+				/>
+			</label>
+			<div class="flex items-center gap-2">
+				<button
+					class="h-9 rounded-sm border border-primary px-3 text-sm font-semibold text-primary disabled:border-gray-300 disabled:text-gray-400"
+					:disabled="!canGoToPreviousPage"
+					type="button"
+					@click="goToPreviousPage"
+				>
+					Previous
+				</button>
+				<button
+					class="h-9 rounded-sm border border-primary px-3 text-sm font-semibold text-primary disabled:border-gray-300 disabled:text-gray-400"
+					:disabled="!canGoToNextPage"
+					type="button"
+					@click="goToNextPage"
+				>
+					Next
+				</button>
+			</div>
+			<div class="text-muted-foreground text-sm">
+				<span>Page {{ page }}</span>
+				<span v-if="pageCount"> of {{ pageCount }}</span>
+				<span v-if="totalItems != null">, {{ totalItems }} items</span>
+			</div>
+		</div>
+
+		<div v-if="data" class="prose mb-auto max-w-6xl p-8">
 			<Toggle v-model="debug">
 				<div v-if="data.total_items">Total items: {{ data.total_items }}</div>
 				<div v-if="data.took">Search duration: {{ data.took }} ms</div>
@@ -372,15 +457,14 @@ const api = useApiClient(); */
 			<div v-if="debug && data.page_count">
 				<pre>{{ JSON.stringify(data._links, null, "  ") }}</pre>
 			</div>
-			<div v-if="data._embedded && data._embedded.entries">
-				<div v-for="(e, i) in data._embedded.entries" :key="i">
-					<div v-if="debug" class="text-sm">
-						<pre>{{ JSON.stringify(e, null, "  ") }}</pre>
-						<pre>{{ e.entry }} </pre>
-					</div>
-					<!-- eslint-disable-next-line vue/no-v-html -->
-					<div v-if="typeof e.entry === 'string'" v-html="e.entry" />
-				</div>
+			<div v-if="data._embedded.entries.length > 0" class="space-y-4">
+				<DictEntry
+					v-for="(entry, i) in data._embedded.entries"
+					:key="entry.id ?? i"
+					:debug="debug"
+					:dict-id="myDict.id"
+					:entry="entry"
+				/>
 			</div>
 		</div>
 
@@ -388,7 +472,7 @@ const api = useApiClient(); */
 			<LoadingIndicator />
 		</Centered>
 	</div>
-	<div v-else class="relative isolate prose size-full max-w-3xl overflow-auto px-8 pt-8 pb-4">
+	<div v-else class="relative isolate prose size-full max-w-6xl overflow-auto px-8 pt-8 pb-4">
 		Error: Dictionary "{{ params.textId }}" could not be loaded.
 	</div>
 </template>
