@@ -15,16 +15,16 @@ import {
 import { computed, nextTick, ref, watch } from "vue";
 
 import {
-	type TriggerMap,
-	type TagItem,
+	buildRawValue,
+	flatRender,
+	getFlatTags,
 	type Operator,
 	OPERATORS,
-	splitQueryIntoTokens,
-	buildRawValue,
-	tokenToTagItem,
 	parseTagClause,
-	getFlatTags,
-	flatRender,
+	splitQueryIntoTokens,
+	type TagItem,
+	tokenToTagItem,
+	type TriggerMap,
 } from "./index.ts";
 
 const props = defineProps<{
@@ -35,7 +35,7 @@ const props = defineProps<{
 const { parseSearchString, validateQuery, normalizeOperators, normalizeParens } = useFilterParser();
 const { contains } = useFilter({ sensitivity: "base" });
 
-const tags = ref<TagItem[]>([]);
+const tags = ref<Array<TagItem>>([]);
 const inputValue = ref("");
 const open = ref(false);
 const highlighted = ref<string | null>(null);
@@ -77,7 +77,7 @@ function addTag(rawValue: string, operator?: Operator) {
 	tags.value.push(tokenToTagItem(trimmed, tags.value.length > 0 ? (operator ?? "AND") : undefined));
 }
 
-function findInList(list: TagItem[], id: string): TagItem | null {
+function findInList(list: Array<TagItem>, id: string): TagItem | null {
 	for (const tag of list) {
 		if (tag.id === id) return tag;
 		if (tag.children) {
@@ -88,7 +88,7 @@ function findInList(list: TagItem[], id: string): TagItem | null {
 	return null;
 }
 
-function removeInList(list: TagItem[], id: string): boolean {
+function removeInList(list: Array<TagItem>, id: string): boolean {
 	for (let i = 0; i < list.length; i++) {
 		if (list[i]!.id === id) {
 			if (i === 0 && list.length > 1) list[1]!.operator = undefined;
@@ -328,10 +328,12 @@ onMounted(() => {
 		:reset-search-term-on-blur="false"
 		@highlight="setHighlight"
 	>
-		<div class="flex w-full flex-wrap items-center gap-1 p-1.5 min-h-10">
+		<div class="flex min-h-10 w-full flex-wrap items-center gap-1 p-1.5">
 			<template v-for="token in renderTokens" :key="`${token.tag.id}-${token.kind}`">
+				<span id="operatorSelect" class="sr-only">Operator</span>
 				<Select
 					v-if="token.kind === 'operator'"
+					aria-labelledby="operatorSelect"
 					:model-value="token.tag.operator"
 					@update:model-value="(val) => updateOperator(token.tag.id, val as Operator)"
 				>
@@ -341,7 +343,7 @@ onMounted(() => {
 						<SelectValue />
 					</SelectTrigger>
 					<SelectContent class="min-w-28 bg-white">
-						<SelectItem v-for="op in OPERATORS" :key="op" :value="op" class="text-xs">
+						<SelectItem v-for="op in OPERATORS" :key="op" class="text-xs" :value="op">
 							{{ op }}
 						</SelectItem>
 					</SelectContent>
@@ -349,12 +351,12 @@ onMounted(() => {
 
 				<span
 					v-else-if="token.kind === 'open-paren'"
-					class="select-none text-sm font-semibold text-on-muted"
+					class="text-sm font-semibold text-on-muted select-none"
 					>(</span
 				>
 
 				<template v-else-if="token.kind === 'close-paren'">
-					<span class="select-none text-sm font-semibold text-on-muted">)</span>
+					<span class="text-sm font-semibold text-on-muted select-none">)</span>
 				</template>
 
 				<div
@@ -369,21 +371,22 @@ onMounted(() => {
 					<span class="max-w-48 truncate" :title="getDisplayValue(token.tag.rawValue)">
 						{{ getDisplayValue(token.tag.rawValue) }}
 					</span>
-					<button
-						class="text-on-muted transition hover:text-foreground"
-						type="button"
-						@click.stop
+					<Button
+						class="h-full p-0 text-on-muted transition"
+						variant="ghost"
 						@click="removeById(token.tag.id)"
+						@click.stop
 					>
 						<X class="size-3" />
-					</button>
+					</Button>
 				</div>
 			</template>
 
 			<ComboboxInput
+				ref="inputRef"
 				v-model="inputValue"
-				class="min-w-24 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
 				autocomplete="off"
+				class="min-w-24 flex-1 bg-transparent text-sm outline-none"
 				:placeholder="tags.length === 0 ? 'Type to search features…' : ''"
 				@click="open = !open"
 				@input="handleInput"
@@ -391,7 +394,6 @@ onMounted(() => {
 				@keydown.enter="handleEnter"
 				@keydown.left.right="open = false"
 				@paste="handlePaste"
-				ref="inputRef"
 			/>
 
 			<ComboboxAnchor :reference="reference" />

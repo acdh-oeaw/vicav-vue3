@@ -162,6 +162,7 @@ function shouldShowOtherFeatureValues(feature: ColumnType) {
 						class="flex items-center gap-2"
 						:class="{ 'opacity-45': isMarkerHidden(feature.id) }"
 					>
+						<!-- eslint-disable vue/no-v-html -->
 						<svg
 							class="mt-0.5 size-3.5 shrink-0"
 							v-html="getMarkerSVG({ id: feature.id, strokeOnly: true }).outerHTML"

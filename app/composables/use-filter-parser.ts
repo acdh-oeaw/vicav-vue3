@@ -69,6 +69,8 @@ function stripRedundantParens(ast: LiqeQuery): LiqeQuery {
 			};
 		case "UnaryOperator":
 			return { ...ast, operand: stripRedundantParens(ast.operand) };
+		case "EmptyExpression":
+		case "Tag":
 		default:
 			return ast;
 	}
@@ -700,7 +702,7 @@ function stringifyAST(ast: LiqeQuery, parentOp?: "AND" | "OR"): string {
 			// - parent is AND (both AND and OR need parens inside AND)
 			// - this is AND and parent is OR (AND needs parens to clarify precedence)
 			const needsParens =
-				(parentOp === "AND" && op != "AND") || (parentOp === "OR" && op === "AND");
+				(parentOp === "AND" && op !== "AND") || (parentOp === "OR" && op === "AND");
 			return needsParens ? `(${inner})` : inner;
 		}
 		case "ParenthesizedExpression":

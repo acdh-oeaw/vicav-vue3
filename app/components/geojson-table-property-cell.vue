@@ -201,13 +201,14 @@ function onValueClick(val: Array<Record<string, unknown>>, title: string) {
 					'flex flex-wrap gap-x-2': infoOpen[key],
 				}"
 			>
+				<!-- eslint-disable vue/no-v-html -->
 				<svg
 					v-if="getPetalEntry(key) !== null"
 					class="size-3.5 shrink-0"
 					v-html="getMarkerSVG(getPetalEntry(key)!).outerHTML"
 				></svg>
 				<Button
-					class="h-auto flex-shrink-0 truncate p-0 !text-black"
+					class="h-auto shrink-0 truncate p-0 text-black!"
 					:class="{
 						'font-medium': flattenedHighlightedValues?.includes(key) && getPetalEntry(key),
 						'font-normal': !flattenedHighlightedValues?.includes(key) || !getPetalEntry(key),

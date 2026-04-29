@@ -95,7 +95,6 @@ export default defineEventHandler(async (event) => {
 	XLSX.utils.book_append_sheet(workbook, worksheet, sanitizeSheetName(body.sheetName));
 	const format = getStringValue(body.format).toLowerCase() === "csv" ? "csv" : "xlsx";
 	const fileName = sanitizeFileName(body.fileName);
-	console.log(fileName);
 
 	if (format === "csv") {
 		const csvSeparator = getStringValue(body.csvSeparator) || ",";

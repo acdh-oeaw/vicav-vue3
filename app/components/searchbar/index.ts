@@ -242,7 +242,7 @@ export interface TagItem {
 	/** Operator connecting this tag to the one before it (undefined for the first tag). */
 	operator?: Operator;
 	/** If set, this tag is a parenthesized group containing these sub-tags. */
-	children?: TagItem[];
+	children?: Array<TagItem>;
 }
 
 export type RenderToken =
@@ -295,7 +295,7 @@ export function splitQueryIntoTokens(query: string): Array<{ operator?: string; 
 
 		if (depth === 0) {
 			const rest = q.slice(i);
-			const m = rest.match(/^(AND NOT|OR NOT|AND|OR)\b/i);
+			const m = /^(AND NOT|OR NOT|AND|OR)\b/i.exec(rest);
 			if (m) {
 				const clause = currentClause.trim();
 				if (clause) result.push({ operator: pendingOperator, clause });
@@ -317,7 +317,7 @@ export function splitQueryIntoTokens(query: string): Array<{ operator?: string; 
 	return result;
 }
 
-export function buildRawValue(items: TagItem[]): string {
+export function buildRawValue(items: Array<TagItem>): string {
 	return items
 		.map((t, i) => {
 			const prefix = i > 0 && t.operator ? `${t.operator} ` : "";
@@ -332,7 +332,7 @@ export function tokenToTagItem(clause: string, operator?: Operator): TagItem {
 	return { id: crypto.randomUUID(), rawValue: clause, operator, ...(children ? { children } : {}) };
 }
 
-export function parseGroupChildren(clause: string): TagItem[] | null {
+export function parseGroupChildren(clause: string): Array<TagItem> | null {
 	if (!clause.startsWith("(") || !clause.endsWith(")")) return null;
 	const inner = clause.slice(1, -1).trim();
 	return splitQueryIntoTokens(inner).map((childToken, j) =>
@@ -366,13 +366,13 @@ export function parseTagClause(
 	};
 }
 
-export function getFlatTags(tag: TagItem): TagItem[] {
+export function getFlatTags(tag: TagItem): Array<TagItem> {
 	if (tag.children) return [tag, ...tag.children.flatMap((child) => getFlatTags(child))];
 	return [tag];
 }
 
-export function flatRender(items: TagItem[]): RenderToken[] {
-	const result: RenderToken[] = [];
+export function flatRender(items: Array<TagItem>): Array<RenderToken> {
+	const result: Array<RenderToken> = [];
 	for (const tag of items) {
 		if (tag.operator) result.push({ kind: "operator", tag });
 		if (tag.children?.length) {

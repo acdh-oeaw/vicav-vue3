@@ -7,7 +7,7 @@ import type { TriggerMap } from "./index.ts";
 import MultiValueSearchbar from "./multi-value-searchbar.vue";
 import TagSearchbar from "./tag-searchbar.vue";
 
-const props = defineProps<{
+const _props = defineProps<{
 	table: Table<unknown>;
 	triggers: TriggerMap;
 }>();
@@ -42,28 +42,28 @@ defineExpose({ submitSearch, value: currentValue });
 <template>
 	<div class="grid w-full max-w-full grid-cols-[1fr_auto]">
 		<div
-			class="flex w-full max-w-full min-h-10 rounded-md rounded-r-none border border-muted bg-white"
+			class="flex min-h-10 w-full max-w-full rounded-md rounded-r-none border border-muted bg-white"
 		>
 			<TagSearchbar
 				v-if="mode === 'tag'"
 				ref="tagRef"
-				class="flex-1 min-w-0"
+				class="min-w-0 flex-1"
 				:table="table"
 				:triggers="triggers"
 			/>
 			<MultiValueSearchbar
 				v-else
 				ref="multiRef"
-				class="flex-1 min-w-0"
+				class="min-w-0 flex-1"
 				:table="table"
 				:triggers="triggers"
 			/>
 
 			<div class="flex shrink-0 items-center border-l border-muted">
 				<Button
-					class="h-full px-2 rounded-none border-0"
-					variant="outline"
+					class="h-full rounded-none border-0 px-2"
 					:title="mode === 'tag' ? 'Switch to text mode' : 'Switch to tag mode'"
+					variant="outline"
 					@click="toggleMode"
 				>
 					<TextCursorInput v-if="mode === 'tag'" class="size-4" />
@@ -71,9 +71,9 @@ defineExpose({ submitSearch, value: currentValue });
 				</Button>
 				<Button
 					v-if="hasValue"
-					class="h-full px-2 rounded-none border-0 border-l border-muted"
-					variant="outline"
+					class="h-full rounded-none border-0 border-l border-muted px-2"
 					title="Clear query"
+					variant="outline"
 					@click="clearAll"
 				>
 					<X class="size-4" />

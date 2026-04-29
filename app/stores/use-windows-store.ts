@@ -264,14 +264,16 @@ export const useWindowsStore = defineStore("windows", () => {
 				index: 0,
 				class: "wb-table",
 				click: function () {
+					const table = tables.get(w.params.url);
+					const globalFilter = (table?.getState().globalFilter as string | undefined) ?? "";
 					openOrUpdateWindow(
 						{
 							targetType: "ListMap",
 							params: {
-								queryString: String(tables.get(w.params.url)?.getState().globalFilter ?? ""),
+								queryString: globalFilter,
 							},
 						} as unknown as WindowItem,
-						String(tables.get(w.params.url)?.getState().globalFilter ?? ""),
+						globalFilter,
 						ListMapSchema.shape.params,
 						"queryString",
 						true,
