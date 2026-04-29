@@ -14,6 +14,7 @@ import type { RestVLEEntry } from "@/lib/api-client";
 import {
 	formatLocation,
 	normalizeEntry,
+	type RenderedForm,
 	type RenderedMetadataItem,
 } from "@/utils/dict-entry-rendering";
 
@@ -107,6 +108,14 @@ const shouldRenderFormMetadata = (item: RenderedMetadataItem) => {
 		item.label === "type" &&
 		(item.value === "lemma" || item.value === "variant" || item.value === "inflected")
 	);
+};
+
+const shouldRenderPrimaryFormMetadata = (item: RenderedMetadataItem) => {
+	return shouldRenderFormMetadata(item) && item.label !== "lang";
+};
+
+const getFormLanguage = (form: RenderedForm) => {
+	return form.metadata.find((item) => item.label === "lang")?.value;
 };
 
 const getGrammarHeaderStyle = (label: string): GrammarHeaderStyle => {
@@ -295,7 +304,7 @@ const formatAvailableCount = (count: number, label: string) => {
 									>
 										<div class="flex flex-wrap items-center gap-2">
 											<Badge
-												v-for="item in form.metadata.filter(shouldRenderFormMetadata)"
+												v-for="item in form.metadata.filter(shouldRenderPrimaryFormMetadata)"
 												:key="`lemma-${formIndex}-${item.label}-${item.value}`"
 												:class="
 													shouldRenderAsLanguageBadge(item)
@@ -312,18 +321,21 @@ const formatAvailableCount = (count: number, label: string) => {
 											<span
 												v-for="orthography in form.orthographies"
 												:key="`lemma-${formIndex}-${orthography.lang}-${orthography.text}`"
-												class="inline-flex items-center gap-2"
+												class="inline-flex items-baseline gap-2"
 												:class="{ 'text-muted-foreground': orthography.isMissing }"
 											>
+												<span class="text-xl leading-tight font-black">{{ orthography.text }}</span>
 												<Badge
-													v-if="orthography.lang"
-													:class="[languageBadgeBaseClass, getLanguageBadgeClass(orthography.lang)]"
+													v-if="orthography.lang ?? getFormLanguage(form)"
+													:class="[
+														languageBadgeBaseClass,
+														getLanguageBadgeClass(orthography.lang ?? getFormLanguage(form) ?? ''),
+													]"
 													variant="outline"
 												>
 													<Languages class="size-3" />
-													{{ orthography.lang }}
+													{{ orthography.lang ?? getFormLanguage(form) }}
 												</Badge>
-												<span>{{ orthography.text }}</span>
 											</span>
 										</div>
 									</div>
@@ -335,7 +347,7 @@ const formatAvailableCount = (count: number, label: string) => {
 										<div class="flex flex-wrap items-center gap-2">
 											<span class="text-sm font-semibold">Variant</span>
 											<Badge
-												v-for="item in form.metadata.filter(shouldRenderFormMetadata)"
+												v-for="item in form.metadata.filter(shouldRenderPrimaryFormMetadata)"
 												:key="`variant-${formIndex}-${item.label}-${item.value}`"
 												:class="
 													shouldRenderAsLanguageBadge(item)
@@ -352,18 +364,21 @@ const formatAvailableCount = (count: number, label: string) => {
 											<span
 												v-for="orthography in form.orthographies"
 												:key="`variant-${formIndex}-${orthography.lang}-${orthography.text}`"
-												class="inline-flex items-center gap-2"
+												class="inline-flex items-baseline gap-2"
 												:class="{ 'text-muted-foreground': orthography.isMissing }"
 											>
+												<span class="text-lg leading-tight font-bold">{{ orthography.text }}</span>
 												<Badge
-													v-if="orthography.lang"
-													:class="[languageBadgeBaseClass, getLanguageBadgeClass(orthography.lang)]"
+													v-if="orthography.lang ?? getFormLanguage(form)"
+													:class="[
+														languageBadgeBaseClass,
+														getLanguageBadgeClass(orthography.lang ?? getFormLanguage(form) ?? ''),
+													]"
 													variant="outline"
 												>
 													<Languages class="size-3" />
-													{{ orthography.lang }}
+													{{ orthography.lang ?? getFormLanguage(form) }}
 												</Badge>
-												<span>{{ orthography.text }}</span>
 											</span>
 										</div>
 										<div v-if="form.grammar.length > 0" class="space-y-1.5">
@@ -451,7 +466,9 @@ const formatAvailableCount = (count: number, label: string) => {
 											<div class="flex flex-wrap items-start justify-between gap-2">
 												<div class="flex flex-wrap items-center gap-2">
 													<Badge
-														v-for="item in inflected.metadata.filter(shouldRenderFormMetadata)"
+														v-for="item in inflected.metadata.filter(
+															shouldRenderPrimaryFormMetadata,
+														)"
 														:key="`inflected-${inflectedIndex}-${item.label}-${item.value}`"
 														:class="
 															shouldRenderAsLanguageBadge(item)
@@ -483,21 +500,25 @@ const formatAvailableCount = (count: number, label: string) => {
 												<span
 													v-for="orthography in inflected.orthographies"
 													:key="`inflected-${inflectedIndex}-${orthography.lang}-${orthography.text}`"
-													class="inline-flex items-center gap-2 font-medium"
+													class="inline-flex items-baseline gap-2"
 													:class="{ 'text-muted-foreground': orthography.isMissing }"
 												>
+													<span class="text-lg leading-tight font-bold">{{
+														orthography.text
+													}}</span>
 													<Badge
-														v-if="orthography.lang"
+														v-if="orthography.lang ?? getFormLanguage(inflected)"
 														:class="[
 															languageBadgeBaseClass,
-															getLanguageBadgeClass(orthography.lang),
+															getLanguageBadgeClass(
+																orthography.lang ?? getFormLanguage(inflected) ?? '',
+															),
 														]"
 														variant="outline"
 													>
 														<Languages class="size-3" />
-														{{ orthography.lang }}
+														{{ orthography.lang ?? getFormLanguage(inflected) }}
 													</Badge>
-													<span>{{ orthography.text }}</span>
 												</span>
 											</div>
 											<div v-if="inflected.grammar.length > 0" class="space-y-1.5">
