@@ -312,7 +312,7 @@ onBeforeUnmount(() => window.removeEventListener("keydown", keyListener));
 defineExpose({ submitSearch, value, clear });
 
 const inputRef = useTemplateRef("inputRef");
-const reference = ref<ReferenceElement>(inputRef.value?.$el);
+const reference = ref<ReferenceElement>();
 onMounted(() => {
 	if (inputRef.value && value.value.length === 0) {
 		reference.value = inputRef.value.$el;
@@ -335,7 +335,7 @@ onMounted(() => {
 					v-if="token.kind === 'operator'"
 					aria-labelledby="operatorSelect"
 					:model-value="token.tag.operator"
-					@update:model-value="(val) => updateOperator(token.tag.id, val as Operator)"
+					@update:model-value="(val: string) => updateOperator(token.tag.id, val as Operator)"
 				>
 					<SelectTrigger
 						class="h-5 w-auto gap-0.5 rounded border-none px-1.5 text-xs font-semibold text-on-muted shadow-none focus:ring-0"
