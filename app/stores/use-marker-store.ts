@@ -25,7 +25,7 @@ function buildVariantColor(baseColor: string) {
 }
 
 export const useMarkerStore = defineStore("markers", () => {
-	const markers = ref<Map<MarkerInterface["id"], MarkerInterface>>(new Map());
+	const markers = ref(new Map<MarkerInterface["id"], MarkerInterface>());
 	const markerSettings = ref({
 		flowerCenterId: null as string | null,
 		strokeWidth: 4,

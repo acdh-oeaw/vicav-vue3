@@ -4,7 +4,7 @@ import InfiniteLoading from "v3-infinite-loading";
 import type { StateHandler } from "v3-infinite-loading/lib/types";
 import type Zod from "zod";
 
-import type { Div } from "@/lib/api-client";
+import type { Div, MixedUtteranceContent } from "@/lib/api-client";
 import { useTeiHeadersStore } from "@/stores/use-tei-headers-store.ts";
 import type { CorpusQuerySchema } from "@/types/global.ts";
 
@@ -15,6 +15,7 @@ const queryString = ref(props.params.queryString);
 const hits = ref<Array<Div & { label?: string }>>([]);
 const displayHits = ref<Array<Div & { label?: string }>>([]);
 const showHelp = ref<boolean>(false);
+const isSearching = ref(false);
 
 const inlineAnnotations = ref<false | true | "indeterminate">(true);
 const inlineTranslations = ref<false | true | "indeterminate">(true);
@@ -23,28 +24,37 @@ const currentPage = ref(0);
 const scrollComplete = ref<boolean>(false);
 
 async function searchCorpus() {
-	if (words.value.length > 0) queryString.value = `[word="${words.value.join("|")}"]`;
+	isSearching.value = true;
+	currentPage.value = 0;
+	hits.value = [];
+	displayHits.value = [];
+	try {
+		if (words.value.length > 0) queryString.value = `[word="${words.value.join("|")}"]`;
 
-	const result = await api.vicav.searchCorpus(
-		{
-			query: queryString.value,
-			render: "json",
-		},
-		{ headers: { Accept: "application/json" } },
-	);
+		const result = await api.vicav.searchCorpus(
+			{
+				query: queryString.value.toString(),
+				render: "json",
+			},
+			{ headers: { Accept: "application/json" } },
+		);
 
-	if (result.error) {
-		console.error(result.error);
-		return;
-	}
-	if (!Array.isArray(result.data.hits) && Array.isArray(result.data.hits?.divs)) {
-		hits.value = result.data.hits.divs;
-		hits.value?.forEach((hit) => {
-			const teiHeader = simpleItems.find((header) => header.id === hit["@docRef"]);
-			hit.label = teiHeader?.label;
-		});
-		displayHits.value = hits.value.slice(currentPage.value * 10, (currentPage.value + 1) * 10);
-		scrollComplete.value = false;
+		if (result.error) {
+			console.error(result.error);
+			return;
+		}
+		if (result.data.hits !== undefined && !Array.isArray(result.data.hits)) {
+			if (Array.isArray(result.data.hits.divs)) hits.value = result.data.hits.divs;
+			else if (result.data.hits.div) hits.value.push(result.data.hits.div);
+			hits.value?.forEach((hit) => {
+				const teiHeader = simpleItems.find((header) => header.id === hit["@docRef"]);
+				hit.label = teiHeader?.label;
+			});
+			displayHits.value = hits.value.slice(currentPage.value * 10, (currentPage.value + 1) * 10);
+			scrollComplete.value = false;
+		}
+	} finally {
+		isSearching.value = false;
 	}
 }
 
@@ -83,6 +93,24 @@ const wordOptions = computed(() => {
 });
 
 const words: Ref<Array<string>> = ref([]);
+
+function splitUtterancesAroundHit(utterances: MixedUtteranceContent, hitId?: string) {
+	const matchIndex = utterances.findIndex((utterance) => utterance.w?.["@id"] === hitId);
+
+	if (matchIndex === -1) {
+		return {
+			before: utterances,
+			match: undefined,
+			after: [],
+		};
+	}
+
+	return {
+		before: utterances.slice(0, matchIndex),
+		match: utterances[matchIndex],
+		after: utterances.slice(matchIndex + 1),
+	};
+}
 </script>
 
 <template>
@@ -148,7 +176,7 @@ const words: Ref<Array<string>> = ref([]);
 			/>
 			<button
 				class="inline-block h-10 w-full rounded border-2 border-solid border-primary bg-on-primary text-center align-middle font-bold whitespace-nowrap text-primary hover:bg-primary hover:text-on-primary disabled:border-gray-400 disabled:text-gray-400 hover:disabled:bg-on-primary hover:disabled:text-gray-400"
-				:disabled="queryString === '' && words.length == 0"
+				:disabled="isSearching || (queryString === '' && words.length == 0)"
 				@click.prevent.stop="searchCorpus"
 			>
 				Query
@@ -174,8 +202,11 @@ const words: Ref<Array<string>> = ref([]);
 				<label for="switch-translations">&nbsp;Inline Translations</label>
 			</div>
 		</div>
-		<div>
-			<div v-if="hits && displayHits.length > 0" class="my-2">Query: "{{ queryString }}"</div>
+		<div v-if="isSearching" class="flex justify-center py-4 text-primary">
+			<LoadingIndicator>Loading corpus results...</LoadingIndicator>
+		</div>
+		<div v-if="hits && displayHits.length > 0">
+			<div class="my-2">Query: "{{ queryString }}"</div>
 			<table>
 				<tr v-for="hit in displayHits" :key="hit['@id']">
 					<td class="p-0">
@@ -191,14 +222,40 @@ const words: Ref<Array<string>> = ref([]);
 						</a>
 					</td>
 					<td>
-						<div v-if="hit.u" class="flex max-w-full flex-row px-6 py-3">
-							<CorpusTextJsonUtterance
-								v-for="(uContent, index) in hit.u['$$']"
-								:key="index"
-								:inline-annotation="inlineAnnotations as boolean"
-								:inline-translation="inlineTranslations as boolean"
-								:utterance="uContent"
-							></CorpusTextJsonUtterance>
+						<div v-if="hit.u" class="overflow-x-auto px-6 py-3">
+							<div
+								class="inline-grid min-w-full grid-cols-[minmax(max-content,1fr)_auto_minmax(max-content,1fr)] items-start gap-x-3"
+							>
+								<div class="flex flex-nowrap justify-end justify-self-end">
+									<CorpusTextJsonUtterance
+										v-for="(uContent, index) in splitUtterancesAroundHit(hit.u['$$'], hit.hits?.[0])
+											.before"
+										:key="`before-${index}`"
+										:inline-annotation="inlineAnnotations as boolean"
+										:inline-translation="inlineTranslations as boolean"
+										:utterance="uContent"
+									></CorpusTextJsonUtterance>
+								</div>
+								<div class="min-w-fit justify-self-center">
+									<CorpusTextJsonUtterance
+										v-if="splitUtterancesAroundHit(hit.u['$$'], hit.hits?.[0]).match"
+										:highlight="true"
+										:inline-annotation="inlineAnnotations as boolean"
+										:inline-translation="inlineTranslations as boolean"
+										:utterance="splitUtterancesAroundHit(hit.u['$$'], hit.hits?.[0]).match!"
+									></CorpusTextJsonUtterance>
+								</div>
+								<div class="flex flex-nowrap justify-self-start">
+									<CorpusTextJsonUtterance
+										v-for="(uContent, index) in splitUtterancesAroundHit(hit.u['$$'], hit.hits?.[0])
+											.after"
+										:key="`after-${index}`"
+										:inline-annotation="inlineAnnotations as boolean"
+										:inline-translation="inlineTranslations as boolean"
+										:utterance="uContent"
+									></CorpusTextJsonUtterance>
+								</div>
+							</div>
 						</div>
 						<div
 							v-if="inlineTranslations && hit.Translation_spanGrp"

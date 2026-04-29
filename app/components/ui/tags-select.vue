@@ -60,6 +60,7 @@ const tagsUpdated = function (value: Array<string>) {
 		class="mx-auto w-full"
 		:filter-function="filterFunction"
 		multiple
+		@pointerdown.stop
 	>
 		<ComboboxAnchor class="w-full">
 			<TagsInputRoot
@@ -110,6 +111,7 @@ const tagsUpdated = function (value: Array<string>) {
 		</ComboboxAnchor>
 		<ComboboxContent
 			class="z-10 mt-2 w-full overflow-hidden rounded bg-white shadow-[0px_10px_38px_-10px_rgba(22,_23,_24,_0.35),_0px_10px_20px_-15px_rgba(22,_23,_24,_0.2)] will-change-[opacity,transform]"
+			@pointerdown.stop
 		>
 			<ComboboxViewport class="p-[5px]">
 				<ComboboxEmpty class="py-2 text-center text-xs font-medium text-gray-400" />

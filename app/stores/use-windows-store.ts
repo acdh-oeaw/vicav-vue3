@@ -14,6 +14,7 @@ import {
 	type WindowItemTargetType,
 } from "@/types/global.ts";
 import * as arrange from "@/utils/window-arrangement";
+import { enableWindowBodyKeyboardFocus } from "@/utils/window-body-focus.ts";
 
 import { useToastsStore } from "./use-toasts-store.ts";
 
@@ -45,7 +46,7 @@ const WindowState = z.intersection(
 export type WindowState = z.infer<typeof WindowState>;
 
 export const useWindowsStore = defineStore("windows", () => {
-	const registry = ref<WindowRegistry>(new Map());
+	const registry = ref(new Map<WindowItem["id"], WindowItem>());
 	const arrangement = ref<WindowArrangement>("smart-tile");
 
 	const router = useRouter();
@@ -177,6 +178,7 @@ export const useWindowsStore = defineStore("windows", () => {
 			},
 			root: rootElement,
 		});
+		enableWindowBodyKeyboardFocus(winbox.body);
 
 		const teiSourceParse = TeiSource.safeParse(params);
 		if (teiSourceParse.success) {

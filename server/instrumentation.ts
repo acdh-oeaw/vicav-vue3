@@ -75,8 +75,8 @@ export class PrettyConsoleSpanExporter implements SpanExporter {
 	 */
 	private _sendSpans(spans: Array<ReadableSpan>, done?: (result: ExportResult) => void): void {
 		for (const span of spans) {
-			console.info(`${span.resource.attributes[ATTR_SERVICE_NAME]?.toString() ?? "unknown service"} \
-v${span.resource.attributes[ATTR_SERVICE_VERSION]?.toString() ?? "unknown version"}:\
+			console.info(`${span.resource.attributes[ATTR_SERVICE_NAME]?.toString() ?? "unknown service"}\
+ ${span.resource.attributes[ATTR_SERVICE_VERSION]?.toString() ?? "unknown version"}:\
  ${span.attributes[ATTR_HTTP_REQUEST_METHOD]?.toString() ?? ""}\
  ${span.attributes[ATTR_URL_SCHEME]?.toString() ?? ""}:/\
 /${span.attributes[ATTR_SERVER_ADDRESS]?.toString() ?? ""}\
