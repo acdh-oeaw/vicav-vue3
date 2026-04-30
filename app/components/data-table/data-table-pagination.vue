@@ -11,11 +11,13 @@ interface DataTablePaginationProps {
 	table: Table<never>;
 }
 
-defineProps<DataTablePaginationProps>();
+const props = defineProps<DataTablePaginationProps>();
+
+const hasPagination = computed(() => props.table.options.getPaginationRowModel != null);
 </script>
 
 <template>
-	<div class="flex items-center justify-between px-2">
+	<div v-if="hasPagination" class="flex items-center justify-between px-2">
 		<div class="flex items-center space-x-6 lg:space-x-8">
 			<div class="flex items-center space-x-2">
 				<p id="pagesizeSelect" class="text-sm font-medium">Pagesize:</p>

@@ -1,14 +1,24 @@
 <script setup lang="ts">
-import type { Column } from "@tanstack/vue-table";
 import { Filter } from "lucide-vue-next";
 
 import { cloneFilterValueMap } from "@/utils/filter-value-map";
 
+interface FacetedFilterColumn {
+	columnDef: {
+		header?: unknown;
+	};
+	getFacetedUniqueValues: () => Map<unknown, number>;
+	getFilterValue: () => unknown;
+	setFilterValue: (value: unknown) => void;
+}
+
 const props = defineProps<{
-	column: Column<never, unknown>;
+	column: FacetedFilterColumn;
 }>();
 const facets = computed(() =>
-	[...props.column.getFacetedUniqueValues()]?.sort((a, b) => b[1] - a[1]),
+	[...props.column.getFacetedUniqueValues()]
+		.map(([value, count]) => [String(value), count] as const)
+		.sort((a, b) => b[1] - a[1]),
 );
 const selectedValues = computed(() => cloneFilterValueMap(props.column?.getFilterValue()));
 </script>
