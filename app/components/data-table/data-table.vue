@@ -2,37 +2,62 @@
 import {
 	type ColumnDef,
 	type ColumnFiltersState,
+	type ExpandedState,
 	type FilterFn,
 	FlexRender,
 	getCoreRowModel,
+	getExpandedRowModel,
 	getFacetedRowModel,
 	getFilteredRowModel,
+	getGroupedRowModel,
 	getPaginationRowModel,
+	getSortedRowModel,
+	type GroupingState,
+	type PaginationState,
+	type SortingState,
 	useVueTable,
 	type VisibilityState,
 } from "@tanstack/vue-table";
+import { ChevronDown, ChevronRight, ChevronsUpDown } from "lucide-vue-next";
 
 import customFacetedUniqueValues from "@/utils/customFacetedUniqueValues.ts";
 
 const emit = defineEmits(["table-ready", "columnFiltersChange", "globalFilterChange", "row-click"]);
+
+interface RowWithSubRows {
+	subRows: Array<RowWithSubRows>;
+}
 
 interface Props {
 	items: Array<never>;
 	columns: Array<ColumnDef<never>>;
 	minHeaderDepth?: number;
 	enableFilterOnColumns?: boolean;
+	enableGrouping?: boolean;
+	enablePagination?: boolean;
+	enableSorting?: boolean;
+	initialExpanded?: ExpandedState;
+	initialGrouping?: GroupingState;
+	initialPagination?: PaginationState;
 	initialColumnVisibility?: Record<string, boolean>;
-	globalFilterFn?: FilterFn<never>;
+	initialSorting?: SortingState;
+	globalFilterFn?: unknown;
 	// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 	visibilityChangeFn?: Function;
 	// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 	columnFilterChangeFn?: Function;
 }
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+	enablePagination: true,
+});
 const { items, columns, initialColumnVisibility } = toRefs(props);
 const columnFilters = ref<ColumnFiltersState>([]);
+const expanded = ref<ExpandedState>(props.initialExpanded ?? {});
 const globalFilter = ref("");
+const grouping = ref<GroupingState>(props.initialGrouping ?? []);
+const pagination = ref<PaginationState>(props.initialPagination ?? { pageIndex: 0, pageSize: 10 });
+const sorting = ref<SortingState>(props.initialSorting ?? []);
 const columnVisibility = ref<VisibilityState>({
 	label: true,
 	person: false,
@@ -54,14 +79,30 @@ const table = useVueTable({
 	},
 	initialState: {
 		columnVisibility: columnVisibility.value,
+		expanded: expanded.value,
 		globalFilter: globalFilter.value,
+		grouping: grouping.value,
+		pagination: pagination.value,
+		sorting: sorting.value,
 	},
 	state: {
 		get columnFilters() {
 			return columnFilters.value;
 		},
+		get expanded() {
+			return expanded.value;
+		},
 		get globalFilter() {
 			return globalFilter.value;
+		},
+		get grouping() {
+			return grouping.value;
+		},
+		get pagination() {
+			return pagination.value;
+		},
+		get sorting() {
+			return sorting.value;
 		},
 		get columnVisibility() {
 			return columnVisibility.value;
@@ -75,10 +116,26 @@ const table = useVueTable({
 			props.columnFilterChangeFn(columnFilters.value);
 		}
 	},
+	onExpandedChange: (updaterOrValue) => {
+		expanded.value =
+			typeof updaterOrValue === "function" ? updaterOrValue(expanded.value) : updaterOrValue;
+	},
 	onGlobalFilterChange: (updaterOrValue) => {
 		globalFilter.value =
 			typeof updaterOrValue === "function" ? updaterOrValue(globalFilter.value) : updaterOrValue;
 		emit("globalFilterChange", globalFilter.value);
+	},
+	onGroupingChange: (updaterOrValue) => {
+		grouping.value =
+			typeof updaterOrValue === "function" ? updaterOrValue(grouping.value) : updaterOrValue;
+	},
+	onPaginationChange: (updaterOrValue) => {
+		pagination.value =
+			typeof updaterOrValue === "function" ? updaterOrValue(pagination.value) : updaterOrValue;
+	},
+	onSortingChange: (updaterOrValue) => {
+		sorting.value =
+			typeof updaterOrValue === "function" ? updaterOrValue(sorting.value) : updaterOrValue;
 	},
 	onColumnVisibilityChange: (updaterOrValue) => {
 		columnVisibility.value =
@@ -94,17 +151,39 @@ const table = useVueTable({
 		}
 	},
 	getCoreRowModel: getCoreRowModel(),
-	getPaginationRowModel: getPaginationRowModel(),
+	getExpandedRowModel: props.enableGrouping ? getExpandedRowModel() : undefined,
 	getFilteredRowModel: getFilteredRowModel(),
+	getGroupedRowModel: props.enableGrouping ? getGroupedRowModel() : undefined,
+	getPaginationRowModel: props.enablePagination === false ? undefined : getPaginationRowModel(),
+	getSortedRowModel: props.enableSorting ? getSortedRowModel() : undefined,
 	getFacetedRowModel: getFacetedRowModel(),
 	getFacetedUniqueValues: customFacetedUniqueValues,
-	globalFilterFn: props.globalFilterFn,
+	globalFilterFn: props.globalFilterFn as FilterFn<never> | undefined,
+	enableGrouping: props.enableGrouping ?? false,
+	enableSorting: props.enableSorting ?? false,
 	enableMultiRowSelection: false,
 });
 
 onMounted(() => {
 	emit("table-ready", table);
 });
+
+function formatGroupValue(columnId: string | undefined, value: unknown): string {
+	if (typeof value === "string" && value.length > 0) return value.replace(/^zzz_/, "");
+	if (typeof value === "number") return value.toString();
+
+	if (columnId === "country") return "Unspecified country";
+	if (columnId === "region") return "Unspecified region";
+	if (columnId === "settlement") return "Unspecified place";
+
+	return "Unspecified";
+}
+
+function countLeafRows(row: RowWithSubRows): number {
+	if (row.subRows.length === 0) return 1;
+
+	return row.subRows.reduce((count, subRow) => count + countLeafRows(subRow), 0);
+}
 </script>
 
 <template>
@@ -118,7 +197,21 @@ onMounted(() => {
 				class="hover:bg-primary"
 			>
 				<TableHead v-for="header in headerGroup.headers" :key="header.id">
-					{{ header.column.columnDef.header }}
+					<button
+						v-if="enableSorting && header.column.getCanSort()"
+						class="inline-flex items-center gap-1"
+						type="button"
+						@click="header.column.getToggleSortingHandler()?.($event)"
+					>
+						<span>{{ header.column.columnDef.header }}</span>
+						<ChevronDown v-if="header.column.getIsSorted() === 'desc'" class="size-4" />
+						<ChevronRight
+							v-else-if="header.column.getIsSorted() === 'asc'"
+							class="size-4 -rotate-90"
+						/>
+						<ChevronsUpDown v-else class="size-4 opacity-70" />
+					</button>
+					<template v-else>{{ header.column.columnDef.header }}</template>
 					<DataTableFacetedFilter
 						v-if="enableFilterOnColumns && header.column.getCanFilter()"
 						:column="header.column"
@@ -132,11 +225,30 @@ onMounted(() => {
 					v-for="row in table.getRowModel().rows"
 					:key="row.id"
 					:class="{ 'bg-secondary': row.getIsSelected() }"
-					@click="emit('row-click', row)"
+					@click="row.getIsGrouped() ? row.toggleExpanded() : emit('row-click', row)"
 				>
-					<TableCell v-for="cell in row.getVisibleCells()" :key="cell.id">
-						<FlexRender :props="cell.getContext()" :render="cell.column.columnDef.cell" />
-					</TableCell>
+					<template v-if="enableGrouping && row.getIsGrouped()">
+						<TableCell :col-span="row.getVisibleCells().length">
+							<button
+								class="inline-flex items-center gap-2 font-semibold"
+								:style="{ paddingLeft: `${row.depth * 1.25}rem` }"
+								type="button"
+								@click.stop="row.toggleExpanded()"
+							>
+								<ChevronDown v-if="row.getIsExpanded()" class="size-4" />
+								<ChevronRight v-else class="size-4" />
+								<span>{{
+									formatGroupValue(row.groupingColumnId, row.getValue(row.groupingColumnId!))
+								}}</span>
+								<span class="text-sm font-normal">({{ countLeafRows(row) }})</span>
+							</button>
+						</TableCell>
+					</template>
+					<template v-else>
+						<TableCell v-for="cell in row.getVisibleCells()" :key="cell.id">
+							<FlexRender :props="cell.getContext()" :render="cell.column.columnDef.cell" />
+						</TableCell>
+					</template>
 				</TableRow>
 			</template>
 			<template v-else>
