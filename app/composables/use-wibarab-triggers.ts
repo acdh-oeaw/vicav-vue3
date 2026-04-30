@@ -8,7 +8,7 @@ import { type TaxonomyTreeEntry, useGeojsonStore } from "@/stores/use-geojson-st
 
 const GeojsonStore = useGeojsonStore();
 const { tables } = storeToRefs(GeojsonStore);
-const url = "https://raw.githubusercontent.com/wibarab/wibarab-data/main/wibarab_varieties.geojson";
+const url = GeojsonStore.wibarabGeojsonUrl;
 
 const {
 	getTaxonomyTree,

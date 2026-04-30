@@ -1,7 +1,8 @@
 <script lang="ts" setup>
-import { ExternalLink } from "lucide-vue-next";
+import type { Table } from "@tanstack/vue-table";
+import { ExternalLink, Info } from "lucide-vue-next";
 
-import type { FeatureValueWindowItem } from "@/types/global.ts";
+import { type FeatureValueWindowItem, GeojsonMapSchema, type WindowItem } from "@/types/global.ts";
 import type { simpleTEIMetadata } from "@/types/teiCorpus";
 
 interface Props {
@@ -12,7 +13,7 @@ const props = defineProps<Props>();
 const { params } = toRefs(props);
 
 const tableContent: Array<{ key: string; displayHeader?: string }> = [
-	{ key: "title", displayHeader: "Feature Value" },
+	// { key: "title", displayHeader: "Feature Value" },
 	{ key: "taxonomy" },
 	{ key: "desc" },
 	{ key: "feature" },
@@ -78,6 +79,31 @@ const citation = computed(() => {
 		title: `${feature}: ${value} | ${place}`,
 	} as simpleTEIMetadata;
 });
+
+const { tables } = useGeojsonStore();
+const openOrUpdateWindow = useOpenOrUpdateWindow();
+const { parseSearchString } = useFilterParser();
+const { wibarabGeojsonUrl } = useGeojsonStore();
+function updateMap(entry: (typeof props.params.values)[0]) {
+	const table = tables.get(wibarabGeojsonUrl);
+	if (!table) return;
+	const searchString = `${entry.featureId}:"${entry.title}"`;
+	parseSearchString(searchString, table as Table<unknown>);
+	table.setGlobalFilter(searchString);
+	openOrUpdateWindow(
+		{
+			targetType: "GeojsonMap",
+			params: {
+				url: wibarabGeojsonUrl,
+				markerType: "petal",
+			},
+		} as unknown as WindowItem,
+		"Variety Data - Map View",
+		GeojsonMapSchema.shape.params,
+		"url",
+		true,
+	);
+}
 </script>
 
 <template>
@@ -87,6 +113,31 @@ const citation = computed(() => {
 		</div>
 		<Table>
 			<TableBody>
+				<TableRow>
+					<TableCell class="capitalize">Feature Value</TableCell>
+					<TableCell
+						v-for="value in params.values"
+						:key="value.title"
+						class="flex items-center justify-between gap-1"
+						gap-1
+					>
+						<span>{{ value.title }}</span>
+						<TooltipProvider>
+							<Tooltip>
+								<TooltipTrigger>
+									<Button class="h-fit" variant="ghost" @click="updateMap(value)">
+										<span>Show on map</span>
+										<Info class="ml-1 size-4"></Info>
+									</Button>
+								</TooltipTrigger>
+								<TooltipContent class="bg-white"
+									>Overwrite the current query with
+									<span class="italic">{{ value.feature }}: {{ value.title }}</span></TooltipContent
+								>
+							</Tooltip>
+						</TooltipProvider>
+					</TableCell>
+				</TableRow>
 				<TableRow v-for="entry in tableData" :key="entry.key">
 					<TableCell class="capitalize">{{ entry.displayHeader ?? entry.key }}</TableCell>
 					<TableCell v-for="value in entry.values" :key="`${entry.key}-${value}`">

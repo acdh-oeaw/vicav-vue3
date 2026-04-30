@@ -235,13 +235,12 @@ export const useWindowsStore = defineStore("windows", () => {
 				index: 0,
 				class: "wb-map",
 				click: function () {
-					const url =
-						"https://raw.githubusercontent.com/wibarab/wibarab-data/main/wibarab_varieties.geojson";
+					const { wibarabGeojsonUrl } = useGeojsonStore();
 					openOrUpdateWindow(
 						{
 							targetType: "GeojsonMap",
 							params: {
-								url,
+								wibarabGeojsonUrl,
 								markerType: "petal",
 							},
 						} as unknown as WindowItem,

@@ -23,7 +23,7 @@ const emit = defineEmits(["updateQueryParam"]);
 
 const GeojsonStore = useGeojsonStore();
 const openOrUpdateWindow = useOpenOrUpdateWindow();
-const url = "https://raw.githubusercontent.com/wibarab/wibarab-data/main/wibarab_varieties.geojson";
+const url = GeojsonStore.wibarabGeojsonUrl;
 
 const { isPending } = GeojsonStore.fetchGeojson(url);
 const { fetchedData, tables, showAllDetails, featureValueTaxonomy } = storeToRefs(GeojsonStore);

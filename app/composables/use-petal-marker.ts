@@ -10,7 +10,7 @@ import { useAdvancedQueries } from "./use-advanced-queries.ts";
 
 const GeojsonStore = useGeojsonStore();
 const { tables } = storeToRefs(GeojsonStore);
-const url = "https://raw.githubusercontent.com/wibarab/wibarab-data/main/wibarab_varieties.geojson";
+const url = GeojsonStore.wibarabGeojsonUrl;
 const { buildFeatureValueId, defaultMarkers } = useMarkerStore();
 const { markers, markerSettings } = storeToRefs(useMarkerStore());
 interface PetalEntry {
