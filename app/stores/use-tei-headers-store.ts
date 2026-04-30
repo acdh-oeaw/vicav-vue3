@@ -14,6 +14,7 @@ import {
 	type TeiHeader,
 	Unit,
 } from "@/lib/api-client";
+import type { DataTypesEnum } from "@/types/global.ts";
 import { type simpleTEIMetadata, SimpleTEIMetadataSchema } from "@/types/teiCorpus.ts";
 
 const TeiCorpusSchema = z.fromJSONSchema(useOpenapiSchema("TeiCorpus")) as z.ZodType<TeiCorpus>;
@@ -37,6 +38,140 @@ type ResponsibilityPeople = Partial<
 	Record<Responsibility, Array<{ given: string; family: string }>>
 >;
 type PublicationMetadata = simpleTEIMetadata["publication"];
+export type GroupedSimpleItemsByDataType = Partial<Record<DataTypesEnum, Array<simpleTEIMetadata>>>;
+export type GroupedSimpleItemsByPlace = Record<string, GroupedSimpleItemsByDataType>;
+export type GroupedSimpleItemsByRegion = Record<string, GroupedSimpleItemsByPlace>;
+export type GroupedSimpleItemsByCountry = Record<string, GroupedSimpleItemsByRegion>;
+export type SimpleMetadataAccessorKey =
+	| "id"
+	| "label"
+	| "title"
+	| "dataType"
+	| "category"
+	| "recordingDate"
+	| "resp"
+	| "duration"
+	| "audioAvailability"
+	| "@hasTEIw"
+	| "country"
+	| "region"
+	| "settlement";
+
+export interface SimpleMetadataAccessor {
+	key: SimpleMetadataAccessorKey;
+	label: string;
+	getValue: (item: simpleTEIMetadata) => string;
+	filterable?: boolean;
+	groupable?: boolean;
+	sortable?: boolean;
+}
+
+export interface GroupSimpleItemsOptions {
+	dataTypes: Array<DataTypesEnum>;
+	filterListBy?: { key: SimpleMetadataAccessorKey; value: string };
+	sort?: (a: simpleTEIMetadata, b: simpleTEIMetadata) => number;
+}
+
+const labelCollator = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });
+export const simpleMetadataAccessors = {
+	id: {
+		key: "id",
+		label: "ID",
+		getValue: (item) => item.id,
+		filterable: false,
+		sortable: true,
+	},
+	label: {
+		key: "label",
+		label: "Title",
+		getValue: (item) => item.label,
+		filterable: true,
+		sortable: true,
+	},
+	title: {
+		key: "title",
+		label: "Title",
+		getValue: (item) => item.title,
+		filterable: true,
+		sortable: true,
+	},
+	dataType: {
+		key: "dataType",
+		label: "Data type",
+		getValue: (item) => item.dataType,
+		filterable: true,
+		sortable: true,
+	},
+	category: {
+		key: "category",
+		label: "Category",
+		getValue: (item) => item.category,
+		filterable: true,
+		sortable: true,
+	},
+	recordingDate: {
+		key: "recordingDate",
+		label: "Recording date",
+		getValue: (item) => {
+			if (typeof item.recordingDate === "string") return item.recordingDate;
+			return item.recordingDate?.["@when"] ?? item.recordingDate?.$ ?? "";
+		},
+		filterable: false,
+		sortable: true,
+	},
+	resp: {
+		key: "resp",
+		label: "Interviewer",
+		getValue: (item) => item.resp,
+		filterable: true,
+		sortable: true,
+	},
+	duration: {
+		key: "duration",
+		label: "Duration",
+		getValue: (item) => item.duration ?? "",
+		filterable: false,
+		sortable: true,
+	},
+	audioAvailability: {
+		key: "audioAvailability",
+		label: "Audio",
+		getValue: (item) => item.audioAvailability,
+		filterable: true,
+		sortable: true,
+	},
+	"@hasTEIw": {
+		key: "@hasTEIw",
+		label: "TEI",
+		getValue: (item) => item["@hasTEIw"],
+		filterable: true,
+		sortable: true,
+	},
+	country: {
+		key: "country",
+		label: "Country",
+		getValue: (item) => item.place.country ?? "",
+		filterable: true,
+		groupable: true,
+		sortable: true,
+	},
+	region: {
+		key: "region",
+		label: "Region",
+		getValue: (item) => item.place.region ?? "",
+		filterable: true,
+		groupable: true,
+		sortable: true,
+	},
+	settlement: {
+		key: "settlement",
+		label: "Place",
+		getValue: (item) => item.place.settlement ?? "",
+		filterable: true,
+		groupable: true,
+		sortable: true,
+	},
+} as const satisfies Record<SimpleMetadataAccessorKey, SimpleMetadataAccessor>;
 
 function hasIDAttribute(item: unknown): item is ObjectWithID {
 	return Object.prototype.hasOwnProperty.call(item, "@id");
@@ -526,6 +661,83 @@ function buildSimpleItems(items: Array<TeiCorpus>): Array<simpleTEIMetadata> {
 	});
 }
 
+export function getSimpleMetadataValue(
+	item: simpleTEIMetadata,
+	key: SimpleMetadataAccessorKey,
+): string {
+	return simpleMetadataAccessors[key].getValue(item);
+}
+
+function compareSimpleMetadataByLabel(a: simpleTEIMetadata, b: simpleTEIMetadata): number {
+	return labelCollator.compare(a.label, b.label);
+}
+
+function sortRecordByKeys<T>(record: Record<string, T>): Record<string, T> {
+	return Object.keys(record)
+		.sort((a, b) => labelCollator.compare(a, b))
+		.reduce<Record<string, T>>((sortedRecord, key) => {
+			sortedRecord[key] = record[key]!;
+			return sortedRecord;
+		}, {});
+}
+
+export function groupSimpleItems(
+	items: Array<simpleTEIMetadata>,
+	options: GroupSimpleItemsOptions,
+): GroupedSimpleItemsByCountry {
+	const sort = options.sort ?? compareSimpleMetadataByLabel;
+	const collectedItems = items
+		.filter((item) => {
+			const isAllowedDataType = options.dataTypes.includes(item.dataType);
+			const matchesFilter =
+				options.filterListBy === undefined ||
+				getSimpleMetadataValue(item, options.filterListBy.key) === options.filterListBy.value;
+
+			return isAllowedDataType && matchesFilter;
+		})
+		.toSorted(sort);
+	const groupedItems = collectedItems.reduce<GroupedSimpleItemsByCountry>((grouped, item) => {
+		const country = getSimpleMetadataValue(item, "country");
+		const region = getSimpleMetadataValue(item, "region");
+		const place = getSimpleMetadataValue(item, "settlement");
+		const dataType = item.dataType;
+
+		grouped[country] ??= {};
+		grouped[country][region] ??= {};
+		grouped[country][region][place] ??= {};
+		grouped[country][region][place][dataType] ??= [];
+		grouped[country][region][place][dataType].push(item);
+
+		return grouped;
+	}, {});
+
+	return sortRecordByKeys(
+		Object.fromEntries(
+			Object.entries(groupedItems).map(([country, itemsByRegion]) => {
+				return [
+					country,
+					sortRecordByKeys(
+						Object.fromEntries(
+							Object.entries(itemsByRegion).map(([region, itemsByPlace]) => {
+								return [
+									region,
+									sortRecordByKeys(
+										Object.fromEntries(
+											Object.entries(itemsByPlace).map(([place, itemsByDataType]) => {
+												return [place, sortRecordByKeys(itemsByDataType)];
+											}),
+										),
+									),
+								];
+							}),
+						),
+					),
+				];
+			}),
+		),
+	) as GroupedSimpleItemsByCountry;
+}
+
 export const useTeiHeadersStore = defineStore("use-tei-headers-store", () => {
 	const { data: projectData, suspense } = useProjectInfo();
 	const rawItems = ref<Array<TeiCorpus>>([]);
@@ -557,10 +769,15 @@ export const useTeiHeadersStore = defineStore("use-tei-headers-store", () => {
 		await initializationPromise;
 	};
 
+	function getGroupedSimpleItems(options: GroupSimpleItemsOptions): GroupedSimpleItemsByCountry {
+		return groupSimpleItems(simpleItems.value, options);
+	}
+
 	return {
 		initialize,
 		rawItems,
 		simpleItems,
 		persons,
+		getGroupedSimpleItems,
 	};
 });
