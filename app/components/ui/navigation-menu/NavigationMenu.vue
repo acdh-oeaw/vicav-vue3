@@ -4,6 +4,7 @@ import {
 	NavigationMenuRoot,
 	type NavigationMenuRootEmits,
 	type NavigationMenuRootProps,
+	type NavigationMenuViewportProps,
 	useForwardPropsEmits,
 } from "reka-ui";
 import { twMerge } from "tailwind-merge";
@@ -16,10 +17,12 @@ const props = withDefaults(
 		NavigationMenuRootProps & {
 			class?: HTMLAttributes["class"];
 			viewport?: boolean;
+			align?: NavigationMenuViewportProps["align"];
 		}
 	>(),
 	{
 		viewport: true,
+		align: "start",
 	},
 );
 const emits = defineEmits<NavigationMenuRootEmits>();
@@ -42,6 +45,6 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits);
 		:data-viewport="viewport"
 	>
 		<slot v-bind="slotProps" />
-		<NavigationMenuViewport v-if="viewport" />
+		<NavigationMenuViewport v-if="viewport" :align="props.align" />
 	</NavigationMenuRoot>
 </template>
