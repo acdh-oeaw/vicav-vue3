@@ -35,7 +35,7 @@ onScopeDispose(() => {
 				>
 					{{ menu.title }}
 				</NavigationMenuTrigger>
-				<NavigationMenuContent class="min-w-32 bg-background text-on-background">
+				<NavigationMenuContent class="min-w-48 bg-background text-on-background">
 					<template v-for="(item, index) of menu.item">
 						<NavigationMenuLink
 							v-if="item.type === 'item'"
