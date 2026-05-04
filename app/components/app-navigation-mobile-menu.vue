@@ -14,11 +14,14 @@ const emit = defineEmits<{
 const { menus } = toRefs(props);
 
 const isSidepanelOpen = ref(false);
-const currentMenu = ref("");
 
 function close() {
 	isSidepanelOpen.value = false;
-	currentMenu.value = "";
+}
+
+function selectItem(item: ItemType) {
+	emit("select-menu-item", item);
+	close();
 }
 
 onMounted(() => {
@@ -32,55 +35,37 @@ onScopeDispose(() => {
 
 <template>
 	<Sheet v-model:open="isSidepanelOpen">
-		<NavigationMenu
-			v-model="currentMenu"
-			class="w-full max-w-full justify-between border-none"
-			orientation="vertical"
-		>
+		<div class="flex w-full items-center justify-between">
 			<WindowListDropdown :is-mobile="true" />
-
-			<SheetTrigger aria-label="Toggle menu" class="cursor-default">
+			<SheetTrigger aria-label="Toggle navigation" class="cursor-default">
 				<MenuIcon class="mx-3 my-1.5 size-5" />
 			</SheetTrigger>
-			<SheetContent class="overflow-y-auto">
-				<SheetHeader>
-					<SheetTitle class="sr-only">Navigation menu</SheetTitle>
-				</SheetHeader>
-				<NavigationMenuList class="relative flex-col">
-					<NavigationMenuItem v-for="menu of menus" :key="menu.id" class="w-full">
-						<NavigationMenuTrigger
-							class="w-full bg-transparent hover:bg-accent/50 focus:bg-accent/50 data-[state=open]:hover:bg-accent/50 data-[state=open]:focus:bg-accent/50"
-						>
-							<!-- <summary class="flex cursor-pointer list-none items-center justify-between font-medium"> -->
-							{{ menu.title }}
-							<!-- </summary> -->
-						</NavigationMenuTrigger>
-						<NavigationMenuContent class="min-w-32 bg-background text-on-background">
-							<template v-for="(item, index) of menu.item">
-								<NavigationMenuLink
+		</div>
+		<SheetContent class="overflow-y-auto">
+			<SheetHeader>
+				<SheetTitle class="sr-only">Navigation menu</SheetTitle>
+				<SheetDescription class="sr-only">Site navigation</SheetDescription>
+			</SheetHeader>
+			<nav aria-label="Main navigation">
+				<Accordion class="w-full" collapsible type="single">
+					<AccordionItem v-for="menu of menus" :key="menu.id" :value="menu.id">
+						<AccordionTrigger>{{ menu.title }}</AccordionTrigger>
+						<AccordionContent>
+							<template v-for="(item, index) of menu.item" :key="item.id ?? `sep-${index}`">
+								<button
 									v-if="item.type === 'item'"
-									:key="item.id"
-									as="div"
-									class="cursor-pointer"
-									@select="
-										() => {
-											emit('select-menu-item', item);
-											isSidepanelOpen = false;
-										}
-									"
+									class="w-full cursor-pointer rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent hover:text-on-accent focus-visible:ring-2 focus-visible:outline-none"
+									type="button"
+									@click="selectItem(item)"
 								>
 									{{ item.title }}
-								</NavigationMenuLink>
-								<NavigationMenuSeparator
-									v-else-if="item.type === 'separator'"
-									:key="`separator-${index}`"
-								/>
+								</button>
+								<div v-else-if="item.type === 'separator'" class="my-1 w-full border-b" />
 							</template>
-						</NavigationMenuContent>
-					</NavigationMenuItem>
-					<NavigationMenuViewport />
-				</NavigationMenuList>
-			</SheetContent>
-		</NavigationMenu>
+						</AccordionContent>
+					</AccordionItem>
+				</Accordion>
+			</nav>
+		</SheetContent>
 	</Sheet>
 </template>
