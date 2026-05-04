@@ -1,13 +1,7 @@
 import { icon } from "leaflet";
 
 export function useGeoMapConfig() {
-	const env = useRuntimeConfig();
 	const { data, ...rest } = useProjectInfo();
-
-	const baseLayer = {
-		url: env.public.mapTileLayerUrl,
-		attribution: env.public.mapTileLayerAttribution,
-	};
 
 	const initialViewState = {
 		center: data.value?.projectConfig?.map?.center,
@@ -25,7 +19,6 @@ export function useGeoMapConfig() {
 
 	return {
 		data: {
-			baseLayer,
 			initialViewState,
 			nearbyMarkersPopup,
 			options: {
