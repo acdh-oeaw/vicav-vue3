@@ -58,6 +58,7 @@ onScopeDispose(() => {
 				</NavigationMenuContent>
 			</NavigationMenuItem>
 		</NavigationMenuList>
-		<WindowListDropdown :is-mobile="false" />
 	</NavigationMenu>
+
+	<WindowListDropdown :is-mobile="false" />
 </template>

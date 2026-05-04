@@ -14,26 +14,21 @@ const { arrangement: currentArrangement, registry } = storeToRefs(windowsStore);
 </script>
 
 <template>
-	<NavigationMenuList>
-		<NavigationMenuItem>
-			<NavigationMenuTrigger
-				aria-label="Windows"
-				class="bg-transparent hover:bg-accent/50 focus:bg-accent/50 data-[state=open]:hover:bg-accent/50 data-[state=open]:focus:bg-accent/50"
-			>
+	<Menubar class="border-none">
+		<MenubarMenu>
+			<MenubarTrigger aria-label="Windows" class="ml-auto">
 				<AppWindowIcon class="size-6" />
-			</NavigationMenuTrigger>
-			<NavigationMenuContent align="end" class="min-w-52 bg-background text-on-background">
+			</MenubarTrigger>
+			<MenubarContent align="end">
 				<template v-if="registry.size === 0">
-					<NavigationMenuLabel>No windows open</NavigationMenuLabel>
+					<MenubarLabel>No windows open</MenubarLabel>
 				</template>
 				<template v-else>
-					<NavigationMenuLabel>Windows ({{ registry.size }})</NavigationMenuLabel>
-					<NavigationMenuSeparator />
-					<NavigationMenuLink
+					<MenubarLabel>Windows ({{ registry.size }})</MenubarLabel>
+					<MenubarSeparator />
+					<MenubarItem
 						v-for="[id, item] of registry"
 						:key="id"
-						as="div"
-						class="text-left"
 						@select="
 							() => {
 								// @ts-expect-error Property missing in upstream types.
@@ -52,16 +47,16 @@ const { arrangement: currentArrangement, registry } = storeToRefs(windowsStore);
 						"
 					>
 						{{ item.winbox.title }}
-					</NavigationMenuLink>
+					</MenubarItem>
 				</template>
 				<template v-if="!props.isMobile">
-					<NavigationMenuLabel class="mt-4">Arrangement</NavigationMenuLabel>
-					<NavigationMenuSeparator />
-					<NavigationMenuLink
+					<!-- <MenubarSeparator /> -->
+					<MenubarLabel class="mt-4">Arrangement</MenubarLabel>
+					<MenubarSeparator />
+					<MenubarItem
 						v-for="(arrangement, id) of arrangements"
 						:key="id"
-						as="div"
-						class="flex-row justify-between"
+						class="justify-between"
 						@select="
 							() => {
 								setWindowArrangement(id);
@@ -70,9 +65,9 @@ const { arrangement: currentArrangement, registry } = storeToRefs(windowsStore);
 					>
 						{{ arrangement.label }}
 						<CheckIcon v-if="id === currentArrangement" class="size-4" />
-					</NavigationMenuLink>
+					</MenubarItem>
 				</template>
-			</NavigationMenuContent>
-		</NavigationMenuItem>
-	</NavigationMenuList>
+			</MenubarContent>
+		</MenubarMenu>
+	</Menubar>
 </template>
