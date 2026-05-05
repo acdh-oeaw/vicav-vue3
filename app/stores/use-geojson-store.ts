@@ -30,7 +30,7 @@ export const useGeojsonStore = defineStore("geojson", () => {
 			}
 		}
 	}
-	function getTaxonomyTree(prefix = "") {
+	function getTaxonomyTree(prefix = "", fallbackValues?: Array<string>) {
 		const filteredResults = [...featureValueTaxonomy.value.entries()].filter(
 			([_key, value]) =>
 				(value?.taxonomy.startsWith(prefix) ?? false) ||
@@ -53,6 +53,13 @@ export const useGeojsonStore = defineStore("geojson", () => {
 				} else {
 					subtree = subtree.get(key)!.children;
 				}
+			});
+		}
+		if (filteredResults.length === 0 && fallbackValues) {
+			tree.set("", {
+				children: new Map(),
+				featureValues: fallbackValues,
+				label: undefined,
 			});
 		}
 		return tree;
