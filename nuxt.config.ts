@@ -82,10 +82,6 @@ export default defineNuxtConfig({
 		public: {
 			apiBaseUrl: "https://vicav-dev.acdh.oeaw.ac.at",
 			appBaseUrl: "http://localhost:3000",
-			mapTileLayerAttribution:
-				"https://api.mapbox.com/styles/v1/acdh/cmj1dhylp005x01r4dw4p9ghx/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoiYWNkaCIsImEiOiJjbWoxOHBsNjEwZjc5M2VyNzBvZ2x2ejlkIn0.itr6_jU4L58IgS2H8aDySA",
-			mapTileLayerUrl:
-				'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery &copy; <a href="http://mapbox.com">Mapbox</a>',
 			matomoBaseUrl: "",
 			matomoId: "",
 			redmineId: "",
