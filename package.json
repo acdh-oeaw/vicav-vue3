@@ -107,6 +107,7 @@
 		"vue-material-design-icons": "^5.3.1",
 		"vue-router": "^5.0.4",
 		"winbox": "^0.2.82",
+		"xlsx": "^0.18.5",
 		"zod": "^4.3.6"
 	},
 	"devDependencies": {

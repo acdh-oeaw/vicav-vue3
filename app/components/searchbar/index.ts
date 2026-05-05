@@ -230,3 +230,158 @@ export function getList(trigger: string | null, triggers: TriggerMap) {
 export function getValue(listValue: string, trigger: string | null, triggers: TriggerMap) {
 	return triggers.get(trigger ?? "")?.find((item) => item.value === listValue);
 }
+
+// ---- Tag-searchbar shared types and pure utilities ----
+
+export const OPERATORS = ["AND", "OR", "AND NOT", "OR NOT"] as const;
+export type Operator = (typeof OPERATORS)[number];
+
+export interface TagItem {
+	id: string;
+	rawValue: string;
+	/** Operator connecting this tag to the one before it (undefined for the first tag). */
+	operator?: Operator;
+	/** If set, this tag is a parenthesized group containing these sub-tags. */
+	children?: Array<TagItem>;
+}
+
+export type RenderToken =
+	| { kind: "operator"; tag: TagItem }
+	| { kind: "open-paren"; tag: TagItem }
+	| { kind: "close-paren"; tag: TagItem }
+	| { kind: "chip"; tag: TagItem };
+
+export function splitQueryIntoTokens(query: string): Array<{ operator?: string; clause: string }> {
+	const result: Array<{ operator?: string; clause: string }> = [];
+	let depth = 0;
+	let inQuote = false;
+	let currentClause = "";
+	let pendingOperator: string | undefined = undefined;
+	let i = 0;
+	const q = query.trim();
+
+	while (i < q.length) {
+		const ch = q[i]!;
+
+		if (ch === '"' && !inQuote) {
+			inQuote = true;
+			currentClause += ch;
+			i++;
+			continue;
+		}
+		if (ch === '"' && inQuote) {
+			inQuote = false;
+			currentClause += ch;
+			i++;
+			continue;
+		}
+		if (inQuote) {
+			currentClause += ch;
+			i++;
+			continue;
+		}
+		if (ch === "(") {
+			depth++;
+			currentClause += ch;
+			i++;
+			continue;
+		}
+		if (ch === ")") {
+			depth--;
+			currentClause += ch;
+			i++;
+			continue;
+		}
+
+		if (depth === 0) {
+			const rest = q.slice(i);
+			const m = /^(AND NOT|OR NOT|AND|OR)\b/i.exec(rest);
+			if (m) {
+				const clause = currentClause.trim();
+				if (clause) result.push({ operator: pendingOperator, clause });
+				pendingOperator = m[1]!.toUpperCase();
+				currentClause = "";
+				i += m[0].length;
+				while (i < q.length && q[i] === " ") i++;
+				continue;
+			}
+		}
+
+		currentClause += ch;
+		i++;
+	}
+
+	const last = currentClause.trim();
+	if (last) result.push({ operator: pendingOperator, clause: last });
+
+	return result;
+}
+
+export function buildRawValue(items: Array<TagItem>): string {
+	return items
+		.map((t, i) => {
+			const prefix = i > 0 && t.operator ? `${t.operator} ` : "";
+			if (t.children) return `${prefix}(${buildRawValue(t.children)})`;
+			return `${prefix}${t.rawValue}`;
+		})
+		.join(" ");
+}
+
+export function tokenToTagItem(clause: string, operator?: Operator): TagItem {
+	const children = parseGroupChildren(clause);
+	return { id: crypto.randomUUID(), rawValue: clause, operator, ...(children ? { children } : {}) };
+}
+
+export function parseGroupChildren(clause: string): Array<TagItem> | null {
+	if (!clause.startsWith("(") || !clause.endsWith(")")) return null;
+	const inner = clause.slice(1, -1).trim();
+	return splitQueryIntoTokens(inner).map((childToken, j) =>
+		tokenToTagItem(
+			childToken.clause,
+			j > 0 ? ((childToken.operator as Operator | undefined) ?? "AND") : undefined,
+		),
+	);
+}
+
+export function parseTagClause(
+	clause: string,
+): { prefix: string; featureKey: string; rawValue: string } | null {
+	let prefix = "";
+	let rest = clause.trim();
+
+	if (rest.toUpperCase().startsWith("NOT ")) {
+		prefix = "NOT ";
+		rest = rest.slice(4).trim();
+	}
+
+	if (rest.startsWith("(")) return null;
+
+	const colonIdx = rest.indexOf(":");
+	if (colonIdx === -1) return null;
+
+	return {
+		prefix,
+		featureKey: rest.slice(0, colonIdx + 1),
+		rawValue: rest.slice(colonIdx + 1),
+	};
+}
+
+export function getFlatTags(tag: TagItem): Array<TagItem> {
+	if (tag.children) return [tag, ...tag.children.flatMap((child) => getFlatTags(child))];
+	return [tag];
+}
+
+export function flatRender(items: Array<TagItem>): Array<RenderToken> {
+	const result: Array<RenderToken> = [];
+	for (const tag of items) {
+		if (tag.operator) result.push({ kind: "operator", tag });
+		if (tag.children?.length) {
+			result.push({ kind: "open-paren", tag });
+			result.push(...flatRender(tag.children));
+			result.push({ kind: "close-paren", tag });
+		} else {
+			result.push({ kind: "chip", tag });
+		}
+	}
+	return result;
+}

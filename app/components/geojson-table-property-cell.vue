@@ -12,9 +12,9 @@ import {
 	VenusAndMars,
 } from "lucide-vue-next";
 import type { DefineComponent } from "vue";
-import ChurchOutlineIcon from "vue-material-design-icons/ChurchOutline.vue";
-import MosqueOutlineIcon from "vue-material-design-icons/MosqueOutline.vue";
-import SynagogueOutlineIcon from "vue-material-design-icons/SynagogueOutline.vue";
+import CrossOutlineIcon from "vue-material-design-icons/CrossOutline.vue";
+import StarCrescentIcon from "vue-material-design-icons/StarCrescent.vue";
+import StarDavidIcon from "vue-material-design-icons/StarDavid.vue";
 
 import type { WindowItem } from "@/types/global.ts";
 
@@ -50,9 +50,9 @@ const iconMap: Record<string, Record<string, LucideIcon | DefineComponent>> = {
 		"#default": UsersRound,
 	},
 	religion: {
-		Jews: SynagogueOutlineIcon,
-		Christians: ChurchOutlineIcon,
-		"#default": MosqueOutlineIcon,
+		Jews: StarDavidIcon,
+		Christians: CrossOutlineIcon,
+		"#default": StarCrescentIcon,
 	},
 	source_representations: {
 		"#default": Languages,
@@ -101,7 +101,7 @@ function getPersonGroupIcon(personGroup: Record<string, string>) {
 	for (const key in personGroup) {
 		if (iconMap[key]) {
 			if (iconMap[key][personGroup[key]!])
-				return { icon: iconMap[key][personGroup[key]!], hideValue: true };
+				return { icon: iconMap[key][personGroup[key]!], hideValue: key !== "religion" };
 			else if (iconMap[key]["#default"])
 				return { icon: iconMap[key]["#default"], hideValue: false };
 		}
@@ -129,7 +129,7 @@ watch(
 
 const { getMarkerSVG } = usePetalMarker();
 const { buildFeatureValueId } = useMarkerStore();
-const { markerSettings } = storeToRefs(useMarkerStore());
+const { markerSettings, markers } = storeToRefs(useMarkerStore());
 const { AND_OPERATOR } = useAdvancedQueries();
 
 const flattenedHighlightedValues = computed(() => {
@@ -137,18 +137,23 @@ const flattenedHighlightedValues = computed(() => {
 });
 
 function getPetalEntry(featureValue: string) {
-	if (props.highlightedValues?.includes(featureValue))
+	const visibleEntry = (entry: { id: string; strokeOnly?: boolean }) => {
+		return markers.value.get(entry.id)?.hidden ? null : entry;
+	};
+	const entry = visibleEntry({ id: buildFeatureValueId(props.column.id, featureValue) });
+
+	if (props.highlightedValues?.includes(featureValue) && entry)
 		// value is directly selected
-		return { id: buildFeatureValueId(props.column.id, featureValue) };
+		return entry;
 	else {
 		// check if value is selected in combined filter ("{x} AND {y}")
 		const combined = props.highlightedValues?.find(
 			(val) => val.includes(AND_OPERATOR) && val.split(AND_OPERATOR).includes(featureValue),
 		);
-		if (combined) return { id: buildFeatureValueId(props.column.id, combined) };
+		if (combined) return visibleEntry({ id: buildFeatureValueId(props.column.id, combined) });
 	}
 	if (markerSettings.value.showOtherFeatureValues && (props.highlightedValues?.length ?? 0) > 0)
-		return { id: props.column.id, strokeOnly: true };
+		return visibleEntry({ id: props.column.id, strokeOnly: true });
 	else return null;
 }
 
@@ -171,6 +176,7 @@ function onValueClick(val: Array<Record<string, unknown>>, title: string) {
 					title,
 					place: props.fullEntry.name,
 					feature: props.column.columnDef.header,
+					featureId: props.column.columnDef.id,
 					taxonomy: featureValueTaxonomy.value.get(`${props.column.columnDef.id}.${title}`)?.label,
 				})),
 				showCitation: false,
@@ -196,16 +202,17 @@ function onValueClick(val: Array<Record<string, unknown>>, title: string) {
 					'flex flex-wrap gap-x-2': infoOpen[key],
 				}"
 			>
+				<!-- eslint-disable vue/no-v-html -->
 				<svg
 					v-if="getPetalEntry(key) !== null"
 					class="size-3.5 shrink-0"
 					v-html="getMarkerSVG(getPetalEntry(key)!).outerHTML"
 				></svg>
 				<Button
-					class="h-auto flex-shrink-0 truncate p-0 !text-black"
+					class="h-auto shrink-0 truncate p-0 text-black!"
 					:class="{
-						'font-medium': flattenedHighlightedValues?.includes(key),
-						'font-light': !flattenedHighlightedValues?.includes(key),
+						'font-medium': flattenedHighlightedValues?.includes(key) && getPetalEntry(key),
+						'font-normal': !flattenedHighlightedValues?.includes(key) || !getPetalEntry(key),
 					}"
 					variant="link"
 					@click="onValueClick(val, key)"

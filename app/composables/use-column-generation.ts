@@ -163,8 +163,8 @@ function createColumnDefs(
 	});
 	const groupedColumns = topLevelColumns
 		// .filter((col) => col.columns.some((col) => (col.columns?.length ?? -1) > 0))
-		.map((col) => columnHelper.group(col))
-		.sort((a, b) => String(a.header).localeCompare(String(b.header)));
+		.map((col) => columnHelper.group(col));
+	// .sort((a, b) => String(a.header).localeCompare(String(b.header)));
 	return groupedColumns;
 }
 

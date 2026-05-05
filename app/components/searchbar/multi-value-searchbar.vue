@@ -3,11 +3,9 @@ import { syntaxHighlighting } from "@codemirror/language";
 import { tooltips } from "@codemirror/view";
 import type { Table } from "@tanstack/vue-table";
 import { computedWithControl } from "@vueuse/core";
-import { ChevronDown, FunnelPlus, X } from "lucide-vue-next";
 import {
 	type AcceptableValue,
 	ComboboxAnchor,
-	ComboboxCancel,
 	ComboboxContent,
 	ComboboxInput,
 	ComboboxItem,
@@ -38,7 +36,7 @@ const props = defineProps<{
 	triggers: TriggerMap;
 }>();
 
-const { parseSearchString, validateQuery, normalizeOperators, addMetaFilter } = useFilterParser();
+const { parseSearchString, validateQuery, normalizeOperators, normalizeParens } = useFilterParser();
 
 const { contains } = useFilter({ sensitivity: "base" });
 
@@ -48,8 +46,6 @@ const cmExtensions = computed(() => [
 	syntaxHighlighting(queryHighlightStyle),
 	tooltips({ parent: document.body }),
 ]);
-
-console.log(props.triggers);
 
 const value = ref("");
 const trigger = ref<string | null>(null);
@@ -138,8 +134,16 @@ function handleSelect(ev: CustomEvent) {
 
 function submitSearch() {
 	parseSearchString(value.value, props.table);
-	props.table.setGlobalFilter(normalizeOperators(value.value));
+	props.table.setGlobalFilter(normalizeParens(normalizeOperators(value.value)));
 }
+
+function clear() {
+	value.value = "";
+	open.value = false;
+	submitSearch();
+}
+
+defineExpose({ submitSearch, value, clear });
 
 onMounted(() => {
 	value.value = props.table.getState().globalFilter;
@@ -154,13 +158,6 @@ watch(
 );
 
 const queryWarnings = computed(() => validateQuery(value.value));
-
-const { metaInfo } = useWibarabTriggers();
-const isMetaMenuOpen = ref([...metaInfo.value.keys()].map(() => false));
-function addMetaFilterToQuery(key: string, val: string) {
-	value.value = addMetaFilter(value.value, key, val);
-	submitSearch();
-}
 
 const highlighted = ref<string | null>(null);
 function setHighlight(el: { ref: HTMLElement; value: AcceptableValue } | undefined) {
@@ -183,131 +180,67 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-	<div class="grid w-full max-w-full grid-cols-[1fr_auto_auto] gap-x-2 overflow-x-hidden">
-		<ComboboxRoot
-			v-model:open="open"
-			class="flex w-full flex-col overflow-x-hidden"
-			ignore-filter
-			:reset-search-term-on-blur="false"
-			@highlight="setHighlight"
-		>
-			<Label class="sr-only text-sm font-semibold" for="search"> search </Label>
-
-			<div class="flex w-full rounded-md border border-muted">
-				<ComboboxInput id="search" :as-child="true" autocomplete="off" class="w-full p-2">
-					<CodeMirror
-						ref="textareaRef"
-						v-model="value"
-						class="w-full overflow-x-auto p-2"
-						:extensions="cmExtensions"
-						:lang="queryLanguageSupport"
-						placeholder="Click to get a list of available features"
-						@input="handleChange"
-						@keydown.delete="
-							() => {
-								open = false;
-								highlighted = null;
-							}
-						"
-						@keydown.enter="eventListener"
-						@keydown.left.right="open = false"
-						@pointerdown="
-							(e: PointerEvent) => {
-								handleChange(e);
-								// open = false;
-							}
-						"
-					/>
-				</ComboboxInput>
-				<ComboboxCancel as-child>
-					<Button
-						class="self-center p-2"
-						variant="ghost"
-						@click="
-							value = '';
-							submitSearch();
-						"
-						><X class="size-4"></X
-					></Button>
-				</ComboboxCancel>
-			</div>
-			<ComboboxAnchor :reference="reference" />
-
-			<ComboboxPortal>
-				<ComboboxContent
-					v-if="list?.length"
-					align="start"
-					class="max-h-48 max-w-80 overflow-x-hidden overflow-y-auto rounded-md border border-neutral-500/30 bg-white p-1.5"
-					position="popper"
-					side="bottom"
-				>
-					<template v-for="(item, idx) in list" :key="String(item.value)">
-						<ComboboxItem
-							class="flex cursor-default rounded px-2 py-1 data-highlighted:bg-muted"
-							:value="item.value"
-							@select="handleSelect"
-						>
-							<span class="truncate whitespace-pre">{{ item.displayValue }}</span>
-						</ComboboxItem>
-						<ComboboxSeparator
-							v-if="item.value.startsWith('ft') && !list[idx + 1]?.value.startsWith('ft')"
-							><span>&nbsp;</span></ComboboxSeparator
-						>
-					</template>
-				</ComboboxContent>
-			</ComboboxPortal>
-		</ComboboxRoot>
-		<DropdownMenu>
-			<DropdownMenuTrigger as-child
-				><Button
-					class="h-full self-end"
-					:disabled="!(value?.length > 0 && queryWarnings.isValid)"
-					variant="outline"
-					@click="submitSearch"
-					><FunnelPlus class="size-4" /></Button
-			></DropdownMenuTrigger>
-
-			<DropdownMenuContent class="max-h-[var(--radix-dropdown-menu-content-available-height)] w-52">
-				<Collapsible
-					v-for="([key, val], idx) in metaInfo"
-					:key="key"
-					v-model:open="isMetaMenuOpen[idx]"
-				>
-					<CollapsibleTrigger class="flex w-full items-center gap-1 p-2 text-sm">
-						<span class="capitalize">{{ key }}</span>
-						<ChevronDown
-							class="size-4"
-							:class="isMetaMenuOpen[idx] ? 'rotate-180' : ''"
-						></ChevronDown>
-					</CollapsibleTrigger>
-					<CollapsibleContent>
-						<Button
-							v-for="entry in val.toSorted((a, b) => a.displayValue.localeCompare(b.displayValue))"
-							:key="entry.value"
-							class="h-auto w-full justify-start p-1 pl-4 text-start text-sm font-normal whitespace-normal"
-							variant="ghost"
-							@click="() => addMetaFilterToQuery(key, entry.value)"
-							>{{ entry.displayValue }}</Button
-						>
-					</CollapsibleContent>
-				</Collapsible>
-			</DropdownMenuContent>
-		</DropdownMenu>
-		<Button class="h-full self-end" variant="outline" @click="submitSearch">Search</Button>
-		<div v-if="queryWarnings.warnings.length" class="mt-1 ml-1 text-xs text-orange-700">
-			<div v-for="(warning, idx) in queryWarnings.warnings" :key="idx">{{ warning }}</div>
-		</div>
-		<div
-			v-else-if="!table.getFilteredRowModel().flatRows.length"
-			class="mt-1 ml-1 text-xs text-on-muted"
-		>
-			Your query returned no results.
-		</div>
-	</div>
+	<ComboboxRoot
+		v-model:open="open"
+		class="flex w-full overflow-x-hidden"
+		ignore-filter
+		:reset-search-term-on-blur="false"
+		@highlight="setHighlight"
+	>
+		<Label class="sr-only text-sm font-semibold" for="search"> search </Label>
+		<ComboboxInput id="search" :as-child="true" autocomplete="off">
+			<CodeMirror
+				ref="textareaRef"
+				v-model="value"
+				class="min-h-10 w-full overflow-x-auto p-1"
+				:extensions="cmExtensions"
+				:lang="queryLanguageSupport"
+				placeholder="Click to get a list of available features"
+				@input="handleChange"
+				@keydown.delete="
+					() => {
+						open = false;
+						highlighted = null;
+					}
+				"
+				@keydown.enter="eventListener"
+				@keydown.left.right="open = false"
+				@pointerdown="(e: PointerEvent) => handleChange(e)"
+			/>
+		</ComboboxInput>
+		<ComboboxAnchor :reference="reference" />
+		<ComboboxPortal>
+			<ComboboxContent
+				v-if="list?.length"
+				align="start"
+				class="max-h-48 max-w-80 overflow-x-hidden overflow-y-auto rounded-md border border-neutral-500/30 bg-white p-1.5"
+				position="popper"
+				side="bottom"
+			>
+				<template v-for="(item, idx) in list" :key="String(item.value)">
+					<ComboboxItem
+						class="flex cursor-default rounded px-2 py-1 data-highlighted:bg-muted"
+						:value="item.value"
+						@select="handleSelect"
+					>
+						<span class="truncate whitespace-pre">{{ item.displayValue }}</span>
+					</ComboboxItem>
+					<ComboboxSeparator
+						v-if="item.value.startsWith('ft') && !list[idx + 1]?.value.startsWith('ft')"
+						><span>&nbsp;</span></ComboboxSeparator
+					>
+				</template>
+			</ComboboxContent>
+		</ComboboxPortal>
+	</ComboboxRoot>
 </template>
 
 <style>
 @reference "@/styles/index.css";
+
+.cm-content {
+	white-space: unset !important;
+}
 
 .cm-scroller {
 	font-family: inherit !important;
@@ -320,18 +253,6 @@ onBeforeUnmount(() => {
 .cm-filter {
 	@apply text-amber-900;
 }
-
-.cm-filter::before {
-	@apply mr-0.5 opacity-80;
-
-	content: "🛈";
-}
-
-/* .cm-feature::before {
-	@apply bg-emerald-900 inline-block size-2 rounded-full mr-1;
-
-	content: "";
-} */
 
 .cm-feature-value {
 	@apply text-amber-700 font-medium;

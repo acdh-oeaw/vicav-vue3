@@ -66,7 +66,7 @@ function getNonFeatureValue(col: (typeof columns.value)[0]) {
 							:highlighted-values="getHighlightedValues(col.column)"
 							:value="rowOriginal.properties[col.column.columnDef.id!]"
 						></GeojsonTablePropertyCell>
-						<span v-else class="font-light">{{ getNonFeatureValue(col) }}</span>
+						<span v-else class="font-normal">{{ getNonFeatureValue(col) }}</span>
 					</TableCell>
 				</TableRow>
 			</TableBody>
