@@ -20,7 +20,13 @@ const multiRef = useTemplateRef<InstanceType<typeof MultiValueSearchbar>>("multi
 const active = computed(() => (mode.value === "tag" ? tagRef.value : multiRef.value));
 
 const { validateQuery } = useFilterParser();
-const currentValue = computed(() => String(active.value?.value ?? ""));
+const currentValue = computed({
+	get: () => String(active.value?.value ?? ""),
+	set: (value: string) => {
+		if (!active.value) return;
+		active.value.value = value;
+	},
+});
 const queryWarnings = computed(() => validateQuery(currentValue.value));
 const hasValue = computed(() => Boolean(currentValue.value.trim()));
 
