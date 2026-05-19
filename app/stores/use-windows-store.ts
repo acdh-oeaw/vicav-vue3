@@ -240,7 +240,7 @@ export const useWindowsStore = defineStore("windows", () => {
 						{
 							targetType: "GeojsonMap",
 							params: {
-								wibarabGeojsonUrl,
+								url: wibarabGeojsonUrl,
 								markerType: "petal",
 							},
 						} as unknown as WindowItem,
