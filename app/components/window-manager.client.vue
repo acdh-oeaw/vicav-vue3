@@ -90,4 +90,20 @@ onMounted(() => {
 	mask-size: 60%;
 	mask-repeat: no-repeat;
 }
+
+.winbox .wb-map {
+	background-color: hsl(var(--color-on-primary));
+	mask-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLW1hcC1pY29uIGx1Y2lkZS1tYXAiPjxwYXRoIGQ9Ik0xNC4xMDYgNS41NTNhMiAyIDAgMCAwIDEuNzg4IDBsMy42NTktMS44M0ExIDEgMCAwIDEgMjEgNC42MTl2MTIuNzY0YTEgMSAwIDAgMS0uNTUzLjg5NGwtNC41NTMgMi4yNzdhMiAyIDAgMCAxLTEuNzg4IDBsLTQuMjEyLTIuMTA2YTIgMiAwIDAgMC0xLjc4OCAwbC0zLjY1OSAxLjgzQTEgMSAwIDAgMSAzIDE5LjM4MVY2LjYxOGExIDEgMCAwIDEgLjU1My0uODk0bDQuNTUzLTIuMjc3YTIgMiAwIDAgMSAxLjc4OCAweiIvPjxwYXRoIGQ9Ik0xNSA1Ljc2NHYxNSIvPjxwYXRoIGQ9Ik05IDMuMjM2djE1Ii8+PC9zdmc+");
+	mask-position: 50% 50%;
+	mask-size: 60%;
+	mask-repeat: no-repeat;
+}
+
+.winbox .wb-table {
+	background-color: hsl(var(--color-on-primary));
+	mask-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXRhYmxlLWljb24gbHVjaWRlLXRhYmxlIj48cGF0aCBkPSJNMTIgM3YxOCIvPjxyZWN0IHdpZHRoPSIxOCIgaGVpZ2h0PSIxOCIgeD0iMyIgeT0iMyIgcng9IjIiLz48cGF0aCBkPSJNMyA5aDE4Ii8+PHBhdGggZD0iTTMgMTVoMTgiLz48L3N2Zz4=");
+	mask-position: 50% 50%;
+	mask-size: 60%;
+	mask-repeat: no-repeat;
+}
 </style>

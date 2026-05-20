@@ -1,7 +1,8 @@
 <script lang="ts" setup>
-import { ExternalLink } from "lucide-vue-next";
+import type { Table } from "@tanstack/vue-table";
+import { ExternalLink, Map } from "lucide-vue-next";
 
-import type { FeatureValueWindowItem } from "@/types/global.ts";
+import { type FeatureValueWindowItem, GeojsonMapSchema, type WindowItem } from "@/types/global.ts";
 import type { simpleTEIMetadata } from "@/types/teiCorpus";
 
 interface Props {
@@ -11,11 +12,21 @@ interface Props {
 const props = defineProps<Props>();
 const { params } = toRefs(props);
 
-const tableContent: Array<{ key: string; displayHeader?: string }> = [
-	{ key: "title", displayHeader: "Feature Value" },
+type QueryUpdateType = "value" | "any";
+const tableContent: Array<{
+	key: string;
+	displayHeader?: string;
+	updateQueryTo?: QueryUpdateType;
+}> = [
+	{ key: "title", displayHeader: "Feature Value", updateQueryTo: "value" },
 	{ key: "taxonomy" },
 	{ key: "desc" },
-	{ key: "feature" },
+	{ key: "feature", updateQueryTo: "any" },
+	{ key: "examples" },
+	{ key: "note" },
+	{ key: "remarks" },
+	{ key: "constraints" },
+	{ key: "exceptions" },
 	{ key: "place" },
 	{ key: "variety" },
 	{ key: "source" },
@@ -32,11 +43,6 @@ const tableContent: Array<{ key: string; displayHeader?: string }> = [
 		key: "source_representations",
 		displayHeader: "Original transcription",
 	},
-	{ key: "examples" },
-	{ key: "note" },
-	{ key: "remarks" },
-	{ key: "constraints" },
-	{ key: "exceptions" },
 	{ key: "resp", displayHeader: "Entered by" },
 ];
 
@@ -78,28 +84,80 @@ const citation = computed(() => {
 		title: `${feature}: ${value} | ${place}`,
 	} as simpleTEIMetadata;
 });
+
+const { tables } = useGeojsonStore();
+const openOrUpdateWindow = useOpenOrUpdateWindow();
+const { parseSearchString } = useFilterParser();
+const { wibarabGeojsonUrl } = useGeojsonStore();
+function getQueryString(updateQueryTo: QueryUpdateType, entry: (typeof props.params.values)[0]) {
+	return updateQueryTo === "value"
+		? `${entry.featureId}:"${entry.title}"`
+		: `${entry.featureId}:ANY`;
+}
+function updateMap(updateQueryTo: QueryUpdateType, entry: (typeof props.params.values)[0]) {
+	const table = tables.get(wibarabGeojsonUrl);
+	if (!table) return;
+	const searchString = getQueryString(updateQueryTo, entry);
+
+	parseSearchString(searchString, table as Table<unknown>);
+	table.setGlobalFilter(searchString);
+	openOrUpdateWindow(
+		{
+			targetType: "GeojsonMap",
+			params: {
+				url: wibarabGeojsonUrl,
+				markerType: "petal",
+			},
+		} as unknown as WindowItem,
+		"Variety Data - Map View",
+		GeojsonMapSchema.shape.params,
+		"url",
+		true,
+	);
+}
 </script>
 
 <template>
-	<div class="relative isolate grid size-full overflow-auto">
-		<div v-if="params.showCitation">
-			<Citation :header="citation" type="entry" />
+	<TooltipProvider>
+		<div class="relative isolate grid size-full overflow-auto">
+			<div v-if="params.showCitation">
+				<Citation :header="citation" type="entry" />
+			</div>
+			<Table>
+				<TableBody>
+					<TableRow v-for="entry in tableData" :key="entry.key">
+						<TableCell class="capitalize">{{ entry.displayHeader ?? entry.key }}</TableCell>
+						<TableCell v-for="(value, valueIdx) in entry.values" :key="`${entry.key}-${value}`">
+							<template v-if="entry.key == 'source' && isLinkType(value)">
+								<NuxtLink class="flex gap-1" external target="_blank" :to="value.link">
+									<span>{{ value.link ? "" : "Fieldwork campaign" }} {{ value.short_cit }}</span>
+									<span class="sr-only">View Source</span
+									><ExternalLink class="inline-block size-3.5" /> </NuxtLink
+							></template>
+							<template v-else> {{ value }}</template>
+
+							<Tooltip v-if="entry.updateQueryTo">
+								<TooltipTrigger>
+									<Button
+										class="ml-1 h-fit px-2"
+										variant="ghost"
+										@click="updateMap(entry.updateQueryTo, params.values[valueIdx])"
+									>
+										<span>Show on map</span>
+										<Map class="ml-1 size-4"></Map>
+									</Button>
+								</TooltipTrigger>
+								<TooltipContent class="bg-white"
+									>Overwrite the current query with
+									<span class="italic">{{
+										getQueryString(entry.updateQueryTo, params.values[valueIdx])
+									}}</span>
+								</TooltipContent>
+							</Tooltip>
+						</TableCell>
+					</TableRow>
+				</TableBody>
+			</Table>
 		</div>
-		<Table>
-			<TableBody>
-				<TableRow v-for="entry in tableData" :key="entry.key">
-					<TableCell class="capitalize">{{ entry.displayHeader ?? entry.key }}</TableCell>
-					<TableCell v-for="value in entry.values" :key="`${entry.key}-${value}`">
-						<template v-if="entry.key == 'source' && isLinkType(value)">
-							<NuxtLink class="flex gap-1" external target="_blank" :to="value.link">
-								<span>{{ value.link ? "" : "Fieldwork campaign" }} {{ value.short_cit }}</span>
-								<span class="sr-only">View Source</span
-								><ExternalLink class="inline-block size-3.5" /> </NuxtLink
-						></template>
-						<template v-else> {{ value }}</template>
-					</TableCell>
-				</TableRow>
-			</TableBody>
-		</Table>
-	</div>
+	</TooltipProvider>
 </template>

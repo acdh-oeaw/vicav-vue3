@@ -1,10 +1,15 @@
 <script lang="ts" setup>
 import type { ColumnDef, Row, Table } from "@tanstack/vue-table";
 import { test } from "liqe";
-import { Download, Info } from "lucide-vue-next";
+import { Download, Info, type Map } from "lucide-vue-next";
 
 import { useGeojsonStore } from "@/stores/use-geojson-store.ts";
-import type { FeatureType, ListMapWindowItem, MarkerType } from "@/types/global.ts";
+import {
+	type FeatureType,
+	GeojsonMapSchema,
+	type ListMapWindowItem,
+	type WindowItem,
+} from "@/types/global.ts";
 
 interface Props {
 	params: ListMapWindowItem["params"];
@@ -17,8 +22,8 @@ const queryString: Ref<string> = ref(params.value.queryString);
 const emit = defineEmits(["updateQueryParam"]);
 
 const GeojsonStore = useGeojsonStore();
-const { addWindow, findWindowByTypeAndParam } = useWindowsStore();
-const url = "https://raw.githubusercontent.com/wibarab/wibarab-data/main/wibarab_varieties.geojson";
+const openOrUpdateWindow = useOpenOrUpdateWindow();
+const url = GeojsonStore.wibarabGeojsonUrl;
 
 const { isPending } = GeojsonStore.fetchGeojson(url);
 const { fetchedData, tables, showAllDetails, featureValueTaxonomy } = storeToRefs(GeojsonStore);
@@ -61,7 +66,7 @@ const columnVisibility = computed(() => {
 	};
 });
 
-function applyGlobalFilter(row: Row<FeatureType>, _colId: string, queryString: string) {
+function applyGlobalFilter(row: Row<never>, _colId: string, queryString: string) {
 	const hidableVisibleCells = row.getVisibleCells().filter((cell) => cell.column.getCanHide());
 	if (hidableVisibleCells.length === 0) return true;
 	if (
@@ -139,6 +144,42 @@ function onColumnFilterChange(columnFilters: Array<{ id: string; value: Map<stri
 const { parseSearchString, normalizeOperators } = useFilterParser();
 
 const tableRef = ref<Table<FeatureType>>();
+
+function getExportRows(multivalueSeparator = ";") {
+	const headers = tableRef.value?.getHeaderGroups().slice(-1)[0]?.headers ?? [];
+	const headerNames = headers.map((header) =>
+		String(header.column.columnDef.header ?? header.column.id),
+	);
+	const rows =
+		tableRef.value?.getFilteredRowModel().rows.map((row) =>
+			headers.map((header) => {
+				const value = row.getValue(header.column.id);
+				if (value === null || value === undefined) return "";
+				if (Array.isArray(value)) return value.join(multivalueSeparator);
+				if (typeof value === "object") return JSON.stringify(value);
+				return String(value);
+			}),
+		) ?? [];
+	return { headerNames, rows };
+}
+
+function sanitizeExportFileName(fileName: string, fallback = "table-export") {
+	const baseName = fileName
+		.trim()
+		.split("")
+		.filter((char) => {
+			const code = char.charCodeAt(0);
+			return code >= 32 && !`<>:"/\\|?*,`.includes(char);
+		})
+		.join("")
+		.replace(/\s+/g, "_")
+		.normalize("NFD")
+		.replace(/[\u0300-\u036f]/g, "")
+		.replace(/[^\w\s-]/g, "")
+		.slice(0, 120);
+	return baseName.length > 0 ? baseName : fallback;
+}
+
 function registerTable(table: Table<FeatureType>) {
 	buildFeatureTaxonomy(
 		projectData.value?.projectConfig?.staticData?.table?.[0] as Record<string, never>,
@@ -152,23 +193,23 @@ function registerTable(table: Table<FeatureType>) {
 	triggerRef(tables);
 	tableRef.value = table;
 
-	const mw = findWindowByTypeAndParam("GeojsonMap", "url", url);
-	if (mw) {
-		mw.winbox.focus();
-		mw.winbox.addClass("highlighted");
-		setTimeout(() => {
-			mw.winbox.removeClass("highlighted");
-		}, 1000);
-	} else {
-		addWindow({
+	openGeoJsonMap();
+}
+
+function openGeoJsonMap() {
+	openOrUpdateWindow(
+		{
 			targetType: "GeojsonMap",
 			params: {
 				url,
-				markerType: "petal" as MarkerType,
+				markerType: "petal",
 			},
-			title: "Variety Data - Map View",
-		});
-	}
+		} as unknown as WindowItem,
+		"Variety Data - Map View",
+		GeojsonMapSchema.shape.params,
+		"url",
+		false,
+	);
 }
 
 function onRowClick(row: Row<FeatureType>) {
@@ -181,72 +222,134 @@ function updateQueryParams(newFilter: string) {
 	emit("updateQueryParam", queryString.value);
 }
 
-async function downloadTable(separator = ",", multivalueSaparator = ";") {
-	const headers = tableRef.value?.getHeaderGroups().slice(-1)[0]?.headers;
-	const rows = tableRef.value?.getFilteredRowModel().rows;
-	const mappedRows = rows?.map((row) =>
-		headers
-			?.map((header) => row.getValue(header.column.id))
-			.map((val) => (Array.isArray(val) ? val.join(multivalueSaparator) : val)),
-	);
+async function downloadTable(format: "csv" | "xlsx", csvSeparator = ",") {
+	if (!tableRef.value) return;
+
+	const { headerNames, rows } = getExportRows();
+	const exportName = sanitizeExportFileName(tableRef.value.getState().globalFilter ?? "");
+	const blob = await $fetch<Blob>("/api/export-table-xlsx", {
+		body: {
+			csvSeparator,
+			fileName: exportName,
+			format,
+			headers: headerNames,
+			rows,
+			sheetName: "Table",
+		},
+		method: "POST",
+		responseType: "blob",
+	});
+
+	const downloadUrl = URL.createObjectURL(blob);
 	const hiddenElement = document.createElement("a");
-	hiddenElement.href = `data:text/csv;charset=utf-8,${encodeURI(
-		`${headers!.map((h) => h.column.columnDef.header).join(separator)}\n${mappedRows!.join("\n")}`,
-	)}`;
-	hiddenElement.target = "_blank";
-	hiddenElement.download = `${tableRef.value?.getState().globalFilter}.csv`;
+	hiddenElement.href = downloadUrl;
+	hiddenElement.download = `${exportName}.${format}`;
 	hiddenElement.style.display = "none";
 	document.body.appendChild(hiddenElement);
 	hiddenElement.click();
 	document.body.removeChild(hiddenElement);
+	URL.revokeObjectURL(downloadUrl);
 }
+
+function jumpToRow(option: { value: string; label: string }) {
+	if (!tableRef.value) return;
+
+	const idx = tableRef.value
+		.getFilteredRowModel()
+		.rows.findIndex((row) => (row.getValue("name") as string) === option.value);
+	if (idx < 0) return;
+	const pageSize = tableRef.value.getState().pagination.pageSize;
+	const targetPage = Math.floor(idx / pageSize);
+	tableRef.value.setPageIndex(targetPage);
+	const rowId = tableRef.value.getFilteredRowModel().rows[idx]?.id;
+	tableRef.value.setRowSelection({ [rowId!]: true });
+}
+
+const searchableLocationNames = computed(() => {
+	return (
+		tableRef.value
+			?.getFilteredRowModel()
+			.rows.map((r) => r.getValue("name") as string)
+			.map((name) => ({ value: name, label: name })) ?? []
+	);
+});
 </script>
 
 <template>
-	<div>
+	<div class="flex h-full min-h-0 flex-col">
 		<Centered v-if="isPending">
 			<LoadingIndicator />
 		</Centered>
-		<div class="flex justify-between justify-items-end py-2">
-			<DataTablePagination v-if="tableRef" :table="tableRef as unknown as Table<never>" />
-
+		<div class="flex justify-between justify-items-end border-b bg-white py-2">
+			<!-- <DataTablePagination v-if="tableRef" :table="tableRef as unknown as Table<never>" /> -->
+			<div class="flex px-2 text-neutral-700">
+				<SearchableCombobox
+					nothing-found="No matching location found."
+					:options="searchableLocationNames"
+					placeholder-text="Jump to location"
+					search-placeholder="Search location..."
+					@select="jumpToRow"
+				/>
+			</div>
 			<div class="flex gap-2">
-				<Toggle v-model:model-value="showAllDetails" class="h-8"
+				<Toggle v-model:model-value="showAllDetails" class="h-8 text-neutral-700"
 					><Info class="size-4 stroke-neutral-800 transition-colors" />
 					<span class="line-clamp-1 text-ellipsis">Show details</span></Toggle
 				>
-				<Button class="inline-flex h-8 gap-2 border-0" variant="outline" @click="downloadTable">
-					<Download class="size-4 stroke-neutral-800 transition-colors" />
-					<span class="line-clamp-1 text-ellipsis">Export table</span>
-				</Button>
-				<!-- <DataTableActiveFilters
-					v-if="tableRef"
-					class="inline"
-					:table="tableRef as unknown as Table<never>"
-				></DataTableActiveFilters>
-				<DataTableFilterColumns
-					v-if="tableRef"
-					class="inline"
-					:table="tableRef as unknown as Table<never>"
-				/> -->
+				<DropdownMenu>
+					<DropdownMenuTrigger as-child>
+						<Button class="inline-flex h-8 gap-2 border-0 text-neutral-700" variant="outline">
+							<Download class="size-4 stroke-neutral-800 transition-colors" />
+							<span class="line-clamp-1 text-ellipsis">Export data</span>
+						</Button>
+					</DropdownMenuTrigger>
+					<DropdownMenuContent align="end" class="flex w-fit flex-col items-center">
+						<Button
+							class="inline-flex h-8 w-full gap-2 border-0"
+							variant="outline"
+							@click="downloadTable('csv')"
+						>
+							<span class="line-clamp-1 text-ellipsis">CSV</span>
+						</Button>
+						<Button
+							class="inline-flex h-8 w-full gap-2 border-0"
+							variant="outline"
+							@click="downloadTable('xlsx')"
+						>
+							<span class="line-clamp-1 text-ellipsis">Excel</span>
+						</Button>
+					</DropdownMenuContent>
+				</DropdownMenu>
 			</div>
 		</div>
-		<DataTable
-			v-if="!isPending"
-			:column-filter-change-fn="onColumnFilterChange"
-			:columns="columns as unknown as Array<ColumnDef<never>>"
-			:enable-filter-on-columns="true"
-			:global-filter-fn="applyGlobalFilter"
-			:initial-column-visibility="columnVisibility"
-			:items="fetchedData.get(url)?.features as Array<never>"
-			:min-header-depth="2"
-			:visibility-change-fn="onVisibilityChange"
-			@global-filter-change="updateQueryParams"
-			@row-click="onRowClick"
-			@table-ready="registerTable"
-		></DataTable>
-		<div class="grid justify-items-end py-2">
-			<DataTablePagination v-if="tableRef" :table="tableRef as unknown as Table<never>" />
+		<div class="min-h-0 flex-1 overflow-auto">
+			<DataTable
+				v-if="!isPending"
+				:column-filter-change-fn="onColumnFilterChange"
+				:columns="columns as unknown as Array<ColumnDef<never>>"
+				:enable-filter-on-columns="false"
+				:global-filter-fn="applyGlobalFilter"
+				:initial-column-visibility="columnVisibility"
+				:items="fetchedData.get(url)?.features as Array<never>"
+				:min-header-depth="2"
+				:sticky-header="true"
+				:visibility-change-fn="onVisibilityChange"
+				@global-filter-change="updateQueryParams"
+				@row-click="onRowClick"
+				@table-ready="registerTable"
+			></DataTable>
+		</div>
+		<div class="flex items-center justify-between py-2">
+			<div class="text-sm">
+				<span class="mx-2 font-medium">Total:</span
+				><span> {{ tableRef?.getFilteredRowModel().flatRows.length }} rows</span>
+			</div>
+			<DataTablePagination
+				v-if="tableRef"
+				open-to-side="top"
+				page-select
+				:table="tableRef as unknown as Table<never>"
+			/>
 		</div>
 	</div>
 </template>

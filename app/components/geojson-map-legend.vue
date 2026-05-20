@@ -8,7 +8,7 @@ import { ensureFilterValueMap } from "@/utils/filter-value-map";
 
 import type { SelectionEntry } from "./marker-selector.vue";
 
-const { getMarkerSVG, getCircleSVG } = usePetalMarker();
+const { getMarkerSVG } = usePetalMarker();
 
 interface Props {
 	params: Zod.infer<typeof GeojsonMapSchema>["params"];
@@ -75,29 +75,41 @@ function hasActiveFilters(column: ColumnType) {
 function updateMarker(markerSelection: SelectionEntry) {
 	setMarker(markerSelection);
 }
+function isMarkerHidden(id: string) {
+	return markers.value.get(id)?.hidden ?? false;
+}
+function shouldShowOtherFeatureValues(feature: ColumnType) {
+	return (
+		hasActiveFilters(feature) &&
+		!getAllFacetsActive(feature) &&
+		markerSettings.value.showOtherFeatureValues
+	);
+}
 </script>
 
 <template>
 	<Collapsible
 		v-model:open="collapsibleOpen"
-		class="flex h-fit w-48 flex-col bg-white/80 p-3 text-xs"
+		class="flex h-fit w-56 flex-col bg-white p-4 text-xs"
 		data-geo-map-legend
 	>
 		<CollapsibleTrigger class="flex w-full justify-between"
-			><b>{{ activeRows?.length }} total markers</b
-			><ChevronDown class="size-4" :class="collapsibleOpen ? '' : 'rotate-180'"></ChevronDown
+			><span class="font-medium">{{ activeRows?.length }} total markers</span
+			><ChevronDown
+				class="size-4 text-on-muted"
+				:class="collapsibleOpen ? '' : 'rotate-180'"
+			></ChevronDown
 		></CollapsibleTrigger>
-		<CollapsibleContent class="max-h-full !overflow-auto">
+		<CollapsibleContent
+			class="max-h-full !overflow-auto border-muted"
+			:class="{ 'mt-2 border-t pt-1': activeFeatures?.length }"
+		>
 			<div v-for="feature in activeFeatures" :key="feature.id" class="my-1">
-				<div class="flex items-start gap-2">
-					<svg
-						v-if="activeFeatures?.length === 1 && markerSettings.showCenter"
-						class="mt-0.5 size-3.5 shrink-0"
-						view-box="0 0 18 18 "
-						v-html="getCircleSVG(`var(--${feature.id})`, true, 14).outerHTML"
-					></svg>
+				<div
+					class="my-2 flex items-start gap-2"
+					:class="{ 'opacity-45': isMarkerHidden(feature.id) }"
+				>
 					<MarkerSelector
-						v-else-if="getActiveFilterValues(feature).length === 0"
 						:icon-categories="['shapes']"
 						:model-value="markers.get(feature.id)!"
 						:use-popover-portal="true"
@@ -107,8 +119,13 @@ function updateMarker(markerSelection: SelectionEntry) {
 				</div>
 				<div
 					v-for="filter in getCombinedFilters(feature)"
-					:key="filter.join('')"
-					class="ml-4 flex items-center gap-2"
+					:key="filter.join(AND_OPERATOR)"
+					class="ml-5 flex items-center gap-2"
+					:class="{
+						'opacity-45': isMarkerHidden(
+							buildFeatureValueId(feature.id, filter.join(AND_OPERATOR)),
+						),
+					}"
 				>
 					<MarkerSelector
 						:icon-categories="['shapes']"
@@ -116,13 +133,6 @@ function updateMarker(markerSelection: SelectionEntry) {
 						:use-popover-portal="true"
 						@update:model-value="(props) => updateMarker(props)"
 					></MarkerSelector>
-					<!-- <svg
-							class="mt-0.5 size-3.5 shrink-0"
-							v-html="
-								getMarkerSVG({ id: buildFeatureValueId(feature.id, filter.join(AND_OPERATOR)) })
-									.outerHTML
-							"
-						></svg> -->
 					<span>
 						<span v-for="(fv, idx) in filter" :key="fv"
 							>{{ fv
@@ -132,11 +142,12 @@ function updateMarker(markerSelection: SelectionEntry) {
 						</span>
 					</span>
 				</div>
-				<div v-if="feature.getIsFiltered() && hasActiveFilters(feature)" class="ml-4">
+				<div v-if="feature.getIsFiltered() && hasActiveFilters(feature)" class="ml-5">
 					<div
 						v-for="[value, count] in getActiveFilterValues(feature)"
 						:key="value"
-						class="flex items-center gap-2"
+						class="my-1 flex items-center gap-2"
+						:class="{ 'opacity-45': isMarkerHidden(buildFeatureValueId(feature.id, value)) }"
 					>
 						<MarkerSelector
 							:icon-categories="['shapes']"
@@ -144,20 +155,14 @@ function updateMarker(markerSelection: SelectionEntry) {
 							:use-popover-portal="true"
 							@update:model-value="(props) => updateMarker(props)"
 						></MarkerSelector>
-						<!-- <svg
-								class="mt-0.5 size-3.5 shrink-0"
-								v-html="getMarkerSVG({ id: buildFeatureValueId(feature.id, value) }).outerHTML"
-							></svg> -->
 						<span>{{ value }} ({{ count }})</span>
 					</div>
 					<div
-						v-if="
-							hasActiveFilters(feature) &&
-							!getAllFacetsActive(feature) &&
-							markerSettings.showOtherFeatureValues
-						"
+						v-if="shouldShowOtherFeatureValues(feature)"
 						class="flex items-center gap-2"
+						:class="{ 'opacity-45': isMarkerHidden(feature.id) }"
 					>
+						<!-- eslint-disable vue/no-v-html -->
 						<svg
 							class="mt-0.5 size-3.5 shrink-0"
 							v-html="getMarkerSVG({ id: feature.id, strokeOnly: true }).outerHTML"

@@ -4,6 +4,8 @@ import { z } from "zod";
 
 import type { QueryParamsType } from "@/lib/api-client";
 import {
+	GeojsonMapSchema,
+	ListMapSchema,
 	QueryString,
 	Schema,
 	TeiSource,
@@ -56,6 +58,9 @@ export const useWindowsStore = defineStore("windows", () => {
 	const initialScreenSetup = computed(() => {
 		return data.value?.projectConfig?.panel ?? [];
 	});
+	const openOrUpdateWindow = useOpenOrUpdateWindow();
+
+	const { tables } = useGeojsonStore();
 
 	async function initializeScreen() {
 		await suspense();
@@ -222,6 +227,63 @@ export const useWindowsStore = defineStore("windows", () => {
 			if (cite.length > 0) {
 				const el = cite[0] as HTMLSpanElement;
 				el.title = "Show citation";
+			}
+		}
+
+		if (w!.targetType === "ListMap") {
+			w.winbox.addControl({
+				index: 0,
+				class: "wb-map",
+				click: function () {
+					const { wibarabGeojsonUrl } = useGeojsonStore();
+					openOrUpdateWindow(
+						{
+							targetType: "GeojsonMap",
+							params: {
+								url: wibarabGeojsonUrl,
+								markerType: "petal",
+							},
+						} as unknown as WindowItem,
+						"Variety Data - Map View",
+						GeojsonMapSchema.shape.params,
+						"url",
+						true,
+					);
+				},
+			});
+			const winboxElement = w.winbox.dom as HTMLElement;
+			const cite = winboxElement.querySelectorAll(".wb-map");
+			if (cite.length > 0) {
+				const el = cite[0] as HTMLSpanElement;
+				el.title = "Open map";
+			}
+		}
+		if (w!.targetType === "GeojsonMap") {
+			w.winbox.addControl({
+				index: 0,
+				class: "wb-table",
+				click: function () {
+					const table = tables.get(w.params.url);
+					const globalFilter = (table?.getState().globalFilter as string | undefined) ?? "";
+					openOrUpdateWindow(
+						{
+							targetType: "ListMap",
+							params: {
+								queryString: globalFilter,
+							},
+						} as unknown as WindowItem,
+						globalFilter,
+						ListMapSchema.shape.params,
+						"queryString",
+						true,
+					);
+				},
+			});
+			const winboxElement = w.winbox.dom as HTMLElement;
+			const cite = winboxElement.querySelectorAll(".wb-table");
+			if (cite.length > 0) {
+				const el = cite[0] as HTMLSpanElement;
+				el.title = "Open table";
 			}
 		}
 		return w;

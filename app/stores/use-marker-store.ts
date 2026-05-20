@@ -12,6 +12,16 @@ interface MarkerInterface {
 	id: string;
 	icon: IconType;
 	colorCode: string;
+	hidden?: boolean;
+}
+interface MarkerStyleInterface {
+	icon?: IconType;
+	colorCode?: string;
+}
+function buildVariantColor(baseColor: string) {
+	const newColor = new Color(baseColor).to("lch");
+	newColor.l = Math.random() * 60 + 20; //lightness values from 20 to 80
+	return newColor.toGamut({ space: "srgb" }).to("srgb").toString({ format: "hex" });
 }
 
 export const useMarkerStore = defineStore("markers", () => {
@@ -21,7 +31,7 @@ export const useMarkerStore = defineStore("markers", () => {
 		strokeWidth: 4,
 		greyscale: false,
 		showCenter: true,
-		showOtherFeatureValues: true,
+		showOtherFeatureValues: false,
 		triggerRepaint: false,
 	});
 	const defaultMarkers = {
@@ -44,6 +54,63 @@ export const useMarkerStore = defineStore("markers", () => {
 		encodeURIComponent(
 			`${columnId}-${(feature ?? "").replaceAll(/[`~!@#$%^&*()_|+\-=?;:'",.<>{}[\]\\/]/g, "")}`,
 		).replaceAll(/[()%\\]/g, "");
+
+	function forEachUnderlyingFeatureValue(
+		featureId: string,
+		updateEntry: (entry: MarkerInterface, id: string) => void,
+	) {
+		const featureValuePrefix = buildFeatureValueId(featureId, "");
+		markers.value.forEach((entry, id) => {
+			if (id !== featureId && id.startsWith(featureValuePrefix)) {
+				updateEntry(entry, id);
+			}
+		});
+	}
+
+	function hasUnderlyingFeatureValues(featureId: string) {
+		let hasUnderlyingValues = false;
+		forEachUnderlyingFeatureValue(featureId, () => {
+			hasUnderlyingValues = true;
+		});
+		return hasUnderlyingValues;
+	}
+
+	function setUnderlyingFeatureValuesHidden(featureId: string, hidden: boolean) {
+		forEachUnderlyingFeatureValue(featureId, (entry, id) => {
+			if (entry.hidden !== hidden) {
+				markers.value.set(id, { ...entry, hidden });
+			}
+		});
+	}
+
+	function applyStyleToUnderlyingFeatureValues(featureId: string, style: MarkerStyleInterface) {
+		forEachUnderlyingFeatureValue(featureId, (entry, id) => {
+			if (entry.icon !== style.icon) {
+				markerSettings.value.triggerRepaint = true;
+			}
+			const updatedEntry: MarkerInterface = {
+				...entry,
+				...style,
+			};
+			markers.value.set(id, updatedEntry);
+			if (style.colorCode) {
+				updateCssVariable({ id, colorCode: style.colorCode });
+				updateColorValue({ id, colorCode: style.colorCode });
+			}
+		});
+	}
+
+	function generateColorVariantsForFeatureValues(featureId: string) {
+		if (!markers.value.has(featureId)) addColor(featureId);
+		const baseColor = markers.value.get(featureId)?.colorCode;
+		assert(baseColor != null, `Base marker color not found for ${featureId}`);
+
+		forEachUnderlyingFeatureValue(featureId, (_entry, id) => {
+			const colorCode = buildVariantColor(baseColor);
+			updateCssVariable({ id, colorCode });
+			updateColorValue({ id, colorCode });
+		});
+	}
 
 	/* General Marker Settings */
 	function updateSettingVariables() {
@@ -118,13 +185,11 @@ export const useMarkerStore = defineStore("markers", () => {
 	function addColorVariant(baseId: ColorInterface["id"], subId: ColorInterface["id"]) {
 		if (!markers.value.has(baseId)) addColor(baseId);
 		const baseColor = markers.value.get(baseId)?.colorCode;
-
-		const newColor = new Color(baseColor!).to("lch");
-		newColor.l = Math.random() * 60 + 20; //lightness values from 20 to 80
+		assert(baseColor != null, `Base marker color not found for ${baseId}`);
 
 		const color: ColorInterface = {
 			id: buildFeatureValueId(baseId, subId),
-			colorCode: newColor.toGamut({ space: "srgb" }).to("srgb").toString({ format: "hex" }),
+			colorCode: buildVariantColor(baseColor),
 		};
 		updateCssVariable(color);
 		updateColorValue(color);
@@ -137,6 +202,7 @@ export const useMarkerStore = defineStore("markers", () => {
 
 	function addDefaultMarker(baseId: MarkerInterface["id"], subId?: MarkerInterface["id"]) {
 		if (subId && !markers.value.has(baseId)) addDefaultMarker(baseId);
+		const inheritedHidden = subId ? (markers.value.get(baseId)?.hidden ?? false) : false;
 		if (markers.value.get(baseId)) {
 			assert(markers.value.get(baseId) != null);
 			setMarker({
@@ -144,12 +210,14 @@ export const useMarkerStore = defineStore("markers", () => {
 				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 				icon: markers.value.get(baseId)!.icon,
 				colorCode: "",
+				hidden: inheritedHidden,
 			});
 		} else
 			setMarker({
 				id: subId ? buildFeatureValueId(baseId, subId) : baseId,
 				icon: defaultMarkers.petal,
 				colorCode: "",
+				hidden: inheritedHidden,
 			});
 		if (subId) addColorVariant(baseId, subId);
 		else addColor(baseId);
@@ -158,7 +226,11 @@ export const useMarkerStore = defineStore("markers", () => {
 	function setMarker(marker: MarkerInterface) {
 		let repaint = false;
 		if (markers.value.get(marker.id)?.icon !== marker.icon) repaint = true;
-		markers.value.set(marker.id, marker);
+		if (markers.value.get(marker.id)?.hidden !== marker.hidden) repaint = true;
+		markers.value.set(marker.id, { hidden: false, ...marker });
+		if (!marker.id.includes("-")) {
+			setUnderlyingFeatureValuesHidden(marker.id, marker.hidden ?? false);
+		}
 		if (marker.colorCode !== "") {
 			setColor(marker);
 		}
@@ -179,6 +251,9 @@ export const useMarkerStore = defineStore("markers", () => {
 		buildFeatureValueId,
 		addDefaultMarker,
 		setMarker,
+		applyStyleToUnderlyingFeatureValues,
+		generateColorVariantsForFeatureValues,
+		hasUnderlyingFeatureValues,
 		removeMarker,
 		markers,
 		markerSettings,

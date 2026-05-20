@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Column, Table } from "@tanstack/vue-table";
-import { List } from "lucide-vue-next";
+import { Check } from "lucide-vue-next";
 import { Field as FormField, useForm } from "vee-validate";
 
 import {
@@ -23,6 +23,7 @@ const { getFacetsForId, getTaxonomyTree, featureValueTaxonomy } = useGeojsonStor
 const props = defineProps<{
 	column: Column<unknown>;
 	table: Table<unknown>;
+	hideCheckbox?: boolean;
 }>();
 
 const rowData = computed(() => props.table.getCoreRowModel().flatRows);
@@ -231,6 +232,7 @@ function computeMarkerData() {
 			id,
 			colorCode: markers.value.get(id)!.colorCode,
 			icon: markers.value.get(id)!.icon,
+			hidden: markers.value.get(id)!.hidden ?? false,
 		};
 	});
 	markerData.value = data;
@@ -253,7 +255,7 @@ const taxonomyTree = computed(() =>
 	),
 );
 
-function _deselectColumn() {
+function deselectColumn() {
 	props.column.toggleVisibility();
 	setFieldValue("items", []);
 	void onSubmit();
@@ -262,9 +264,34 @@ function _deselectColumn() {
 
 <template>
 	<Dialog :open="dialogOpen" @update:open="dialogOpen = false">
-		<DialogTrigger @click.stop="dialogOpen = true">
-			<List class="ml-2 size-4"></List>
-			<span class="sr-only">Select feature values</span>
+		<DialogTrigger
+			class="grid w-full items-center justify-between gap-2 px-2 py-1 text-left text-sm hover:bg-accent"
+			:class="hideCheckbox ? 'grid-cols-[1fr_auto]' : 'grid-cols-[auto_1fr_auto]'"
+			v-bind="$attrs"
+			@click.stop="dialogOpen = true"
+		>
+			<Button
+				v-if="column.getIsVisible() && !hideCheckbox"
+				class="size-4 border-0 p-0"
+				variant="outline"
+				@click.stop="deselectColumn"
+			>
+				<Check class="size-full"></Check>
+				<span class="sr-only">Deselect feature</span>
+			</Button>
+			<div v-else-if="!hideCheckbox" class="size-4"></div>
+
+			<span>{{ column.columnDef.header }}</span>
+			<div @click.stop>
+				<MarkerSelector
+					v-if="column.getIsVisible()"
+					:icon-categories="['shapes']"
+					:model-value="markers.get(column.id)!"
+					:type="['icon']"
+					:use-popover-modal="true"
+					@update:model-value="(props) => updateMarker(props)"
+				></MarkerSelector>
+			</div>
 		</DialogTrigger>
 		<DialogContent class="sm:max-w-[425px]">
 			<form class="grid grid-rows-[auto_1fr_auto] gap-4 sm:max-h-[90vh]" @submit="onSubmit">
@@ -280,10 +307,10 @@ function _deselectColumn() {
 					<Button class="ml-auto w-fit" type="button" variant="outline" @click="toggleAllValues"
 						>{{ allValuesSelected ? "Deselect" : "Select" }} all values</Button
 					>
-					<FormItem class="overflow-auto">
+					<FormItem class="-mt-px overflow-auto">
 						<div
 							v-if="selectedCombinedFilters.size > 0 || (filterSuggestion?.count ?? 0) > 0"
-							class="relative rounded bg-secondary p-2.5"
+							class="sticky top-0 -mt-px rounded bg-secondary p-2.5"
 						>
 							<div class="relative -mt-2 mb-1 -ml-1 text-xs font-light">Combined filters</div>
 							<FeatureSelectionDialogEntry
@@ -333,7 +360,7 @@ function _deselectColumn() {
 						</div>
 
 						<!-- Regular Feature Values -->
-						<div class="ml-2.5">
+						<div class="mt-1 ml-2.5">
 							<template v-for="[key, entry] in taxonomyTree.entries()" :key="key">
 								<FeatureSelectionDialogEntry
 									:facets="facets"

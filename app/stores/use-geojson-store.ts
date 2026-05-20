@@ -4,6 +4,9 @@ import { defineStore } from "pinia";
 
 import { type FeatureCollectionType, type FeatureType, GeoFeatureSchema } from "@/types/global.ts";
 
+//Todo: maybe move this to an env variable
+export const wibarabGeojsonUrl =
+	"https://raw.githubusercontent.com/wibarab/wibarab-data/main/wibarab_varieties.geojson";
 export interface TaxonomyTreeEntry {
 	label: string | undefined;
 	featureValues: Array<string>;
@@ -145,5 +148,6 @@ export const useGeojsonStore = defineStore("geojson", () => {
 		showAllDetails,
 		getSortedTaxonomyChildren,
 		getSortedTaxonomyFeatureValues,
+		wibarabGeojsonUrl,
 	};
 });

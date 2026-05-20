@@ -8,7 +8,7 @@ import { type TaxonomyTreeEntry, useGeojsonStore } from "@/stores/use-geojson-st
 
 const GeojsonStore = useGeojsonStore();
 const { tables } = storeToRefs(GeojsonStore);
-const url = "https://raw.githubusercontent.com/wibarab/wibarab-data/main/wibarab_varieties.geojson";
+const url = GeojsonStore.wibarabGeojsonUrl;
 
 const {
 	getTaxonomyTree,
@@ -119,7 +119,10 @@ const metaInfoKeys = computed(() =>
 	[...metaInfo.value.keys()].map((key) => ({ value: `${key}:`, displayValue: key })),
 );
 
-const operators = ["and", "or"].map((o) => ({ displayValue: o, value: o.toUpperCase() }));
+const operators = ["and", "or", "and not", "or not"].map((o) => ({
+	displayValue: o,
+	value: o.toUpperCase(),
+}));
 
 const wibarabTriggers = computed(() => {
 	const map = {

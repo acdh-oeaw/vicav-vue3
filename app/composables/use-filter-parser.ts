@@ -54,6 +54,38 @@ function ensureColumnFilterMap(
 	return { column: col, filterValue };
 }
 
+function stripRedundantParens(ast: LiqeQuery): LiqeQuery {
+	switch (ast.type) {
+		case "ParenthesizedExpression": {
+			const inner = stripRedundantParens(ast.expression);
+			if (inner.type === "Tag" || inner.type === "UnaryOperator") return inner;
+			return { ...ast, expression: inner };
+		}
+		case "LogicalExpression":
+			return {
+				...ast,
+				left: stripRedundantParens(ast.left),
+				right: stripRedundantParens(ast.right),
+			};
+		case "UnaryOperator":
+			return { ...ast, operand: stripRedundantParens(ast.operand) };
+		case "EmptyExpression":
+		case "Tag":
+		default:
+			return ast;
+	}
+}
+
+function normalizeParens(query: string): string {
+	const trimmed = query.trim();
+	if (trimmed.length === 0) return trimmed;
+	try {
+		return stringifyAST(stripRedundantParens(parse(trimmed))).trim();
+	} catch {
+		return trimmed;
+	}
+}
+
 function parseSearchString(searchString: string, table: Table<unknown>) {
 	table.resetColumnFilters();
 	table.resetColumnVisibility();
@@ -429,6 +461,7 @@ function isInQuery(query: LiqeQuery | string, filter: LiqeQuery | string): boole
 
 function assembleFilter(columnId: string, key: string) {
 	let assembledFilter = `${columnId}:"${key}"`;
+	if (key === "*") assembledFilter = `${columnId}:ANY`;
 	if (key.includes(AND_OPERATOR)) {
 		assembledFilter = key
 			.split(AND_OPERATOR)
@@ -668,7 +701,8 @@ function stringifyAST(ast: LiqeQuery, parentOp?: "AND" | "OR"): string {
 			// Wrap in parentheses if:
 			// - parent is AND (both AND and OR need parens inside AND)
 			// - this is AND and parent is OR (AND needs parens to clarify precedence)
-			const needsParens = parentOp === "AND" || (parentOp === "OR" && op === "AND");
+			const needsParens =
+				(parentOp === "AND" && op !== "AND") || (parentOp === "OR" && op === "AND");
 			return needsParens ? `(${inner})` : inner;
 		}
 		case "ParenthesizedExpression":
@@ -859,6 +893,7 @@ export function useFilterParser() {
 		getTraversedAST,
 		validateQuery,
 		normalizeOperators,
+		normalizeParens,
 		addMetaFilter,
 		parse,
 	};

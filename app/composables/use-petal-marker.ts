@@ -10,13 +10,17 @@ import { useAdvancedQueries } from "./use-advanced-queries.ts";
 
 const GeojsonStore = useGeojsonStore();
 const { tables } = storeToRefs(GeojsonStore);
-const url = "https://raw.githubusercontent.com/wibarab/wibarab-data/main/wibarab_varieties.geojson";
+const url = GeojsonStore.wibarabGeojsonUrl;
 const { buildFeatureValueId, defaultMarkers } = useMarkerStore();
 const { markers, markerSettings } = storeToRefs(useMarkerStore());
 interface PetalEntry {
 	id: string;
 	strokeOnly?: boolean;
 	type?: "feature" | "featureValue";
+}
+
+function isMarkerHidden(id: string) {
+	return markers.value.get(id)?.hidden ?? false;
 }
 
 function getCircleSVG(fill: string, symmetrical = false, containerLength = 12) {
@@ -71,27 +75,30 @@ function getMarkerSVG(petalValue: PetalEntry) {
 function getFlowerSVG(entries: Array<PetalEntry>, center?: PetalEntry) {
 	const div = document.createElement("div");
 	div.className = "hover:scale-150 transition origin-center relative -translate-y-1/2";
-	const NUM_PETALS = entries.length;
+	const visibleEntries = entries.filter((entry) => !isMarkerHidden(entry.id));
+	const visibleCenter = center && !isMarkerHidden(center.id) ? center : undefined;
+	const NUM_PETALS = visibleEntries.length;
 	const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
 	svg.setAttribute("width", "12px");
 	svg.setAttribute("height", "12px");
 	svg.classList.add("overflow-visible");
 
-	for (const [i, value] of entries.entries()) {
+	for (const [i, value] of visibleEntries.entries()) {
 		const useLucideIcon =
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 			markers.value.has(value.id) && !markers.value.get(value.id)?.icon?.custom;
 		const petal = getMarkerSVG(value);
-		petal.style.transform = `rotate(${String((i * 360) / NUM_PETALS)}deg) ${useLucideIcon && (entries.length > 1 || center) ? "translateY(-3px)" : ""}`;
+		petal.style.transform = `rotate(${String((i * 360) / NUM_PETALS)}deg) ${useLucideIcon && (visibleEntries.length > 1 || visibleCenter) ? "translateY(-3px)" : ""}`;
 		svg.appendChild(petal);
 	}
 
-	if (center && markerSettings.value.showCenter) {
-		const centerMarker = getMarkerSVG(center);
+	if (visibleCenter && markerSettings.value.showCenter) {
+		const centerMarker = getMarkerSVG(visibleCenter);
 		centerMarker.style.transform = "translateY(6px)";
 		svg.appendChild(centerMarker);
 	}
-	if (entries.length === 0 && !center) svg.appendChild(getCircleSVG(`hsl(var(--color-primary))`));
+	if (visibleEntries.length === 0 && !visibleCenter)
+		svg.appendChild(getCircleSVG(`hsl(var(--color-primary))`));
 
 	div.appendChild(svg);
 
@@ -112,10 +119,14 @@ function getPetalMarker(feature: GeoJsonFeature<Point, MarkerProperties>, latlng
 		.filter(
 			(col) => col.getCanFilter() && Object.keys(feature.properties).find((k) => k === col.id),
 		);
+	const filteredFeaturesCount = table
+		?.getVisibleLeafColumns()
+		.filter((col) => col.getCanFilter()).length;
 	let unfilteredFeatures =
 		features?.filter((col) => !col.getIsFiltered() || !hasActiveFilters(col)) ?? [];
 	if (features?.length === 1 && unfilteredFeatures.length === 1) unfilteredFeatures = [];
-	const flowerCenter = features?.length === 1 ? features[0] : undefined;
+	const flowerCenter =
+		features?.length === 1 && filteredFeaturesCount === 1 ? features[0] : undefined;
 
 	const featureValues = table
 		?.getVisibleLeafColumns()
