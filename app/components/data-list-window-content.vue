@@ -20,7 +20,7 @@ const props = defineProps<Props>();
 
 const teiHeadersStore = useTeiHeadersStore();
 const { simpleItems } = storeToRefs(teiHeadersStore);
-const isCorpusTextTable = computed(() => {
+const isCorpusTextList = computed(() => {
 	return props.params.dataTypes.length === 1 && props.params.dataTypes[0] === "CorpusText";
 });
 
@@ -52,7 +52,7 @@ function getTargetType(dataType: string): string {
 </script>
 
 <template>
-	<CorpusTextDataTable v-if="isCorpusTextTable" :items="simpleItems" />
+	<CorpusTextDataList v-if="isCorpusTextList" :items="simpleItems" />
 	<div v-else-if="groupedItems" class="relative isolate grid size-full overflow-auto">
 		<div v-if="debug">
 			<label for="debug">Debug</label>
