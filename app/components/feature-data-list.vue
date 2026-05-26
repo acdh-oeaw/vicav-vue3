@@ -9,11 +9,11 @@ defineProps<{
 
 <template>
 	<SimpleMetadataDataList
-		data-type="CorpusText"
+		data-type="Feature"
 		:items="items"
-		:require-tei-availability-for-link="true"
-		search-input-id="corpus-text-search"
-		:show-audio-availability="true"
-		target-type="CorpusText"
+		:require-tei-availability-for-link="false"
+		search-input-id="feature-search"
+		:show-audio-availability="false"
+		target-type="Feature"
 	/>
 </template>
