@@ -1,3 +1,5 @@
+import { nextTick } from "vue";
+
 const interactiveContentSelector = [
 	"a[href]",
 	"button",
@@ -21,7 +23,7 @@ const interactiveContentSelector = [
 	"[tabindex]:not([tabindex='-1'])",
 ].join(", ");
 
-export function shouldPreserveFocusTarget(target: EventTarget | null): boolean {
+function shouldPreserveFocusTarget(target: EventTarget | null): boolean {
 	if (!(target instanceof Element)) return false;
 
 	return target.closest(interactiveContentSelector) != null;
@@ -43,11 +45,11 @@ function isScrollable(element: HTMLElement): boolean {
 	return canScrollY || canScrollX;
 }
 
-export function getKeyboardScrollFocusTarget(
-	body: HTMLElement,
-	target: EventTarget | null,
-): HTMLElement {
-	if (!(target instanceof HTMLElement)) return body;
+function getKeyboardScrollFocusTarget(body: HTMLElement, target?: EventTarget | null): HTMLElement {
+	if (!(target instanceof HTMLElement)) {
+		const candidates = [body, ...body.querySelectorAll<HTMLElement>("*")];
+		return candidates.find((element) => isScrollable(element)) ?? body;
+	}
 
 	let element: HTMLElement | null = target;
 
@@ -61,16 +63,33 @@ export function getKeyboardScrollFocusTarget(
 	return body;
 }
 
-export function enableWindowBodyKeyboardFocus(body: HTMLElement): void {
+function focusKeyboardScrollTarget(body: HTMLElement, target?: EventTarget | null): void {
+	if (shouldPreserveFocusTarget(target ?? null)) return;
+
+	const focusTarget = getKeyboardScrollFocusTarget(body, target);
+	if (focusTarget.tabIndex < 0) {
+		focusTarget.tabIndex = -1;
+	}
+	focusTarget.focus({ preventScroll: true });
+}
+
+export async function focusWindowBodyKeyboardScrollTargetAfterRender(
+	body: HTMLElement,
+): Promise<void> {
+	await nextTick();
+	await new Promise<void>((resolve) => {
+		requestAnimationFrame(() => {
+			resolve();
+		});
+	});
+
+	focusKeyboardScrollTarget(body);
+}
+
+export function enableWindowBodyKeyboardScrollFocus(body: HTMLElement): void {
 	body.tabIndex = -1;
 
 	body.addEventListener("pointerdown", (event) => {
-		if (shouldPreserveFocusTarget(event.target)) return;
-
-		const target = getKeyboardScrollFocusTarget(body, event.target);
-		if (target.tabIndex < 0) {
-			target.tabIndex = -1;
-		}
-		target.focus({ preventScroll: true });
+		focusKeyboardScrollTarget(body, event.target);
 	});
 }
