@@ -2,6 +2,9 @@
 <script lang="ts" setup>
 import { Volume2, VolumeX } from "lucide-vue-next";
 
+import CorpusTextDataList from "@/components/corpus-text-data-list.vue";
+import FeatureDataList from "@/components/feature-data-list.vue";
+import SampleTextDataList from "@/components/sample-text-data-list.vue";
 import dataTypes from "@/config/dataTypes.ts";
 import {
 	type SimpleMetadataAccessorKey,
@@ -22,6 +25,12 @@ const teiHeadersStore = useTeiHeadersStore();
 const { simpleItems } = storeToRefs(teiHeadersStore);
 const isCorpusTextList = computed(() => {
 	return props.params.dataTypes.length === 1 && props.params.dataTypes[0] === "CorpusText";
+});
+const isFeatureList = computed(() => {
+	return props.params.dataTypes.length === 1 && props.params.dataTypes[0] === "Feature";
+});
+const isSampleTextList = computed(() => {
+	return props.params.dataTypes.length === 1 && props.params.dataTypes[0] === "SampleText";
 });
 
 function normalizeFilterListBy() {
@@ -53,6 +62,8 @@ function getTargetType(dataType: string): string {
 
 <template>
 	<CorpusTextDataList v-if="isCorpusTextList" :items="simpleItems" />
+	<SampleTextDataList v-else-if="isSampleTextList" :items="simpleItems" />
+	<FeatureDataList v-else-if="isFeatureList" :items="simpleItems" />
 	<div v-else-if="groupedItems" class="relative isolate grid size-full overflow-auto">
 		<div v-if="debug">
 			<label for="debug">Debug</label>
