@@ -23,6 +23,10 @@ const interactiveContentSelector = [
 	"[tabindex]:not([tabindex='-1'])",
 ].join(", ");
 
+interface FocusKeyboardScrollTargetOptions {
+	afterRender?: boolean;
+}
+
 function shouldPreserveFocusTarget(target: EventTarget | null): boolean {
 	if (!(target instanceof Element)) return false;
 
@@ -73,23 +77,27 @@ function focusKeyboardScrollTarget(body: HTMLElement, target?: EventTarget | nul
 	focusTarget.focus({ preventScroll: true });
 }
 
-export async function focusWindowBodyKeyboardScrollTargetAfterRender(
+export async function focusWindowBodyKeyboardScrollTarget(
 	body: HTMLElement,
+	target?: EventTarget | null,
+	options: FocusKeyboardScrollTargetOptions = {},
 ): Promise<void> {
-	await nextTick();
-	await new Promise<void>((resolve) => {
-		requestAnimationFrame(() => {
-			resolve();
+	if (options.afterRender === true) {
+		await nextTick();
+		await new Promise<void>((resolve) => {
+			requestAnimationFrame(() => {
+				resolve();
+			});
 		});
-	});
+	}
 
-	focusKeyboardScrollTarget(body);
+	focusKeyboardScrollTarget(body, target);
 }
 
 export function enableWindowBodyKeyboardScrollFocus(body: HTMLElement): void {
 	body.tabIndex = -1;
 
 	body.addEventListener("pointerdown", (event) => {
-		focusKeyboardScrollTarget(body, event.target);
+		void focusWindowBodyKeyboardScrollTarget(body, event.target);
 	});
 }
