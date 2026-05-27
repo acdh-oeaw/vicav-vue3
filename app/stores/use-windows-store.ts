@@ -14,7 +14,10 @@ import {
 	type WindowItemTargetType,
 } from "@/types/global.ts";
 import * as arrange from "@/utils/window-arrangement";
-import { enableWindowBodyKeyboardFocus } from "@/utils/window-body-focus.ts";
+import {
+	enableWindowBodyKeyboardScrollFocus,
+	focusWindowBodyKeyboardScrollTarget,
+} from "@/utils/window-body-focus.ts";
 
 import { useToastsStore } from "./use-toasts-store.ts";
 
@@ -178,7 +181,10 @@ export const useWindowsStore = defineStore("windows", () => {
 			},
 			root: rootElement,
 		});
-		enableWindowBodyKeyboardFocus(winbox.body);
+		//focus window content on every click
+		enableWindowBodyKeyboardScrollFocus(winbox.body);
+		//focus window when opened the first time (=now)
+		void focusWindowBodyKeyboardScrollTarget(winbox.body, null, { afterRender: true });
 
 		const teiSourceParse = TeiSource.safeParse(params);
 		if (teiSourceParse.success) {
