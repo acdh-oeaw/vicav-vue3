@@ -103,7 +103,7 @@ watch(
 					@keydown.enter.prevent="submit"
 				/>
 			</div>
-			<div v-if="selectOptions.size > 0" class="ib-select">
+			<div v-if="props.selectOptions.size > 0" class="ib-select">
 				<!-- eslint-disable-next-line vuejs-accessibility/form-control-has-label -->
 				<select v-model="mySelectOption">
 					<option v-for="([key, value], i) in props.selectOptions" :key="i" :value="key">

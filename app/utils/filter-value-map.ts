@@ -22,3 +22,24 @@ export function cloneFilterValueMap(value: unknown): FilterValueMap {
 	const current = ensureFilterValueMap(value);
 	return new FilterValueMap(current.entries(), current.exclude);
 }
+
+function stringifyFilterValue(value: unknown): string {
+	if (typeof value === "string") return value;
+	if (typeof value === "number" || typeof value === "boolean") return String(value);
+	if (value == null) return "";
+	return JSON.stringify(value);
+}
+
+export function matchesFilterValueMap(value: unknown, filterValue: unknown): boolean {
+	const map = ensureFilterValueMap(filterValue);
+
+	if (map.size === 0 && map.exclude.size === 0) return true;
+
+	const values = Array.isArray(value)
+		? value.map(stringifyFilterValue)
+		: [stringifyFilterValue(value)];
+	const included = map.size === 0 || values.some((entry) => map.has(entry));
+	const excluded = values.some((entry) => map.exclude.has(entry));
+
+	return included && !excluded;
+}

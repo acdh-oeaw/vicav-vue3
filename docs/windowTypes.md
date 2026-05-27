@@ -246,6 +246,10 @@ Rendered as
 
 Rendered as [data-list-window-content.vue](../app/components/data-list-window-content.vue).
 
+Single-type `CorpusText`, `SampleText`, and `Feature` lists are delegated to specialized
+searchable/filterable simple-metadata list components. Mixed lists and other data types use the
+grouped list rendering in `data-list-window-content.vue`.
+
 - `params`:
 
 ```ts

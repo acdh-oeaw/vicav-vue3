@@ -66,7 +66,7 @@ const columnVisibility = computed(() => {
 	};
 });
 
-function applyGlobalFilter(row: Row<never>, _colId: string, queryString: string) {
+function applyGlobalFilter(row: Row<FeatureType>, _colId: string, queryString: string) {
 	const hidableVisibleCells = row.getVisibleCells().filter((cell) => cell.column.getCanHide());
 	if (hidableVisibleCells.length === 0) return true;
 	if (
