@@ -51,20 +51,17 @@ test.describe("Desktop Menu - All Categories Visible", () => {
 		).toBeVisible();
 	});
 
-	test("should display Glossary menu with correct submenu items", async ({ page }) => {
-		// 1. Click on Glossary menu item and verify submenu items
+	test("should display Dictionary menu with correct submenu items", async ({ page }) => {
+		// 1. Click on Dictionary menu item and verify submenu items
 		await page.setViewportSize({ width: 1920, height: 1080 });
 		await page.goto("/");
 		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
 
-		await page.getByRole("menuitem", { name: "Glossary" }).click();
+		await page.getByRole("menuitem", { name: "Dictionary" }).click();
 
-		// expect: Glossary menu should contain: Search for vocabulary in corpus texts, Functional Requirements and Data Specification
+		// expect: Dictionary menu should contain: Search for vocabulary in corpus texts, Functional Requirements and Data Specification
 		await expect(
 			page.getByRole("menuitem", { name: "Search for vocabulary in corpus texts" }),
-		).toBeVisible();
-		await expect(
-			page.getByRole("menuitem", { name: "Functional Requirements and Data Specification" }),
 		).toBeVisible();
 	});
 

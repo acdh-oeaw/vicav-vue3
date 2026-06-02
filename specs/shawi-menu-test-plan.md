@@ -87,9 +87,9 @@ all menu functionality, window management, navigation, and user interactions.
 
 **Steps:**
 
-1. Navigate to home page and verify menu bar contains About, Profiles, Corpus, Glossary, Windows
+1. Navigate to home page and verify menu bar contains About, Profiles, Corpus, Dictionary, Windows
    menu items
-   - expect: All five menu items should be visible: About, Profiles, Corpus, Glossary, Windows
+   - expect: All five menu items should be visible: About, Profiles, Corpus, Dictionary, Windows
 
 #### 2.2. Desktop Menu - About Menu Content
 
@@ -120,14 +120,14 @@ all menu functionality, window management, navigation, and user interactions.
    - expect: Corpus menu should contain: List all entries, Search the corpus, Functional
      Requirements and Data Specification
 
-#### 2.5. Desktop Menu - Glossary Menu Content
+#### 2.5. Desktop Menu - Dictionary Menu Content
 
 **File:** `e2e/pages/shawi/menu/desktop-all-categories.test.ts`
 
 **Steps:**
 
-1. Click on Glossary menu item and verify submenu items
-   - expect: Glossary menu should contain: Search for vocabulary in corpus texts, Functional
+1. Click on Dictionary menu item and verify submenu items
+   - expect: Dictionary menu should contain: Search for vocabulary in corpus texts, Functional
      Requirements and Data Specification
 
 #### 2.6. Desktop Menu - Windows Menu Content
