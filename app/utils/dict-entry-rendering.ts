@@ -70,15 +70,15 @@ export interface RenderedBibliographyItem {
 }
 
 export interface RenderedDictEntry {
-	id?: string;
+	id: string;
 	sid?: string;
 	xmlId?: string;
-	lemma?: string;
+	lemma: string;
 	title?: string;
 	status?: string;
 	type?: string;
 	html?: string;
-	selfHref?: string;
+	selfHref: string;
 	entryLang?: string;
 	location?: string;
 	locations: Array<RenderedLocation>;
@@ -617,21 +617,17 @@ function collectSenseMetadata(sense: SenseLike): Array<RenderedMetadataItem> {
 	]);
 }
 
-function normalizeSelfHref(entry: RestVLEEntry): string | undefined {
-	return entry._links?.self.href;
-}
-
 export function normalizeEntry(entry: RestVLEEntry): RenderedDictEntry {
 	if (typeof entry.entry === "string") {
 		return {
 			id: entry.id,
 			sid: entry.sid,
 			lemma: entry.lemma,
-			title: entry.lemma ?? entry.id,
+			title: entry.lemma,
 			status: entry.status,
 			type: entry.type,
 			html: entry.entry,
-			selfHref: normalizeSelfHref(entry),
+			selfHref: entry._links.self.href,
 			locations: [],
 			etymologies: [],
 			bibliography: [],
@@ -733,8 +729,8 @@ export function normalizeEntry(entry: RestVLEEntry): RenderedDictEntry {
 	const firstLemmaText = lemmaForms
 		.flatMap((form) => form.orthographies)
 		.find((orthography) => !orthography.isMissing)?.text;
-	const normalizedLemma = entry.lemma != null && entry.lemma !== "[]" ? entry.lemma : undefined;
-	const title = firstLemmaText ?? normalizedLemma ?? quote ?? entry.id ?? "Dictionary entry";
+	const normalizedLemma = entry.lemma !== "[]" ? entry.lemma : undefined;
+	const title = firstLemmaText ?? normalizedLemma ?? quote ?? entry.id;
 
 	return {
 		id: entry.id,
@@ -744,7 +740,7 @@ export function normalizeEntry(entry: RestVLEEntry): RenderedDictEntry {
 		title,
 		status: entry.status,
 		type: entry.type,
-		selfHref: normalizeSelfHref(entry),
+		selfHref: entry._links.self.href,
 		entryLang: normalizedPayload?.["@lang"],
 		location,
 		locations,

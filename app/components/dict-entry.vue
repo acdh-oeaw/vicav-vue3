@@ -5,6 +5,7 @@ import type { RestVLEEntry } from "@/lib/api-client";
 import {
 	formatLocation,
 	normalizeEntry,
+	type RenderedDictEntry,
 	type RenderedForm,
 	type RenderedGrammarItem,
 	type RenderedLocation,
@@ -69,24 +70,20 @@ const hasInflectedForms = computed(() => e.value.inflectedForms.length > 0);
 const hasEtymology = computed(() => e.value.etymologies.length > 0);
 const hasEditors = computed(() => uniqueEditors.value.length > 0);
 
-const getEntryLink = (entryId: string | number | null | undefined, responseFormat?: "json") => {
-	if (entryId == null || props.dictId == null) return undefined;
-
-	const path = `/restvle/dicts/${props.dictId}/entries`;
+const getEntryLink = (entry: RenderedDictEntry, responseFormat?: "json") => {
 	const url = env.public.apiBaseUrl
-		? new URL(path, env.public.apiBaseUrl)
-		: new URL(path, "http://localhost");
-	url.searchParams.set("id", String(entryId));
+		? new URL(entry.selfHref, env.public.apiBaseUrl)
+		: new URL(entry.selfHref, "http://localhost");
 
 	if (responseFormat != null) {
 		url.searchParams.set("format", responseFormat);
 	}
-
-	return env.public.apiBaseUrl ? url.toString() : `${path}${url.search}`;
+	// TODO: Why? above this is resolved to localhost and now back to relative?
+	return env.public.apiBaseUrl ? url.toString() : `${entry.selfHref}${url.search}`;
 };
 
-const entryXmlLink = computed(() => getEntryLink(e.value.id));
-const entryJsonLink = computed(() => getEntryLink(e.value.id, "json"));
+const entryXmlLink = computed(() => getEntryLink(e.value));
+const entryJsonLink = computed(() => getEntryLink(e.value, "json"));
 
 const findGrammarValue = (items: Array<RenderedGrammarItem>, label: string) => {
 	const value = items.find((item) => item.label === label)?.value;
