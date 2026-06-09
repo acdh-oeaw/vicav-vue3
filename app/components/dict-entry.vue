@@ -159,12 +159,12 @@ const languageClass = (language: string | undefined) => {
 		<div v-if="e.html" v-html="e.html" />
 		<article
 			v-else
-			class="not-prose overflow-hidden border-2 border-orange-400 bg-white text-gray-950"
+			class="not-prose overflow-hidden border-2 border-primary bg-white text-gray-950"
 		>
-			<header class="bg-orange-400 px-3 py-2 text-white">
+			<header class="bg-primary px-3 py-2 text-white">
 				<div class="flex flex-wrap items-start justify-between gap-x-2 gap-y-1">
 					<span
-						class="mt-0.5 inline-flex size-7 shrink-0 items-center justify-center rounded-sm border border-white/70 bg-white text-orange-400"
+						class="mt-0.5 inline-flex size-7 shrink-0 items-center justify-center rounded-sm border border-white/70 bg-white text-primary"
 					>
 						<BookA v-if="e.type === 'entry'" class="size-4" />
 						<MessageSquareQuote v-else class="size-4" />
@@ -210,7 +210,7 @@ const languageClass = (language: string | undefined) => {
 								<TooltipTrigger as-child>
 									<NuxtLink
 										aria-label="entry as xml"
-										class="flex size-8 items-center justify-center rounded-sm border border-white/50 text-white hover:bg-white hover:text-orange-500"
+										class="flex size-8 items-center justify-center rounded-sm border border-white/50 text-white hover:bg-white hover:text-primary"
 										external
 										rel="noopener noreferrer"
 										target="_blank"
@@ -229,7 +229,7 @@ const languageClass = (language: string | undefined) => {
 								<TooltipTrigger as-child>
 									<NuxtLink
 										aria-label="entry as JSON"
-										class="flex size-8 items-center justify-center rounded-sm border border-white/50 text-white hover:bg-white hover:text-orange-500"
+										class="flex size-8 items-center justify-center rounded-sm border border-white/50 text-white hover:bg-white hover:text-primary"
 										external
 										rel="noopener noreferrer"
 										target="_blank"
@@ -251,7 +251,7 @@ const languageClass = (language: string | undefined) => {
 				<div class="grid grid-cols-[minmax(8.75rem,12.5rem)_1fr] gap-x-6">
 					<div
 						v-if="hasEtymology"
-						class="bg-orange-50 px-4 py-3 text-base leading-none font-semibold text-orange-500 uppercase"
+						class="px-4 py-3 text-base leading-none font-semibold text-primary uppercase"
 					>
 						Etymology
 					</div>
@@ -271,7 +271,7 @@ const languageClass = (language: string | undefined) => {
 
 					<div
 						v-if="hasInflectedForms"
-						class="bg-orange-50 px-4 py-3 text-base leading-none font-semibold text-orange-500 uppercase"
+						class="px-4 py-3 text-base leading-none font-semibold text-primary uppercase"
 					>
 						Infl. Forms
 					</div>
@@ -329,13 +329,11 @@ const languageClass = (language: string | undefined) => {
 					</section>
 
 					<template v-for="(sense, senseIndex) in e.senses" :key="sense.id ?? senseIndex">
-						<div
-							class="bg-orange-50 px-4 py-3 text-base leading-none font-semibold text-orange-500 uppercase"
-						>
+						<div class="px-4 py-3 text-base leading-none font-semibold text-primary uppercase">
 							{{ e.senses.length > 1 ? `Sense ${String(senseIndex + 1)}` : "Sense" }}
 						</div>
 						<section class="py-0.5">
-							<div class="rounded-sm border-2 border-orange-400 px-2 py-1">
+							<div class="rounded-sm border-2 border-primary px-2 py-1">
 								<div v-if="senseGrammarText(sense.grammar)" class="mb-1 font-bold italic">
 									({{ senseGrammarText(sense.grammar) }})
 								</div>
@@ -362,7 +360,7 @@ const languageClass = (language: string | undefined) => {
 									<div
 										v-for="(example, exampleIndex) in sense.examples"
 										:key="`${example.kind}-${example.id ?? example.quote?.text ?? exampleIndex}`"
-										class="rounded-lg border-2 border-orange-400 bg-orange-50 px-1 py-1"
+										class="rounded-lg border-2 border-primary px-1 py-1"
 									>
 										<div class="flex flex-wrap items-start justify-between gap-1">
 											<div
@@ -424,7 +422,7 @@ const languageClass = (language: string | undefined) => {
 
 					<div
 						v-if="hasEditors"
-						class="bg-orange-50 px-4 py-3 text-base leading-none font-semibold text-orange-500 uppercase"
+						class="px-4 py-3 text-base leading-none font-semibold text-primary uppercase"
 					>
 						Editors
 					</div>
