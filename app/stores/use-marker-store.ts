@@ -29,6 +29,7 @@ export const useMarkerStore = defineStore("markers", () => {
 	const markerSettings = ref({
 		flowerCenterId: null as string | null,
 		strokeWidth: 4,
+		size: 12,
 		greyscale: false,
 		showCenter: true,
 		showOtherFeatureValues: false,
@@ -138,6 +139,7 @@ export const useMarkerStore = defineStore("markers", () => {
 			() => markerSettings.value.showCenter,
 			() => markerSettings.value.showOtherFeatureValues,
 			() => markerSettings.value.flowerCenterId,
+			() => markerSettings.value.size,
 		],
 		() => {
 			markerSettings.value.triggerRepaint = true;

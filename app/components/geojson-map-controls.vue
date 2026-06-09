@@ -108,6 +108,14 @@ function downloadLegend() {
 					><span>Greyscale markers</span> <input v-model="markerSettings.greyscale" type="checkbox"
 				/></label>
 				<label class="flex items-center justify-between"
+					><span>Marker size</span
+					><input
+						v-model="markerSettings.size"
+						class="mr-[-1em] ml-1 w-[3em] text-right font-medium"
+						min="1"
+						type="number"
+				/></label>
+				<label class="flex items-center justify-between"
 					><span>Stroke width</span
 					><input
 						v-model="markerSettings.strokeWidth"
