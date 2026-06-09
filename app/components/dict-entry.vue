@@ -71,15 +71,13 @@ const hasEtymology = computed(() => e.value.etymologies.length > 0);
 const hasEditors = computed(() => uniqueEditors.value.length > 0);
 
 const getEntryLink = (entry: RenderedDictEntry, responseFormat?: "json") => {
-	const url = env.public.apiBaseUrl
-		? new URL(entry.selfHref, env.public.apiBaseUrl)
-		: new URL(entry.selfHref, "http://localhost");
+	const url = new URL(entry.selfHref, env.public.apiBaseUrl);
 
 	if (responseFormat != null) {
 		url.searchParams.set("format", responseFormat);
 	}
-	// TODO: Why? above this is resolved to localhost and now back to relative?
-	return env.public.apiBaseUrl ? url.toString() : `${entry.selfHref}${url.search}`;
+
+	return url.toString();
 };
 
 const entryXmlLink = computed(() => getEntryLink(e.value));
