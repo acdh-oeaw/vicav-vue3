@@ -159,7 +159,7 @@ const languageClass = (language: string | undefined) => {
 		<div v-if="e.html" v-html="e.html" />
 		<article
 			v-else
-			class="not-prose overflow-hidden border-2 border-primary-400 bg-white text-gray-950"
+			class="not-prose overflow-hidden border-2 border-primary bg-white text-gray-950"
 		>
 			<header class="bg-primary px-3 py-2 text-white">
 				<div class="flex flex-wrap items-start justify-between gap-x-2 gap-y-1">
