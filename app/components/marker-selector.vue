@@ -18,6 +18,7 @@ const props = withDefaults(
 		enableHideToggle?: boolean;
 		usePopoverPortal?: boolean;
 		usePopoverModal?: boolean;
+		hideMarker?: boolean;
 	}>(),
 	{
 		enableHideToggle: true,
@@ -104,6 +105,7 @@ const customIcons = [
 			v-if="props.type?.includes('icon')"
 			:color="modelValue.colorCode"
 			:custom-icons="customIcons"
+			:display-edit-icon="hideMarker"
 			:enable-apply-to-underlying-feature-values="hasUnderlyingFeatureValues(modelValue.id)"
 			:enable-hide-toggle="enableHideToggle"
 			:hidden="modelValue.hidden"

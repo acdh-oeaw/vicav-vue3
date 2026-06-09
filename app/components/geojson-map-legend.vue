@@ -109,13 +109,14 @@ function shouldShowOtherFeatureValues(feature: ColumnType) {
 					class="my-2 flex items-start gap-2"
 					:class="{ 'opacity-45': isMarkerHidden(feature.id) }"
 				>
+					<span>{{ feature.columnDef.header }} ({{ getMatchingRowCount(feature.id) }})</span>
 					<MarkerSelector
+						:hide-marker="true"
 						:icon-categories="['shapes']"
 						:model-value="markers.get(feature.id)!"
 						:use-popover-portal="true"
 						@update:model-value="(props) => updateMarker(props)"
 					></MarkerSelector>
-					<span>{{ feature.columnDef.header }} ({{ getMatchingRowCount(feature.id) }})</span>
 				</div>
 				<div
 					v-for="filter in getCombinedFilters(feature)"

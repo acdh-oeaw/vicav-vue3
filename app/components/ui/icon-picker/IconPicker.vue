@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useDebounce } from "@vueuse/core";
-import { Eye, EyeOff, Palette } from "lucide-vue-next";
+import { Eye, EyeOff, Palette, PencilIcon } from "lucide-vue-next";
 import type { SVGAttributes } from "vue";
 
 import { iconsData } from "./icons-data.ts";
@@ -29,6 +29,7 @@ const props = withDefaults(
 		enableApplyToUnderlyingFeatureValues?: boolean;
 		usePopoverPortal?: boolean;
 		usePopoverModal?: boolean;
+		displayEditIcon?: boolean;
 	}>(),
 	{
 		searchable: true,
@@ -120,13 +121,14 @@ function generateColorVariants() {
 		<PopoverTrigger as-child>
 			<Button class="h-auto p-0.5" variant="outline">
 				<Icon
-					v-if="icon"
+					v-if="icon && !displayEditIcon"
 					:additional-attributes="icon.additionalAttributes"
 					:is-custom-icon="icon.custom"
 					:name="icon?.name ?? ''"
 					:size="12"
 					:style="{ stroke: localColor, fill: icon.custom ? localColor : null }"
 				/>
+				<PencilIcon v-else-if="displayEditIcon" :size="12"></PencilIcon>
 				<span v-else class="px-1">{{ triggerPlaceholder || "Select an icon" }}</span>
 			</Button>
 		</PopoverTrigger>
@@ -175,6 +177,10 @@ function generateColorVariants() {
 						v-else
 						:key="iconOption.name"
 						class="flex aspect-square h-auto items-center justify-center rounded-md border p-1 hover:bg-gray-100"
+						:class="{
+							'border-2 bg-gray-100':
+								currentIcon?.name === iconOption.name && currentIcon?.custom === iconOption.custom,
+						}"
 						variant="outline"
 						@click.prevent.stop="selectIcon(iconOption)"
 					>
