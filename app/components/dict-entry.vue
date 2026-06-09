@@ -181,7 +181,7 @@ const languageClass = (language: string | undefined) => {
 								</span>
 								<span
 									v-if="formText(form)"
-									class="text-2xl leading-none font-medium break-words italic underline decoration-white/70 decoration-2 underline-offset-4"
+									class="text-2xl leading-none font-medium wrap-break-word italic underline decoration-white/70 decoration-2 underline-offset-4"
 									:title="languageTooltip(formLanguage(form))"
 								>
 									{{ formText(form) }}
