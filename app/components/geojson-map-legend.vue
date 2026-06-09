@@ -111,6 +111,7 @@ function shouldShowOtherFeatureValues(feature: ColumnType) {
 				>
 					<span>{{ feature.columnDef.header }} ({{ getMatchingRowCount(feature.id) }})</span>
 					<MarkerSelector
+						data-feature-marker-selector
 						:hide-marker="true"
 						:icon-categories="['shapes']"
 						:model-value="markers.get(feature.id)!"
