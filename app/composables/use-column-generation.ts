@@ -165,7 +165,12 @@ function createColumnDefs(
 		// .filter((col) => col.columns.some((col) => (col.columns?.length ?? -1) > 0))
 		.map((col) => columnHelper.group(col));
 	// .sort((a, b) => String(a.header).localeCompare(String(b.header)));
-	return groupedColumns;
+	return [
+		...groupedColumns.filter(
+			(c) => !["traditional_classification", "country"].includes(c.id ?? ""),
+		),
+		...groupedColumns.filter((c) => ["traditional_classification", "country"].includes(c.id ?? "")),
+	];
 }
 
 export function useColumnGeneration() {

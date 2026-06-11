@@ -39,10 +39,12 @@ const extendedFeatureNames = computed(() => {
 	return allFeatureNames;
 });
 const extendedFeatureCategories = computed(() => {
-	const featureCategories = projectData.value!.projectConfig?.staticData?.table?.[1] as Record<
-		string,
-		string
+	const featureCategoryArray = projectData.value!.projectConfig?.staticData?.table?.[1] as Array<
+		Record<string, string>
 	>;
+	const featureCategories = Object.fromEntries(
+		featureCategoryArray.flatMap((obj) => Object.entries(obj)),
+	);
 	const extendedFeatureCategories = { ...featureCategories, country: "Country" };
 	return extendedFeatureCategories;
 });
