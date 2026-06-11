@@ -1,66 +1,16 @@
 <script setup lang="ts">
-import {
-	BookA,
-	Braces,
-	ChevronDown,
-	ChevronUp,
-	Code,
-	Languages,
-	MapPin,
-	MessageSquareQuote,
-} from "lucide-vue-next";
+import { BookA, BookOpen, Braces, Code, MapPin, MessageSquareQuote } from "lucide-vue-next";
 
 import type { RestVLEEntry } from "@/lib/api-client";
 import {
 	formatLocation,
 	normalizeEntry,
+	type RenderedDictEntry,
 	type RenderedForm,
-	type RenderedMetadataItem,
+	type RenderedGrammarItem,
+	type RenderedLocation,
+	type RenderedText,
 } from "@/utils/dict-entry-rendering";
-
-interface GrammarHeaderStyle {
-	label: string;
-	value: string;
-}
-
-const grammarHeaderStyles: Record<string, GrammarHeaderStyle> = {
-	"Part of speech": {
-		label: "bg-sky-200 text-sky-950",
-		value: "bg-sky-50/95 text-sky-950",
-	},
-	Class: {
-		label: "bg-violet-200 text-violet-950",
-		value: "bg-violet-50/95 text-violet-950",
-	},
-	"Syn root": {
-		label: "bg-orange-200 text-orange-950",
-		value: "bg-orange-50/95 text-orange-950",
-	},
-	"Dia root": {
-		label: "bg-green-200 text-green-950",
-		value: "bg-green-50/95 text-green-950",
-	},
-};
-
-const neutralGrammarHeaderStyle: GrammarHeaderStyle = {
-	label: "bg-slate-200 text-slate-950",
-	value: "bg-slate-50/95 text-slate-950",
-};
-
-const languageBadgeBaseClass = "inline-flex items-center gap-1 font-semibold";
-
-const languageBadgeStyles: Record<string, string> = {
-	ar: "border-amber-300 bg-amber-50 text-amber-950",
-	"ar-latn": "border-red-300 bg-red-50 text-red-950",
-	de: "border-emerald-300 bg-emerald-50 text-emerald-950",
-	en: "border-sky-300 bg-sky-50 text-sky-950",
-	fr: "border-violet-300 bg-violet-50 text-violet-950",
-};
-
-const neutralLanguageBadgeStyle = "border-slate-300 bg-slate-50 text-slate-950";
-
-const sectionHeadingClass =
-	"w-36 border-l-4 border-primary bg-primary/10 align-top text-xs font-black tracking-[0.12em] text-primary uppercase";
 
 const props = withDefaults(
 	defineProps<{
@@ -75,699 +25,414 @@ const props = withDefaults(
 	},
 );
 
+const e = computed(() => normalizeEntry(props.entry));
 const env = useRuntimeConfig();
 
-const e = computed(() => normalizeEntry(props.entry));
-const isExpanded = ref(props.expanded);
+const compactBadgeClass =
+	"inline-flex min-h-6 items-center gap-1 rounded-full border border-gray-300 bg-white/90 px-1.5 text-sm leading-none text-gray-900 shadow-xs";
 
-watch(
-	() => props.expanded,
-	(value) => {
-		isExpanded.value = value;
-	},
-);
+const bibliographyById = computed(() => {
+	return new Map(e.value.bibliography.map((item) => [item.id, item.label]));
+});
 
-const getEntryLink = (entryId: string | number | null | undefined, responseFormat?: "json") => {
-	if (entryId == null || props.dictId == null) return undefined;
+const headerForms = computed(() => {
+	return e.value.lemmaForms.concat(e.value.variantForms);
+});
 
-	const path = `/restvle/dicts/${props.dictId}/entries`;
-	const url = env.public.apiBaseUrl
-		? new URL(path, env.public.apiBaseUrl)
-		: new URL(path, "http://localhost");
-	url.searchParams.set("id", String(entryId));
+const compactGrammar = computed(() => {
+	const values = {
+		partOfSpeech: findGrammarValue(e.value.grammar, "Part of speech"),
+		class: findGrammarValue(e.value.grammar, "Class"),
+		synRoot: findGrammarValue(e.value.grammar, "Syn root"),
+		diaRoot: findGrammarValue(e.value.grammar, "Dia root"),
+	};
+	const roots = [
+		formatRootGrammar(values.synRoot, "synRoot"),
+		formatRootGrammar(values.diaRoot, "diaRoot"),
+	].filter(Boolean);
+
+	return [values.partOfSpeech, values.class, roots.join(", ")].filter(Boolean).join(", ");
+});
+
+const uniqueEditors = computed(() => {
+	const names = new Set<string>();
+
+	for (const editor of e.value.editors) {
+		if (editor.who != null && editor.who !== "") {
+			names.add(editor.who);
+		}
+	}
+
+	return Array.from(names);
+});
+
+const hasInflectedForms = computed(() => e.value.inflectedForms.length > 0);
+const hasEtymology = computed(() => e.value.etymologies.length > 0);
+const hasEditors = computed(() => uniqueEditors.value.length > 0);
+
+const getEntryLink = (entry: RenderedDictEntry, responseFormat?: "json") => {
+	const url = new URL(entry.selfHref, env.public.apiBaseUrl);
 
 	if (responseFormat != null) {
 		url.searchParams.set("format", responseFormat);
 	}
 
-	return env.public.apiBaseUrl ? url.toString() : `${path}${url.search}`;
+	return url.toString();
 };
 
-const shouldRenderFormMetadata = (item: RenderedMetadataItem) => {
-	return !(
-		item.label === "type" &&
-		(item.value === "lemma" || item.value === "variant" || item.value === "inflected")
-	);
+const entryXmlLink = computed(() => getEntryLink(e.value));
+const entryJsonLink = computed(() => getEntryLink(e.value, "json"));
+
+const findGrammarValue = (items: Array<RenderedGrammarItem>, label: string) => {
+	const value = items.find((item) => item.label === label)?.value;
+	return value == null || value === "-" ? undefined : value;
 };
 
-const shouldRenderPrimaryFormMetadata = (item: RenderedMetadataItem) => {
-	return shouldRenderFormMetadata(item) && item.label !== "lang";
+const formatRootGrammar = (value: string | undefined, label: string) => {
+	if (value == null) return undefined;
+	return `${value} (${label})`;
 };
 
-const getFormLanguage = (form: RenderedForm) => {
-	return form.metadata.find((item) => item.label === "lang")?.value;
+const formText = (form: RenderedForm) => {
+	return form.orthographies.find((orthography) => !orthography.isMissing)?.text;
 };
 
-const getGrammarHeaderStyle = (label: string): GrammarHeaderStyle => {
-	return grammarHeaderStyles[label] ?? neutralGrammarHeaderStyle;
+const formLanguage = (form: RenderedForm) => {
+	return form.orthographies.find((orthography) => !orthography.isMissing)?.lang;
 };
 
-const getLanguageBadgeClass = (language: string) => {
-	const normalizedLanguage = language.toLocaleLowerCase();
-
-	return languageBadgeStyles[normalizedLanguage] ?? neutralLanguageBadgeStyle;
+const languageTooltip = (language: string | undefined) => {
+	if (language == null || language === "") return undefined;
+	return `Language: ${language}`;
 };
 
-const shouldRenderAsLanguageBadge = (item: RenderedMetadataItem) => {
-	return item.label === "lang" || item.label === "entry language";
+const sourceLabel = (source: string | undefined) => {
+	if (source == null) return undefined;
+	return bibliographyById.value.get(source);
 };
 
-const toggleExpanded = () => {
-	isExpanded.value = !isExpanded.value;
+const grammarValues = (items: Array<RenderedGrammarItem>) => {
+	return items.map((item) => item.value).filter((value) => value !== "-");
 };
 
-const expandEntry = () => {
-	isExpanded.value = true;
+const formGrammarText = (form: RenderedForm) => {
+	const values = grammarValues(form.grammar);
+	return values.length === 0 ? undefined : values.join(", ");
 };
 
-const formatAvailableCount = (count: number, label: string) => {
-	return `${count} ${label}${count === 1 ? "" : "s"} available`;
+const senseGrammarText = (items: Array<RenderedGrammarItem>) => {
+	const values = grammarValues(items);
+	return values.length === 0 ? undefined : values.join(", ");
+};
+
+const locationKey = (location: RenderedLocation) => {
+	return formatLocation(location);
+};
+
+const textKey = (text: RenderedText, index: number) => {
+	return `${text.lang ?? "unknown"}-${text.source ?? "none"}-${text.text}-${String(index)}`;
+};
+
+const languageClass = (language: string | undefined) => {
+	switch (language?.toLocaleLowerCase()) {
+		case "en":
+			return "text-sky-500";
+		case "de":
+			return "text-emerald-600";
+		case "tr":
+			return "text-red-600";
+		case "fr":
+			return "text-purple-700";
+		default:
+			return "text-gray-900";
+	}
 };
 </script>
 
 <template>
-	<!-- eslint-disable tailwindcss/classnames-order, tailwindcss/no-custom-classname -->
+	<!-- eslint-disable tailwindcss/classnames-order -->
 	<div>
-		<div v-if="debug" class="text-sm">
+		<div v-if="props.debug" class="text-sm">
 			<pre>{{ JSON.stringify(e.raw, null, "  ") }}</pre>
 		</div>
 		<!-- eslint-disable-next-line vue/no-v-html -->
 		<div v-if="e.html" v-html="e.html" />
-		<Card v-else class="overflow-hidden rounded-sm border-2 border-primary/40 shadow-sm">
-			<CardHeader class="gap-3 border-b border-primary bg-primary text-on-primary">
-				<div class="flex items-stretch justify-between gap-3">
-					<div class="min-w-0 flex-[1_1_70%]">
-						<div class="flex h-full items-start gap-3">
-							<TooltipProvider
-								v-if="e.type === 'entry' || e.type === 'example'"
-								:delay-duration="0"
-							>
-								<Tooltip>
-									<TooltipTrigger as-child>
-										<button
-											:aria-label="e.type"
-											class="flex size-10 shrink-0 items-center justify-center rounded-sm border border-on-primary/40 bg-on-primary text-primary shadow-sm"
-											type="button"
-										>
-											<BookA v-if="e.type === 'entry'" class="size-5" />
-											<MessageSquareQuote v-else class="size-5" />
-										</button>
-									</TooltipTrigger>
-									<TooltipContent class="border-black bg-black text-white" side="bottom">
-										{{ e.type }}
-									</TooltipContent>
-								</Tooltip>
-							</TooltipProvider>
-							<div class="flex min-w-0 flex-1 self-stretch flex-col">
-								<div class="space-y-1">
-									<CardTitle
-										class="max-w-full break-words text-2xl leading-tight font-black tracking-normal text-on-primary underline decoration-on-primary/40 decoration-2 underline-offset-4 [overflow-wrap:anywhere]"
-									>
-										{{ e.title }}
-									</CardTitle>
-									<CardDescription
-										v-if="e.location"
-										class="text-sm font-semibold tracking-[0.08em] text-on-primary/80 uppercase"
-									>
-										{{ e.location }}
-									</CardDescription>
-								</div>
-								<div v-if="e.grammar.length > 0" class="mt-auto flex flex-wrap gap-1.5 pt-2">
-									<div
-										v-for="item in e.grammar"
-										:key="`header-grammar-${item.label}-${item.value}`"
-										class="inline-flex overflow-hidden rounded-sm border border-on-primary/30 text-xs shadow-sm"
-									>
-										<span
-											class="px-2 py-1 font-black tracking-[0.08em] uppercase"
-											:class="getGrammarHeaderStyle(item.label).label"
-										>
-											{{ item.label }}
-										</span>
-										<span
-											class="px-2 py-1 font-semibold"
-											:class="getGrammarHeaderStyle(item.label).value"
-										>
-											{{ item.value }}
-										</span>
-									</div>
-								</div>
-							</div>
+		<article
+			v-else
+			class="not-prose overflow-hidden border-2 border-primary bg-white text-gray-950"
+		>
+			<header class="bg-primary px-3 py-2 text-white">
+				<div class="flex flex-wrap items-start justify-between gap-x-2 gap-y-1">
+					<span
+						class="mt-0.5 inline-flex size-7 shrink-0 items-center justify-center rounded-sm border border-white/70 bg-white text-primary"
+					>
+						<BookA v-if="e.type === 'entry'" class="size-4" />
+						<MessageSquareQuote v-else class="size-4" />
+					</span>
+					<div class="min-w-0 flex-1">
+						<div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-lg leading-tight">
+							<template v-for="(form, formIndex) in headerForms" :key="`header-${formIndex}`">
+								<span
+									v-if="formIndex > 0"
+									aria-hidden="true"
+									class="hidden text-white/80 sm:inline"
+								>
+									;
+								</span>
+								<span
+									v-if="formText(form)"
+									class="text-2xl leading-none font-medium wrap-break-word italic underline decoration-white/70 decoration-2 underline-offset-4"
+									:title="languageTooltip(formLanguage(form))"
+								>
+									{{ formText(form) }}
+								</span>
+								<span
+									v-for="location in form.locations"
+									:key="`header-${formIndex}-${locationKey(location)}`"
+									:class="compactBadgeClass"
+								>
+									<MapPin class="size-4 text-gray-400" />
+									{{ formatLocation(location) }}
+								</span>
+								<span v-if="sourceLabel(form.source)" :class="compactBadgeClass">
+									<BookOpen class="size-4 text-gray-500" />
+									{{ sourceLabel(form.source) }}
+								</span>
+							</template>
+						</div>
+						<div v-if="compactGrammar" class="pl-10 text-xl leading-tight">
+							{{ compactGrammar }}
 						</div>
 					</div>
-					<div class="ml-4 flex min-w-0 max-w-[16rem] flex-[0_1_16rem] flex-col items-end gap-2">
-						<div class="flex items-center justify-end gap-2">
-							<TooltipProvider :delay-duration="0">
-								<Tooltip>
-									<TooltipTrigger as-child>
-										<button
-											:aria-label="isExpanded ? 'Collapse entry details' : 'Expand entry details'"
-											class="flex size-8 items-center justify-center rounded-sm border border-on-primary/40 text-on-primary hover:bg-on-primary hover:text-primary"
-											type="button"
-											@click="toggleExpanded"
-										>
-											<ChevronUp v-if="isExpanded" class="size-4" />
-											<ChevronDown v-else class="size-4" />
-										</button>
-									</TooltipTrigger>
-									<TooltipContent class="border-black bg-black text-white" side="bottom">
-										{{ isExpanded ? "collapse entry details" : "expand entry details" }}
-									</TooltipContent>
-								</Tooltip>
-							</TooltipProvider>
-							<TooltipProvider :delay-duration="0">
-								<Tooltip>
-									<TooltipTrigger as-child>
-										<NuxtLink
-											aria-label="entry as xml"
-											class="flex size-8 items-center justify-center rounded-sm border border-on-primary/40 text-on-primary hover:bg-on-primary hover:text-primary"
-											external
-											rel="noopener noreferrer"
-											target="_blank"
-											:to="getEntryLink(e.id)"
-										>
-											<Code class="size-4" />
-										</NuxtLink>
-									</TooltipTrigger>
-									<TooltipContent class="border-black bg-black text-white" side="bottom">
-										view as xml
-									</TooltipContent>
-								</Tooltip>
-							</TooltipProvider>
-							<TooltipProvider :delay-duration="0">
-								<Tooltip>
-									<TooltipTrigger as-child>
-										<NuxtLink
-											aria-label="entry as JSON"
-											class="flex size-8 items-center justify-center rounded-sm border border-on-primary/40 text-on-primary hover:bg-on-primary hover:text-primary"
-											external
-											rel="noopener noreferrer"
-											target="_blank"
-											:to="getEntryLink(e.id, 'json')"
-										>
-											<Braces class="size-4" />
-										</NuxtLink>
-									</TooltipTrigger>
-									<TooltipContent class="border-black bg-black text-white" side="bottom">
-										view as JSON
-									</TooltipContent>
-								</Tooltip>
-							</TooltipProvider>
-						</div>
-						<div class="flex flex-wrap justify-end gap-2">
-							<Badge v-if="e.id" variant="outline">id: {{ e.id }}</Badge>
-							<Badge v-if="e.status && e.status !== 'released'" variant="outline">
-								{{ e.status }}
-							</Badge>
-							<Badge
-								v-for="item in e.metadata"
-								:key="`${item.label}-${item.value}`"
-								variant="outline"
-							>
-								{{ item.label }}: {{ item.value }}
-							</Badge>
-						</div>
+					<div class="ml-auto flex items-center gap-2">
+						<TooltipProvider v-if="entryXmlLink" :delay-duration="0">
+							<Tooltip>
+								<TooltipTrigger as-child>
+									<NuxtLink
+										aria-label="entry as xml"
+										class="flex size-8 items-center justify-center rounded-sm border border-white/50 text-white hover:bg-white hover:text-primary"
+										external
+										rel="noopener noreferrer"
+										target="_blank"
+										:to="entryXmlLink"
+									>
+										<Code class="size-4" />
+									</NuxtLink>
+								</TooltipTrigger>
+								<TooltipContent class="border-black bg-black text-white" side="bottom">
+									view as xml
+								</TooltipContent>
+							</Tooltip>
+						</TooltipProvider>
+						<TooltipProvider v-if="entryJsonLink" :delay-duration="0">
+							<Tooltip>
+								<TooltipTrigger as-child>
+									<NuxtLink
+										aria-label="entry as JSON"
+										class="flex size-8 items-center justify-center rounded-sm border border-white/50 text-white hover:bg-white hover:text-primary"
+										external
+										rel="noopener noreferrer"
+										target="_blank"
+										:to="entryJsonLink"
+									>
+										<Braces class="size-4" />
+									</NuxtLink>
+								</TooltipTrigger>
+								<TooltipContent class="border-black bg-black text-white" side="bottom">
+									view as JSON
+								</TooltipContent>
+							</Tooltip>
+						</TooltipProvider>
 					</div>
 				</div>
-			</CardHeader>
-			<CardContent class="pt-4">
-				<Table>
-					<TableBody>
-						<TableRow v-if="e.lemmaForms.length > 0 || e.variantForms.length > 0">
-							<TableCell :class="sectionHeadingClass">Lemma</TableCell>
-							<TableCell>
-								<div class="space-y-3">
-									<div
-										v-for="(form, formIndex) in e.lemmaForms"
-										:key="`lemma-${formIndex}`"
-										class="space-y-2"
-									>
-										<div class="flex flex-wrap items-center gap-2">
-											<Badge
-												v-for="item in form.metadata.filter(shouldRenderPrimaryFormMetadata)"
-												:key="`lemma-${formIndex}-${item.label}-${item.value}`"
-												:class="
-													shouldRenderAsLanguageBadge(item)
-														? [languageBadgeBaseClass, getLanguageBadgeClass(item.value)]
-														: undefined
-												"
-												variant="outline"
-											>
-												<Languages v-if="shouldRenderAsLanguageBadge(item)" class="size-3" />
-												{{ item.label }}: {{ item.value }}
-											</Badge>
-										</div>
-										<div class="flex flex-wrap items-center gap-2">
-											<span
-												v-for="orthography in form.orthographies"
-												:key="`lemma-${formIndex}-${orthography.lang}-${orthography.text}`"
-												class="inline-flex items-baseline gap-2"
-												:class="{ 'text-muted-foreground': orthography.isMissing }"
-											>
-												<span class="text-xl leading-tight font-black">{{ orthography.text }}</span>
-												<Badge
-													v-if="orthography.lang ?? getFormLanguage(form)"
-													:class="[
-														languageBadgeBaseClass,
-														getLanguageBadgeClass(orthography.lang ?? getFormLanguage(form) ?? ''),
-													]"
-													variant="outline"
-												>
-													<Languages class="size-3" />
-													{{ orthography.lang ?? getFormLanguage(form) }}
-												</Badge>
-											</span>
-										</div>
-									</div>
-									<div
-										v-for="(form, formIndex) in e.variantForms"
-										:key="`variant-${formIndex}`"
-										class="space-y-2 border-t border-border/60 pt-3"
-									>
-										<div class="flex flex-wrap items-center gap-2">
-											<span class="text-sm font-semibold">Variant</span>
-											<Badge
-												v-for="item in form.metadata.filter(shouldRenderPrimaryFormMetadata)"
-												:key="`variant-${formIndex}-${item.label}-${item.value}`"
-												:class="
-													shouldRenderAsLanguageBadge(item)
-														? [languageBadgeBaseClass, getLanguageBadgeClass(item.value)]
-														: undefined
-												"
-												variant="outline"
-											>
-												<Languages v-if="shouldRenderAsLanguageBadge(item)" class="size-3" />
-												{{ item.label }}: {{ item.value }}
-											</Badge>
-										</div>
-										<div class="flex flex-wrap items-center gap-2">
-											<span
-												v-for="orthography in form.orthographies"
-												:key="`variant-${formIndex}-${orthography.lang}-${orthography.text}`"
-												class="inline-flex items-baseline gap-2"
-												:class="{ 'text-muted-foreground': orthography.isMissing }"
-											>
-												<span class="text-lg leading-tight font-bold">{{ orthography.text }}</span>
-												<Badge
-													v-if="orthography.lang ?? getFormLanguage(form)"
-													:class="[
-														languageBadgeBaseClass,
-														getLanguageBadgeClass(orthography.lang ?? getFormLanguage(form) ?? ''),
-													]"
-													variant="outline"
-												>
-													<Languages class="size-3" />
-													{{ orthography.lang ?? getFormLanguage(form) }}
-												</Badge>
-											</span>
-										</div>
-										<div v-if="form.grammar.length > 0" class="space-y-1.5">
-											<div
-												v-for="item in form.grammar"
-												:key="`variant-${formIndex}-${item.label}`"
-												class="flex items-start gap-4"
-											>
-												<div class="w-36 shrink-0 text-sm font-semibold tracking-[0.02em]">
-													{{ item.label }}
-												</div>
-												<div class="min-w-0 flex-1 text-sm font-normal">
-													{{ item.value }}
-												</div>
-											</div>
-										</div>
-									</div>
+			</header>
+
+			<div class="px-4 py-3">
+				<div class="grid grid-cols-[minmax(8.75rem,12.5rem)_1fr] gap-x-6">
+					<div
+						v-if="hasEtymology"
+						class="px-4 py-3 text-base leading-none font-semibold text-primary uppercase"
+					>
+						Etymology
+					</div>
+					<section v-if="hasEtymology" class="py-3 text-base leading-snug">
+						<span
+							v-for="(etymology, etymologyIndex) in e.etymologies"
+							:key="textKey(etymology, etymologyIndex)"
+						>
+							<span v-if="etymologyIndex === 0">&lt; </span>
+							<span v-else>; </span>
+							<span class="italic" :title="languageTooltip(etymology.lang)">
+								{{ etymology.text }}
+							</span>
+							<span v-if="etymology.lang"> ({{ etymology.lang }})</span>
+						</span>
+					</section>
+
+					<div
+						v-if="hasInflectedForms"
+						class="px-4 py-3 text-base leading-none font-semibold text-primary uppercase"
+					>
+						Infl. Forms
+					</div>
+					<section v-if="hasInflectedForms" class="space-y-2 py-3 text-base leading-snug">
+						<div
+							v-for="(form, formIndex) in e.inflectedForms"
+							:key="`inflected-${formIndex}`"
+							class="flex flex-wrap items-center gap-x-2 gap-y-1"
+						>
+							<span
+								v-if="formText(form)"
+								class="font-bold italic"
+								:title="languageTooltip(formLanguage(form))"
+							>
+								{{ formText(form) }}
+							</span>
+							<span v-if="formGrammarText(form)">({{ formGrammarText(form) }})</span>
+							<template v-for="location in form.locations" :key="locationKey(location)">
+								<span :class="compactBadgeClass">
+									<MapPin class="size-4 text-gray-400" />
+									{{ formatLocation(location) }}
+								</span>
+							</template>
+							<span v-if="sourceLabel(form.source)" :class="compactBadgeClass">
+								<BookOpen class="size-4 text-gray-500" />
+								{{ sourceLabel(form.source) }}
+							</span>
+							<template
+								v-for="(variant, variantIndex) in form.variants"
+								:key="`inflected-${formIndex}-variant-${variantIndex}`"
+							>
+								<span aria-hidden="true">;</span>
+								<span
+									v-if="formText(variant)"
+									class="font-bold italic"
+									:title="languageTooltip(formLanguage(variant))"
+								>
+									{{ formText(variant) }}
+								</span>
+								<span v-if="formGrammarText(variant)">({{ formGrammarText(variant) }})</span>
+								<span
+									v-for="location in variant.locations"
+									:key="locationKey(location)"
+									:class="compactBadgeClass"
+								>
+									<MapPin class="size-4 text-gray-400" />
+									{{ formatLocation(location) }}
+								</span>
+								<span v-if="sourceLabel(variant.source)" :class="compactBadgeClass">
+									<BookOpen class="size-4 text-gray-500" />
+									{{ sourceLabel(variant.source) }}
+								</span>
+							</template>
+						</div>
+					</section>
+
+					<template v-for="(sense, senseIndex) in e.senses" :key="sense.id ?? senseIndex">
+						<div class="px-4 py-3 text-base leading-none font-semibold text-primary uppercase">
+							{{ e.senses.length > 1 ? `Sense ${String(senseIndex + 1)}` : "Sense" }}
+						</div>
+						<section class="py-0.5">
+							<div class="rounded-sm border-2 border-primary px-2 py-1">
+								<div v-if="senseGrammarText(sense.grammar)" class="mb-1 font-bold italic">
+									({{ senseGrammarText(sense.grammar) }})
 								</div>
-							</TableCell>
-						</TableRow>
-						<TableRow v-if="e.locations.length > 0">
-							<TableCell :class="sectionHeadingClass">Locations</TableCell>
-							<TableCell>
-								<div class="flex flex-wrap gap-2">
-									<Badge
-										v-for="location in e.locations"
-										:key="formatLocation(location)"
-										class="inline-flex items-center gap-1"
-										variant="outline"
-									>
-										<MapPin class="size-3" />
-										{{ formatLocation(location) }}
-									</Badge>
-								</div>
-							</TableCell>
-						</TableRow>
-						<TableRow v-if="e.quote">
-							<TableCell :class="sectionHeadingClass">Quote</TableCell>
-							<TableCell>
-								<div class="space-y-2">
-									<p class="m-0">{{ e.quote.text }}</p>
-									<Badge
-										v-if="e.quote.lang"
-										:class="[languageBadgeBaseClass, getLanguageBadgeClass(e.quote.lang)]"
-										variant="outline"
-									>
-										<Languages class="size-3" />
-										{{ e.quote.lang }}
-									</Badge>
-								</div>
-							</TableCell>
-						</TableRow>
-						<TableRow v-if="e.translations.length > 0">
-							<TableCell :class="sectionHeadingClass">Translations</TableCell>
-							<TableCell>
-								<div class="space-y-2">
+								<div class="text-base leading-tight">
 									<div
-										v-for="translation in e.translations"
-										:key="`${translation.lang}-${translation.text}`"
-										class="flex flex-wrap items-center gap-2"
+										v-for="(translation, translationIndex) in sense.translations"
+										:key="textKey(translation, translationIndex)"
+										class="flex flex-wrap items-center gap-1.5"
 									>
-										<Badge
-											v-if="translation.lang"
-											:class="[languageBadgeBaseClass, getLanguageBadgeClass(translation.lang)]"
-											variant="outline"
+										<span
+											:class="languageClass(translation.lang)"
+											:title="languageTooltip(translation.lang)"
 										>
-											<Languages class="size-3" />
-											{{ translation.lang }}
-										</Badge>
-										<span>{{ translation.text }}</span>
+											{{ translation.text }}
+										</span>
+										<span v-if="sourceLabel(translation.source)" :class="compactBadgeClass">
+											<BookOpen class="size-4 text-gray-500" />
+											{{ sourceLabel(translation.source) }}
+										</span>
 									</div>
 								</div>
-							</TableCell>
-						</TableRow>
-						<TableRow v-if="e.inflectedForms.length > 0">
-							<TableCell :class="sectionHeadingClass">Inflected Forms</TableCell>
-							<TableCell>
-								<div class="space-y-3">
-									<Card
-										v-for="(inflected, inflectedIndex) in e.inflectedForms"
-										:key="`inflected-${inflectedIndex}`"
-										class="rounded-sm border border-primary/30 shadow-none"
+
+								<div v-if="sense.examples.length > 0" class="mt-1 space-y-1.5">
+									<div
+										v-for="(example, exampleIndex) in sense.examples"
+										:key="`${example.kind}-${example.id ?? example.quote?.text ?? exampleIndex}`"
+										class="rounded-lg border-2 border-primary px-1 py-1"
 									>
-										<CardContent class="space-y-2 pt-4">
-											<div class="flex flex-wrap items-start justify-between gap-2">
-												<div class="flex flex-wrap items-center gap-2">
-													<Badge
-														v-for="item in inflected.metadata.filter(
-															shouldRenderPrimaryFormMetadata,
-														)"
-														:key="`inflected-${inflectedIndex}-${item.label}-${item.value}`"
-														:class="
-															shouldRenderAsLanguageBadge(item)
-																? [languageBadgeBaseClass, getLanguageBadgeClass(item.value)]
-																: undefined
-														"
-														variant="outline"
-													>
-														<Languages v-if="shouldRenderAsLanguageBadge(item)" class="size-3" />
-														{{ item.label }}: {{ item.value }}
-													</Badge>
-												</div>
-												<div
-													v-if="inflected.locations.length > 0"
-													class="ml-auto flex flex-wrap justify-end gap-2"
-												>
-													<Badge
-														v-for="location in inflected.locations"
-														:key="formatLocation(location)"
-														class="inline-flex items-center gap-1"
-														variant="outline"
-													>
-														<MapPin class="size-3" />
-														{{ formatLocation(location) }}
-													</Badge>
-												</div>
+										<div class="flex flex-wrap items-start justify-between gap-1">
+											<div
+												v-if="example.quote"
+												class="font-bold italic"
+												:title="languageTooltip(example.quote.lang)"
+											>
+												{{ example.quote.text }}
 											</div>
-											<div class="flex flex-wrap items-center gap-2">
+											<div class="ml-auto flex flex-wrap justify-end gap-0.5">
 												<span
-													v-for="orthography in inflected.orthographies"
-													:key="`inflected-${inflectedIndex}-${orthography.lang}-${orthography.text}`"
-													class="inline-flex items-baseline gap-2"
-													:class="{ 'text-muted-foreground': orthography.isMissing }"
+													v-for="item in example.bibliography"
+													:key="item"
+													:class="compactBadgeClass"
 												>
-													<span class="text-lg leading-tight font-bold">{{
-														orthography.text
-													}}</span>
-													<Badge
-														v-if="orthography.lang ?? getFormLanguage(inflected)"
-														:class="[
-															languageBadgeBaseClass,
-															getLanguageBadgeClass(
-																orthography.lang ?? getFormLanguage(inflected) ?? '',
-															),
-														]"
-														variant="outline"
-													>
-														<Languages class="size-3" />
-														{{ orthography.lang ?? getFormLanguage(inflected) }}
-													</Badge>
+													<BookOpen class="size-4 text-gray-500" />
+													{{ item }}
+												</span>
+												<span v-if="sourceLabel(example.source)" :class="compactBadgeClass">
+													<BookOpen class="size-4 text-gray-500" />
+													{{ sourceLabel(example.source) }}
+												</span>
+												<span
+													v-for="location in example.locations"
+													:key="locationKey(location)"
+													:class="compactBadgeClass"
+												>
+													<MapPin class="size-4 text-gray-400" />
+													{{ formatLocation(location) }}
 												</span>
 											</div>
-											<div v-if="inflected.grammar.length > 0" class="space-y-1.5">
-												<div
-													v-for="item in inflected.grammar"
-													:key="`inflected-${inflectedIndex}-${item.label}`"
-													class="flex items-start gap-4"
-												>
-													<div class="w-36 shrink-0 text-sm font-semibold tracking-[0.02em]">
-														{{ item.label }}
-													</div>
-													<div class="min-w-0 flex-1 text-sm font-normal">
-														{{ item.value }}
-													</div>
-												</div>
+										</div>
+										<div class="text-base leading-tight">
+											<div
+												v-for="(translation, translationIndex) in example.translations"
+												:key="textKey(translation, translationIndex)"
+												:class="languageClass(translation.lang)"
+												:title="languageTooltip(translation.lang)"
+											>
+												{{ translation.text }}
 											</div>
-										</CardContent>
-									</Card>
-								</div>
-							</TableCell>
-						</TableRow>
-						<TableRow v-if="e.senses.length > 0">
-							<TableCell :class="sectionHeadingClass">Senses</TableCell>
-							<TableCell>
-								<div class="space-y-4">
-									<Card
-										v-for="sense in e.senses"
-										:key="sense.id ?? sense.translations.map((item) => item.text).join('|')"
-										class="rounded-sm border border-primary/30 shadow-none"
-									>
-										<CardContent class="space-y-3 pt-4">
-											<div class="flex flex-wrap items-center gap-2">
-												<Badge v-if="sense.ana" variant="outline">{{ sense.ana }}</Badge>
-												<Badge
-													v-for="item in sense.metadata"
-													:key="`${sense.id}-${item.label}-${item.value}`"
-													variant="outline"
-												>
-													{{ item.label }}: {{ item.value }}
-												</Badge>
-											</div>
-											<div v-if="sense.definitions.length > 0" class="space-y-2">
-												<p class="text-sm font-semibold">Definitions</p>
-												<div
-													v-for="definition in sense.definitions"
-													:key="`${sense.id}-${definition.lang}-${definition.text}`"
-													class="flex flex-wrap items-center gap-2"
-													:class="{ 'text-muted-foreground': definition.isMissing }"
-												>
-													<Badge
-														v-if="definition.lang"
-														:class="[
-															languageBadgeBaseClass,
-															getLanguageBadgeClass(definition.lang),
-														]"
-														variant="outline"
-													>
-														<Languages class="size-3" />
-														{{ definition.lang }}
-													</Badge>
-													<span>{{ definition.text }}</span>
-												</div>
-											</div>
-											<div v-if="sense.translations.length > 0" class="space-y-2">
-												<div
-													v-for="translation in sense.translations"
-													:key="`${sense.id}-${translation.lang}-${translation.text}`"
-													class="flex flex-wrap items-center gap-2"
-													:class="{ 'text-muted-foreground': translation.isMissing }"
-												>
-													<Badge
-														v-if="translation.lang"
-														:class="[
-															languageBadgeBaseClass,
-															getLanguageBadgeClass(translation.lang),
-														]"
-														variant="outline"
-													>
-														<Languages class="size-3" />
-														{{ translation.lang }}
-													</Badge>
-													<span>
-														{{ translation.text }}
-														<span v-if="translation.gloss">({{ translation.gloss }})</span>
-													</span>
-												</div>
-											</div>
-											<div v-if="sense.grammar.length > 0" class="space-y-1.5">
-												<div
-													v-for="item in sense.grammar"
-													:key="`${sense.id}-${item.label}`"
-													class="flex items-start gap-4"
-												>
-													<div class="w-36 shrink-0 text-sm font-semibold tracking-[0.02em]">
-														{{ item.label }}
-													</div>
-													<div class="min-w-0 flex-1 text-sm font-normal">
-														{{ item.value }}
-													</div>
-												</div>
-											</div>
-											<div v-if="sense.examples.length > 0" class="space-y-3">
-												<p class="text-sm font-semibold">Examples</p>
-												<button
-													v-if="!isExpanded"
-													class="rounded-sm border border-primary/30 px-3 py-1.5 text-sm font-semibold text-primary hover:bg-primary/10"
-													type="button"
-													@click="expandEntry"
-												>
-													{{ formatAvailableCount(sense.examples.length, "Example") }}
-												</button>
-												<Card
-													v-for="example in isExpanded ? sense.examples : []"
-													:key="`${example.kind}-${example.id ?? example.quote?.text}`"
-													class="rounded-sm border border-primary/25 bg-muted/20 shadow-none"
-												>
-													<CardContent class="space-y-2 pt-4">
-														<div
-															v-if="example.locations.length > 0"
-															class="flex flex-wrap justify-end gap-2"
-														>
-															<Badge
-																v-for="location in example.locations"
-																:key="formatLocation(location)"
-																class="inline-flex items-center gap-1"
-																variant="outline"
-															>
-																<MapPin class="size-3" />
-																{{ formatLocation(location) }}
-															</Badge>
-														</div>
-														<div v-if="example.quote" class="grid grid-cols-[4.5rem_1fr] gap-2">
-															<div>
-																<Badge
-																	v-if="example.quote.lang"
-																	:class="[
-																		languageBadgeBaseClass,
-																		getLanguageBadgeClass(example.quote.lang),
-																	]"
-																	variant="outline"
-																>
-																	<Languages class="size-3" />
-																	{{ example.quote.lang }}
-																</Badge>
-															</div>
-															<span>{{ example.quote.text }}</span>
-														</div>
-														<div v-if="example.translations.length > 0" class="space-y-1">
-															<div
-																v-for="translation in example.translations"
-																:key="`${example.id}-${translation.lang}-${translation.text}`"
-																class="grid grid-cols-[4.5rem_1fr] gap-2"
-																:class="{ 'text-muted-foreground': translation.isMissing }"
-															>
-																<div>
-																	<Badge
-																		v-if="translation.lang"
-																		:class="[
-																			languageBadgeBaseClass,
-																			getLanguageBadgeClass(translation.lang),
-																		]"
-																		variant="outline"
-																	>
-																		<Languages class="size-3" />
-																		{{ translation.lang }}
-																	</Badge>
-																</div>
-																<span>{{ translation.text }}</span>
-															</div>
-														</div>
-														<div v-if="example.bibliography.length > 0" class="space-y-1">
-															<p class="text-sm font-semibold">Bibliography</p>
-															<div class="flex flex-wrap gap-2">
-																<Badge
-																	v-for="item in example.bibliography"
-																	:key="item"
-																	variant="outline"
-																>
-																	{{ item }}
-																</Badge>
-															</div>
-														</div>
-														<div v-if="example.editors.length > 0" class="space-y-1">
-															<div
-																v-for="(editor, exampleEditorIndex) in example.editors"
-																:key="`${example.id}-${editor.action}-${editor.when}-${exampleEditorIndex}`"
-																class="flex flex-wrap items-center gap-2 text-sm"
-															>
-																<span>{{ editor.who ?? "Unknown" }}</span>
-																<span>({{ editor.action }})</span>
-																<span v-if="editor.when">{{ editor.when }}</span>
-															</div>
-														</div>
-													</CardContent>
-												</Card>
-											</div>
-										</CardContent>
-									</Card>
-								</div>
-							</TableCell>
-						</TableRow>
-						<TableRow v-if="e.notes.length > 0">
-							<TableCell :class="sectionHeadingClass">Notes</TableCell>
-							<TableCell>
-								<button
-									v-if="!isExpanded"
-									class="rounded-sm border border-primary/30 px-3 py-1.5 text-sm font-semibold text-primary hover:bg-primary/10"
-									type="button"
-									@click="expandEntry"
-								>
-									{{ formatAvailableCount(e.notes.length, "Note") }}
-								</button>
-								<div v-else class="space-y-2">
-									<p v-for="note in e.notes" :key="note" class="m-0">
-										{{ note }}
-									</p>
-								</div>
-							</TableCell>
-						</TableRow>
-						<TableRow v-if="e.editors.length > 0">
-							<TableCell :class="sectionHeadingClass">Editors</TableCell>
-							<TableCell>
-								<button
-									v-if="!isExpanded"
-									class="rounded-sm border border-primary/30 px-3 py-1.5 text-sm font-semibold text-primary hover:bg-primary/10"
-									type="button"
-									@click="expandEntry"
-								>
-									{{ formatAvailableCount(e.editors.length, "Editor") }}
-								</button>
-								<div v-else class="space-y-2">
-									<div
-										v-for="(editor, editorIndex) in e.editors"
-										:key="`${editor.action}-${editor.when}-${editor.who}-${editorIndex}`"
-										class="flex flex-wrap items-center gap-2"
-									>
-										<span class="font-medium">{{ editor.who ?? "Unknown" }}</span>
-										<span>({{ editor.action }})</span>
-										<span v-if="editor.when">{{ editor.when }}</span>
-										<Badge v-if="editor.status" variant="outline">
-											{{ editor.status }}
-										</Badge>
+										</div>
 									</div>
 								</div>
-							</TableCell>
-						</TableRow>
-					</TableBody>
-				</Table>
-			</CardContent>
-		</Card>
+
+								<div v-if="sense.locations.length > 0" class="mt-3 flex flex-wrap gap-0.5">
+									<span
+										v-for="location in sense.locations"
+										:key="locationKey(location)"
+										:class="compactBadgeClass"
+									>
+										<MapPin class="size-4 text-gray-400" />
+										{{ formatLocation(location) }}
+									</span>
+								</div>
+							</div>
+						</section>
+					</template>
+
+					<div
+						v-if="hasEditors"
+						class="px-4 py-3 text-base leading-none font-semibold text-primary uppercase"
+					>
+						Editors
+					</div>
+					<section v-if="hasEditors" class="py-3 text-base leading-snug">
+						<span v-for="(editor, editorIndex) in uniqueEditors" :key="editor">
+							{{ editor }}<span v-if="editorIndex < uniqueEditors.length - 1">, </span>
+						</span>
+					</section>
+				</div>
+			</div>
+		</article>
 	</div>
 </template>
