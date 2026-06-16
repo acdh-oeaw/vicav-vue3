@@ -63,6 +63,7 @@ function updateQueryParam(queryString: string) {
 	<CorpusQueryWindowContent
 		v-else-if="props.item.targetType === 'CorpusQuery'"
 		:params="props.item.params"
+		@update-query-param="updateQueryParam"
 	/>
 	<CorpusTextJsonWindowContent
 		v-else-if="props.item.targetType === 'CorpusText'"

@@ -11,6 +11,9 @@ import type { CorpusQuerySchema } from "@/types/global.ts";
 const api = useApiClient();
 const { simpleItems } = useTeiHeadersStore();
 const props = defineProps<{ params: Zod.infer<typeof CorpusQuerySchema>["params"] }>();
+const emit = defineEmits<{
+	updateQueryParam: [queryString: string];
+}>();
 const queryString = ref(props.params.queryString);
 const hits = ref<Array<Div & { label?: string }>>([]);
 const displayHits = ref<Array<Div & { label?: string }>>([]);
@@ -23,13 +26,15 @@ const inlineTranslations = ref<false | true | "indeterminate">(true);
 const currentPage = ref(0);
 const scrollComplete = ref<boolean>(false);
 
-async function searchCorpus() {
+async function searchCorpus(options: { updateRoute?: boolean } = {}) {
+	const { updateRoute = true } = options;
 	isSearching.value = true;
 	currentPage.value = 0;
 	hits.value = [];
 	displayHits.value = [];
 	try {
 		if (words.value.length > 0) queryString.value = `[word="${words.value.join("|")}"]`;
+		if (updateRoute) emit("updateQueryParam", queryString.value);
 
 		const result = await api.vicav.searchCorpus(
 			{
@@ -58,6 +63,10 @@ async function searchCorpus() {
 	}
 }
 
+function submitSearchCorpus() {
+	void searchCorpus();
+}
+
 // API currently doesn't support pagination for corpus search results, so we're faking it
 const handleInfiniteScroll = async function ($state: StateHandler) {
 	currentPage.value += 1;
@@ -70,6 +79,10 @@ const handleInfiniteScroll = async function ($state: StateHandler) {
 		$state.complete();
 	}
 };
+
+onMounted(() => {
+	if (queryString.value !== "") void searchCorpus({ updateRoute: false });
+});
 
 const openNewWindowFromAnchor = useAnchorClickHandler();
 
@@ -172,12 +185,12 @@ function splitUtterancesAroundHit(utterances: MixedUtteranceContent, hitId?: str
 				aria-label="Search"
 				placeholder="Search in corpus ..."
 				:special-characters="specialCharacters"
-				@submit="searchCorpus"
+				@submit="submitSearchCorpus"
 			/>
 			<button
 				class="inline-block h-10 w-full rounded border-2 border-solid border-primary bg-on-primary text-center align-middle font-bold whitespace-nowrap text-primary hover:bg-primary hover:text-on-primary disabled:border-gray-400 disabled:text-gray-400 hover:disabled:bg-on-primary hover:disabled:text-gray-400"
 				:disabled="isSearching || (queryString === '' && words.length == 0)"
-				@click.prevent.stop="searchCorpus"
+				@click.prevent.stop="submitSearchCorpus"
 			>
 				Query
 			</button>
