@@ -22,9 +22,11 @@ const isSearching = ref(false);
 
 const inlineAnnotations = ref<false | true | "indeterminate">(true);
 const inlineTranslations = ref<false | true | "indeterminate">(true);
+const words: Ref<Array<string>> = ref([]);
 
 const currentPage = ref(0);
 const scrollComplete = ref<boolean>(false);
+const lastRestoredQueryString = ref<string>();
 const {
 	hasInlineAnnotations: blockHasInlineAnnotations,
 	hasInlineTranslations: blockHasInlineTranslations,
@@ -100,17 +102,15 @@ const handleInfiniteScroll = async function ($state: StateHandler) {
 	}
 };
 
-onMounted(() => {
-	if (queryString.value !== "") void searchCorpus({ updateRoute: false });
-});
-
 watch(
 	() => props.params.queryString,
 	(value) => {
-		if (value === "" || value === queryString.value) return;
+		if (value === "" || value === lastRestoredQueryString.value) return;
 		queryString.value = value;
+		lastRestoredQueryString.value = value;
 		void searchCorpus({ updateRoute: false });
 	},
+	{ flush: "post", immediate: true },
 );
 
 const openNewWindowFromAnchor = useAnchorClickHandler();
@@ -133,8 +133,6 @@ const wordOptions = computed(() => {
 		return { label: item, value: item };
 	});
 });
-
-const words: Ref<Array<string>> = ref([]);
 
 function splitUtterancesAroundHit(utterances: MixedUtteranceContent, hitId?: string) {
 	const matchIndex = utterances.findIndex((utterance) => utterance.w?.["@id"] === hitId);
