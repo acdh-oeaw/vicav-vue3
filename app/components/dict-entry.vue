@@ -1,5 +1,13 @@
 <script setup lang="ts">
-import { BookA, BookOpen, Braces, Code, MapPin, MessageSquareQuote } from "lucide-vue-next";
+import {
+	BookA,
+	BookOpen,
+	Braces,
+	CircleAlert,
+	Code,
+	MapPin,
+	MessageSquareQuote,
+} from "lucide-vue-next";
 
 import type { RestVLEEntry } from "@/lib/api-client";
 import {
@@ -69,6 +77,14 @@ const uniqueEditors = computed(() => {
 const hasInflectedForms = computed(() => e.value.inflectedForms.length > 0);
 const hasEtymology = computed(() => e.value.etymologies.length > 0);
 const hasEditors = computed(() => uniqueEditors.value.length > 0);
+const entryStatus = computed(() => {
+	const status = e.value.status?.trim();
+	if (status == null || status.toLocaleLowerCase() === "released") return undefined;
+	return status;
+});
+const entryStatusLabel = computed(() => {
+	return entryStatus.value?.replaceAll("-", " ");
+});
 
 const getEntryLink = (entry: RenderedDictEntry, responseFormat?: "json") => {
 	const url = new URL(entry.selfHref, env.public.apiBaseUrl);
@@ -204,45 +220,51 @@ const languageClass = (language: string | undefined) => {
 							{{ compactGrammar }}
 						</div>
 					</div>
-					<div class="ml-auto flex items-center gap-2">
-						<TooltipProvider v-if="entryXmlLink" :delay-duration="0">
-							<Tooltip>
-								<TooltipTrigger as-child>
-									<NuxtLink
-										aria-label="entry as xml"
-										class="flex size-8 items-center justify-center rounded-sm border border-white/50 text-white hover:bg-white hover:text-primary"
-										external
-										rel="noopener noreferrer"
-										target="_blank"
-										:to="entryXmlLink"
-									>
-										<Code class="size-4" />
-									</NuxtLink>
-								</TooltipTrigger>
-								<TooltipContent class="border-black bg-black text-white" side="bottom">
-									view as xml
-								</TooltipContent>
-							</Tooltip>
-						</TooltipProvider>
-						<TooltipProvider v-if="entryJsonLink" :delay-duration="0">
-							<Tooltip>
-								<TooltipTrigger as-child>
-									<NuxtLink
-										aria-label="entry as JSON"
-										class="flex size-8 items-center justify-center rounded-sm border border-white/50 text-white hover:bg-white hover:text-primary"
-										external
-										rel="noopener noreferrer"
-										target="_blank"
-										:to="entryJsonLink"
-									>
-										<Braces class="size-4" />
-									</NuxtLink>
-								</TooltipTrigger>
-								<TooltipContent class="border-black bg-black text-white" side="bottom">
-									view as JSON
-								</TooltipContent>
-							</Tooltip>
-						</TooltipProvider>
+					<div class="ml-auto flex flex-col items-end gap-1.5">
+						<div class="flex items-center gap-2">
+							<TooltipProvider v-if="entryXmlLink" :delay-duration="0">
+								<Tooltip>
+									<TooltipTrigger as-child>
+										<NuxtLink
+											aria-label="entry as xml"
+											class="flex size-8 items-center justify-center rounded-sm border border-white/50 text-white hover:bg-white hover:text-primary"
+											external
+											rel="noopener noreferrer"
+											target="_blank"
+											:to="entryXmlLink"
+										>
+											<Code class="size-4" />
+										</NuxtLink>
+									</TooltipTrigger>
+									<TooltipContent class="border-black bg-black text-white" side="bottom">
+										view as xml
+									</TooltipContent>
+								</Tooltip>
+							</TooltipProvider>
+							<TooltipProvider v-if="entryJsonLink" :delay-duration="0">
+								<Tooltip>
+									<TooltipTrigger as-child>
+										<NuxtLink
+											aria-label="entry as JSON"
+											class="flex size-8 items-center justify-center rounded-sm border border-white/50 text-white hover:bg-white hover:text-primary"
+											external
+											rel="noopener noreferrer"
+											target="_blank"
+											:to="entryJsonLink"
+										>
+											<Braces class="size-4" />
+										</NuxtLink>
+									</TooltipTrigger>
+									<TooltipContent class="border-black bg-black text-white" side="bottom">
+										view as JSON
+									</TooltipContent>
+								</Tooltip>
+							</TooltipProvider>
+						</div>
+						<span v-if="entryStatusLabel" class="capitalize" :class="compactBadgeClass">
+							<CircleAlert class="size-4 text-gray-500" />
+							{{ entryStatusLabel }}
+						</span>
 					</div>
 				</div>
 			</header>
