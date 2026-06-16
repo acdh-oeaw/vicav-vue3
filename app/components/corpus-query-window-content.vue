@@ -25,6 +25,26 @@ const inlineTranslations = ref<false | true | "indeterminate">(true);
 
 const currentPage = ref(0);
 const scrollComplete = ref<boolean>(false);
+const {
+	hasInlineAnnotations: blockHasInlineAnnotations,
+	hasInlineTranslations: blockHasInlineTranslations,
+} = useCorpusAnnotationAvailability();
+
+const hasInlineAnnotations = computed(() => {
+	return blockHasInlineAnnotations(hits.value);
+});
+
+const hasInlineTranslations = computed(() => {
+	return blockHasInlineTranslations(hits.value);
+});
+
+const showInlineAnnotations = computed(() => {
+	return hasInlineAnnotations.value && inlineAnnotations.value === true;
+});
+
+const showInlineTranslations = computed(() => {
+	return hasInlineTranslations.value && inlineTranslations.value === true;
+});
 
 async function searchCorpus(options: { updateRoute?: boolean } = {}) {
 	const { updateRoute = true } = options;
@@ -205,8 +225,8 @@ function splitUtterancesAroundHit(utterances: MixedUtteranceContent, hitId?: str
 			</button>
 			<br />
 		</form>
-		<div class="flex justify-end p-4">
-			<div>
+		<div v-if="hasInlineAnnotations || hasInlineTranslations" class="flex justify-end p-4">
+			<div v-if="hasInlineAnnotations">
 				<Checkbox
 					id="switch-annotations"
 					:default-checked="true"
@@ -214,8 +234,8 @@ function splitUtterancesAroundHit(utterances: MixedUtteranceContent, hitId?: str
 				/>
 				<label for="switch-annotations">&nbsp;Inline Annotations</label>
 			</div>
-			&nbsp;
-			<div>
+			<span v-if="hasInlineAnnotations && hasInlineTranslations">&nbsp;</span>
+			<div v-if="hasInlineTranslations">
 				<Checkbox
 					id="switch-translations"
 					:default-checked="true"
@@ -253,8 +273,8 @@ function splitUtterancesAroundHit(utterances: MixedUtteranceContent, hitId?: str
 										v-for="(uContent, index) in splitUtterancesAroundHit(hit.u['$$'], hit.hits?.[0])
 											.before"
 										:key="`before-${index}`"
-										:inline-annotation="inlineAnnotations as boolean"
-										:inline-translation="inlineTranslations as boolean"
+										:inline-annotation="showInlineAnnotations"
+										:inline-translation="showInlineTranslations"
 										:utterance="uContent"
 									></CorpusTextJsonUtterance>
 								</div>
@@ -262,8 +282,8 @@ function splitUtterancesAroundHit(utterances: MixedUtteranceContent, hitId?: str
 									<CorpusTextJsonUtterance
 										v-if="splitUtterancesAroundHit(hit.u['$$'], hit.hits?.[0]).match"
 										:highlight="true"
-										:inline-annotation="inlineAnnotations as boolean"
-										:inline-translation="inlineTranslations as boolean"
+										:inline-annotation="showInlineAnnotations"
+										:inline-translation="showInlineTranslations"
 										:utterance="splitUtterancesAroundHit(hit.u['$$'], hit.hits?.[0]).match!"
 									></CorpusTextJsonUtterance>
 								</div>
@@ -272,15 +292,15 @@ function splitUtterancesAroundHit(utterances: MixedUtteranceContent, hitId?: str
 										v-for="(uContent, index) in splitUtterancesAroundHit(hit.u['$$'], hit.hits?.[0])
 											.after"
 										:key="`after-${index}`"
-										:inline-annotation="inlineAnnotations as boolean"
-										:inline-translation="inlineTranslations as boolean"
+										:inline-annotation="showInlineAnnotations"
+										:inline-translation="showInlineTranslations"
 										:utterance="uContent"
 									></CorpusTextJsonUtterance>
 								</div>
 							</div>
 						</div>
 						<div
-							v-if="inlineTranslations && hit.Translation_spanGrp"
+							v-if="showInlineTranslations && hit.Translation_spanGrp"
 							class="flex max-w-full flex-row px-6 py-3 italic"
 						>
 							{{ hit.Translation_spanGrp.span["$"] }}

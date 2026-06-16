@@ -34,6 +34,11 @@ const currentPage = ref(1);
 const infinite = ref<typeof InfiniteLoading | null>(null);
 const scrollComplete = ref<boolean>(false);
 const utterancesWrapper = ref<HTMLElement | null>(null);
+const {
+	getUtterances,
+	hasInlineAnnotations: blockHasInlineAnnotations,
+	hasInlineTranslations: blockHasInlineTranslations,
+} = useCorpusAnnotationAvailability();
 
 const annotationBlocks = ref<Array<Div>>([]);
 const displayAnnotationBlocks = ref<Array<Div>>([]);
@@ -41,28 +46,12 @@ const inlineAnnotations = ref<false | true | "indeterminate">(true);
 const inlineTranslations = ref<false | true | "indeterminate">(true);
 const denseTeiHeader = ref<false | true | "indeterminate">(true);
 
-function hasTokenAnnotation(token: U["$$"][number]): boolean {
-	if (token.w) {
-		return (
-			token.w["@lemmaRef"] != null ||
-			token.w["@msd"] != null ||
-			token.w.pos != null ||
-			token.w.synRoot != null ||
-			token.w.diaRoot != null
-		);
-	}
-
-	return token.seg?.["$$"].some(hasTokenAnnotation) ?? false;
-}
-
 const hasInlineAnnotations = computed(() => {
-	return annotationBlocks.value.some((div) =>
-		getUtterances(div).some((utterance) => utterance["$$"].some(hasTokenAnnotation)),
-	);
+	return blockHasInlineAnnotations(annotationBlocks.value);
 });
 
 const hasInlineTranslations = computed(() => {
-	return annotationBlocks.value.some((div) => div.Translation_spanGrp != null);
+	return blockHasInlineTranslations(annotationBlocks.value);
 });
 
 const showInlineAnnotations = computed(() => {
@@ -89,10 +78,6 @@ const enabledOptions = computed<Array<string>>({
 });
 
 const api = useApiClient();
-
-function getUtterances(div: Div): Array<U> {
-	return [div.u, ...(div.us ?? [])].filter((u) => u !== undefined);
-}
 
 function renderUtteranceTokenText(token: U["$$"][number]): string {
 	if (token.w) {
