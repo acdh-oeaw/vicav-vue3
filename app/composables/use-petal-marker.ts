@@ -23,10 +23,20 @@ function isMarkerHidden(id: string) {
 	return markers.value.get(id)?.hidden ?? false;
 }
 
-function getCircleSVG(fill: string, symmetrical = false, containerLength = markerSettings.value.size) {
+function getCircleSVG(
+	fill: string,
+	symmetrical = false,
+	containerLength = markerSettings.value.size,
+) {
 	const center = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-	center.setAttribute("cx", symmetrical ? String(containerLength / 2) : String(markerSettings.value.size / 2));
-	center.setAttribute("cy", symmetrical ? String(containerLength / 2) : String(markerSettings.value.size));
+	center.setAttribute(
+		"cx",
+		symmetrical ? String(containerLength / 2) : String(markerSettings.value.size / 2),
+	);
+	center.setAttribute(
+		"cy",
+		symmetrical ? String(containerLength / 2) : String(markerSettings.value.size),
+	);
 	center.setAttribute("r", symmetrical ? "3" : "2.5");
 	center.style.fill = fill;
 	center.style.filter = "var(--greyscale)";
@@ -94,7 +104,7 @@ function getFlowerSVG(entries: Array<PetalEntry>, center?: PetalEntry) {
 
 	if (visibleCenter && markerSettings.value.showCenter) {
 		const centerMarker = getMarkerSVG(visibleCenter);
-		centerMarker.style.transform = `translateY(${String(markerSettings.value.size/2)}px)`;
+		centerMarker.style.transform = `translateY(${String(markerSettings.value.size / 2)}px)`;
 		svg.appendChild(centerMarker);
 	}
 	if (visibleEntries.length === 0 && !visibleCenter)

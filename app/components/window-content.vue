@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import FeatureStatisticsWindowContent from "@/components/feature-statistics-window-content.vue";
 import type { WindowItem } from "@/types/global.ts";
 
 interface Props {
@@ -31,6 +32,10 @@ function updateQueryParam(queryString: string) {
 	/>
 	<FeatureWindowContent
 		v-else-if="props.item.targetType === 'Feature'"
+		:params="props.item.params"
+	/>
+	<FeatureStatisticsWindowContent
+		v-else-if="props.item.targetType === 'FeatureStatistics'"
 		:params="props.item.params"
 	/>
 	<FeatureValueWindowContent
