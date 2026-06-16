@@ -41,24 +41,40 @@ const labelDisplaySelectValue = computed({
 
 function download() {
 	let node = document.querySelector("[data-geo-map]");
-	if (printLegend.value) node = node?.parentElement ?? node;
+	if (printLegend.value) {
+		node = node?.parentElement ?? node;
+		node?.querySelector("[data-geo-map-legend]")?.classList.remove("max-h-[50%]");
+		node
+			?.querySelectorAll("[data-feature-marker-selector]")
+			.forEach((entry) => entry.classList.add("hidden"));
+	}
 	if (node != null) {
 		exportInProgress.value = true;
-		exportNodeAsPng(node as HTMLElement, fileFormat.value).then(
-			() => (exportInProgress.value = false),
-		);
+		exportNodeAsPng(node as HTMLElement, fileFormat.value).then(() => {
+			node
+				.querySelectorAll("[data-feature-marker-selector]")
+				.forEach((entry) => entry.classList.remove("hidden"));
+			node?.querySelector("[data-geo-map-legend]")?.classList.add("max-h-[50%]");
+			exportInProgress.value = false;
+		});
 	}
 }
 function downloadLegend() {
 	const node = document.querySelector("[data-geo-map-legend]");
 	if (node != null) {
 		exportInProgress.value = true;
-		node.classList.remove("bg-white/80", "absolute");
+		node.classList.remove("bg-white/80", "absolute", "max-h-[50%]");
 		node.classList.add("bg-white");
+		node
+			.querySelectorAll("[data-feature-marker-selector]")
+			.forEach((entry) => entry.classList.add("hidden"));
 		exportNodeAsPng(node as HTMLElement, fileFormat.value).then(() => {
 			exportInProgress.value = false;
-			node.classList.add("bg-white/80", "absolute");
+			node.classList.add("bg-white/80", "absolute", "max-h-[50%]");
 			node.classList.remove("bg-white");
+			node
+				.querySelectorAll("[data-feature-marker-selector]")
+				.forEach((entry) => entry.classList.remove("hidden"));
 		});
 	}
 }
@@ -90,6 +106,14 @@ function downloadLegend() {
 				<div class="my-0.5 w-full border-b-[1px]"></div>
 				<label class="flex items-center justify-between gap-2"
 					><span>Greyscale markers</span> <input v-model="markerSettings.greyscale" type="checkbox"
+				/></label>
+				<label class="flex items-center justify-between"
+					><span>Marker size</span
+					><input
+						v-model="markerSettings.size"
+						class="mr-[-1em] ml-1 w-[3em] text-right font-medium"
+						min="1"
+						type="number"
 				/></label>
 				<label class="flex items-center justify-between"
 					><span>Stroke width</span

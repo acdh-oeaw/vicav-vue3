@@ -23,10 +23,20 @@ function isMarkerHidden(id: string) {
 	return markers.value.get(id)?.hidden ?? false;
 }
 
-function getCircleSVG(fill: string, symmetrical = false, containerLength = 12) {
+function getCircleSVG(
+	fill: string,
+	symmetrical = false,
+	containerLength = markerSettings.value.size,
+) {
 	const center = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-	center.setAttribute("cx", symmetrical ? String(containerLength / 2) : "6");
-	center.setAttribute("cy", symmetrical ? String(containerLength / 2) : "12");
+	center.setAttribute(
+		"cx",
+		symmetrical ? String(containerLength / 2) : String(markerSettings.value.size / 2),
+	);
+	center.setAttribute(
+		"cy",
+		symmetrical ? String(containerLength / 2) : String(markerSettings.value.size),
+	);
 	center.setAttribute("r", symmetrical ? "3" : "2.5");
 	center.style.fill = fill;
 	center.style.filter = "var(--greyscale)";
@@ -79,8 +89,8 @@ function getFlowerSVG(entries: Array<PetalEntry>, center?: PetalEntry) {
 	const visibleCenter = center && !isMarkerHidden(center.id) ? center : undefined;
 	const NUM_PETALS = visibleEntries.length;
 	const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-	svg.setAttribute("width", "12px");
-	svg.setAttribute("height", "12px");
+	svg.setAttribute("width", `${String(markerSettings.value.size)}px`);
+	svg.setAttribute("height", `${String(markerSettings.value.size)}px`);
 	svg.classList.add("overflow-visible");
 
 	for (const [i, value] of visibleEntries.entries()) {
@@ -94,7 +104,7 @@ function getFlowerSVG(entries: Array<PetalEntry>, center?: PetalEntry) {
 
 	if (visibleCenter && markerSettings.value.showCenter) {
 		const centerMarker = getMarkerSVG(visibleCenter);
-		centerMarker.style.transform = "translateY(6px)";
+		centerMarker.style.transform = `translateY(${String(markerSettings.value.size / 2)}px)`;
 		svg.appendChild(centerMarker);
 	}
 	if (visibleEntries.length === 0 && !visibleCenter)
