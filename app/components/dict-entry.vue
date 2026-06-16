@@ -333,7 +333,7 @@ const languageClass = (language: string | undefined) => {
 							{{ e.senses.length > 1 ? `Sense ${String(senseIndex + 1)}` : "Sense" }}
 						</div>
 						<section class="py-0.5">
-							<div class="rounded-sm border-2 border-primary px-2 py-1">
+							<div class="rounded-sm bg-primary/15 px-2 py-1">
 								<div v-if="senseGrammarText(sense.grammar)" class="mb-1 font-bold italic">
 									({{ senseGrammarText(sense.grammar) }})
 								</div>
@@ -360,7 +360,7 @@ const languageClass = (language: string | undefined) => {
 									<div
 										v-for="(example, exampleIndex) in sense.examples"
 										:key="`${example.kind}-${example.id ?? example.quote?.text ?? exampleIndex}`"
-										class="rounded-lg border-2 border-primary px-1 py-1"
+										class="rounded-lg bg-primary/15 px-1 py-1"
 									>
 										<div class="flex flex-wrap items-start justify-between gap-1">
 											<div
