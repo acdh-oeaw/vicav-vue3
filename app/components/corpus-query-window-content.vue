@@ -84,6 +84,15 @@ onMounted(() => {
 	if (queryString.value !== "") void searchCorpus({ updateRoute: false });
 });
 
+watch(
+	() => props.params.queryString,
+	(value) => {
+		if (value === "" || value === queryString.value) return;
+		queryString.value = value;
+		void searchCorpus({ updateRoute: false });
+	},
+);
+
 const openNewWindowFromAnchor = useAnchorClickHandler();
 
 const { data: config } = useProjectInfo();

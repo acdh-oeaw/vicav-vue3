@@ -463,8 +463,8 @@ export const useWindowsStore = defineStore("windows", () => {
 		const w = registry.value.get(id);
 		if (w) {
 			const wi = QueryString.safeParse(w.params);
-			if (wi.success) {
-				wi.data.queryString = query;
+			if (wi.success && "queryString" in w.params) {
+				w.params.queryString = query;
 				w.winbox.setTitle(query);
 				updateUrl();
 			}
