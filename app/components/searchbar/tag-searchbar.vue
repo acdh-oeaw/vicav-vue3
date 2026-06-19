@@ -61,7 +61,9 @@ function buildCqlTag(raw: string): string {
 function getCqlDisplayValue(clause: string): string {
 	const trimmed = clause.trim();
 	const inner = trimmed.startsWith("[")
-		? (trimmed.endsWith("]") ? trimmed.slice(1, -1) : trimmed.slice(1))
+		? trimmed.endsWith("]")
+			? trimmed.slice(1, -1)
+			: trimmed.slice(1)
 		: trimmed;
 
 	if (props.freeTriggerKey) {
@@ -252,11 +254,11 @@ function parseInputTrigger(
 	return { trigger: "", searchValue: segment };
 }
 
-const currentTrigger = computed(() =>
-	parseInputTrigger(inputValue.value, cursorPos.value ?? undefined).trigger,
+const currentTrigger = computed(
+	() => parseInputTrigger(inputValue.value, cursorPos.value ?? undefined).trigger,
 );
-const currentSearchValue = computed(() =>
-	parseInputTrigger(inputValue.value, cursorPos.value ?? undefined).searchValue,
+const currentSearchValue = computed(
+	() => parseInputTrigger(inputValue.value, cursorPos.value ?? undefined).searchValue,
 );
 const flatTags = computed(() => tags.value.flatMap((tag) => getFlatTags(tag)));
 const renderTokens = computed(() => flatRender(tags.value));
@@ -355,8 +357,15 @@ function handleSelect(ev: CustomEvent) {
 		} else {
 			// Wibarab: populate input with the feature key so the value dropdown opens
 			inputValue.value = featureTriggerValue + selectedValue;
+			const pos = inputValue.value.length;
+			cursorPos.value = pos;
 			open.value = false;
 			nextTick(() => {
+				const el = inputRef.value?.$el as HTMLInputElement | undefined;
+				if (el) {
+					el.setSelectionRange(pos, pos);
+					el.focus();
+				}
 				if (filteredList.value.length > 0) open.value = true;
 			});
 		}
@@ -524,12 +533,7 @@ onMounted(() => {
 						<SelectValue />
 					</SelectTrigger>
 					<SelectContent class="min-w-28 bg-white">
-						<SelectItem
-							v-for="op in activeOperators"
-							:key="op"
-							class="text-xs"
-							:value="op"
-						>
+						<SelectItem v-for="op in activeOperators" :key="op" class="text-xs" :value="op">
 							{{ op }}
 						</SelectItem>
 					</SelectContent>
@@ -573,8 +577,19 @@ onMounted(() => {
 				v-model="inputValue"
 				autocomplete="off"
 				class="min-w-24 flex-1 bg-transparent text-sm outline-none"
-				:placeholder="tags.length === 0 ? (isCqlMode ? 'Click or type [ to add a token…' : 'Type to search…') : ''"
-				@click="() => { open = !open; updateCursorPos(); }"
+				:placeholder="
+					tags.length === 0
+						? isCqlMode
+							? 'Click or type [ to add a token…'
+							: 'Type to search…'
+						: ''
+				"
+				@click="
+					() => {
+						open = !open;
+						updateCursorPos();
+					}
+				"
 				@input="handleInput"
 				@keydown.backspace="handleBackspace"
 				@keydown.enter="handleEnter"
