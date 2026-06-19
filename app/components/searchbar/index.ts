@@ -45,29 +45,6 @@ const properties: Array<keyof CSSStyleDeclaration> = [
 const isBrowser = typeof window !== "undefined";
 const isFirefox = isBrowser && window.navigator.userAgent.toLowerCase().includes("firefox");
 
-export function getSelectionOffset(element: HTMLElement) {
-	element.focus();
-	if ((document.getSelection()?.rangeCount ?? -1) <= 0) return 0;
-	const _range = document.getSelection()?.getRangeAt(0);
-	if (!_range) return -1;
-	const range = _range.cloneRange();
-	range.selectNodeContents(element);
-	range.setEnd(_range.endContainer, _range.endOffset);
-	return range.toString().length;
-}
-// Source - https://stackoverflow.com/a/3866442
-// Posted by Nico Burns, modified by community. See post 'Timeline' for change history
-// Retrieved 2026-02-12, License - CC BY-SA 3.0
-
-export function setEndOfContenteditable(element: HTMLElement) {
-	const range = document.createRange(); //Create a range (a range is a like the selection but invisible)
-	range.selectNodeContents(element); //Select the entire contents of the element with the range
-	range.collapse(false); //collapse the range to the end point. false means collapse to end rather than the start
-	const selection = window.getSelection(); //get the selection object (allows you to change selection)
-	selection?.removeAllRanges(); //remove any selections already made
-	selection?.addRange(range); //make the range you have just created the visible selection
-}
-
 function getCaretCoordinates(
 	element: HTMLInputElement | HTMLTextAreaElement,
 	position: number,
@@ -161,12 +138,10 @@ export type TriggerMap = Map<
 	}>
 >;
 
-export function getTriggerOffset(element: HTMLTextAreaElement, triggers: TriggerMap) {
-	const value = element.textContent;
-	const selectionStart = getSelectionOffset(element);
-	for (let i = selectionStart; i >= 0; i--) {
+export function getTriggerOffset(text: string, cursorOffset: number, triggers: TriggerMap) {
+	for (let i = cursorOffset; i >= 0; i--) {
 		for (const trigger of [...triggers.keys()].toSorted((a, b) => b.length - a.length)) {
-			if (value.substring(i - trigger.length + 1, i + 1) === trigger) {
+			if (text.substring(i - trigger.length + 1, i + 1) === trigger) {
 				return i - trigger.length + 1;
 			}
 		}
@@ -174,33 +149,29 @@ export function getTriggerOffset(element: HTMLTextAreaElement, triggers: Trigger
 	return -1;
 }
 
-export function getTrigger(element: HTMLTextAreaElement, triggers: TriggerMap) {
-	const value = element.textContent;
-
-	const selectionOffset = getSelectionOffset(element);
+export function getTrigger(text: string, cursorOffset: number, triggers: TriggerMap) {
 	for (const trigger of [...triggers.keys()].toSorted((a, b) => b.length - a.length)) {
-		const triggerStart = selectionOffset - trigger.length;
-		if (triggerStart >= 0 && value.substring(triggerStart, selectionOffset) === trigger) {
-			// const secondPreviousChar = value[triggerStart - 1];
-			// const isIsolated = !secondPreviousChar || /\W/.test(secondPreviousChar);
-			// console.log("Tested trigger: ", `*${trigger}*`, value, selectionStart, secondPreviousChar);
-			// if (isIsolated) {
+		const triggerStart = cursorOffset - trigger.length;
+		if (triggerStart >= 0 && text.substring(triggerStart, cursorOffset) === trigger) {
 			return trigger;
-			// }
 		}
 	}
 	return null;
 }
 
-export function getSearchValue(element: HTMLTextAreaElement, triggers: TriggerMap) {
-	const offset = getTriggerOffset(element, triggers);
-	const trigger = getTrigger(element, triggers);
-	// if (offset === -1) return "";
-	return element.textContent.slice(offset + (trigger?.length ?? 0), getSelectionOffset(element));
+export function getSearchValue(text: string, cursorOffset: number, triggers: TriggerMap) {
+	const offset = getTriggerOffset(text, cursorOffset, triggers);
+	const trigger = getTrigger(text, cursorOffset, triggers);
+	return text.slice(offset + (trigger?.length ?? 0), cursorOffset);
 }
 
-export function getAnchorRect(element: HTMLTextAreaElement, triggers: TriggerMap) {
-	const offset = getTriggerOffset(element, triggers);
+export function getAnchorRect(
+	element: HTMLTextAreaElement,
+	text: string,
+	cursorOffset: number,
+	triggers: TriggerMap,
+) {
+	const offset = getTriggerOffset(text, cursorOffset, triggers);
 	const { left, top, height } = getCaretCoordinates(element, offset + 1);
 	const { x, y } = element.getBoundingClientRect();
 	return {
