@@ -22,12 +22,10 @@ import {
 	getAnchorRect,
 	getList,
 	getSearchValue,
-	getSelectionOffset,
 	getTrigger,
 	getTriggerOffset,
 	getValue,
 	replaceValue,
-	setEndOfContenteditable,
 	type TriggerMap,
 } from "./index.ts";
 import { queryHighlightStyle, queryLanguageSupport, wordHover } from "./query-language.ts";
@@ -49,7 +47,11 @@ const { contains } = useFilter({ sensitivity: "base" });
 
 const cmExtensions = computed(() => {
 	if (props.queryMode === "cql") {
-		return [cqlLanguageSupport, syntaxHighlighting(cqlHighlightStyle), tooltips({ parent: document.body })];
+		return [
+			cqlLanguageSupport,
+			syntaxHighlighting(cqlHighlightStyle),
+			tooltips({ parent: document.body }),
+		];
 	}
 	return [
 		queryLanguageSupport,
@@ -67,13 +69,26 @@ const searchValue = ref("");
 
 const textareaRef = ref<InstanceType<typeof ComboboxInput>>();
 
+function getCm() {
+	return textareaRef.value as unknown as InstanceType<typeof CodeMirror>;
+}
+
+function getCursorOffset() {
+	return getCm()?.getCursor() ?? 0;
+}
+
 const reference = computedWithControl(
 	() => [searchValue.value, open.value],
 	() =>
 		({
 			getBoundingClientRect: () => {
 				if (textareaRef.value?.$el) {
-					const { x, y, height } = getAnchorRect(textareaRef.value?.$el, props.triggers);
+					const { x, y, height } = getAnchorRect(
+						textareaRef.value.$el,
+						value.value,
+						getCursorOffset(),
+						props.triggers,
+					);
 					return { x, y, height, top: y, left: x, width: 0 };
 				} else {
 					return null;
@@ -107,16 +122,16 @@ watch([trigger, searchValue], () => {
 	if (isDynamicTrigger.value) emit("update:searchTerm", searchValue.value.replace(/^"/, ""));
 });
 
-function handleChange(ev: InputEvent | PointerEvent) {
-	const target = ev.target as HTMLTextAreaElement;
-	const _trigger = getTrigger(target, props.triggers);
-	const _searchValue = getSearchValue(target, props.triggers);
+function handleChange() {
+	const text = value.value;
+	const cursorOffset = getCursorOffset();
+	const _trigger = getTrigger(text, cursorOffset, props.triggers);
+	const _searchValue = getSearchValue(text, cursorOffset, props.triggers);
 	if (_trigger !== null) {
 		// in CQL mode only open the dropdown at natural token boundaries,
 		// e.g. start of doc, after whitespace, or after "]"
 		if (_trigger === "" && props.queryMode === "cql") {
-			const cursorOffset = getSelectionOffset(target as unknown as HTMLElement);
-			const charBefore = cursorOffset > 0 ? ((target.textContent ?? "")[cursorOffset - 1] ?? null) : null;
+			const charBefore = cursorOffset > 0 ? (text[cursorOffset - 1] ?? null) : null;
 			if (charBefore !== null && !/[\s\]]/.test(charBefore)) {
 				trigger.value = null;
 				open.value = false;
@@ -130,7 +145,6 @@ function handleChange(ev: InputEvent | PointerEvent) {
 		trigger.value = null;
 		open.value = false;
 	}
-	// value.value = target.textContent;
 	searchValue.value = _searchValue;
 
 	if (_trigger === null) open.value = false;
@@ -138,11 +152,12 @@ function handleChange(ev: InputEvent | PointerEvent) {
 
 function handleSelect(ev: CustomEvent) {
 	highlighted.value = null;
+	const cm = getCm();
 	const textarea = textareaRef.value?.$el;
 
-	if (!textarea) return;
+	if (!cm || !textarea) return;
 
-	const offset = getTriggerOffset(textarea, props.triggers) - 1;
+	const cursorPos = cm.getCursor() ?? 0;
 	const selectedValue = getValue(ev.detail.value, trigger.value, props.triggers)?.value;
 
 	if (!selectedValue) return;
@@ -151,13 +166,7 @@ function handleSelect(ev: CustomEvent) {
 	ev.preventDefault();
 
 	// CQL keyword selection: insert [keyword=""] and place cursor between the quotes.
-	// We use cm.getCursor() (CodeMirror's internal cursor, not DOM selection) to derive
-	// the insert position — getTriggerOffset/getSelectionOffset can return garbage offsets
-	// when the user just clicked a dropdown item (DOM focus briefly leaves the editor).
 	if (props.queryMode === "cql" && (trigger.value === "[" || trigger.value === "")) {
-		const cm = textareaRef.value as unknown as InstanceType<typeof CodeMirror>;
-		const cursorPos = cm?.getCursor() ?? 0;
-
 		let keyword: string;
 		let insertStart: number;
 		let deleteLength: number;
@@ -177,15 +186,15 @@ function handleSelect(ev: CustomEvent) {
 		const inserted = `[${keyword}=""]`;
 		const cursorPosition = insertStart + keyword.length + 3; // after [keyword="
 
-		// Both calls are synchronous CodeMirror dispatches — no async gap between them.
-		cm?.replaceRange(inserted, insertStart, insertStart + deleteLength);
-		cm?.setCursor(cursorPosition);
+		cm.replaceRange(inserted, insertStart, insertStart + deleteLength);
+		cm.setCursor(cursorPosition);
 		trigger.value = null;
 		caretOffset.value = cursorPosition;
-		nextTick().then(() => handleChange({ target: textarea } as InputEvent));
+		nextTick().then(() => handleChange());
 		return;
 	}
 
+	const offset = getTriggerOffset(value.value, cursorPos, props.triggers) - 1;
 	value.value = replaceValue(
 		value.value ?? "",
 		offset,
@@ -194,12 +203,11 @@ function handleSelect(ev: CustomEvent) {
 		trigger.value ?? "",
 	);
 	trigger.value = null;
-	const nextCaretOffset = offset + (selectedValue?.length ?? 0);
-	caretOffset.value = nextCaretOffset;
-
 	nextTick().then(() => {
-		setEndOfContenteditable(textarea);
-		handleChange({ target: textarea } as InputEvent);
+		const end = value.value.length;
+		cm.setCursor(end);
+		caretOffset.value = end;
+		handleChange();
 	});
 }
 
@@ -220,7 +228,7 @@ function clear() {
 }
 
 async function insertSnippet(snippet: string) {
-	const cm = textareaRef.value as unknown as InstanceType<typeof CodeMirror>;
+	const cm = getCm();
 	const textarea = textareaRef.value?.$el;
 	if (!cm || !textarea) return;
 	const cursorPos = cm.getCursor() ?? value.value.length;
@@ -229,7 +237,7 @@ async function insertSnippet(snippet: string) {
 	cm.setCursor(pos);
 	caretOffset.value = pos;
 	await nextTick();
-	handleChange({ target: textarea } as InputEvent);
+	handleChange();
 }
 
 defineExpose({ submitSearch, value, clear, insertSnippet });
@@ -247,7 +255,8 @@ watch(
 );
 
 const queryWarnings = computed(() => {
-	if (props.queryMode === "cql" || props.onSubmit) return { isValid: true, warnings: [] as Array<string> };
+	if (props.queryMode === "cql" || props.onSubmit)
+		return { isValid: true, warnings: [] as Array<string> };
 	return validateQuery(value.value);
 });
 
@@ -287,8 +296,12 @@ onBeforeUnmount(() => {
 				class="min-h-10 w-full overflow-x-auto p-1"
 				:extensions="cmExtensions"
 				:lang="queryMode === 'cql' ? cqlLanguageSupport : queryLanguageSupport"
-				:placeholder="queryMode === 'cql' ? 'Type a CQL query, e.g. [word=&quot;…&quot; &amp; pos=&quot;…&quot;]' : 'Click to get a list of available features'"
-				@input="handleChange"
+				:placeholder="
+					queryMode === 'cql'
+						? 'Type a CQL query, e.g. [word=&quot;…&quot; &amp; pos=&quot;…&quot;]'
+						: 'Click to get a list of available features'
+				"
+				@input="() => handleChange()"
 				@keydown.delete="
 					() => {
 						open = false;
@@ -297,7 +310,7 @@ onBeforeUnmount(() => {
 				"
 				@keydown.enter="eventListener"
 				@keydown.left.right="open = false"
-				@pointerdown="(e: PointerEvent) => handleChange(e)"
+				@pointerdown="() => handleChange()"
 			/>
 		</ComboboxInput>
 		<ComboboxAnchor :reference="reference" />
