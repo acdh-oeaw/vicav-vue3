@@ -18,9 +18,9 @@ import {
 	buildRawValue,
 	flatRender,
 	getFlatTags,
-	type Operator,
 	OPERATORS,
 	parseTagClause,
+	splitCqlQuery,
 	splitQueryIntoTokens,
 	type TagItem,
 	tokenToTagItem,
@@ -28,9 +28,16 @@ import {
 } from "./index.ts";
 
 const props = defineProps<{
-	table: Table<unknown>;
+	table?: Table<unknown>;
 	triggers: TriggerMap;
+	operators?: ReadonlyArray<string>;
+	featureTrigger?: string;
+	onSubmit?: (value: string) => void;
+	freeTriggerKey?: string;
+	dynamicTriggers?: ReadonlyArray<string>;
 }>();
+
+const emit = defineEmits<{ "update:searchTerm": [value: string] }>();
 
 const { parseSearchString, validateQuery, normalizeOperators, normalizeParens } = useFilterParser();
 const { contains } = useFilter({ sensitivity: "base" });
@@ -41,7 +48,56 @@ const open = ref(false);
 const highlighted = ref<string | null>(null);
 const editingTagId = ref<string | null>(null);
 
-// ---- Display value (computed reactively from triggers) ----
+const cursorPos = ref<number | null>(null);
+
+const isCqlMode = computed(() => (props.featureTrigger ?? "") === "[");
+const activeOperators = computed(() => props.operators ?? OPERATORS);
+
+function buildCqlTag(raw: string): string {
+	const trimmed = raw.trim();
+	return trimmed.startsWith("[") && !trimmed.endsWith("]") ? `${trimmed}]` : trimmed;
+}
+
+function getCqlDisplayValue(clause: string): string {
+	const trimmed = clause.trim();
+	const inner = trimmed.startsWith("[")
+		? (trimmed.endsWith("]") ? trimmed.slice(1, -1) : trimmed.slice(1))
+		: trimmed;
+
+	if (props.freeTriggerKey) {
+		const m = new RegExp(`^${props.freeTriggerKey}="(.+)"$`).exec(inner);
+		if (m) return (m[1] ?? "").split("|").join(" | ");
+	}
+
+	if (/[&|]/.test(inner)) return inner;
+
+	const eqIdx = inner.indexOf("=");
+	if (eqIdx === -1) return inner;
+
+	const keyword = inner.slice(0, eqIdx).trim();
+	const rawVal = inner.slice(eqIdx + 1).trim(); // e.g. '"v.*"'
+	const valueDisplay = rawVal.replace(/^"|"$/g, "");
+
+	const triggerKey = `[${keyword}=`;
+	const keywordDisplay =
+		props.triggers.get("[")?.find((t) => t.value === `${keyword}=`)?.displayValue ?? keyword;
+	const knownValueDisplay = props.triggers
+		.get(triggerKey)
+		?.find((v) => v.value === rawVal)?.displayValue;
+
+	return `${keywordDisplay}: ${knownValueDisplay ?? valueDisplay}`;
+}
+
+/** Merges `word` into the last tag if it is a freeTriggerKey token. Returns true on success. */
+function tryMergeFreeWord(word: string): boolean {
+	if (!props.freeTriggerKey) return false;
+	const last = tags.value.at(-1);
+	if (!last || last.children) return false;
+	const m = new RegExp(`^\\[${props.freeTriggerKey}="(.+)"\\]$`).exec(last.rawValue);
+	if (!m) return false;
+	last.rawValue = `[${props.freeTriggerKey}="${m[1] ?? ""}|${word}"]`;
+	return true;
+}
 
 function getDisplayValue(clause: string): string {
 	let prefix = "";
@@ -53,6 +109,11 @@ function getDisplayValue(clause: string): string {
 	}
 
 	if (rest.startsWith("(")) return clause;
+
+	// CQL format: [keyword="value"]
+	if (rest.startsWith("[")) {
+		return `${prefix}${getCqlDisplayValue(rest)}`;
+	}
 
 	const colonIdx = rest.indexOf(":");
 	if (colonIdx === -1) return clause;
@@ -75,10 +136,14 @@ function getDisplayValue(clause: string): string {
 	return `${prefix}${featureDisplay}: ${valueDisplay}`;
 }
 
-function addTag(rawValue: string, operator?: Operator) {
+function addTag(rawValue: string, operator?: string) {
 	const trimmed = rawValue.trim();
 	if (!trimmed) return;
-	tags.value.push(tokenToTagItem(trimmed, tags.value.length > 0 ? (operator ?? "AND") : undefined));
+
+	const defaultOp = isCqlMode.value ? undefined : (activeOperators.value[0] ?? "AND");
+	tags.value.push(
+		tokenToTagItem(trimmed, tags.value.length > 0 ? (operator ?? defaultOp) : undefined),
+	);
 }
 
 function findInList(list: Array<TagItem>, id: string): TagItem | null {
@@ -118,7 +183,7 @@ function removeById(id: string) {
 	submitSearch();
 }
 
-function updateOperator(id: string, operator: Operator) {
+function updateOperator(id: string, operator: string) {
 	const tag = findInList(tags.value, id);
 	if (tag) {
 		tag.operator = operator;
@@ -135,6 +200,20 @@ function clear() {
 	reference.value = inputRef.value?.$el;
 }
 
+async function insertSnippet(snippet: string) {
+	const el = inputRef.value?.$el as HTMLInputElement | undefined;
+	const start = el?.selectionStart ?? inputValue.value.length;
+	const end = el?.selectionEnd ?? start;
+	inputValue.value = inputValue.value.slice(0, start) + snippet + inputValue.value.slice(end);
+	const pos = start + snippet.length;
+	await nextTick();
+	if (el) {
+		el.focus();
+		el.setSelectionRange(pos, pos);
+	}
+	handleInput();
+}
+
 const value = computed({
 	get() {
 		return buildRawValue(tags.value);
@@ -144,31 +223,41 @@ const value = computed({
 			tags.value = [];
 			return;
 		}
-		tags.value = splitQueryIntoTokens(newVal).map((token, i) =>
-			tokenToTagItem(
-				token.clause,
-				i > 0 ? ((token.operator as Operator | undefined) ?? "AND") : undefined,
-			),
-		);
+		if (isCqlMode.value) {
+			tags.value = splitCqlQuery(newVal).map((token) => tokenToTagItem(token.clause, undefined));
+		} else {
+			const defaultOp = activeOperators.value[0] ?? "AND";
+			tags.value = splitQueryIntoTokens(newVal).map((token, i) =>
+				tokenToTagItem(token.clause, i > 0 ? (token.operator ?? defaultOp) : undefined),
+			);
+		}
 	},
 });
 
-function parseInputTrigger(inputVal: string): { trigger: string; searchValue: string } {
+function parseInputTrigger(
+	inputVal: string,
+	upTo?: number,
+): { trigger: string; searchValue: string } {
+	const segment = inputVal.slice(0, upTo ?? inputVal.length);
 	const nonEmptyTriggers = [...props.triggers.keys()]
 		.filter((t) => t !== "")
 		.sort((a, b) => b.length - a.length);
 
 	for (const trigger of nonEmptyTriggers) {
-		const idx = inputVal.lastIndexOf(trigger);
+		const idx = segment.lastIndexOf(trigger);
 		if (idx !== -1) {
-			return { trigger, searchValue: inputVal.slice(idx + trigger.length) };
+			return { trigger, searchValue: segment.slice(idx + trigger.length) };
 		}
 	}
-	return { trigger: "", searchValue: inputVal };
+	return { trigger: "", searchValue: segment };
 }
 
-const currentTrigger = computed(() => parseInputTrigger(inputValue.value).trigger);
-const currentSearchValue = computed(() => parseInputTrigger(inputValue.value).searchValue);
+const currentTrigger = computed(() =>
+	parseInputTrigger(inputValue.value, cursorPos.value ?? undefined).trigger,
+);
+const currentSearchValue = computed(() =>
+	parseInputTrigger(inputValue.value, cursorPos.value ?? undefined).searchValue,
+);
 const flatTags = computed(() => tags.value.flatMap((tag) => getFlatTags(tag)));
 const renderTokens = computed(() => flatRender(tags.value));
 const editingTag = computed(
@@ -180,12 +269,29 @@ const editingTagClause = computed(() =>
 const activeTrigger = computed(() => editingTagClause.value?.featureKey ?? currentTrigger.value);
 const activeSearchValue = computed(() => (editingTagClause.value ? "" : currentSearchValue.value));
 
+// In CQL mode: show the "[" trigger keyword list when the input is empty and nothing
+// is being edited — this replaces the removed "" trigger so clicking still shows options.
+const showKeywordsOnEmpty = computed(
+	() => isCqlMode.value && !editingTagClause.value && !inputValue.value,
+);
+
+const isDynamicTrigger = computed(() =>
+	(props.dynamicTriggers ?? []).includes(activeTrigger.value),
+);
+
 const filteredList = computed(() => {
-	const list = props.triggers.get(activeTrigger.value) ?? [];
+	const triggerKey = showKeywordsOnEmpty.value ? "[" : activeTrigger.value;
+	const list = props.triggers.get(triggerKey) ?? [];
+
+	if (isDynamicTrigger.value) return list;
 	const search = activeSearchValue.value;
 	return list.filter(
 		(item) => contains(item.displayValue, search) || contains(String(item.value), search),
 	);
+});
+
+watch([activeTrigger, activeSearchValue], () => {
+	if (isDynamicTrigger.value) emit("update:searchTerm", activeSearchValue.value.replace(/^"/, ""));
 });
 
 watch(
@@ -195,8 +301,13 @@ watch(
 	},
 );
 
+function updateCursorPos() {
+	cursorPos.value = (inputRef.value?.$el as HTMLInputElement | null)?.selectionStart ?? null;
+}
+
 function handleInput() {
 	editingTagId.value = null;
+	updateCursorPos();
 	open.value = filteredList.value.length > 0;
 }
 
@@ -204,23 +315,55 @@ function handleSelect(ev: CustomEvent) {
 	ev.preventDefault();
 	highlighted.value = null;
 	const selectedValue = String(ev.detail.value);
+	const featureTriggerValue = props.featureTrigger ?? "";
 
 	if (editingTag.value && editingTagClause.value) {
-		editingTag.value.rawValue = `${editingTagClause.value.prefix}${editingTagClause.value.featureKey}${selectedValue}`;
+		let rawVal = `${editingTagClause.value.prefix}${editingTagClause.value.featureKey}${selectedValue}`;
+		if (isCqlMode.value) rawVal = buildCqlTag(rawVal);
+		editingTag.value.rawValue = rawVal;
 		editingTagId.value = null;
 		inputValue.value = "";
 		open.value = false;
 		submitSearch();
-	} else if (currentTrigger.value === "") {
-		// A feature key was selected — populate the input so the user can pick a value
-		inputValue.value = selectedValue;
-		open.value = false;
-		nextTick(() => {
-			if (filteredList.value.length > 0) open.value = true;
-		});
+	} else if (
+		currentTrigger.value === featureTriggerValue ||
+		(isCqlMode.value && currentTrigger.value === "")
+	) {
+		if (isCqlMode.value) {
+			// Build the canonical "[keyword=" prefix from either trigger source
+			const prefix =
+				currentTrigger.value === featureTriggerValue
+					? featureTriggerValue + selectedValue
+					: selectedValue; // "" trigger: value is already "[word="
+
+			const keyword = prefix.replace(/^\[/, "").replace(/=$/, "");
+
+			inputValue.value = `[${keyword}=""]`;
+			const pos = `[${keyword}="`.length;
+			cursorPos.value = pos;
+			open.value = false;
+			nextTick(() => {
+				const el = inputRef.value?.$el as HTMLInputElement | undefined;
+				if (el) {
+					el.setSelectionRange(pos, pos);
+					el.focus();
+				}
+				// For keywords with predefined values the filteredList is now non-empty
+				// (searchValue = '"' matches all quoted values); open the dropdown.
+				if (filteredList.value.length > 0) open.value = true;
+			});
+		} else {
+			// Wibarab: populate input with the feature key so the value dropdown opens
+			inputValue.value = featureTriggerValue + selectedValue;
+			open.value = false;
+			nextTick(() => {
+				if (filteredList.value.length > 0) open.value = true;
+			});
+		}
 	} else {
-		// A value was selected — create a complete tag
-		addTag(`${currentTrigger.value}${selectedValue}`);
+		let tagValue = `${currentTrigger.value}${selectedValue}`;
+		if (isCqlMode.value) tagValue = buildCqlTag(tagValue);
+		addTag(tagValue);
 		inputValue.value = "";
 		open.value = false;
 		submitSearch();
@@ -246,7 +389,20 @@ function handleEnter(e: KeyboardEvent) {
 	e.preventDefault();
 	if (highlighted.value) return; // let combobox handle selection
 	if (inputValue.value.trim()) {
-		addTag(inputValue.value.trim());
+		let tagValue = inputValue.value.trim();
+		if (isCqlMode.value) {
+			tagValue = buildCqlTag(tagValue);
+			// Free-text entry: wrap in [freeTriggerKey="…"] and merge with previous if applicable
+			if (!tagValue.startsWith("[") && props.freeTriggerKey) {
+				if (!tryMergeFreeWord(tagValue)) {
+					addTag(`[${props.freeTriggerKey}="${tagValue}"]`);
+				}
+				inputValue.value = "";
+				open.value = false;
+				return;
+			}
+		}
+		addTag(tagValue);
 		inputValue.value = "";
 		open.value = false;
 	} else if (queryWarnings.value.isValid) {
@@ -260,17 +416,30 @@ function handlePaste(e: ClipboardEvent) {
 	if (!text) return;
 
 	const combined = inputValue.value + text;
-	const tokens = splitQueryIntoTokens(combined);
 
-	if (tokens.length > 1) {
-		tokens.forEach((token, i) =>
-			addTag(token.clause, i > 0 ? (token.operator as Operator | undefined) : undefined),
-		);
-		inputValue.value = "";
-		open.value = false;
+	if (isCqlMode.value) {
+		const tokens = splitCqlQuery(combined);
+		if (tokens.length > 1) {
+			tokens.forEach((token) => addTag(token.clause));
+			inputValue.value = "";
+			open.value = false;
+		} else {
+			inputValue.value = combined;
+			handleInput();
+		}
 	} else {
-		inputValue.value = combined;
-		handleInput();
+		const tokens = splitQueryIntoTokens(combined);
+		if (tokens.length > 1) {
+			const defaultOp = activeOperators.value[0] ?? "AND";
+			tokens.forEach((token, i) =>
+				addTag(token.clause, i > 0 ? (token.operator ?? defaultOp) : undefined),
+			);
+			inputValue.value = "";
+			open.value = false;
+		} else {
+			inputValue.value = combined;
+			handleInput();
+		}
 	}
 }
 
@@ -287,19 +456,27 @@ watch(open, () => {
 });
 
 function submitSearch() {
+	if (props.onSubmit) {
+		props.onSubmit(value.value);
+		return;
+	}
+	if (!props.table) return;
 	parseSearchString(value.value, props.table);
 	props.table.setGlobalFilter(normalizeParens(normalizeOperators(value.value)));
 }
 
-const queryWarnings = computed(() => validateQuery(value.value));
+const queryWarnings = computed(() => {
+	if (props.onSubmit) return { isValid: true, warnings: [] as Array<string> };
+	return validateQuery(value.value);
+});
 
 onMounted(() => {
-	const globalFilter = props.table.getState().globalFilter;
+	const globalFilter = props.table?.getState().globalFilter;
 	if (globalFilter) value.value = globalFilter;
 });
 
 watch(
-	() => props.table.getState().globalFilter,
+	() => props.table?.getState().globalFilter,
 	(newVal) => {
 		if (newVal !== value.value) value.value = newVal ?? "";
 	},
@@ -313,7 +490,7 @@ const keyListener = (e: KeyboardEvent) => {
 onMounted(() => window.addEventListener("keydown", keyListener));
 onBeforeUnmount(() => window.removeEventListener("keydown", keyListener));
 
-defineExpose({ submitSearch, value, clear });
+defineExpose({ submitSearch, value, clear, insertSnippet });
 
 const inputRef = useTemplateRef("inputRef");
 const reference = ref<ReferenceElement>();
@@ -339,7 +516,7 @@ onMounted(() => {
 					v-if="token.kind === 'operator'"
 					aria-labelledby="operatorSelect"
 					:model-value="token.tag.operator"
-					@update:model-value="(val: string) => updateOperator(token.tag.id, val as Operator)"
+					@update:model-value="(val: string) => updateOperator(token.tag.id, val)"
 				>
 					<SelectTrigger
 						class="h-5 w-auto gap-0.5 rounded border-none px-1.5 text-xs font-semibold text-on-muted shadow-none focus:ring-0"
@@ -347,7 +524,12 @@ onMounted(() => {
 						<SelectValue />
 					</SelectTrigger>
 					<SelectContent class="min-w-28 bg-white">
-						<SelectItem v-for="op in OPERATORS" :key="op" class="text-xs" :value="op">
+						<SelectItem
+							v-for="op in activeOperators"
+							:key="op"
+							class="text-xs"
+							:value="op"
+						>
 							{{ op }}
 						</SelectItem>
 					</SelectContent>
@@ -391,8 +573,8 @@ onMounted(() => {
 				v-model="inputValue"
 				autocomplete="off"
 				class="min-w-24 flex-1 bg-transparent text-sm outline-none"
-				:placeholder="tags.length === 0 ? 'Type to search features…' : ''"
-				@click="open = !open"
+				:placeholder="tags.length === 0 ? (isCqlMode ? 'Click or type [ to add a token…' : 'Type to search…') : ''"
+				@click="() => { open = !open; updateCursorPos(); }"
 				@input="handleInput"
 				@keydown.backspace="handleBackspace"
 				@keydown.enter="handleEnter"
