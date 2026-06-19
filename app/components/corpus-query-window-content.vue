@@ -194,15 +194,21 @@ const { cqlTriggers } = useCqlTriggers(cqlConfig);
 				@submit="searchCorpus"
 			/> -->
 			<Searchbar
-			v-model="queryString"
-			v-model:search-term="wordSearch"
-			:dynamic-keys="['word']"
-			feature-trigger="["
-			:on-submit="(v) => {queryString = v; searchCorpus()}"
-			query-mode="cql"
-			:special-characters="specialCharacters"
-			:triggers="cqlTriggers"
-		/>
+				v-model="queryString"
+				v-model:search-term="wordSearch"
+				:dynamic-keys="['word']"
+				feature-trigger="["
+				free-trigger-key="word"
+				:on-submit="
+					(v) => {
+						queryString = v;
+						searchCorpus();
+					}
+				"
+				query-mode="cql"
+				:special-characters="specialCharacters"
+				:triggers="cqlTriggers"
+			/>
 			<!-- <button
 				class="inline-block h-10 w-full rounded border-2 border-solid border-primary bg-on-primary text-center align-middle font-bold whitespace-nowrap text-primary hover:bg-primary hover:text-on-primary disabled:border-gray-400 disabled:text-gray-400 hover:disabled:bg-on-primary hover:disabled:text-gray-400"
 				:disabled="isSearching || (queryString === '' && words.length == 0)"

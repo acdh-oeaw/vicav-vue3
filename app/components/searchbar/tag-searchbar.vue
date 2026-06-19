@@ -268,11 +268,27 @@ const editingTag = computed(
 const editingTagClause = computed(() =>
 	editingTag.value ? parseTagClause(editingTag.value.rawValue) : null,
 );
-const activeTrigger = computed(() => editingTagClause.value?.featureKey ?? currentTrigger.value);
+
+// In CQL mode, plain text typed without a "[" is free-text input. We surface it as if the
+// user were filling the freeTriggerKey's value list, so the same (dynamic) suggestions appear.
+const freeTextTrigger = computed(() => `[${props.freeTriggerKey}=`);
+const isFreeTextInput = computed(
+	() =>
+		isCqlMode.value &&
+		Boolean(props.freeTriggerKey) &&
+		!editingTagClause.value &&
+		currentTrigger.value === "" &&
+		Boolean(inputValue.value) &&
+		!inputValue.value.trim().startsWith("["),
+);
+
+const activeTrigger = computed(() => {
+	if (editingTagClause.value) return editingTagClause.value.featureKey;
+	if (isFreeTextInput.value) return freeTextTrigger.value;
+	return currentTrigger.value;
+});
 const activeSearchValue = computed(() => (editingTagClause.value ? "" : currentSearchValue.value));
 
-// In CQL mode: show the "[" trigger keyword list when the input is empty and nothing
-// is being edited — this replaces the removed "" trigger so clicking still shows options.
 const showKeywordsOnEmpty = computed(
 	() => isCqlMode.value && !editingTagClause.value && !inputValue.value,
 );
@@ -318,6 +334,18 @@ function handleSelect(ev: CustomEvent) {
 	highlighted.value = null;
 	const selectedValue = String(ev.detail.value);
 	const featureTriggerValue = props.featureTrigger ?? "";
+
+	// Free-text suggestion picked: wrap the chosen word as a freeTriggerKey token (merging
+	// into a previous free-text tag when possible), mirroring handleEnter's free-text path.
+	if (isFreeTextInput.value) {
+		const word = selectedValue.replace(/^"|"$/g, "");
+		if (!tryMergeFreeWord(word)) addTag(`[${props.freeTriggerKey}="${word}"]`);
+		inputValue.value = "";
+		open.value = false;
+		submitSearch();
+		reference.value = inputRef.value?.$el;
+		return;
+	}
 
 	if (editingTag.value && editingTagClause.value) {
 		let rawVal = `${editingTagClause.value.prefix}${editingTagClause.value.featureKey}${selectedValue}`;
