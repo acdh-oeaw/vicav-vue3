@@ -22,6 +22,7 @@ import {
 	getAnchorRect,
 	getList,
 	getSearchValue,
+	getSelectionOffset,
 	getTrigger,
 	getTriggerOffset,
 	getValue,
@@ -30,22 +31,33 @@ import {
 	type TriggerMap,
 } from "./index.ts";
 import { queryHighlightStyle, queryLanguageSupport, wordHover } from "./query-language.ts";
+import { cqlHighlightStyle, cqlLanguageSupport } from "./query-language-cql.ts";
 
 const props = defineProps<{
-	table: Table<unknown>;
+	table?: Table<unknown>;
 	triggers: TriggerMap;
+	queryMode?: "wibarab" | "cql";
+	onSubmit?: (value: string) => void;
+	dynamicTriggers?: ReadonlyArray<string>;
 }>();
+
+const emit = defineEmits<{ "update:searchTerm": [value: string] }>();
 
 const { parseSearchString, validateQuery, normalizeOperators, normalizeParens } = useFilterParser();
 
 const { contains } = useFilter({ sensitivity: "base" });
 
-const cmExtensions = computed(() => [
-	queryLanguageSupport,
-	wordHover(props.triggers),
-	syntaxHighlighting(queryHighlightStyle),
-	tooltips({ parent: document.body }),
-]);
+const cmExtensions = computed(() => {
+	if (props.queryMode === "cql") {
+		return [cqlLanguageSupport, syntaxHighlighting(cqlHighlightStyle), tooltips({ parent: document.body })];
+	}
+	return [
+		queryLanguageSupport,
+		wordHover(props.triggers),
+		syntaxHighlighting(queryHighlightStyle),
+		tooltips({ parent: document.body }),
+	];
+});
 
 const value = ref("");
 const trigger = ref<string | null>(null);
@@ -70,11 +82,17 @@ const reference = computedWithControl(
 		}) as ReferenceElement,
 );
 
+const isDynamicTrigger = computed(() =>
+	(props.dynamicTriggers ?? []).includes(trigger.value ?? ""),
+);
+
 const list = computed(() => {
 	const textarea = textareaRef.value?.$el;
 	if (!textarea) return;
 
 	const _list = getList(trigger.value, props.triggers);
+
+	if (isDynamicTrigger.value) return _list;
 	return _list.filter((item) => contains(String(item.value), searchValue.value));
 });
 
@@ -85,11 +103,27 @@ watch(
 	},
 );
 
+watch([trigger, searchValue], () => {
+	if (isDynamicTrigger.value) emit("update:searchTerm", searchValue.value.replace(/^"/, ""));
+});
+
 function handleChange(ev: InputEvent | PointerEvent) {
 	const target = ev.target as HTMLTextAreaElement;
 	const _trigger = getTrigger(target, props.triggers);
 	const _searchValue = getSearchValue(target, props.triggers);
 	if (_trigger !== null) {
+		// in CQL mode only open the dropdown at natural token boundaries,
+		// e.g. start of doc, after whitespace, or after "]"
+		if (_trigger === "" && props.queryMode === "cql") {
+			const cursorOffset = getSelectionOffset(target as unknown as HTMLElement);
+			const charBefore = cursorOffset > 0 ? ((target.textContent ?? "")[cursorOffset - 1] ?? null) : null;
+			if (charBefore !== null && !/[\s\]]/.test(charBefore)) {
+				trigger.value = null;
+				open.value = false;
+				searchValue.value = _searchValue;
+				return;
+			}
+		}
 		trigger.value = _trigger;
 		open.value = true;
 	} else if (_searchValue == null) {
@@ -115,6 +149,43 @@ function handleSelect(ev: CustomEvent) {
 
 	// prevent setting `ComboboxInput`
 	ev.preventDefault();
+
+	// CQL keyword selection: insert [keyword=""] and place cursor between the quotes.
+	// We use cm.getCursor() (CodeMirror's internal cursor, not DOM selection) to derive
+	// the insert position — getTriggerOffset/getSelectionOffset can return garbage offsets
+	// when the user just clicked a dropdown item (DOM focus briefly leaves the editor).
+	if (props.queryMode === "cql" && (trigger.value === "[" || trigger.value === "")) {
+		const cm = textareaRef.value as unknown as InstanceType<typeof CodeMirror>;
+		const cursorPos = cm?.getCursor() ?? 0;
+
+		let keyword: string;
+		let insertStart: number;
+		let deleteLength: number;
+
+		if (trigger.value === "[") {
+			// Cursor is after "[" + searchValue; position of "[" = cursorPos - 1 - searchValue.length
+			keyword = selectedValue.replace(/=$/, "");
+			insertStart = Math.max(0, cursorPos - 1 - searchValue.value.length);
+			deleteLength = 1 + searchValue.value.length;
+		} else {
+			// "" trigger: selectedValue is "[keyword=" (bracket-prefixed); insert at cursor
+			keyword = selectedValue.slice(1, -1);
+			insertStart = cursorPos;
+			deleteLength = 0;
+		}
+
+		const inserted = `[${keyword}=""]`;
+		const cursorPosition = insertStart + keyword.length + 3; // after [keyword="
+
+		// Both calls are synchronous CodeMirror dispatches — no async gap between them.
+		cm?.replaceRange(inserted, insertStart, insertStart + deleteLength);
+		cm?.setCursor(cursorPosition);
+		trigger.value = null;
+		caretOffset.value = cursorPosition;
+		nextTick().then(() => handleChange({ target: textarea } as InputEvent));
+		return;
+	}
+
 	value.value = replaceValue(
 		value.value ?? "",
 		offset,
@@ -123,7 +194,7 @@ function handleSelect(ev: CustomEvent) {
 		trigger.value ?? "",
 	);
 	trigger.value = null;
-	const nextCaretOffset = offset + selectedValue?.length;
+	const nextCaretOffset = offset + (selectedValue?.length ?? 0);
 	caretOffset.value = nextCaretOffset;
 
 	nextTick().then(() => {
@@ -133,6 +204,11 @@ function handleSelect(ev: CustomEvent) {
 }
 
 function submitSearch() {
+	if (props.onSubmit) {
+		props.onSubmit(value.value);
+		return;
+	}
+	if (!props.table) return;
 	parseSearchString(value.value, props.table);
 	props.table.setGlobalFilter(normalizeParens(normalizeOperators(value.value)));
 }
@@ -143,21 +219,37 @@ function clear() {
 	submitSearch();
 }
 
-defineExpose({ submitSearch, value, clear });
+async function insertSnippet(snippet: string) {
+	const cm = textareaRef.value as unknown as InstanceType<typeof CodeMirror>;
+	const textarea = textareaRef.value?.$el;
+	if (!cm || !textarea) return;
+	const cursorPos = cm.getCursor() ?? value.value.length;
+	cm.replaceRange(snippet, cursorPos, cursorPos);
+	const pos = cursorPos + snippet.length;
+	cm.setCursor(pos);
+	caretOffset.value = pos;
+	await nextTick();
+	handleChange({ target: textarea } as InputEvent);
+}
+
+defineExpose({ submitSearch, value, clear, insertSnippet });
 
 onMounted(() => {
-	value.value = props.table.getState().globalFilter;
+	if (props.table) value.value = props.table.getState().globalFilter;
 	nextTick(() => (open.value = false));
 });
 
 watch(
-	() => props.table.getState().globalFilter,
+	() => props.table?.getState().globalFilter,
 	(newVal) => {
-		value.value = newVal;
+		if (newVal !== undefined) value.value = newVal;
 	},
 );
 
-const queryWarnings = computed(() => validateQuery(value.value));
+const queryWarnings = computed(() => {
+	if (props.queryMode === "cql" || props.onSubmit) return { isValid: true, warnings: [] as Array<string> };
+	return validateQuery(value.value);
+});
 
 const highlighted = ref<string | null>(null);
 function setHighlight(el: { ref: HTMLElement; value: AcceptableValue } | undefined) {
@@ -194,8 +286,8 @@ onBeforeUnmount(() => {
 				v-model="value"
 				class="min-h-10 w-full overflow-x-auto p-1"
 				:extensions="cmExtensions"
-				:lang="queryLanguageSupport"
-				placeholder="Click to get a list of available features"
+				:lang="queryMode === 'cql' ? cqlLanguageSupport : queryLanguageSupport"
+				:placeholder="queryMode === 'cql' ? 'Type a CQL query, e.g. [word=&quot;…&quot; &amp; pos=&quot;…&quot;]' : 'Click to get a list of available features'"
 				@input="handleChange"
 				@keydown.delete="
 					() => {

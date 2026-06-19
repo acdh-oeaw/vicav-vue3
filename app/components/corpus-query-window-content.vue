@@ -14,7 +14,7 @@ const props = defineProps<{ params: Zod.infer<typeof CorpusQuerySchema>["params"
 const queryString = ref(props.params.queryString);
 const hits = ref<Array<Div & { label?: string }>>([]);
 const displayHits = ref<Array<Div & { label?: string }>>([]);
-const showHelp = ref<boolean>(false);
+// const showHelp = ref<boolean>(false);
 const isSearching = ref(false);
 
 const inlineAnnotations = ref<false | true | "indeterminate">(true);
@@ -111,6 +111,25 @@ function splitUtterancesAroundHit(utterances: MixedUtteranceContent, hitId?: str
 		after: utterances.slice(matchIndex + 1),
 	};
 }
+
+const cqlConfig = computed<CqlConfig>(() => [
+	// `word` suggestions are fetched dynamically (driven by `wordSearch` below).
+	{
+		key: "word",
+		displayValue: "Word",
+		values: wordOptions.value.map((o) => ({ value: o.value, displayValue: o.label })),
+	},
+	{ key: "lemma", displayValue: "Lemma" },
+	{
+		key: "pos",
+		displayValue: "Part of Speech",
+		values: [
+			{ value: "verb", displayValue: "Verb" },
+			{ value: "noun", displayValue: "Noun" },
+		],
+	},
+]);
+const { cqlTriggers } = useCqlTriggers(cqlConfig);
 </script>
 
 <template>
@@ -119,7 +138,7 @@ function splitUtterancesAroundHit(utterances: MixedUtteranceContent, hitId?: str
 		<form
 			class="block w-full rounded border border-gray-300 bg-gray-50 p-2.5 px-4 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
 		>
-			<label class="mb-2 flex w-48! p-0 font-bold" for="word_tags">
+			<!-- <label class="mb-2 flex w-48! p-0 font-bold" for="word_tags">
 				<span class="grow">Search for exact words</span>
 				<a href="#" title="More information" @click="showHelp = true"
 					><span class="hidden">More information</span>
@@ -148,7 +167,7 @@ function splitUtterancesAroundHit(utterances: MixedUtteranceContent, hitId?: str
 				:options="wordOptions"
 				placeholder="Search for words..."
 				:special-characters="specialCharacters"
-			/>
+			/> -->
 
 			<label class="mb-2 flex w-40! p-0 font-bold" for="word_tags">
 				<span class="grow">Advanced search</span>
@@ -165,7 +184,7 @@ function splitUtterancesAroundHit(utterances: MixedUtteranceContent, hitId?: str
 					>)
 				</span>
 			</div>
-			<InputExtended
+			<!-- <InputExtended
 				v-if="specialCharacters"
 				id="query"
 				v-model="queryString"
@@ -173,16 +192,27 @@ function splitUtterancesAroundHit(utterances: MixedUtteranceContent, hitId?: str
 				placeholder="Search in corpus ..."
 				:special-characters="specialCharacters"
 				@submit="searchCorpus"
-			/>
-			<button
+			/> -->
+			<Searchbar
+			v-model="queryString"
+			v-model:search-term="wordSearch"
+			:dynamic-keys="['word']"
+			feature-trigger="["
+			:on-submit="(v) => {queryString = v; searchCorpus()}"
+			query-mode="cql"
+			:special-characters="specialCharacters"
+			:triggers="cqlTriggers"
+		/>
+			<!-- <button
 				class="inline-block h-10 w-full rounded border-2 border-solid border-primary bg-on-primary text-center align-middle font-bold whitespace-nowrap text-primary hover:bg-primary hover:text-on-primary disabled:border-gray-400 disabled:text-gray-400 hover:disabled:bg-on-primary hover:disabled:text-gray-400"
 				:disabled="isSearching || (queryString === '' && words.length == 0)"
 				@click.prevent.stop="searchCorpus"
 			>
 				Query
-			</button>
+			</button> -->
 			<br />
 		</form>
+
 		<div class="flex justify-end p-4">
 			<div>
 				<Checkbox

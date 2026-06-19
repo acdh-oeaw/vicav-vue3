@@ -45,7 +45,7 @@ const properties: Array<keyof CSSStyleDeclaration> = [
 const isBrowser = typeof window !== "undefined";
 const isFirefox = isBrowser && window.navigator.userAgent.toLowerCase().includes("firefox");
 
-function getSelectionOffset(element: HTMLElement) {
+export function getSelectionOffset(element: HTMLElement) {
 	element.focus();
 	if ((document.getSelection()?.rangeCount ?? -1) <= 0) return 0;
 	const _range = document.getSelection()?.getRangeAt(0);
@@ -240,7 +240,7 @@ export interface TagItem {
 	id: string;
 	rawValue: string;
 	/** Operator connecting this tag to the one before it (undefined for the first tag). */
-	operator?: Operator;
+	operator?: string;
 	/** If set, this tag is a parenthesized group containing these sub-tags. */
 	children?: Array<TagItem>;
 }
@@ -327,7 +327,7 @@ export function buildRawValue(items: Array<TagItem>): string {
 		.join(" ");
 }
 
-export function tokenToTagItem(clause: string, operator?: Operator): TagItem {
+export function tokenToTagItem(clause: string, operator?: string): TagItem {
 	const children = parseGroupChildren(clause);
 	return { id: crypto.randomUUID(), rawValue: clause, operator, ...(children ? { children } : {}) };
 }
@@ -336,10 +336,7 @@ export function parseGroupChildren(clause: string): Array<TagItem> | null {
 	if (!clause.startsWith("(") || !clause.endsWith(")")) return null;
 	const inner = clause.slice(1, -1).trim();
 	return splitQueryIntoTokens(inner).map((childToken, j) =>
-		tokenToTagItem(
-			childToken.clause,
-			j > 0 ? ((childToken.operator as Operator | undefined) ?? "AND") : undefined,
-		),
+		tokenToTagItem(childToken.clause, j > 0 ? (childToken.operator ?? "AND") : undefined),
 	);
 }
 
@@ -356,6 +353,14 @@ export function parseTagClause(
 
 	if (rest.startsWith("(")) return null;
 
+	// CQL format: [keyword=value] — featureKey is "[keyword=" so it matches the trigger key
+	if (rest.startsWith("[")) {
+		const eqIdx = rest.indexOf("=");
+		if (eqIdx === -1) return null;
+		return { prefix, featureKey: rest.slice(0, eqIdx + 1), rawValue: rest.slice(eqIdx + 1) };
+	}
+
+	// Wibarab format: feature:value
 	const colonIdx = rest.indexOf(":");
 	if (colonIdx === -1) return null;
 
@@ -364,6 +369,61 @@ export function parseTagClause(
 		featureKey: rest.slice(0, colonIdx + 1),
 		rawValue: rest.slice(colonIdx + 1),
 	};
+}
+
+export function splitCqlQuery(query: string): Array<{ clause: string }> {
+	const result: Array<{ clause: string }> = [];
+	let i = 0;
+	const q = query.trim();
+
+	while (i < q.length) {
+		if (/\s/.test(q[i]!)) {
+			i++;
+			continue;
+		}
+
+		if (q[i] === "[") {
+			let token = "[";
+			i++;
+			let depth = 1;
+			while (i < q.length && depth > 0) {
+				const c = q[i]!;
+				if (c === "[") {
+					depth++;
+					token += c;
+					i++;
+				} else if (c === "]") {
+					depth--;
+					token += c;
+					i++;
+				} else if (c === '"') {
+					token += '"';
+					i++;
+					while (i < q.length && q[i] !== '"') {
+						if (q[i] === "\\") {
+							token += q[i++]!;
+						}
+						if (i < q.length) {
+							token += q[i++]!;
+						}
+					}
+					if (i < q.length) {
+						token += '"';
+						i++;
+					}
+				} else {
+					token += c;
+					i++;
+				}
+			}
+			result.push({ clause: token });
+			continue;
+		}
+
+		i++;
+	}
+
+	return result;
 }
 
 export function getFlatTags(tag: TagItem): Array<TagItem> {
