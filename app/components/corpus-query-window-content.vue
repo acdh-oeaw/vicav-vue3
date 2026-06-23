@@ -14,7 +14,7 @@ const props = defineProps<{ params: Zod.infer<typeof CorpusQuerySchema>["params"
 const queryString = ref(props.params.queryString);
 const hits = ref<Array<Div & { label?: string }>>([]);
 const displayHits = ref<Array<Div & { label?: string }>>([]);
-// const showHelp = ref<boolean>(false);
+const showHelp = ref<boolean>(false);
 const isSearching = ref(false);
 
 const inlineAnnotations = ref<false | true | "indeterminate">(true);
@@ -112,7 +112,6 @@ function splitUtterancesAroundHit(utterances: MixedUtteranceContent, hitId?: str
 	};
 }
 
-// Available CQL attributes (word, lemma, pos ...) are fetched from the NoSke corpus
 const { cqlConfig: attributeConfig } = useCqlAttributes();
 
 const cqlConfig = computed<CqlConfig>(() =>
@@ -135,14 +134,14 @@ const { cqlTriggers } = useCqlTriggers(cqlConfig);
 		<form
 			class="block w-full rounded border border-gray-300 bg-gray-50 p-2.5 px-4 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
 		>
-			<!-- <label class="mb-2 flex w-48! p-0 font-bold" for="word_tags">
-				<span class="grow">Search for exact words</span>
-				<a href="#" title="More information" @click="showHelp = true"
+			<label class="mb-2 flex p-0 font-bold" for="word_tags">
+				<span class="mr-2">Search for words or enter a CQL query</span>
+				<a href="#" title="More information" @click="showHelp = !showHelp"
 					><span class="hidden">More information</span>
 					<Info class="size-4" />
 				</a>
 			</label>
-			<div v-if="showHelp" class="flex items-center gap-2">
+			<div v-if="showHelp" class="mb-2 flex flex-col gap-2">
 				<span class="text-gray-500"
 					>Enter beginning of the word to trigger autocomplete suggestions from the words occurring
 					in the corpus. Autocomplete is accent-insensitive, allowing for a simplified word form
@@ -154,42 +153,16 @@ const { cqlTriggers } = useCqlTriggers(cqlConfig);
 					Example: w.?n would yield results like "wen", "win", "w.*n" would yield results for "wen,
 					win or weyn" as well.
 				</span>
-			</div>
-			<TagsSelect
-				v-if="wordOptions"
-				id="word_tags"
-				v-model="words"
-				v-model:search-term="wordSearch"
-				:filter-function="(i) => i"
-				:options="wordOptions"
-				placeholder="Search for words..."
-				:special-characters="specialCharacters"
-			/> -->
-
-			<label class="mb-2 flex w-40! p-0 font-bold" for="word_tags">
-				<span class="grow">Advanced search</span>
-			</label>
-			<div class="mb-2 flex items-center gap-2">
-				<Info class="size-4" />
 				<span class="text-gray-500"
-					>Enter a proper CQL query with exact transliateration characters. (<a
+					>Alternatively, enter a proper CQL query with exact transliateration characters. (<a
 						class="content-center"
-						href="https://howto.acdh.oeaw.ac.at/de/resources/corpus-query-language-im-austrian-media-corpus"
+						href="https://campus.dariah.eu/resources/hosted/corpus-query-language-im-austrian-media-corpus"
 						target="_blank"
 						title="More information about CQL syntax"
 						><span>More info</span></a
 					>)
 				</span>
 			</div>
-			<!-- <InputExtended
-				v-if="specialCharacters"
-				id="query"
-				v-model="queryString"
-				aria-label="Search"
-				placeholder="Search in corpus ..."
-				:special-characters="specialCharacters"
-				@submit="searchCorpus"
-			/> -->
 			<Searchbar
 				v-model="queryString"
 				v-model:search-term="wordSearch"
@@ -206,13 +179,6 @@ const { cqlTriggers } = useCqlTriggers(cqlConfig);
 				:special-characters="specialCharacters"
 				:triggers="cqlTriggers"
 			/>
-			<!-- <button
-				class="inline-block h-10 w-full rounded border-2 border-solid border-primary bg-on-primary text-center align-middle font-bold whitespace-nowrap text-primary hover:bg-primary hover:text-on-primary disabled:border-gray-400 disabled:text-gray-400 hover:disabled:bg-on-primary hover:disabled:text-gray-400"
-				:disabled="isSearching || (queryString === '' && words.length == 0)"
-				@click.prevent.stop="searchCorpus"
-			>
-				Query
-			</button> -->
 			<br />
 		</form>
 
