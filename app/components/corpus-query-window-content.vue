@@ -134,23 +134,20 @@ function splitUtterancesAroundHit(utterances: MixedUtteranceContent, hitId?: str
 	};
 }
 
-const cqlConfig = computed<CqlConfig>(() => [
-	// `word` suggestions are fetched dynamically (driven by `wordSearch` below).
-	{
-		key: "word",
-		displayValue: "Word",
-		values: wordOptions.value.map((o) => ({ value: o.value, displayValue: o.label })),
-	},
-	{ key: "lemma", displayValue: "Lemma" },
-	{
-		key: "pos",
-		displayValue: "Part of Speech",
-		values: [
-			{ value: "verb", displayValue: "Verb" },
-			{ value: "noun", displayValue: "Noun" },
-		],
-	},
-]);
+// Available CQL attributes (word, lemma, pos ...) are fetched from the NoSke corpus
+const { cqlConfig: attributeConfig } = useCqlAttributes();
+
+const cqlConfig = computed<CqlConfig>(() =>
+	attributeConfig.value.map((attr) =>
+		// `word` suggestions are fetched dynamically (driven by `wordSearch` below).
+		attr.key === "word"
+			? {
+					...attr,
+					values: wordOptions.value.map((o) => ({ value: o.value, displayValue: o.label })),
+				}
+			: attr,
+	),
+);
 const { cqlTriggers } = useCqlTriggers(cqlConfig);
 </script>
 
