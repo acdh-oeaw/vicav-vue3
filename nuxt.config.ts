@@ -79,6 +79,10 @@ export default defineNuxtConfig({
 		// See https://nuxt.com/docs/guide/runtime-config
 		BOTS: "disabled",
 		apiBaseUrl: undefined,
+		// Server-only: the NoSketch Engine instance is proxied through /api/cql-attributes
+		// because it does not send CORS headers (browser cannot call it directly).
+		noskeBaseUrl: "https://shawi-noske-main.acdh-dev.oeaw.ac.at",
+		noskeCorpus: "shawi",
 		public: {
 			apiBaseUrl: "https://vicav-dev.acdh.oeaw.ac.at",
 			appBaseUrl: "http://localhost:3000",
