@@ -63,10 +63,6 @@ async function searchCorpus(options: { updateRoute?: boolean } = {}) {
 	}
 }
 
-function submitSearchCorpus() {
-	void searchCorpus();
-}
-
 // API currently doesn't support pagination for corpus search results, so we're faking it
 const handleInfiniteScroll = async function ($state: StateHandler) {
 	currentPage.value += 1;
