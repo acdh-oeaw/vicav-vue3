@@ -100,6 +100,20 @@ Rendered as [feature-window-content.vue](../app/components/feature-window-conten
 }
 ```
 
+### `FeatureStatistics`
+
+Rendered as
+[feature-statistics-window-content.vue](../app/components/feature-statistics-window-content.vue).
+
+- `params`:
+
+```ts
+{
+  featureId: string;
+  showCitation?: boolean;
+}
+```
+
 ### `FeatureValue`
 
 Rendered as [feature-value-window-content.vue](../app/components/feature-value-window-content.vue).
