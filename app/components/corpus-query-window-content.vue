@@ -104,7 +104,7 @@ watch(
 		if (value === "" || value === lastRestoredQueryString.value) return;
 		queryString.value = value;
 		lastRestoredQueryString.value = value;
-		void searchCorpus({ updateRoute: false });
+		if (!isSearching.value) void searchCorpus({ updateRoute: false });
 	},
 	{ flush: "post", immediate: true },
 );
@@ -207,8 +207,10 @@ const { cqlTriggers } = useCqlTriggers(cqlConfig);
 				free-trigger-key="word"
 				:on-submit="
 					(v) => {
-						queryString = v;
-						searchCorpus();
+						if (!isSearching) {
+							queryString = v;
+							searchCorpus();
+						}
 					}
 				"
 				query-mode="cql"
