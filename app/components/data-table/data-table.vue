@@ -22,7 +22,13 @@ import { ChevronDown, ChevronRight, ChevronsUpDown } from "lucide-vue-next";
 
 import customFacetedUniqueValues from "@/utils/customFacetedUniqueValues.ts";
 
-const emit = defineEmits(["table-ready", "columnFiltersChange", "globalFilterChange", "row-click"]);
+const emit = defineEmits([
+	"table-ready",
+	"columnFiltersChange",
+	"globalFilterChange",
+	"row-click",
+	"column-header-click",
+]);
 
 interface RowWithSubRows {
 	subRows: Array<RowWithSubRows>;
@@ -205,6 +211,7 @@ function countLeafRows(row: RowWithSubRows): number {
 					:key="header.id"
 					:class="{ 'sticky z-20 bg-primary': stickyHeader }"
 					:style="stickyHeader ? { top: `${headerGroupIndex * 3}rem` } : undefined"
+					@click="emit('column-header-click', header)"
 				>
 					<button
 						v-if="enableSorting && header.column.getCanSort()"
