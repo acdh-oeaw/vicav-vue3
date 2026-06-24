@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import FeatureStatisticsWindowContent from "@/components/feature-statistics-window-content.vue";
 import type { WindowItem } from "@/types/global.ts";
 
 interface Props {
