@@ -34,32 +34,50 @@ const currentPage = ref(1);
 const infinite = ref<typeof InfiniteLoading | null>(null);
 const scrollComplete = ref<boolean>(false);
 const utterancesWrapper = ref<HTMLElement | null>(null);
+const {
+	getUtterances,
+	hasInlineAnnotations: blockHasInlineAnnotations,
+	hasInlineTranslations: blockHasInlineTranslations,
+} = useCorpusAnnotationAvailability();
 
 const annotationBlocks = ref<Array<Div>>([]);
 const displayAnnotationBlocks = ref<Array<Div>>([]);
 const inlineAnnotations = ref<false | true | "indeterminate">(true);
 const inlineTranslations = ref<false | true | "indeterminate">(true);
 const denseTeiHeader = ref<false | true | "indeterminate">(true);
+
+const hasInlineAnnotations = computed(() => {
+	return blockHasInlineAnnotations(annotationBlocks.value);
+});
+
+const hasInlineTranslations = computed(() => {
+	return blockHasInlineTranslations(annotationBlocks.value);
+});
+
+const showInlineAnnotations = computed(() => {
+	return hasInlineAnnotations.value && inlineAnnotations.value === true;
+});
+
+const showInlineTranslations = computed(() => {
+	return hasInlineTranslations.value && inlineTranslations.value === true;
+});
+
 const enabledOptions = computed<Array<string>>({
 	get() {
 		return [
-			...(inlineAnnotations.value === true ? ["annotations"] : []),
-			...(inlineTranslations.value === true ? ["translations"] : []),
+			...(showInlineAnnotations.value ? ["annotations"] : []),
+			...(showInlineTranslations.value ? ["translations"] : []),
 			...(denseTeiHeader.value === true ? ["dense-tei-header"] : []),
 		];
 	},
 	set(values: Array<string>) {
-		inlineAnnotations.value = values.includes("annotations");
-		inlineTranslations.value = values.includes("translations");
+		inlineAnnotations.value = hasInlineAnnotations.value && values.includes("annotations");
+		inlineTranslations.value = hasInlineTranslations.value && values.includes("translations");
 		denseTeiHeader.value = values.includes("dense-tei-header");
 	},
 });
 
 const api = useApiClient();
-
-function getUtterances(div: Div): Array<U> {
-	return [div.u, ...(div.us ?? [])].filter((u) => u !== undefined);
-}
 
 function renderUtteranceTokenText(token: U["$$"][number]): string {
 	if (token.w) {
@@ -179,7 +197,7 @@ onMounted(async () => {
 		<div class="sticky top-0 z-10 flex justify-end bg-white p-4">
 			<TooltipProvider>
 				<ToggleGroup v-model="enabledOptions" type="multiple" variant="outline">
-					<Tooltip>
+					<Tooltip v-if="hasInlineAnnotations">
 						<TooltipTrigger as-child>
 							<ToggleGroupItem class="hover:bg-primary" value="annotations">
 								<ChevronsLeftRightEllipsis class="h-4 w-4" />
@@ -189,7 +207,7 @@ onMounted(async () => {
 							Show inline linguistic annotations in utterances.
 						</TooltipContent>
 					</Tooltip>
-					<Tooltip>
+					<Tooltip v-if="hasInlineTranslations">
 						<TooltipTrigger as-child>
 							<ToggleGroupItem class="hover:bg-primary" value="translations">
 								<Languages class="h-4 w-4" />
@@ -279,14 +297,14 @@ onMounted(async () => {
 										v-for="(uContent, index) in u['$$']"
 										:key="index"
 										:highlight="uContent.w?.['@id'] === props.params.hits"
-										:inline-annotation="inlineAnnotations as boolean"
-										:inline-translation="inlineTranslations as boolean"
+										:inline-annotation="showInlineAnnotations"
+										:inline-translation="showInlineTranslations"
 										:utterance="uContent"
 									></CorpusTextJsonUtterance>
 								</div>
 							</div>
 							<div
-								v-if="inlineTranslations && a.Translation_spanGrp"
+								v-if="showInlineTranslations && a.Translation_spanGrp"
 								class="flex max-w-full flex-row px-6 py-3 italic"
 							>
 								{{ a.Translation_spanGrp.span["$"] }}
