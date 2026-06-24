@@ -15,10 +15,10 @@ const _props = defineProps<{
 	operators?: ReadonlyArray<string>;
 	/**
 	 * The trigger string for the first selection step.
-	 * Defaults to "" (wibarab). Set to "[" for CQL mode.
+	 * Defaults to "" (lucene). Set to "[" for CQL mode.
 	 */
 	featureTrigger?: string;
-	queryMode?: "wibarab" | "cql";
+	queryMode?: "lucene" | "cql";
 	onSubmit?: (value: string) => void;
 	/** CQL mode: attribute key used when wrapping free-text input (e.g. "word"). */
 	freeTriggerKey?: string;
@@ -30,7 +30,7 @@ const model = defineModel<string>({ default: "" });
 const searchTerm = defineModel<string>("searchTerm", { default: "" });
 
 // Resolve bare keys to the trigger keys the subcomponents match against:
-// CQL values live under "[key=", wibarab values under "key:".
+// CQL values live under "[key=", lucene values under "key:".
 const isCql = computed(() => (_props.featureTrigger ?? "") === "[" || _props.queryMode === "cql");
 const dynamicTriggers = computed(() =>
 	(_props.dynamicKeys ?? []).map((key) => (isCql.value ? `[${key}=` : `${key}:`)),

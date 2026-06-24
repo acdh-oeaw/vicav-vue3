@@ -34,7 +34,7 @@ import { cqlHighlightStyle, cqlLanguageSupport } from "./query-language-cql.ts";
 const props = defineProps<{
 	table?: Table<unknown>;
 	triggers: TriggerMap;
-	queryMode?: "wibarab" | "cql";
+	queryMode?: "lucene" | "cql";
 	onSubmit?: (value: string) => void;
 	dynamicTriggers?: ReadonlyArray<string>;
 }>();

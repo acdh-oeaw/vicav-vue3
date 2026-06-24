@@ -383,7 +383,7 @@ function handleSelect(ev: CustomEvent) {
 				if (filteredList.value.length > 0) open.value = true;
 			});
 		} else {
-			// Wibarab: populate input with the feature key so the value dropdown opens
+			// Lucene: populate input with the feature key so the value dropdown opens
 			inputValue.value = featureTriggerValue + selectedValue;
 			const pos = inputValue.value.length;
 			cursorPos.value = pos;

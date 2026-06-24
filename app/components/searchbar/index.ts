@@ -331,7 +331,7 @@ export function parseTagClause(
 		return { prefix, featureKey: rest.slice(0, eqIdx + 1), rawValue: rest.slice(eqIdx + 1) };
 	}
 
-	// Wibarab format: feature:value
+	// Lucene format: feature:value
 	const colonIdx = rest.indexOf(":");
 	if (colonIdx === -1) return null;
 
