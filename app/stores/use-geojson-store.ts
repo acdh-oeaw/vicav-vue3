@@ -22,13 +22,21 @@ export const useGeojsonStore = defineStore("geojson", () => {
 		new Map<string, { label: string | undefined; taxonomy: string } | undefined>(),
 	);
 	function buildFeatureTaxonomy(
-		features: Record<string, { values: Record<string, string>; taxonomy: Record<string, string> }>,
+		features: Record<
+			string,
+			{ values: Record<string, string>; taxonomy: Array<Record<string, string>> }
+		>,
 	) {
 		for (const feature in features) {
+			const taxonomyLabels = (features[feature]?.taxonomy ?? []).reduce<Record<string, string>>(
+				(acc, entry) => ({ ...acc, ...entry }),
+				{},
+			);
 			for (const value in features[feature]?.values) {
+				const path = features[feature].values[value]!;
 				featureValueTaxonomy.value.set(`${feature}.${value}`, {
-					label: features[feature].taxonomy[features[feature].values[value]!],
-					taxonomy: features[feature].values[value]!,
+					label: taxonomyLabels[path],
+					taxonomy: path,
 				});
 			}
 		}
