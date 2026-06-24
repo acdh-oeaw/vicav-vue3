@@ -52,10 +52,8 @@ const props = withDefaults(defineProps<Props>(), {
 
 const isHorizontal = computed(() => props.orientation === "horizontal");
 
-/** Number of distinct colors in the unovis default categorical palette (--vis-color0..5). */
 const PALETTE_SIZE = 6;
 
-/** A color per category, shared between the bar segments and the legend so they always match. */
 const categoryColors = computed(() =>
 	props.categories.map(
 		(_category, i) =>
@@ -71,11 +69,6 @@ const legendItems = computed(() =>
 	})),
 );
 
-/**
- * unovis renders horizontal bars bottom-up (the first datum sits at the bottom).
- * Reverse the data for horizontal charts so the first datum is drawn at the top,
- * matching normal reading order (and showing the biggest values first when sorted).
- */
 const orderedData = computed(() =>
 	isHorizontal.value ? props.data.slice().reverse() : props.data,
 );
@@ -96,25 +89,28 @@ const tickValues = computed(() => orderedData.value.map((_d, i) => i));
 const categoryAxisType = computed(() => (isHorizontal.value ? "y" : "x"));
 const valueAxisType = computed(() => (isHorizontal.value ? "x" : "y"));
 
-/** Approximate pixel width of the longest label, used to reserve room and size the wrap width. */
+const MAX_LABEL_WIDTH = 130;
+
+function estimateLabelWidth(length: number, bold = false) {
+	return length * (bold ? 7.5 : 6.5) + 12; // Emphasised labels are bold, so they run wider
+}
+
 const longestLabelWidth = computed(() => {
-	const longest = props.data.reduce(
-		(maxLength, datum) =>
-			Math.max(maxLength, props.labelFormatter(String(datum[props.index] ?? "")).length),
-		0,
+	let longest = 0;
+	let longestEmphasized = 0;
+	for (const datum of props.data) {
+		const length = props.labelFormatter(String(datum[props.index] ?? "")).length;
+		longest = Math.max(longest, length);
+		if (props.emphasize?.(datum)) longestEmphasized = Math.max(longestEmphasized, length);
+	}
+	return Math.max(
+		Math.min(estimateLabelWidth(longest), MAX_LABEL_WIDTH),
+		estimateLabelWidth(longestEmphasized, true),
 	);
-	return Math.min(longest * 6.5 + 12, 240);
 });
 
-/** Reserve horizontal room for the longest label so it is not clipped. */
 const labelMargin = computed(() => longestLabelWidth.value);
 
-/**
- * Wrap width for the category-axis tick labels. unovis otherwise falls back to a
- * fraction of the container width and wraps long labels onto multiple tspans
- * (causing the overlapping lines). Sizing it to the reserved label space keeps
- * each label on a single line. Only meaningful on the horizontal (Y) label axis.
- */
 const categoryTickTextWidth = computed(() =>
 	isHorizontal.value ? Math.max(longestLabelWidth.value - 8, 24) : undefined,
 );
@@ -155,13 +151,6 @@ const triggers = {
 	},
 };
 
-/**
- * unovis applies a single global font weight to all axis tick labels. To bold
- * only the emphasised ones we use unovis' `attributes` config, which sets a DOM
- * attribute on each tick label, passing the tick value (the datum index) to the
- * accessor. A presentation attribute on the label text overrides the weight it
- * would otherwise inherit from the tick group.
- */
 const emphasizedIndices = computed(
 	() => new Set(orderedData.value.flatMap((d, i) => (props.emphasize?.(d) ? [i] : []))),
 );
@@ -172,7 +161,7 @@ const categoryAxisAttributes = computed(() =>
 				[Axis.selectors.tickLabel]: {
 					"font-weight": (i: number) => (emphasizedIndices.value.has(i) ? "700" : ""),
 				},
-				// Mark emphasised tick groups so their (bar-less) tick line can be hidden via CSS.
+				// Mark emphasised tick groups so their tick line can be hidden via CSS
 				[Axis.selectors.tick]: {
 					"data-emphasized": (i: number) => (emphasizedIndices.value.has(i) ? "true" : "false"),
 				},
@@ -197,6 +186,8 @@ const categoryAxisAttributes = computed(() =>
 				:attributes="categoryAxisAttributes"
 				:grid-line="false"
 				:tick-format="labelAtIndex"
+				tick-text-fit-mode="trim"
+				tick-text-trim-type="middle"
 				:tick-text-width="categoryTickTextWidth"
 				:tick-values="tickValues"
 				:type="categoryAxisType"
