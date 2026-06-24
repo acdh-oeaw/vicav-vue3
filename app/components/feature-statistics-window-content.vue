@@ -126,20 +126,130 @@ function categoryFormatter(category: "tribal" | "nontribal" | string) {
 		}[category] ?? category
 	);
 }
+
+type ViewMode = "value" | "tribe" | "country";
+const viewMode = ref<ViewMode>("value");
+
+interface GroupedChart {
+	categories: Array<string>;
+	rows: Array<Record<string, unknown>>;
+}
+
+type FeatureEntries = Record<string, Array<Record<string, unknown>>>;
+
+function buildGroupedChart(
+	contribute: (
+		properties: Record<string, unknown>,
+		featureEntries: FeatureEntries,
+		add: (group: string, featureValue: string, count: number) => void,
+	) => void,
+): GroupedChart {
+	if (!table.value) return { categories: [], rows: [] };
+	const counts: Record<string, Record<string, number>> = {};
+	const featureTotals: Record<string, number> = {};
+	const add = (group: string, value: string, count: number) => {
+		counts[group] ??= {};
+		counts[group]![value] = (counts[group]![value] ?? 0) + count;
+		featureTotals[value] = (featureTotals[value] ?? 0) + count;
+	};
+	table.value.getCoreRowModel().flatRows.forEach((row) => {
+		const properties = (row.original as { properties?: Record<string, unknown> }).properties ?? {};
+		contribute(properties, (properties[params.value.featureId] as FeatureEntries) ?? {}, add);
+	});
+
+	const categories = Object.entries(featureTotals)
+		.sort((a, b) => b[1] - a[1])
+		.map(([value]) => value);
+	const total = (vals: Record<string, number>) =>
+		Object.values(vals).reduce((sum, n) => sum + n, 0);
+	const rows = Object.entries(counts)
+		.sort((a, b) => total(b[1]) - total(a[1]))
+		.map(([group, vals]) => ({ key: group, ...vals }));
+
+	return { categories, rows };
+}
+
+const tribeChart = computed<GroupedChart>(() =>
+	buildGroupedChart((_properties, featureEntries, add) => {
+		Object.entries(featureEntries).forEach(([value, entries]) => {
+			entries.forEach((entry) => {
+				const tribe = entry.tribe;
+				if (tribe == null) return;
+				const tribes = Array.isArray(tribe) ? tribe : [tribe];
+				tribes.forEach((name) => add(String(name), value, 1));
+			});
+		});
+	}),
+);
+
+const countryChart = computed<GroupedChart>(() =>
+	buildGroupedChart((properties, featureEntries, add) => {
+		const country = properties.country;
+		if (country == null || country === "") return;
+		Object.entries(featureEntries).forEach(([value, entries]) => {
+			if (entries.length > 0) add(String(country), value, entries.length);
+		});
+	}),
+);
 </script>
 
 <template>
 	<div class="size-full overflow-auto p-3">
-		<h2 class="mb-3 text-sm font-semibold">Number of entries per value of "{{ featureLabel }}"</h2>
-		<BarChart
-			v-if="chartData.length > 0"
-			:categories="['tribal', 'nontribal']"
-			:category-formatter="categoryFormatter"
-			:data="chartData"
-			:emphasize="(d) => d.isHeading === true"
-			index="key"
-			orientation="horizontal"
-		/>
-		<p v-else class="text-sm text-on-muted">No entries available for this feature.</p>
+		<div class="mb-3 flex items-center justify-between gap-3">
+			<h2 class="text-sm font-semibold">
+				<template v-if="viewMode === 'tribe'"
+					>Number of entries per tribe for "{{ featureLabel }}"</template
+				>
+				<template v-else-if="viewMode === 'country'"
+					>Number of entries per country for "{{ featureLabel }}"</template
+				>
+				<template v-else>Number of entries per value of "{{ featureLabel }}"</template>
+			</h2>
+			<ToggleGroup
+				:model-value="viewMode"
+				type="single"
+				variant="outline"
+				@update:model-value="(value) => value && (viewMode = value as ViewMode)"
+			>
+				<ToggleGroupItem class="h-8" value="value">By value</ToggleGroupItem>
+				<ToggleGroupItem class="h-8" value="tribe">By tribe</ToggleGroupItem>
+				<ToggleGroupItem class="h-8" value="country">By country</ToggleGroupItem>
+			</ToggleGroup>
+		</div>
+
+		<template v-if="viewMode === 'tribe'">
+			<BarChart
+				v-if="tribeChart.rows.length > 0"
+				:categories="tribeChart.categories"
+				:data="tribeChart.rows"
+				index="key"
+				orientation="horizontal"
+			/>
+			<p v-else class="text-sm text-on-muted">No tribe entries available for this feature.</p>
+		</template>
+
+		<template v-else-if="viewMode === 'country'">
+			<BarChart
+				v-if="countryChart.rows.length > 0"
+				:categories="countryChart.categories"
+				:data="countryChart.rows"
+				index="key"
+				orientation="horizontal"
+			/>
+			<p v-else class="text-sm text-on-muted">No country entries available for this feature.</p>
+		</template>
+
+		<template v-else>
+			<BarChart
+				v-if="chartData.length > 0"
+				:categories="['tribal', 'nontribal']"
+				:category-formatter="categoryFormatter"
+				:data="chartData"
+				:emphasize="(d) => d.isHeading === true"
+				index="key"
+				orientation="horizontal"
+			/>
+			<p v-else class="text-sm text-on-muted">No entries available for this feature.</p>
+		</template>
 	</div>
 </template>

@@ -136,6 +136,7 @@ const triggers = {
 		const d = segment.datum;
 		const label = props.labelFormatter(String(d[props.index] ?? ""));
 		const rows = props.categories
+			.filter((category) => Number(d[category] ?? 0) !== 0)
 			.map(
 				(category) =>
 					`<div class="flex items-center justify-between gap-4">
@@ -166,12 +167,17 @@ const categoryAxisAttributes = computed(() =>
 					"data-emphasized": (i: number) => (emphasizedIndices.value.has(i) ? "true" : "false"),
 				},
 			}
-		: undefined,
+		: {},
 );
 </script>
 
 <template>
 	<div :class="twMerge('w-full', props.class)">
+		<VisBulletLegend
+			v-if="showLegend"
+			class="mx-auto mb-2 w-fit max-w-[1200px] text-center"
+			:items="legendItems"
+		/>
 		<VisXYContainer :data="orderedData" :height="resolvedHeight" :margin="margin">
 			<VisStackedBar
 				:bar-padding="0.14"
@@ -199,13 +205,11 @@ const categoryAxisAttributes = computed(() =>
 			/>
 			<VisTooltip :triggers="triggers" />
 		</VisXYContainer>
-
-		<VisBulletLegend v-if="showLegend" class="mx-auto mb-2 w-fit" :items="legendItems" />
 	</div>
 </template>
 
 <style scoped>
-/* Emphasised labels (e.g. taxonomy headings) carry no bar, so drop their tick mark. */
+/* Emphasised labels (e.g. taxonomy headings) carry no bar, so drop their tick mark */
 :deep(.tick[data-emphasized="true"] line) {
 	display: none;
 }
