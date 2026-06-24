@@ -53,6 +53,22 @@ function openDictWindow(u: typeof props.utterance) {
 	});
 	return;
 }
+
+const hasDictAnnotation = computed(() => {
+	return props.utterance.w?.["@lemmaRef"] != null;
+});
+
+const hasPosAnnotation = computed(() => {
+	return props.utterance.w?.pos != null;
+});
+
+const hasMsdAnnotation = computed(() => {
+	return props.utterance.w?.["@msd"] != null;
+});
+
+const hasTooltipAnnotation = computed(() => {
+	return hasPosAnnotation.value || hasMsdAnnotation.value;
+});
 </script>
 
 <template>
@@ -61,7 +77,7 @@ function openDictWindow(u: typeof props.utterance) {
 		:id="props.highlight ? props.utterance.w['@id'] : undefined"
 		class="u flex flex-col"
 	>
-		<TooltipProvider v-if="!inlineAnnotation" :delay-duration="0">
+		<TooltipProvider v-if="!inlineAnnotation && hasTooltipAnnotation" :delay-duration="0">
 			<Tooltip>
 				<TooltipTrigger @click="openDictWindow(props.utterance)">
 					<div class="flex justify-center text-lg" :class="{ 'text-primary': props.highlight }">
@@ -69,11 +85,18 @@ function openDictWindow(u: typeof props.utterance) {
 					</div>
 				</TooltipTrigger>
 				<TooltipContent class="bg-primary" side="bottom">
-					<p>{{ props.utterance.w.pos }}&nbsp;</p>
-					<p>{{ props.utterance.w["@msd"] }}&nbsp;</p>
+					<p v-if="hasPosAnnotation">{{ props.utterance.w.pos }}&nbsp;</p>
+					<p v-if="hasMsdAnnotation">{{ props.utterance.w["@msd"] }}&nbsp;</p>
 				</TooltipContent>
 			</Tooltip>
 		</TooltipProvider>
+		<div
+			v-else-if="!inlineAnnotation"
+			class="flex justify-center text-lg"
+			:class="{ 'text-primary': props.highlight }"
+		>
+			{{ renderUtterance(props.utterance) }}
+		</div>
 		<!-- eslint-disable vuejs-accessibility/click-events-have-key-events, vuejs-accessibility/no-static-element-interactions -->
 		<div
 			v-if="inlineAnnotation"
@@ -82,16 +105,19 @@ function openDictWindow(u: typeof props.utterance) {
 			@click="openDictWindow(props.utterance)"
 		>
 			{{ renderUtterance(props.utterance) }}
-			<BookA
-				v-if="inlineAnnotation && props.utterance.w['@lemmaRef']"
-				class="size-3 text-gray-500"
-			/>
+			<BookA v-if="inlineAnnotation && hasDictAnnotation" class="size-3 text-gray-500" />
 		</div>
 		<!-- eslint-enable -->
-		<div v-if="inlineAnnotation" class="flex justify-center text-xs text-gray-500">
+		<div
+			v-if="inlineAnnotation && hasPosAnnotation"
+			class="flex justify-center text-xs text-gray-500"
+		>
 			{{ props.utterance.w.pos }}&nbsp;
 		</div>
-		<div v-if="inlineAnnotation" class="flex justify-center text-xs text-gray-500">
+		<div
+			v-if="inlineAnnotation && hasMsdAnnotation"
+			class="flex justify-center text-xs text-gray-500"
+		>
 			{{ props.utterance.w["@msd"] }}&nbsp;
 		</div>
 	</div>
