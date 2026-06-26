@@ -101,17 +101,8 @@ const getEntryLink = (entry: RenderedDictEntry, responseFormat?: "json") => {
 
 const entryXmlLink = computed(() => getEntryLink(e.value));
 const entryJsonLink = computed(() => getEntryLink(e.value, "json"));
-const corpusLemmaQuery = computed(() => {
-	return `[word="${escapeCorpusQueryValue(corpusLemmaSearchTerm.value)}"]`;
-});
-const corpusLemmaSearchTerm = computed(() => {
-	return (
-		e.value.lemmaForms
-			.flatMap((form) => form.orthographies)
-			.find((orthography) => !orthography.isMissing)?.text ??
-		e.value.title ??
-		e.value.lemma
-	).replace(/\s+\[[^\]]+\]$/u, "");
+const corpusDictIDQuery = computed(() => {
+	return `[dict=="dict:${escapeCorpusQueryValue(e.value.id)}"]`;
 });
 
 const findGrammarValue = (items: Array<RenderedGrammarItem>, label: string) => {
@@ -129,7 +120,7 @@ const escapeCorpusQueryValue = (value: string) => {
 };
 
 const openCorpusSearchWindow = () => {
-	const queryString = corpusLemmaQuery.value;
+	const queryString = corpusDictIDQuery.value;
 	openOrUpdateWindow(
 		{
 			targetType: "CorpusQuery",
