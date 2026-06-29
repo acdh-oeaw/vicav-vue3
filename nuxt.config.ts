@@ -147,6 +147,8 @@ export default defineNuxtConfig({
 				"class-variance-authority",
 				"@lezer/highlight",
 				"vee-validate",
+				"@unovis/vue",
+				"@unovis/ts",
 			],
 		},
 	},
