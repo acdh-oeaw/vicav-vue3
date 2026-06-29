@@ -186,7 +186,7 @@ const languageClass = (language: string | undefined) => {
 						<MessageSquareQuote v-else class="size-4" />
 					</span>
 					<div class="min-w-0 flex-1">
-						<div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-lg leading-tight">
+						<div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-lg/tight">
 							<template v-for="(form, formIndex) in headerForms" :key="`header-${formIndex}`">
 								<span
 									v-if="formIndex > 0"
@@ -216,7 +216,7 @@ const languageClass = (language: string | undefined) => {
 								</span>
 							</template>
 						</div>
-						<div v-if="compactGrammar" class="pl-10 text-xl leading-tight">
+						<div v-if="compactGrammar" class="pl-10 text-xl/tight">
 							{{ compactGrammar }}
 						</div>
 					</div>
@@ -277,7 +277,7 @@ const languageClass = (language: string | undefined) => {
 					>
 						Etymology
 					</div>
-					<section v-if="hasEtymology" class="py-3 text-base leading-snug">
+					<section v-if="hasEtymology" class="py-3 text-base/snug">
 						<span
 							v-for="(etymology, etymologyIndex) in e.etymologies"
 							:key="textKey(etymology, etymologyIndex)"
@@ -297,7 +297,7 @@ const languageClass = (language: string | undefined) => {
 					>
 						Infl. Forms
 					</div>
-					<section v-if="hasInflectedForms" class="space-y-2 py-3 text-base leading-snug">
+					<section v-if="hasInflectedForms" class="space-y-2 py-3 text-base/snug">
 						<div
 							v-for="(form, formIndex) in e.inflectedForms"
 							:key="`inflected-${formIndex}`"
@@ -359,7 +359,7 @@ const languageClass = (language: string | undefined) => {
 								<div v-if="senseGrammarText(sense.grammar)" class="mb-1 font-bold italic">
 									({{ senseGrammarText(sense.grammar) }})
 								</div>
-								<div class="text-base leading-tight">
+								<div class="text-base/tight">
 									<div
 										v-for="(translation, translationIndex) in sense.translations"
 										:key="textKey(translation, translationIndex)"
@@ -382,7 +382,7 @@ const languageClass = (language: string | undefined) => {
 									<div
 										v-for="(example, exampleIndex) in sense.examples"
 										:key="`${example.kind}-${example.id ?? example.quote?.text ?? exampleIndex}`"
-										class="rounded-lg bg-primary/15 px-1 py-1"
+										class="rounded-lg bg-primary/15 p-1"
 									>
 										<div class="flex flex-wrap items-start justify-between gap-1">
 											<div
@@ -415,7 +415,7 @@ const languageClass = (language: string | undefined) => {
 												</span>
 											</div>
 										</div>
-										<div class="text-base leading-tight">
+										<div class="text-base/tight">
 											<div
 												v-for="(translation, translationIndex) in example.translations"
 												:key="textKey(translation, translationIndex)"
@@ -448,7 +448,7 @@ const languageClass = (language: string | undefined) => {
 					>
 						Editors
 					</div>
-					<section v-if="hasEditors" class="py-3 text-base leading-snug">
+					<section v-if="hasEditors" class="py-3 text-base/snug">
 						<span v-for="(editor, editorIndex) in uniqueEditors" :key="editor">
 							{{ editor }}<span v-if="editorIndex < uniqueEditors.length - 1">, </span>
 						</span>

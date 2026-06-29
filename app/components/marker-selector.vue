@@ -127,7 +127,7 @@ const customIcons = [
 		>
 			<span class="sr-only mr-2 text-neutral-800">Pick a marker color</span>
 			<div
-				class="size-4 rounded"
+				class="size-4 rounded-sm"
 				:style="{
 					backgroundColor: localColor,
 					stroke: localColor,

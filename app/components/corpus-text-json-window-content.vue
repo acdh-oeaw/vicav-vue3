@@ -195,7 +195,7 @@ onMounted(async () => {
 					<Tooltip v-if="hasInlineAnnotations">
 						<TooltipTrigger as-child>
 							<ToggleGroupItem class="hover:bg-primary" value="annotations">
-								<ChevronsLeftRightEllipsis class="h-4 w-4" />
+								<ChevronsLeftRightEllipsis class="size-4" />
 							</ToggleGroupItem>
 						</TooltipTrigger>
 						<TooltipContent class="border-black bg-black text-white">
@@ -205,7 +205,7 @@ onMounted(async () => {
 					<Tooltip v-if="hasInlineTranslations">
 						<TooltipTrigger as-child>
 							<ToggleGroupItem class="hover:bg-primary" value="translations">
-								<Languages class="h-4 w-4" />
+								<Languages class="size-4" />
 							</ToggleGroupItem>
 						</TooltipTrigger>
 						<TooltipContent class="border-black bg-black text-white">
@@ -215,7 +215,7 @@ onMounted(async () => {
 					<Tooltip>
 						<TooltipTrigger as-child>
 							<ToggleGroupItem class="hover:bg-primary" value="dense-tei-header">
-								<AlignVerticalSpaceBetween class="h-4 w-4" />
+								<AlignVerticalSpaceBetween class="size-4" />
 							</ToggleGroupItem>
 						</TooltipTrigger>
 						<TooltipContent class="border-black bg-black text-white">

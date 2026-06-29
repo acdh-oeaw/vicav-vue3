@@ -215,7 +215,7 @@ function splitUtterancesAroundHit(utterances: MixedUtteranceContent, hitId?: str
 				@submit="submitSearchCorpus"
 			/>
 			<button
-				class="inline-block h-10 w-full rounded-sm border-2 border-solid border-primary bg-on-primary text-center align-middle font-bold whitespace-nowrap text-primary hover:bg-primary hover:text-on-primary disabled:border-gray-400 disabled:text-gray-400 hover:disabled:bg-on-primary hover:disabled:text-gray-400"
+				class="inline-block h-10 w-full rounded-sm border-2 border-solid border-primary bg-on-primary text-center align-middle font-bold whitespace-nowrap text-primary hover:bg-primary hover:text-on-primary hover:disabled:bg-on-primary hover:disabled:text-gray-400 disabled:border-gray-400 disabled:text-gray-400"
 				:disabled="isSearching || (queryString === '' && words.length == 0)"
 				@click.prevent.stop="submitSearchCorpus"
 			>

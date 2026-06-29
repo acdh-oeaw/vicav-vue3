@@ -60,7 +60,7 @@ function addMetaFilterToQuery(key: string, val: string) {
 						</DropdownMenuTrigger>
 
 						<DropdownMenuContent
-							class="max-h-[var(--radix-dropdown-menu-content-available-height)]"
+							class="max-h-(--radix-dropdown-menu-content-available-height)"
 						>
 							<GeojsonMapToolbarItem
 								v-for="column in group.columns"
@@ -102,7 +102,7 @@ function addMetaFilterToQuery(key: string, val: string) {
 					</DropdownMenuTrigger>
 
 					<DropdownMenuContent
-						class="inline-block max-h-[var(--radix-dropdown-menu-content-available-height)] w-52"
+						class="inline-block max-h-(--radix-dropdown-menu-content-available-height) w-52"
 					>
 						<Collapsible
 							v-for="([key, val], idx) in metaInfo"

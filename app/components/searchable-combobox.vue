@@ -25,7 +25,7 @@ function onSelect(option: (typeof _props.options)[0]) {
 		<PopoverTrigger>
 			<div class="flex items-center justify-between">
 				<span class="text-sm">{{ placeholderText }}</span>
-				<ChevronsUpDownIcon class="ml-2 h-4 w-4 shrink-0 opacity-50" />
+				<ChevronsUpDownIcon class="ml-2 size-4 shrink-0 opacity-50" />
 			</div>
 		</PopoverTrigger>
 		<PopoverContent class="bg-white p-0">

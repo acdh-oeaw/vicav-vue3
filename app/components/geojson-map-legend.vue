@@ -101,7 +101,7 @@ function shouldShowOtherFeatureValues(feature: ColumnType) {
 			></ChevronDown
 		></CollapsibleTrigger>
 		<CollapsibleContent
-			class="max-h-full !overflow-auto border-muted"
+			class="max-h-full overflow-auto! border-muted"
 			:class="{ 'mt-2 border-t pt-1': activeFeatures?.length }"
 		>
 			<div v-for="feature in activeFeatures" :key="feature.id" class="my-1">

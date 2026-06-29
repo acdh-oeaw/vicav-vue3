@@ -147,7 +147,7 @@ function generateColorVariants() {
 					<span class="sr-only">Select color</span>
 				</label>
 
-				<div class="my-2 h-[1px] w-full bg-neutral-200"></div>
+				<div class="my-2 h-px w-full bg-neutral-200"></div>
 
 				<div class="mt-0.5 w-full">
 					<label

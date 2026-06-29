@@ -98,7 +98,7 @@ function toggleSpeakerCard(index: number) {
 								</template>
 								<template v-else>
 									<CardHeader class="rounded-t-lg border-b bg-muted/40 pb-3">
-										<CardTitle class="flex items-center gap-3 text-base leading-tight">
+										<CardTitle class="flex items-center gap-3 text-base/tight">
 											<Contact class="size-5 shrink-0" />
 											<span class="ml-auto text-right">{{ person.name }}</span>
 										</CardTitle>

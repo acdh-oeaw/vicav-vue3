@@ -93,7 +93,7 @@ function downloadLegend() {
 				<div class="mt-1 flex items-center gap-2">
 					<span id="displayLabelsLabel" class="whitespace-nowrap">Show labels</span>
 					<Select v-model="labelDisplaySelectValue" aria-labelledby="displayLabelsLabel">
-						<SelectTrigger class="h-fit min-w-34 px-1 py-1 text-xs">
+						<SelectTrigger class="h-fit min-w-34 p-1 text-xs">
 							<SelectValue placeholder="Select a label mode" />
 						</SelectTrigger>
 						<SelectContent class="bg-white">
@@ -103,7 +103,7 @@ function downloadLegend() {
 						</SelectContent>
 					</Select>
 				</div>
-				<div class="my-0.5 w-full border-b-[1px]"></div>
+				<div class="my-0.5 w-full border-b"></div>
 				<label class="flex items-center justify-between gap-2"
 					><span>Greyscale markers</span> <input v-model="markerSettings.greyscale" type="checkbox"
 				/></label>
@@ -123,7 +123,7 @@ function downloadLegend() {
 						min="1"
 						type="number"
 				/></label>
-				<div class="my-0.5 w-full border-b-[1px]"></div>
+				<div class="my-0.5 w-full border-b"></div>
 				<label class="flex items-center justify-between gap-2"
 					><span class="max-w-36">Show center points for single feature</span>
 					<input v-model="markerSettings.showCenter" type="checkbox"
@@ -144,7 +144,7 @@ function downloadLegend() {
 				<div class="flex items-center gap-2">
 					<span id="fileFormatLabel" class="whitespace-nowrap">Image format:</span>
 					<Select v-model="fileFormat" aria-labelledby="fileFormatLabel">
-						<SelectTrigger class="h-fit px-1 py-1 text-xs">
+						<SelectTrigger class="h-fit p-1 text-xs">
 							<SelectValue placeholder="Select a file format" />
 						</SelectTrigger>
 						<SelectContent class="bg-white">
