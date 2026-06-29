@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChevronDown } from "lucide-vue-next";
+import { ChevronDown } from "@lucide/vue";
 import { SelectIcon, SelectTrigger, type SelectTriggerProps } from "radix-vue";
 import { type ClassNameValue, twMerge } from "tailwind-merge";
 

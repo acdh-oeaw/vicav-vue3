@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Info } from "lucide-vue-next";
+import { Info } from "@lucide/vue";
 import InfiniteLoading from "v3-infinite-loading";
 import type { StateHandler } from "v3-infinite-loading/lib/types";
 import type Zod from "zod";
@@ -157,7 +157,7 @@ function splitUtterancesAroundHit(utterances: MixedUtteranceContent, hitId?: str
 	<!-- eslint-disable vue/no-v-html -->
 	<div class="p-2">
 		<form
-			class="block w-full rounded border border-gray-300 bg-gray-50 p-2.5 px-4 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
+			class="block w-full rounded-sm border border-gray-300 bg-gray-50 p-2.5 px-4 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
 		>
 			<label class="mb-2 flex w-48! p-0 font-bold" for="word_tags">
 				<span class="grow">Search for exact words</span>
@@ -215,7 +215,7 @@ function splitUtterancesAroundHit(utterances: MixedUtteranceContent, hitId?: str
 				@submit="submitSearchCorpus"
 			/>
 			<button
-				class="inline-block h-10 w-full rounded border-2 border-solid border-primary bg-on-primary text-center align-middle font-bold whitespace-nowrap text-primary hover:bg-primary hover:text-on-primary disabled:border-gray-400 disabled:text-gray-400 hover:disabled:bg-on-primary hover:disabled:text-gray-400"
+				class="inline-block h-10 w-full rounded-sm border-2 border-solid border-primary bg-on-primary text-center align-middle font-bold whitespace-nowrap text-primary hover:bg-primary hover:text-on-primary disabled:border-gray-400 disabled:text-gray-400 hover:disabled:bg-on-primary hover:disabled:text-gray-400"
 				:disabled="isSearching || (queryString === '' && words.length == 0)"
 				@click.prevent.stop="submitSearchCorpus"
 			>

@@ -1,6 +1,6 @@
 <script lang="ts" setup>
+import { ExternalLink, Map } from "@lucide/vue";
 import type { Table } from "@tanstack/vue-table";
-import { ExternalLink, Map } from "lucide-vue-next";
 
 import { type FeatureValueWindowItem, GeojsonMapSchema, type WindowItem } from "@/types/global.ts";
 import type { simpleTEIMetadata } from "@/types/teiCorpus";

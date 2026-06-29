@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { MenuIcon } from "lucide-vue-next";
+import { MenuIcon } from "@lucide/vue";
 
 import type { ItemType, MainItemType } from "@/lib/api-client";
 

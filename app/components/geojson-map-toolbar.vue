@@ -1,6 +1,6 @@
 <script lang="ts" setup>
+import { ChevronDown, Info } from "@lucide/vue";
 import type { Column, Table } from "@tanstack/vue-table";
-import { ChevronDown, Info } from "lucide-vue-next";
 import type Zod from "zod";
 
 import { useGeojsonStore } from "@/stores/use-geojson-store.ts";

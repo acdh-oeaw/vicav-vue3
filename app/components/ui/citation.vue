@@ -2,7 +2,7 @@
 import "@citation-js/plugin-csl";
 
 import { Cite, type CSLDate, type CSLJSON, type CSLName } from "@citation-js/core";
-import { Quote } from "lucide-vue-next";
+import { Quote } from "@lucide/vue";
 
 import type { simpleTEIMetadata } from "@/types/teiCorpus";
 

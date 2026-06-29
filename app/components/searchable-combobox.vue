@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChevronsUpDownIcon } from "lucide-vue-next";
+import { ChevronsUpDownIcon } from "@lucide/vue";
 
 const _props = defineProps<{
 	options: Array<{ value: string; label?: string }>;

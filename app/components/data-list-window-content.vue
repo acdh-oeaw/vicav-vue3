@@ -1,6 +1,6 @@
 <!-- eslint-disable @typescript-eslint/sort-type-constituents -->
 <script lang="ts" setup>
-import { Volume2, VolumeX } from "lucide-vue-next";
+import { Volume2, VolumeX } from "@lucide/vue";
 
 import CorpusTextDataList from "@/components/corpus-text-data-list.vue";
 import FeatureDataList from "@/components/feature-data-list.vue";

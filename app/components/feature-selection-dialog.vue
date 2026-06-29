@@ -1,6 +1,6 @@
 <script setup lang="ts">
+import { Check } from "@lucide/vue";
 import type { Column, Table } from "@tanstack/vue-table";
-import { Check } from "lucide-vue-next";
 import { Field as FormField, useForm } from "vee-validate";
 
 import {
@@ -310,7 +310,7 @@ function deselectColumn() {
 					<FormItem class="-mt-px overflow-auto">
 						<div
 							v-if="selectedCombinedFilters.size > 0 || (filterSuggestion?.count ?? 0) > 0"
-							class="sticky top-0 -mt-px rounded bg-secondary p-2.5"
+							class="sticky top-0 -mt-px rounded-sm bg-secondary p-2.5"
 						>
 							<div class="relative -mt-2 mb-1 -ml-1 text-xs font-light">Combined filters</div>
 							<FeatureSelectionDialogEntry

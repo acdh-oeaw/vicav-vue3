@@ -1,12 +1,7 @@
 <script setup lang="ts">
 import "v3-infinite-loading/lib/style.css";
 
-import {
-	AlignVerticalSpaceBetween,
-	ChevronsLeftRightEllipsis,
-	Copy,
-	Languages,
-} from "lucide-vue-next";
+import { AlignVerticalSpaceBetween, ChevronsLeftRightEllipsis, Copy, Languages } from "@lucide/vue";
 import InfiniteLoading from "v3-infinite-loading";
 import type { StateHandler } from "v3-infinite-loading/lib/types";
 import type { z } from "zod";

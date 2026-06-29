@@ -7,7 +7,7 @@ import {
 	Code,
 	MapPin,
 	MessageSquareQuote,
-} from "lucide-vue-next";
+} from "@lucide/vue";
 
 import type { RestVLEEntry } from "@/lib/api-client";
 import {

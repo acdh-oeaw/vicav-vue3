@@ -1,6 +1,6 @@
 <script setup lang="ts">
+import { ChevronDown } from "@lucide/vue";
 import type { Column } from "@tanstack/vue-table";
-import { ChevronDown } from "lucide-vue-next";
 import type Zod from "zod";
 
 import type { GeojsonMapSchema } from "@/types/global.ts";

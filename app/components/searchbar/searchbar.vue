@@ -1,6 +1,6 @@
 <script setup lang="ts">
+import { SquareMousePointer, TextCursorInput, X } from "@lucide/vue";
 import type { Table } from "@tanstack/vue-table";
-import { SquareMousePointer, TextCursorInput, X } from "lucide-vue-next";
 import { computed, ref } from "vue";
 
 import type { TriggerMap } from "./index.ts";

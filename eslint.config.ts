@@ -22,9 +22,15 @@ const configs = defineConfig(
 	tailwindcssConfig,
 	{
 		settings: {
-			tailwindcss: {
-				config: resolve("./app/styles/index.css"),
+			"better-tailwindcss": {
+				entryPoint: resolve("./app/styles/index.css"),
 			},
+		},
+		rules: {
+			"better-tailwindcss/enforce-canonical-classes": "off",
+			"better-tailwindcss/enforce-consistent-class-order": "off",
+			"better-tailwindcss/enforce-consistent-variable-syntax": "off",
+			"better-tailwindcss/no-unknown-classes": "off",
 		},
 	},
 	playwrightConfig,

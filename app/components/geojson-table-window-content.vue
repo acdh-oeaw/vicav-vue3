@@ -1,7 +1,7 @@
 <script lang="ts" setup>
+import { Download, Info, type Map } from "@lucide/vue";
 import type { ColumnDef, Row, Table } from "@tanstack/vue-table";
 import { test } from "liqe";
-import { Download, Info, type Map } from "lucide-vue-next";
 
 import { useGeojsonStore } from "@/stores/use-geojson-store.ts";
 import {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChevronDown } from "lucide-vue-next";
+import { ChevronDown } from "@lucide/vue";
 import { AccordionHeader, AccordionTrigger, type AccordionTriggerProps } from "radix-vue";
 
 const props = withDefaults(defineProps<AccordionTriggerProps>(), {});

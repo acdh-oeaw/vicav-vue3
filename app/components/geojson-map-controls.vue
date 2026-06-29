@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Download, Settings } from "lucide-vue-next";
+import { Download, Settings } from "@lucide/vue";
 
 interface Props {
 	displayLabels?: "on" | "off" | "default";

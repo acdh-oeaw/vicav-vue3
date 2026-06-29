@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { XIcon } from "lucide-vue-next";
+import { XIcon } from "@lucide/vue";
 import { ToastClose, type ToastCloseProps } from "radix-vue";
 
 const props = defineProps<ToastCloseProps>();

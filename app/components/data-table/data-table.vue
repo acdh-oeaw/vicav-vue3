@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { ChevronDown, ChevronRight, ChevronsUpDown } from "@lucide/vue";
 import {
 	type ColumnDef,
 	type ColumnFiltersState,
@@ -18,7 +19,6 @@ import {
 	useVueTable,
 	type VisibilityState,
 } from "@tanstack/vue-table";
-import { ChevronDown, ChevronRight, ChevronsUpDown } from "lucide-vue-next";
 
 import customFacetedUniqueValues from "@/utils/customFacetedUniqueValues.ts";
 

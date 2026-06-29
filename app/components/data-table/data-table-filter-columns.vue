@@ -1,6 +1,6 @@
 <script setup lang="ts">
+import { ChevronDown, LayoutList, ListChecks, ListTodo, TableProperties } from "@lucide/vue";
 import type { Column, Table } from "@tanstack/vue-table";
-import { ChevronDown, LayoutList, ListChecks, ListTodo, TableProperties } from "lucide-vue-next";
 import type { Component } from "vue";
 
 import { FilterValueMap } from "@/utils/filter-value-map";

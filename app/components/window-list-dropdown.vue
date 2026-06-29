@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { AppWindowIcon, CheckIcon } from "lucide-vue-next";
+import { AppWindowIcon, CheckIcon } from "@lucide/vue";
 
 const props = defineProps<{
 	isMobile: boolean;

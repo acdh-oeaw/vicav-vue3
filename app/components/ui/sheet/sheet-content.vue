@@ -1,6 +1,6 @@
 <script setup lang="ts">
+import { XIcon } from "@lucide/vue";
 import { cva } from "cva";
-import { XIcon } from "lucide-vue-next";
 import {
 	DialogClose,
 	DialogContent,

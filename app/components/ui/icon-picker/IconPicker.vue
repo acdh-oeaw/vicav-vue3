@@ -1,6 +1,6 @@
 <script setup lang="ts">
+import { Eye, EyeOff, Palette, PencilIcon } from "@lucide/vue";
 import { useDebounce } from "@vueuse/core";
-import { Eye, EyeOff, Palette, PencilIcon } from "lucide-vue-next";
 import type { SVGAttributes } from "vue";
 
 import { iconsData } from "./icons-data.ts";
@@ -137,7 +137,7 @@ function generateColorVariants() {
 				<label class="flex grow-0 basis-0 items-center p-0" @click.capture.stop>
 					<span class="mr-2 text-neutral-800">Pick a marker color</span>
 					<div
-						class="size-4 rounded"
+						class="size-4 rounded-sm"
 						:style="{
 							backgroundColor: localColor,
 							stroke: localColor,

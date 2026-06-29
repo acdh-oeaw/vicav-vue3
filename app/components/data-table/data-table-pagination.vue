@@ -1,11 +1,6 @@
 <script setup lang="ts">
+import { ChevronFirstIcon, ChevronLastIcon, ChevronLeftIcon, ChevronRightIcon } from "@lucide/vue";
 import type { Table } from "@tanstack/vue-table";
-import {
-	ChevronFirstIcon,
-	ChevronLastIcon,
-	ChevronLeftIcon,
-	ChevronRightIcon,
-} from "lucide-vue-next";
 
 interface DataTablePaginationProps {
 	table: Table<never>;

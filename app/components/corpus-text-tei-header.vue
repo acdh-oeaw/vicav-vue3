@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Contact } from "lucide-vue-next";
+import { Contact } from "@lucide/vue";
 
 import { useTeiHeadersStore } from "@/stores/use-tei-headers-store.ts";
 

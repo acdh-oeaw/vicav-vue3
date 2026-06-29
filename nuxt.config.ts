@@ -123,7 +123,7 @@ export default defineNuxtConfig({
 				"zod",
 				"@acdh-oeaw/lib",
 				"colorjs.io/fn",
-				"lucide-vue-next",
+				"@lucide/vue",
 				"radix-vue",
 				"cva",
 				"winbox",
