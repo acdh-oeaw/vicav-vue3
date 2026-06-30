@@ -1,6 +1,6 @@
 <script lang="ts" setup>
+import { ChevronDown } from "@lucide/vue";
 import type { Column, Table } from "@tanstack/vue-table";
-import { ChevronDown } from "lucide-vue-next";
 
 const _props = defineProps<{
 	item: Column<unknown>;

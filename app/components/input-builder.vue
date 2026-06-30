@@ -85,12 +85,14 @@ watch(
 	<!-- eslint-disable tailwindcss/no-custom-classname -->
 	<div class="ib">
 		<div class="ib-buttons">
+			<!-- eslint-disable vue/no-v-html -->
 			<button
 				v-for="(c, i) in specialCharacters"
 				:key="i"
 				@click.prevent="InsertSnippet(c.value)"
 				v-html="c.text ? c.text : c.value"
 			></button>
+			<!-- eslint-enable vue/no-v-html -->
 		</div>
 		<div class="ib-input-row">
 			<div class="ib-textinput">

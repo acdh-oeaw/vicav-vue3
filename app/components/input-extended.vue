@@ -56,12 +56,14 @@ const restoreCursorPosition = (pos: number) => {
 	<div class="ie">
 		<div class="ie-buttons">
 			<!-- @ts-expect-error  -->
+			<!-- eslint-disable vue/no-v-html -->
 			<button
 				v-for="(c, i) in specialCharacters"
 				:key="i"
 				@click.prevent="InsertSnippet(c.value)"
 				v-html="c.text ? c.text : c.value"
 			></button>
+			<!-- eslint-enable vue/no-v-html -->
 		</div>
 		<div class="ie-textinput">
 			<!-- eslint-disable-next-line vuejs-accessibility/form-control-has-label -->

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { BookA } from "lucide-vue-next";
+import { BookA } from "@lucide/vue";
 
 import type { Gap, Pc, Seg, W } from "@/lib/api-client";
 

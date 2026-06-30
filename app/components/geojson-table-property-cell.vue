@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import type { Column } from "@tanstack/vue-table";
 import {
 	Contact,
 	ExternalLink,
@@ -10,7 +9,8 @@ import {
 	UsersRound,
 	Venus,
 	VenusAndMars,
-} from "lucide-vue-next";
+} from "@lucide/vue";
+import type { Column } from "@tanstack/vue-table";
 import type { DefineComponent } from "vue";
 import CrossOutlineIcon from "vue-material-design-icons/CrossOutline.vue";
 import StarCrescentIcon from "vue-material-design-icons/StarCrescent.vue";

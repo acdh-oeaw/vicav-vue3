@@ -29,7 +29,7 @@ export function useOpenOrUpdateWindow() {
 			);
 			if (window) {
 				const windowItem = window;
-				const originalParams: object = window.params as object;
+				const originalParams: object = window.params;
 				windowItem.params = {
 					...originalParams,
 					...(item.params as object),

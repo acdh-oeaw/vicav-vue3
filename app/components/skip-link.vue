@@ -14,7 +14,7 @@ function onClick() {
 
 <template>
 	<NuxtLink
-		class="fixed -translate-y-full rounded bg-background px-4 py-3 text-on-background transition focus-visible:translate-y-0"
+		class="fixed -translate-y-full rounded-sm bg-background px-4 py-3 text-on-background transition focus-visible:translate-y-0"
 		:href="{ hash: `#${props.targetId}` }"
 		@click="onClick"
 	>

@@ -735,7 +735,7 @@ export function groupSimpleItems(
 				];
 			}),
 		),
-	) as GroupedSimpleItemsByCountry;
+	);
 }
 
 export const useTeiHeadersStore = defineStore("use-tei-headers-store", () => {

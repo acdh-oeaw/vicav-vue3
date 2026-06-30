@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChevronDown } from "lucide-vue-next";
+import { ChevronDown } from "@lucide/vue";
 import { SelectIcon, SelectTrigger, type SelectTriggerProps } from "radix-vue";
 import { type ClassNameValue, twMerge } from "tailwind-merge";
 
@@ -11,7 +11,7 @@ const props = defineProps<SelectTriggerProps>();
 		v-bind="props"
 		:class="
 			twMerge([
-				'placeholder:text-muted-foreground flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-hidden focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1',
+				'flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-hidden focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1',
 				$attrs.class as ClassNameValue[],
 			])
 		"

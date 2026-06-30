@@ -41,7 +41,7 @@ const filterUpdated = function () {
 				class="flex size-[20px] appearance-none items-center justify-center rounded-[4px] bg-white shadow-[0_2px_2px] shadow-gray-300 outline-hidden focus-within:shadow-[0_0_0_2px_gray]"
 				@update:checked="filterUpdated"
 			>
-				<CheckboxIndicator class="flex size-full items-center justify-center rounded bg-white">
+				<CheckboxIndicator class="flex size-full items-center justify-center rounded-sm bg-white">
 					<Icon class="size-3.5" icon="radix-icons:check" />
 				</CheckboxIndicator>
 			</CheckboxRoot>
@@ -57,7 +57,7 @@ const filterUpdated = function () {
 				class="flex size-[20px] appearance-none items-center justify-center rounded-[4px] bg-white shadow-[0_2px_2px] shadow-gray-300 outline-hidden focus-within:shadow-[0_0_0_2px_gray] hover:bg-white"
 				@update:checked="filterUpdated"
 			>
-				<CheckboxIndicator class="flex size-full items-center justify-center rounded bg-white">
+				<CheckboxIndicator class="flex size-full items-center justify-center rounded-sm bg-white">
 					<Icon class="size-3.5" icon="radix-icons:check" />
 				</CheckboxIndicator>
 			</CheckboxRoot>

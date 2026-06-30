@@ -1,11 +1,11 @@
 <script lang="ts" setup>
+import { Volume2, VolumeX } from "@lucide/vue";
 import {
 	type ColumnDef,
 	type ColumnFiltersState,
 	createColumnHelper,
 	type Table,
 } from "@tanstack/vue-table";
-import { Volume2, VolumeX } from "lucide-vue-next";
 import { h } from "vue";
 
 import { useTeiHeadersStore } from "@/stores/use-tei-headers-store.ts";

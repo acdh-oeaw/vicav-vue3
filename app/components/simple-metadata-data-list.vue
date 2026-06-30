@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ChevronDown, ChevronRight, Volume2, VolumeX } from "@lucide/vue";
 import {
 	type ColumnFiltersState,
 	createColumnHelper,
@@ -16,7 +17,6 @@ import {
 	type Table as TanstackTable,
 	useVueTable,
 } from "@tanstack/vue-table";
-import { ChevronDown, ChevronRight, Volume2, VolumeX } from "lucide-vue-next";
 
 import {
 	getSimpleMetadataValue,

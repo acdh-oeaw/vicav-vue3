@@ -73,7 +73,7 @@ const tagsUpdated = function (value: Array<string>) {
 				<TagsInputItem
 					v-for="item in tags"
 					:key="item.toString()"
-					class="flex items-center justify-center gap-2 rounded bg-primary px-2 py-1 text-white aria-current:bg-primary"
+					class="flex items-center justify-center gap-2 rounded-sm bg-primary px-2 py-1 text-white aria-current:bg-primary"
 					:value="item"
 				>
 					<TagsInputItemText class="text-sm">
@@ -92,7 +92,7 @@ const tagsUpdated = function (value: Array<string>) {
 					<TagsInputInput
 						v-if="specialCharacters"
 						as-child
-						class="w-full items-center gap-2 rounded bg-transparent! focus:outline-hidden"
+						class="w-full items-center gap-2 rounded-sm bg-transparent! focus:outline-hidden"
 					>
 						<InputExtended
 							v-model="searchTerm"
@@ -102,7 +102,7 @@ const tagsUpdated = function (value: Array<string>) {
 					</TagsInputInput>
 					<TagsInputInput
 						v-else
-						class="flex flex-1 flex-wrap items-center gap-2 rounded bg-transparent! px-1 focus:outline-hidden"
+						class="flex flex-1 flex-wrap items-center gap-2 rounded-sm bg-transparent! px-1 focus:outline-hidden"
 						:placeholder="placeholder"
 						@focus="() => (immediateOpen ? (open = true) : null)"
 					/>
@@ -110,7 +110,7 @@ const tagsUpdated = function (value: Array<string>) {
 			</TagsInputRoot>
 		</ComboboxAnchor>
 		<ComboboxContent
-			class="z-10 mt-2 w-full overflow-hidden rounded bg-white shadow-[0px_10px_38px_-10px_rgba(22,_23,_24,_0.35),_0px_10px_20px_-15px_rgba(22,_23,_24,_0.2)] will-change-[opacity,transform]"
+			class="z-10 mt-2 w-full overflow-hidden rounded-sm bg-white shadow-[0px_10px_38px_-10px_rgba(22,23,24,0.35),0px_10px_20px_-15px_rgba(22,23,24,0.2)] will-change-[opacity,transform]"
 			@pointerdown.stop
 		>
 			<ComboboxViewport class="p-[5px]">

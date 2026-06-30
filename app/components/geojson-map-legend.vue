@@ -1,6 +1,6 @@
 <script setup lang="ts">
+import { ChevronDown } from "@lucide/vue";
 import type { Column } from "@tanstack/vue-table";
-import { ChevronDown } from "lucide-vue-next";
 import type Zod from "zod";
 
 import type { GeojsonMapSchema } from "@/types/global.ts";
@@ -101,7 +101,7 @@ function shouldShowOtherFeatureValues(feature: ColumnType) {
 			></ChevronDown
 		></CollapsibleTrigger>
 		<CollapsibleContent
-			class="max-h-full !overflow-auto border-muted"
+			class="max-h-full overflow-auto! border-muted"
 			:class="{ 'mt-2 border-t pt-1': activeFeatures?.length }"
 		>
 			<div v-for="feature in activeFeatures" :key="feature.id" class="my-1">

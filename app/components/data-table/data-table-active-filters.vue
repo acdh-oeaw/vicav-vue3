@@ -1,6 +1,6 @@
 <script setup lang="ts">
+import { Filter, X } from "@lucide/vue";
 import type { ColumnFilter, Table } from "@tanstack/vue-table";
-import { Filter, X } from "lucide-vue-next";
 
 import { ensureFilterValueMap, FilterValueMap } from "@/utils/filter-value-map";
 

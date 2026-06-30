@@ -1,6 +1,6 @@
 <script lang="ts" setup>
+import { ChevronDown, Info } from "@lucide/vue";
 import type { Column, Table } from "@tanstack/vue-table";
-import { ChevronDown, Info } from "lucide-vue-next";
 import type Zod from "zod";
 
 import { useGeojsonStore } from "@/stores/use-geojson-store.ts";
@@ -59,9 +59,7 @@ function addMetaFilterToQuery(key: string, val: string) {
 							<ChevronDown class="size-4" :class="open ? 'rotate-180' : ''"></ChevronDown>
 						</DropdownMenuTrigger>
 
-						<DropdownMenuContent
-							class="max-h-[var(--radix-dropdown-menu-content-available-height)]"
-						>
+						<DropdownMenuContent class="max-h-(--radix-dropdown-menu-content-available-height)">
 							<GeojsonMapToolbarItem
 								v-for="column in group.columns"
 								:key="column.id"
@@ -102,7 +100,7 @@ function addMetaFilterToQuery(key: string, val: string) {
 					</DropdownMenuTrigger>
 
 					<DropdownMenuContent
-						class="inline-block max-h-[var(--radix-dropdown-menu-content-available-height)] w-52"
+						class="inline-block max-h-(--radix-dropdown-menu-content-available-height) w-52"
 					>
 						<Collapsible
 							v-for="([key, val], idx) in metaInfo"
