@@ -7,9 +7,11 @@ import {
 	Code,
 	MapPin,
 	MessageSquareQuote,
+	Search,
 } from "lucide-vue-next";
 
 import type { RestVLEEntry } from "@/lib/api-client";
+import { QueryString, type WindowItem } from "@/types/global.ts";
 import {
 	formatLocation,
 	normalizeEntry,
@@ -35,6 +37,7 @@ const props = withDefaults(
 
 const e = computed(() => normalizeEntry(props.entry));
 const env = useRuntimeConfig();
+const openOrUpdateWindow = useOpenOrUpdateWindow();
 
 const compactBadgeClass =
 	"inline-flex min-h-6 items-center gap-1 rounded-full border border-gray-300 bg-white/90 px-1.5 text-sm leading-none text-gray-900 shadow-xs";
@@ -98,6 +101,9 @@ const getEntryLink = (entry: RenderedDictEntry, responseFormat?: "json") => {
 
 const entryXmlLink = computed(() => getEntryLink(e.value));
 const entryJsonLink = computed(() => getEntryLink(e.value, "json"));
+const corpusDictIDQuery = computed(() => {
+	return `[dict=="dict:${escapeCorpusQueryValue(e.value.id)}"]`;
+});
 
 const findGrammarValue = (items: Array<RenderedGrammarItem>, label: string) => {
 	const value = items.find((item) => item.label === label)?.value;
@@ -107,6 +113,26 @@ const findGrammarValue = (items: Array<RenderedGrammarItem>, label: string) => {
 const formatRootGrammar = (value: string | undefined, label: string) => {
 	if (value == null) return undefined;
 	return `${value} (${label})`;
+};
+
+const escapeCorpusQueryValue = (value: string) => {
+	return value.replaceAll("\\", "\\\\").replaceAll('"', '\\"');
+};
+
+const openCorpusSearchWindow = () => {
+	const queryString = corpusDictIDQuery.value;
+	openOrUpdateWindow(
+		{
+			targetType: "CorpusQuery",
+			params: {
+				queryString,
+			},
+		} as unknown as WindowItem,
+		`Corpus search: ${e.value.title ?? e.value.lemma}`,
+		QueryString,
+		"queryString",
+		true,
+	);
 };
 
 const formText = (form: RenderedForm) => {
@@ -257,6 +283,23 @@ const languageClass = (language: string | undefined) => {
 									</TooltipTrigger>
 									<TooltipContent class="border-black bg-black text-white" side="bottom">
 										view as JSON
+									</TooltipContent>
+								</Tooltip>
+							</TooltipProvider>
+							<TooltipProvider :delay-duration="0">
+								<Tooltip>
+									<TooltipTrigger as-child>
+										<button
+											aria-label="search lemma in corpus"
+											class="flex size-8 items-center justify-center rounded-sm border border-white/50 text-white hover:bg-white hover:text-primary"
+											type="button"
+											@click="openCorpusSearchWindow"
+										>
+											<Search class="size-4" />
+										</button>
+									</TooltipTrigger>
+									<TooltipContent class="border-black bg-black text-white" side="bottom">
+										search in corpus
 									</TooltipContent>
 								</Tooltip>
 							</TooltipProvider>
