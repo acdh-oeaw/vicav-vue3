@@ -59,9 +59,7 @@ function addMetaFilterToQuery(key: string, val: string) {
 							<ChevronDown class="size-4" :class="open ? 'rotate-180' : ''"></ChevronDown>
 						</DropdownMenuTrigger>
 
-						<DropdownMenuContent
-							class="max-h-(--radix-dropdown-menu-content-available-height)"
-						>
+						<DropdownMenuContent class="max-h-(--radix-dropdown-menu-content-available-height)">
 							<GeojsonMapToolbarItem
 								v-for="column in group.columns"
 								:key="column.id"
