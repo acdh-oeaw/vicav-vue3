@@ -33,6 +33,10 @@ function updateQueryParam(queryString: string) {
 		v-else-if="props.item.targetType === 'Feature'"
 		:params="props.item.params"
 	/>
+	<FeatureStatisticsWindowContent
+		v-else-if="props.item.targetType === 'FeatureStatistics'"
+		:params="props.item.params"
+	/>
 	<FeatureValueWindowContent
 		v-else-if="props.item.targetType === 'FeatureValue'"
 		:params="props.item.params"

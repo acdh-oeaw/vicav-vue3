@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { Download, Info, type Map } from "@lucide/vue";
-import type { ColumnDef, Row, Table } from "@tanstack/vue-table";
+import type { ColumnDef, Header, Row, Table } from "@tanstack/vue-table";
 import { test } from "liqe";
 
 import { useGeojsonStore } from "@/stores/use-geojson-store.ts";
@@ -275,6 +275,19 @@ const searchableLocationNames = computed(() => {
 			.map((name) => ({ value: name, label: name })) ?? []
 	);
 });
+
+function onFeatureClick(val: Header<unknown, unknown>) {
+	openOrUpdateWindow(
+		{
+			targetType: "FeatureStatistics",
+			params: {
+				featureId: val.id,
+				showCitation: false,
+			},
+		} as unknown as WindowItem,
+		`Feature: ${val.column.columnDef.header}`,
+	);
+}
 </script>
 
 <template>
@@ -324,7 +337,7 @@ const searchableLocationNames = computed(() => {
 				</DropdownMenu>
 			</div>
 		</div>
-		<div class="min-h-0 flex-1 overflow-auto">
+		<div id="results-table" class="min-h-0 flex-1 overflow-auto">
 			<DataTable
 				v-if="!isPending"
 				:column-filter-change-fn="onColumnFilterChange"
@@ -336,6 +349,7 @@ const searchableLocationNames = computed(() => {
 				:min-header-depth="2"
 				:sticky-header="true"
 				:visibility-change-fn="onVisibilityChange"
+				@column-header-click="onFeatureClick"
 				@global-filter-change="updateQueryParams"
 				@row-click="onRowClick"
 				@table-ready="registerTable"
@@ -355,3 +369,9 @@ const searchableLocationNames = computed(() => {
 		</div>
 	</div>
 </template>
+
+<style>
+#results-table thead th {
+	cursor: pointer;
+}
+</style>

@@ -115,6 +115,18 @@ function updateMap(updateQueryTo: QueryUpdateType, entry: (typeof props.params.v
 		true,
 	);
 }
+function onFeatureClick(val: Record<string, unknown>) {
+	openOrUpdateWindow(
+		{
+			targetType: "FeatureStatistics",
+			params: {
+				featureId: val.featureId,
+				showCitation: false,
+			},
+		} as unknown as WindowItem,
+		`Feature: ${val.feature}`,
+	);
+}
 </script>
 
 <template>
@@ -134,6 +146,14 @@ function updateMap(updateQueryTo: QueryUpdateType, entry: (typeof props.params.v
 									<span class="sr-only">View Source</span
 									><ExternalLink class="inline-block size-3.5" /> </NuxtLink
 							></template>
+							<template v-else-if="entry.key === 'feature'">
+								<Button
+									class="h-auto shrink-0 p-0 font-normal text-black!"
+									variant="link"
+									@click="onFeatureClick(params.values[valueIdx])"
+									>{{ value }}</Button
+								></template
+							>
 							<template v-else> {{ value }}</template>
 
 							<Tooltip v-if="entry.updateQueryTo">

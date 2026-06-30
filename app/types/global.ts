@@ -149,6 +149,12 @@ export const FeatureSchema = z.object({
 });
 export type FeatureWindowItem = WindowItemBase & z.infer<typeof FeatureSchema>;
 
+export const FeatureStatisticsSchema = z.object({
+	targetType: z.literal("FeatureStatistics"),
+	params: z.object({ featureId: z.string() }).extend(ShowCitation.partial().shape),
+});
+export type FeatureStatisticsWindowItem = WindowItemBase & z.infer<typeof FeatureStatisticsSchema>;
+
 export const FeatureValueSchema = z.object({
 	targetType: z.literal("FeatureValue"),
 	params: z.object({ values: z.array(z.any()) }).extend(ShowCitation.partial().shape),
@@ -281,6 +287,7 @@ export const Schema = z.discriminatedUnion("targetType", [
 	CorpusQuerySchema,
 	CorpusTextSchema,
 	FeatureSchema,
+	FeatureStatisticsSchema,
 	FeatureValueSchema,
 	GeoMapSchema,
 	ProfileSchema,
