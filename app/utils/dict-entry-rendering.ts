@@ -57,6 +57,7 @@ export interface RenderedSense {
 	id?: string;
 	ana?: string;
 	definitions: Array<RenderedText>;
+	glosses: Array<RenderedText>;
 	translations: Array<RenderedText>;
 	grammar: Array<RenderedGrammarItem>;
 	locations: Array<RenderedLocation>;
@@ -206,7 +207,7 @@ interface TranslationEquivalentLike {
 	form?: {
 		orth?: TextNodeLike;
 	};
-	gloss?: TextNodeLike;
+	gloss?: TextNodeLike | string;
 }
 
 interface RelatedXrLike {
@@ -229,6 +230,7 @@ interface SenseLike {
 	defs?: Array<TextNodeLike>;
 	translationEquivalent_cit?: TranslationEquivalentLike;
 	translationEquivalent_cits?: Array<TranslationEquivalentLike>;
+	glosses?: Array<TextNodeLike>;
 	geographic_usg?: EntryLocationLike;
 	geographic_usgs?: Array<EntryLocationLike>;
 	example_cit?: ExampleLike;
@@ -363,7 +365,10 @@ function collectTranslationEquivalents(
 	return [...asArray(single), ...asArray(multiple)].flatMap((translation) => {
 		const lang = translation.form?.orth?.["@lang"] ?? translation["@lang"];
 		const text = translation.form?.orth?.$?.trim();
-		const gloss = translation.gloss?.$?.trim();
+		const gloss =
+			typeof translation.gloss === "string"
+				? translation.gloss.trim()
+				: translation.gloss?.$?.trim();
 
 		if (text != null && text !== "") {
 			return [{ lang, gloss, source: normalizeSource(translation["@source"]), text }];
@@ -710,6 +715,7 @@ export function normalizeEntry(entry: RestVLEEntry): RenderedDictEntry {
 				id: sense["@id"],
 				ana: sense["@ana"],
 				definitions: collectTextNodes(sense.def, sense.defs),
+				glosses: collectTextNodes(undefined, sense.glosses),
 				translations: collectTranslationEquivalents(
 					sense.translationEquivalent_cit,
 					sense.translationEquivalent_cits,

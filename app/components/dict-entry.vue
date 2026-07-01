@@ -413,12 +413,24 @@ const languageClass = (language: string | undefined) => {
 											:title="languageTooltip(translation.lang)"
 										>
 											{{ translation.text }}
+											<span v-if="translation.gloss" class="text-gray-700">
+												({{ translation.gloss }})
+											</span>
 										</span>
 										<span v-if="sourceLabel(translation.source)" :class="compactBadgeClass">
 											<BookOpen class="size-4 text-gray-500" />
 											{{ sourceLabel(translation.source) }}
 										</span>
 									</div>
+								</div>
+								<div v-if="sense.glosses.length > 0" class="mt-1 flex flex-wrap gap-1">
+									<span
+										v-for="(gloss, glossIndex) in sense.glosses"
+										:key="textKey(gloss, glossIndex)"
+										class="inline-flex items-center rounded-sm bg-white/80 px-1.5 py-0.5 text-sm text-gray-700"
+									>
+										<span class="font-semibold">gloss:</span>&nbsp;{{ gloss.text }}
+									</span>
 								</div>
 
 								<div v-if="sense.examples.length > 0" class="mt-1 space-y-1.5">
