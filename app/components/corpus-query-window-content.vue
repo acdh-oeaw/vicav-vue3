@@ -134,8 +134,27 @@ const wordOptions = computed(() => {
 	});
 });
 
+function utteranceContentContainsHit(
+	utterance: MixedUtteranceContent[number],
+	hitId?: string,
+): boolean {
+	if (hitId == null) return false;
+	return (
+		utterance.w?.["@id"] === hitId ||
+		utterance.seg?.["$$"].some((segUtterance) =>
+			utteranceContentContainsHit(segUtterance, hitId),
+		) === true
+	);
+}
+
+function getHitKey(hit: Div, index: number) {
+	return [hit["@docRef"], hit["@id"], hit.hits?.join(","), index].filter(Boolean).join("-");
+}
+
 function splitUtterancesAroundHit(utterances: MixedUtteranceContent, hitId?: string) {
-	const matchIndex = utterances.findIndex((utterance) => utterance.w?.["@id"] === hitId);
+	const matchIndex = utterances.findIndex((utterance) =>
+		utteranceContentContainsHit(utterance, hitId),
+	);
 
 	if (matchIndex === -1) {
 		return {
@@ -248,7 +267,7 @@ function splitUtterancesAroundHit(utterances: MixedUtteranceContent, hitId?: str
 		<div v-if="hits && displayHits.length > 0">
 			<div class="my-2">Query: "{{ queryString }}"</div>
 			<table>
-				<tr v-for="hit in displayHits" :key="hit['@id']">
+				<tr v-for="(hit, hitIndex) in displayHits" :key="getHitKey(hit, hitIndex)">
 					<td class="p-0">
 						<a
 							:data-hits="hit.hits![0]"
@@ -271,6 +290,7 @@ function splitUtterancesAroundHit(utterances: MixedUtteranceContent, hitId?: str
 										v-for="(uContent, index) in splitUtterancesAroundHit(hit.u['$$'], hit.hits?.[0])
 											.before"
 										:key="`before-${index}`"
+										:hits="hit.hits?.[0]"
 										:inline-annotation="showInlineAnnotations"
 										:inline-translation="showInlineTranslations"
 										:utterance="uContent"
@@ -280,6 +300,7 @@ function splitUtterancesAroundHit(utterances: MixedUtteranceContent, hitId?: str
 									<CorpusTextJsonUtterance
 										v-if="splitUtterancesAroundHit(hit.u['$$'], hit.hits?.[0]).match"
 										:highlight="true"
+										:hits="hit.hits?.[0]"
 										:inline-annotation="showInlineAnnotations"
 										:inline-translation="showInlineTranslations"
 										:utterance="splitUtterancesAroundHit(hit.u['$$'], hit.hits?.[0]).match!"
@@ -290,6 +311,7 @@ function splitUtterancesAroundHit(utterances: MixedUtteranceContent, hitId?: str
 										v-for="(uContent, index) in splitUtterancesAroundHit(hit.u['$$'], hit.hits?.[0])
 											.after"
 										:key="`after-${index}`"
+										:hits="hit.hits?.[0]"
 										:inline-annotation="showInlineAnnotations"
 										:inline-translation="showInlineTranslations"
 										:utterance="uContent"
