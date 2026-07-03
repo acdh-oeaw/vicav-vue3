@@ -30,8 +30,8 @@ import { matchesFilterValueMap } from "@/utils/filter-value-map.ts";
 
 const props = defineProps<{
 	items: Array<simpleTEIMetadata>;
-	dataType: Extract<DataTypesEnum, "CorpusText" | "SampleText" | "Feature">;
-	targetType: Extract<DataTypesEnum, "CorpusText" | "SampleText" | "Feature">;
+	dataType: Extract<DataTypesEnum, "CorpusText" | "SampleText" | "Feature" | "Profile">;
+	targetType: Extract<DataTypesEnum, "CorpusText" | "SampleText" | "Feature" | "Profile">;
 	searchInputId: string;
 	showAudioAvailability: boolean;
 	requireTeiAvailabilityForLink: boolean;

@@ -4,6 +4,7 @@ import { Volume2, VolumeX } from "@lucide/vue";
 
 import CorpusTextDataList from "@/components/corpus-text-data-list.vue";
 import FeatureDataList from "@/components/feature-data-list.vue";
+import ProfileDataList from "@/components/profile-data-list.vue";
 import SampleTextDataList from "@/components/sample-text-data-list.vue";
 import dataTypes from "@/config/dataTypes.ts";
 import {
@@ -23,14 +24,18 @@ const props = defineProps<Props>();
 
 const teiHeadersStore = useTeiHeadersStore();
 const { simpleItems } = storeToRefs(teiHeadersStore);
-const isCorpusTextList = computed(() => {
-	return props.params.dataTypes.length === 1 && props.params.dataTypes[0] === "CorpusText";
-});
-const isFeatureList = computed(() => {
-	return props.params.dataTypes.length === 1 && props.params.dataTypes[0] === "Feature";
-});
-const isSampleTextList = computed(() => {
-	return props.params.dataTypes.length === 1 && props.params.dataTypes[0] === "SampleText";
+const specializedListType = computed(() => {
+	if (props.params.dataTypes.length !== 1) return undefined;
+
+	switch (props.params.dataTypes[0]) {
+		case "CorpusText":
+		case "Feature":
+		case "Profile":
+		case "SampleText":
+			return props.params.dataTypes[0];
+		default:
+			return undefined;
+	}
 });
 
 function normalizeFilterListBy() {
@@ -61,9 +66,10 @@ function getTargetType(dataType: string): string {
 </script>
 
 <template>
-	<CorpusTextDataList v-if="isCorpusTextList" :items="simpleItems" />
-	<SampleTextDataList v-else-if="isSampleTextList" :items="simpleItems" />
-	<FeatureDataList v-else-if="isFeatureList" :items="simpleItems" />
+	<CorpusTextDataList v-if="specializedListType === 'CorpusText'" :items="simpleItems" />
+	<SampleTextDataList v-else-if="specializedListType === 'SampleText'" :items="simpleItems" />
+	<FeatureDataList v-else-if="specializedListType === 'Feature'" :items="simpleItems" />
+	<ProfileDataList v-else-if="specializedListType === 'Profile'" :items="simpleItems" />
 	<div v-else-if="groupedItems" class="relative isolate grid size-full overflow-auto">
 		<div v-if="debug">
 			<label for="debug">Debug</label>
