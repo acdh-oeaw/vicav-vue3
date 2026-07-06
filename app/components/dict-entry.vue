@@ -331,7 +331,7 @@ const languageClass = (language: string | undefined) => {
 			</header>
 
 			<div class="px-4 py-3">
-				<div class="grid grid-cols-[minmax(8.75rem,12.5rem)_1fr] gap-x-6">
+				<div class="grid grid-cols-[max-content_minmax(0,1fr)] gap-x-4">
 					<div
 						v-if="hasEtymology"
 						class="px-4 py-3 text-base leading-none font-semibold text-primary uppercase"
@@ -421,8 +421,20 @@ const languageClass = (language: string | undefined) => {
 						</div>
 						<section class="py-0.5">
 							<div class="rounded-sm bg-primary/15 px-2 py-1">
-								<div v-if="senseGrammarText(sense.grammar)" class="mb-1 font-bold italic">
-									({{ senseGrammarText(sense.grammar) }})
+								<div class="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-1">
+									<div v-if="senseGrammarText(sense.grammar)" class="mb-1 font-bold italic">
+										({{ senseGrammarText(sense.grammar) }})
+									</div>
+									<div class="flex max-w-72 flex-wrap justify-end gap-0.5 justify-self-end">
+										<span
+											v-for="location in sense.locations"
+											:key="locationKey(location)"
+											:class="compactBadgeClass"
+										>
+											<MapPin class="size-4 text-gray-400" />
+											{{ formatLocation(location) }}
+										</span>
+									</div>
 								</div>
 								<div class="text-base/tight">
 									<div
@@ -512,17 +524,6 @@ const languageClass = (language: string | undefined) => {
 											</div>
 										</div>
 									</div>
-								</div>
-
-								<div v-if="sense.locations.length > 0" class="mt-3 flex flex-wrap gap-0.5">
-									<span
-										v-for="location in sense.locations"
-										:key="locationKey(location)"
-										:class="compactBadgeClass"
-									>
-										<MapPin class="size-4 text-gray-400" />
-										{{ formatLocation(location) }}
-									</span>
 								</div>
 							</div>
 						</section>
