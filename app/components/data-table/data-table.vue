@@ -174,7 +174,7 @@ const table = useVueTable({
 	getExpandedRowModel: props.enableGrouping ? getExpandedRowModel() : undefined,
 	getFilteredRowModel: getFilteredRowModel(),
 	getGroupedRowModel: props.enableGrouping ? getGroupedRowModel() : undefined,
-	getPaginationRowModel: props.enablePagination === false ? undefined : getPaginationRowModel(),
+	getPaginationRowModel: !props.enablePagination ? undefined : getPaginationRowModel(),
 	getSortedRowModel: props.enableSorting ? getSortedRowModel() : undefined,
 	getFacetedRowModel: getFacetedRowModel(),
 	getFacetedUniqueValues: customFacetedUniqueValues,
