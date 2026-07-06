@@ -19,6 +19,7 @@ import {
 	type RenderedForm,
 	type RenderedGrammarItem,
 	type RenderedLocation,
+	type RenderedSense,
 	type RenderedText,
 } from "@/utils/dict-entry-rendering";
 
@@ -165,6 +166,23 @@ const formGrammarText = (form: RenderedForm) => {
 const senseGrammarText = (items: Array<RenderedGrammarItem>) => {
 	const values = grammarValues(items);
 	return values.length === 0 ? undefined : values.join(", ");
+};
+
+const groupedSenseTranslations = (sense: RenderedSense) => {
+	const groups = new Map<string, { lang: string | undefined; translations: Array<RenderedText> }>();
+
+	for (const translation of sense.translations) {
+		const key = translation.lang ?? "";
+		const group = groups.get(key);
+
+		if (group == null) {
+			groups.set(key, { lang: translation.lang, translations: [translation] });
+		} else {
+			group.translations.push(translation);
+		}
+	}
+
+	return Array.from(groups.values());
 };
 
 const locationKey = (location: RenderedLocation) => {
@@ -404,22 +422,31 @@ const languageClass = (language: string | undefined) => {
 								</div>
 								<div class="text-base/tight">
 									<div
-										v-for="(translation, translationIndex) in sense.translations"
-										:key="textKey(translation, translationIndex)"
+										v-for="translationGroup in groupedSenseTranslations(sense)"
+										:key="translationGroup.lang ?? 'unknown'"
 										class="flex flex-wrap items-center gap-1.5"
 									>
 										<span
-											:class="languageClass(translation.lang)"
-											:title="languageTooltip(translation.lang)"
+											class="inline-flex flex-wrap items-center gap-x-1"
+											:class="languageClass(translationGroup.lang)"
+											:title="languageTooltip(translationGroup.lang)"
 										>
-											{{ translation.text }}
-											<span v-if="translation.gloss" class="text-gray-700">
-												({{ translation.gloss }})
-											</span>
-										</span>
-										<span v-if="sourceLabel(translation.source)" :class="compactBadgeClass">
-											<BookOpen class="size-4 text-gray-500" />
-											{{ sourceLabel(translation.source) }}
+											<template
+												v-for="(translation, translationIndex) in translationGroup.translations"
+												:key="textKey(translation, translationIndex)"
+											>
+												<span>{{ translation.text }}</span>
+												<span v-if="translation.gloss" class="text-gray-700">
+													({{ translation.gloss }})
+												</span>
+												<span v-if="sourceLabel(translation.source)" :class="compactBadgeClass">
+													<BookOpen class="size-4 text-gray-500" />
+													{{ sourceLabel(translation.source) }}
+												</span>
+												<span v-if="translationIndex < translationGroup.translations.length - 1">
+													,
+												</span>
+											</template>
 										</span>
 									</div>
 								</div>
