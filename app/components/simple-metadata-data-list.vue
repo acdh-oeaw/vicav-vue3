@@ -205,6 +205,46 @@ const facetColumnIds = [
 	"audioAvailability",
 	"@hasTEIw",
 ];
+const placeHierarchyColumnIds = ["country", "region", "settlement"];
+const hideSingleValueFilterColumnIds = [
+	...placeHierarchyColumnIds,
+	"category",
+	"audioAvailability",
+	"@hasTEIw",
+];
+
+interface FacetedColumn {
+	getFacetedUniqueValues: () => Map<unknown, number>;
+}
+
+interface DisplayRow {
+	row: Row<simpleTEIMetadata>;
+	depth: number;
+}
+
+const visibleFacetColumnIds = computed(() => {
+	return facetColumnIds.filter((columnId) => {
+		const column = table.getColumn(columnId);
+
+		return column != null && !hasSingleFilterValue(columnId, column);
+	});
+});
+
+const displayRows = computed<Array<DisplayRow>>(() => {
+	return table
+		.getRowModel()
+		.rows.filter((row) => !isEmptyPlaceHierarchyGroup(row))
+		.map((row) => {
+			const skippedAncestorCount = row
+				.getParentRows()
+				.filter((parentRow) => isEmptyPlaceHierarchyGroup(parentRow)).length;
+
+			return {
+				row,
+				depth: row.depth - skippedAncestorCount,
+			};
+		});
+});
 
 function formatGroupValue(columnId: string | undefined, value: unknown): string {
 	if (typeof value === "string" && value.length > 0) return value.replace(/^zzz_/, "");
@@ -215,6 +255,22 @@ function formatGroupValue(columnId: string | undefined, value: unknown): string 
 	if (columnId === "settlement") return "Unspecified place";
 
 	return "Unspecified";
+}
+
+function hasSingleFilterValue(columnId: string, column: FacetedColumn): boolean {
+	if (!hideSingleValueFilterColumnIds.includes(columnId)) return false;
+
+	const values = [...column.getFacetedUniqueValues().keys()];
+
+	return values.length <= 1;
+}
+
+function isEmptyPlaceHierarchyGroup(row: Row<simpleTEIMetadata>): boolean {
+	if (!row.getIsGrouped()) return false;
+	if (row.groupingColumnId == null) return false;
+	if (!placeHierarchyColumnIds.includes(row.groupingColumnId)) return false;
+
+	return row.getValue(row.groupingColumnId) === "";
 }
 
 function countLeafRows(row: Row<simpleTEIMetadata>): number {
@@ -239,7 +295,7 @@ function canOpenItem(item: simpleTEIMetadata): boolean {
 			<DataTableActiveFilters :table="table as unknown as TanstackTable<never>" />
 			<div class="flex flex-wrap items-center gap-1">
 				<span
-					v-for="columnId in facetColumnIds"
+					v-for="columnId in visibleFacetColumnIds"
 					:key="columnId"
 					class="inline-flex items-center gap-1 text-sm"
 				>
@@ -258,10 +314,10 @@ function canOpenItem(item: simpleTEIMetadata): boolean {
 			</div>
 			<ul v-else>
 				<li
-					v-for="row in table.getRowModel().rows"
+					v-for="{ row, depth } in displayRows"
 					:key="row.id"
 					class="py-0.5 text-base"
-					:style="{ marginLeft: `${row.depth * 1.25}rem` }"
+					:style="{ marginLeft: `${depth * 1.25}rem` }"
 				>
 					<button
 						v-if="row.getIsGrouped()"

@@ -63,6 +63,14 @@ function getDataTypeName(dataType: string): string {
 function getTargetType(dataType: string): string {
 	return dataTypes[dataType as DataTypesEnum]?.targetType ?? dataType;
 }
+
+function countItemsByPlace(itemsByPlace: Record<string, Record<string, Array<unknown>>>): number {
+	return Object.values(itemsByPlace).flat(2).length;
+}
+
+function hierarchyLevelClass(level: string | number): string {
+	return level === "" ? "" : "p-2";
+}
 </script>
 
 <template>
@@ -82,26 +90,34 @@ function getTargetType(dataType: string): string {
 				:value="debugString"
 			></textarea>
 		</div>
-		<div v-for="(itemsByRegion, country) in groupedItems" :key="country" class="p-2">
-			<h2 v-if="Object.keys(groupedItems).length > 1 && country !== ''" class="text-lg">
+		<div
+			v-for="(itemsByRegion, country) in groupedItems"
+			:key="country"
+			:class="hierarchyLevelClass(country)"
+		>
+			<h2 v-if="country !== ''" class="text-lg">
 				{{ country }}
 			</h2>
-			<h2 v-else-if="Object.keys(groupedItems).length > 1" class="text-lg">Unspecified country</h2>
-			<div v-for="(itemsByPlace, region) in itemsByRegion" :key="region" class="p-2 text-base">
+			<div
+				v-for="(itemsByPlace, region) in itemsByRegion"
+				:key="region"
+				class="text-base"
+				:class="hierarchyLevelClass(region)"
+			>
 				<h4 v-if="region !== ''" class="text-lg italic">
 					{{ region }}
-					<span v-if="Object.values(itemsByPlace).flat(2).length > 1"
-						>({{ Object.values(itemsByPlace).flat(2).length }})</span
+					<span v-if="countItemsByPlace(itemsByPlace) > 1"
+						>({{ countItemsByPlace(itemsByPlace) }})</span
 					>
 				</h4>
-				<h4 v-else-if="Object.keys(itemsByRegion).length > 1" class="text-lg italic">
-					Unspecified region
-				</h4>
-				<div v-for="(itemsBydataType, place) in itemsByPlace" :key="place" class="p-2">
+				<div
+					v-for="(itemsBydataType, place) in itemsByPlace"
+					:key="place"
+					:class="hierarchyLevelClass(place)"
+				>
 					<h5 v-if="place !== ''" class="text-base font-bold">
 						{{ place.replace(/^zzz_/, "") }}
 					</h5>
-					<h5 v-else class="text-base font-bold">Unspecified place</h5>
 					<div v-for="(items, dataType) in itemsBydataType" :key="dataType">
 						<em v-if="params.dataTypes.length > 1" class="text-sm italic">
 							{{ getDataTypeName(dataType) }}
