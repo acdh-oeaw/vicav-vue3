@@ -470,15 +470,15 @@ const languageClass = (language: string | undefined) => {
 										:key="`${example.kind}-${example.id ?? example.quote?.text ?? exampleIndex}`"
 										class="rounded-lg bg-primary/15 p-1"
 									>
-										<div class="flex flex-wrap items-start justify-between gap-1">
+										<div class="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-1">
 											<div
 												v-if="example.quote"
-												class="font-bold italic"
+												class="min-w-0 font-bold wrap-break-word italic"
 												:title="languageTooltip(example.quote.lang)"
 											>
 												{{ example.quote.text }}
 											</div>
-											<div class="ml-auto flex flex-wrap justify-end gap-0.5">
+											<div class="flex max-w-72 flex-wrap justify-end gap-0.5 justify-self-end">
 												<span
 													v-for="item in example.bibliography"
 													:key="item"
