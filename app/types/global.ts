@@ -90,6 +90,7 @@ export const BibliographyEntriesSchema = z.object({
 	params: QueryString.extend({
 		xslt: z.string().optional(),
 		showMap: z.boolean().optional(),
+		isQueryVisible: z.boolean().optional(),
 	}),
 });
 export type BibliographyEntriesWindowItem = WindowItemBase &

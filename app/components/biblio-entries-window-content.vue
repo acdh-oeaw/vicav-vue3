@@ -24,14 +24,15 @@ const queryString: Ref<string> = ref(params.value.queryString);
 const isTextQuery: Ref<boolean> = ref(true);
 const isMapQuery: Ref<boolean> = ref(false);
 
-const isFormOpen = ref(queryString.value === "" || params.value.showMap);
-const isListOpen = ref(queryString.value !== "" && !params.value.showMap);
+params.value.isQueryVisible ??= false;
+const isListOpen = ref(queryString.value !== "");
 
 function submitNewQuery(map: boolean): void {
 	if (queryString.value === "") return;
 	if (!isTextQuery.value && !isMapQuery.value) isTextQuery.value = true;
 	params.value.queryString = queryString.value;
 	params.value.showMap = map;
+	params.value.isQueryVisible = false;
 	emit("updateQueryParam", queryString.value);
 	if (map) {
 		addWindow({
@@ -42,9 +43,8 @@ function submitNewQuery(map: boolean): void {
 			},
 			title: `Bibl. Locations for "${queryString.value}"`,
 		});
-		isListOpen.value = false;
+		isListOpen.value = true;
 	} else {
-		isFormOpen.value = false;
 		isListOpen.value = true;
 	}
 }
@@ -62,12 +62,14 @@ function submitNewQueryKeyup(event: KeyboardEvent): void {
 		:class="{ 'opacity-50 grayscale': isLoading }"
 	>
 		<!-- eslint-disable vuejs-accessibility/form-control-has-label, tailwindcss/no-custom-classname -->
-		<Collapsible v-model:open="isFormOpen" class="prose max-w-3xl px-8 pt-8 pb-4">
-			<CollapsibleTrigger class="dvStats flex w-full items-baseline">
-				{{ queryString !== "" ? "Query:&nbsp;&nbsp;" : "&nbsp;" }}
-				<span class="spQueryText">{{ queryString }}</span>
+		<Collapsible v-model:open="params.isQueryVisible" class="prose max-w-3xl px-8 pt-8 pb-4">
+			<CollapsibleTrigger
+				class="flex w-full items-baseline bg-primary p-4 py-0 font-bold text-on-primary"
+			>
+				<span>Query Bibliography:</span>
+				<span v-if="queryString !== ''" class="spQueryText">&nbsp;&nbsp;{{ queryString }}</span>
 				<div class="relative top-1 mr-4 ml-auto">
-					<div v-if="!isFormOpen">
+					<div v-if="!params.isQueryVisible">
 						<svg
 							class="svg-icon"
 							style="
@@ -86,7 +88,7 @@ function submitNewQueryKeyup(event: KeyboardEvent): void {
 							/>
 						</svg>
 					</div>
-					<div v-if="isFormOpen">
+					<div v-if="params.isQueryVisible">
 						<svg
 							class="svg-icon"
 							style="
