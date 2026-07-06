@@ -197,7 +197,8 @@ function submitNewQueryKeyup(event: KeyboardEvent): void {
 			</CollapsibleTrigger>
 			<CollapsibleContent>
 				<!-- eslint-disable vue/no-v-html -->
-				<div v-if="data" v-html="data.html" />
+				<p v-if="data && !data.hasResults">No results.</p>
+				<div v-else-if="data" v-html="data.html" />
 			</CollapsibleContent>
 		</Collapsible>
 
