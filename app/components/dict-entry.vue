@@ -420,7 +420,7 @@ const languageClass = (language: string | undefined) => {
 							{{ e.senses.length > 1 ? `Sense ${String(senseIndex + 1)}` : "Sense" }}
 						</div>
 						<section class="py-0.5">
-							<div class="rounded-sm bg-primary/15 px-2 py-1">
+							<div class="rounded-sm border border-primary/15 bg-primary/15 px-2 py-1">
 								<div class="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-1">
 									<div v-if="senseGrammarText(sense.grammar)" class="mb-1 font-bold italic">
 										({{ senseGrammarText(sense.grammar) }})
