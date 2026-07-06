@@ -338,18 +338,22 @@ const languageClass = (language: string | undefined) => {
 					>
 						Etymology
 					</div>
-					<section v-if="hasEtymology" class="py-3 text-base/snug">
-						<span
-							v-for="(etymology, etymologyIndex) in e.etymologies"
-							:key="textKey(etymology, etymologyIndex)"
-						>
-							<span v-if="etymologyIndex === 0">&lt; </span>
-							<span v-else>; </span>
-							<span class="italic" :title="languageTooltip(etymology.lang)">
-								{{ etymology.text }}
+					<section v-if="hasEtymology" class="space-y-1 py-3 text-base/snug">
+						<div v-for="(group, groupIndex) in e.etymologyGroups" :key="`etymology-${groupIndex}`">
+							<span
+								v-for="(etymology, etymologyIndex) in group.etymologies"
+								:key="textKey(etymology, etymologyIndex)"
+							>
+								<span v-if="etymologyIndex > 0">; </span>
+								<span
+									class="italic"
+									:class="languageClass(etymology.lang)"
+									:title="languageTooltip(etymology.lang)"
+								>
+									{{ etymology.text }}
+								</span>
 							</span>
-							<span v-if="etymology.lang"> ({{ etymology.lang }})</span>
-						</span>
+						</div>
 					</section>
 
 					<div
