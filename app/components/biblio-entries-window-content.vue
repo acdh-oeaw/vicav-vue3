@@ -79,7 +79,6 @@ function submitNewQueryKeyup(event: KeyboardEvent): void {
 								height: 1em;
 								fill: currentColor;
 							"
-							version="1.1"
 							viewBox="0 0 1024 1024"
 							xmlns="http://www.w3.org/2000/svg"
 						>
@@ -98,7 +97,6 @@ function submitNewQueryKeyup(event: KeyboardEvent): void {
 								height: 1em;
 								fill: currentColor;
 							"
-							version="1.1"
 							viewBox="0 0 1024 1024"
 							xmlns="http://www.w3.org/2000/svg"
 						>
@@ -167,7 +165,6 @@ function submitNewQueryKeyup(event: KeyboardEvent): void {
 								height: 1em;
 								fill: currentColor;
 							"
-							version="1.1"
 							viewBox="0 0 1024 1024"
 							xmlns="http://www.w3.org/2000/svg"
 						>
@@ -214,7 +211,7 @@ function submitNewQueryKeyup(event: KeyboardEvent): void {
 @reference "@/styles/index.css";
 /* stylelint-disable selector-class-pattern, block-no-empty */
 .dvStats {
-	@apply mb-[5px] pb-[5px] pl-[5px] border border-solid border-primary bg-primary text-on-primary font-bold;
+	@apply mb-1.25 pb-1.25 pl-1.25 border border-solid border-primary bg-primary text-on-primary font-bold;
 }
 
 .spQueryText {
