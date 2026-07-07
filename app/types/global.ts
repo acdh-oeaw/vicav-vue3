@@ -244,6 +244,14 @@ export const GeojsonMapSchema = z.object({
 });
 export type GeojsonMapWindowItem = WindowItemBase & z.infer<typeof GeojsonMapSchema>;
 
+export const SimpleMetadataListSortMode = z.enum(["hit-count", "alphabetical"]);
+export const SimpleMetadataListState = z.object({
+	sortMode: SimpleMetadataListSortMode.optional(),
+	globalFilter: z.string().optional(),
+	facets: z.record(z.string(), z.array(z.string())).optional(),
+});
+export type SimpleMetadataListState = z.infer<typeof SimpleMetadataListState>;
+
 export const DataListSchema = z.object({
 	targetType: z.literal("DataList"),
 	params: z
@@ -255,6 +263,7 @@ export const DataListSchema = z.object({
 					value: z.string(),
 				})
 				.optional(),
+			listState: SimpleMetadataListState.optional(),
 		})
 		.extend(TextId.partial().shape),
 });

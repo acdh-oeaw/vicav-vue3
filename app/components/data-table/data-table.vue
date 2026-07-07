@@ -34,6 +34,12 @@ interface RowWithSubRows {
 	subRows: Array<RowWithSubRows>;
 }
 
+interface HeaderFilterColumn {
+	id: string;
+	getCanFilter: () => boolean;
+	getFacetedUniqueValues: () => Map<unknown, number>;
+}
+
 interface Props {
 	items: Array<never>;
 	columns: Array<ColumnDef<never>>;
@@ -65,6 +71,13 @@ const globalFilter = ref("");
 const grouping = ref<GroupingState>(props.initialGrouping ?? []);
 const pagination = ref<PaginationState>(props.initialPagination ?? { pageIndex: 0, pageSize: 10 });
 const sorting = ref<SortingState>(props.initialSorting ?? []);
+const placeHierarchyColumnIds = ["country", "region", "settlement"];
+const hideSingleValueFilterColumnIds = [
+	...placeHierarchyColumnIds,
+	"category",
+	"audioAvailability",
+	"@hasTEIw",
+];
 const columnVisibility = ref<VisibilityState>({
 	label: true,
 	person: false,
@@ -161,7 +174,7 @@ const table = useVueTable({
 	getExpandedRowModel: props.enableGrouping ? getExpandedRowModel() : undefined,
 	getFilteredRowModel: getFilteredRowModel(),
 	getGroupedRowModel: props.enableGrouping ? getGroupedRowModel() : undefined,
-	getPaginationRowModel: props.enablePagination === false ? undefined : getPaginationRowModel(),
+	getPaginationRowModel: !props.enablePagination ? undefined : getPaginationRowModel(),
 	getSortedRowModel: props.enableSorting ? getSortedRowModel() : undefined,
 	getFacetedRowModel: getFacetedRowModel(),
 	getFacetedUniqueValues: customFacetedUniqueValues,
@@ -184,6 +197,18 @@ function formatGroupValue(columnId: string | undefined, value: unknown): string 
 	if (columnId === "settlement") return "Unspecified place";
 
 	return "Unspecified";
+}
+
+function hasSingleFilterValue(column: HeaderFilterColumn): boolean {
+	if (!hideSingleValueFilterColumnIds.includes(column.id)) return false;
+
+	const values = [...column.getFacetedUniqueValues().keys()];
+
+	return values.length <= 1;
+}
+
+function canShowColumnFilter(column: HeaderFilterColumn): boolean {
+	return column.getCanFilter() && !hasSingleFilterValue(column);
 }
 
 function countLeafRows(row: RowWithSubRows): number {
@@ -229,7 +254,7 @@ function countLeafRows(row: RowWithSubRows): number {
 					</button>
 					<template v-else>{{ header.column.columnDef.header }}</template>
 					<DataTableFacetedFilter
-						v-if="enableFilterOnColumns && header.column.getCanFilter()"
+						v-if="enableFilterOnColumns && canShowColumnFilter(header.column)"
 						:column="header.column"
 					></DataTableFacetedFilter>
 				</TableHead>

@@ -275,9 +275,17 @@ grouped list rendering in `data-list-window-content.vue`.
     key: string;
     value: string;
   };
+  listState?: {
+    sortMode?: "hit-count" | "alphabetical";
+    globalFilter?: string;
+    facets?: Record<string, string[]>;
+  };
   textId?: string;
 }
 ```
+
+- Event wired by `window-content.vue`: `update:params` replaces the window params through the
+  generic validated `updateWindowParams()` store path, which updates the encoded URL state.
 
 ### `DataTable`
 
@@ -353,6 +361,8 @@ branches:
 
 ```text
 Review app/types/global.ts and app/components/window-content.vue.
+Also review app/stores/use-windows-store.ts for URL/state serialization helpers and generic window
+param update paths.
 Update docs/windowTypes.md so it accurately documents the current implemented window targetType
 values, the component rendered for each targetType, the params shape for each schema, and any
 additional props or events passed by window-content.vue.
@@ -362,6 +372,8 @@ Include:
 - changed params fields, optional/default behavior, and enum values
 - changes to shared helper fields such as TextId, TeiSource, ShowCitation, and QueryString
 - changed rendered component names, extra props, or emitted events wired in window-content.vue
+- window params that are persisted to the encoded w= URL state, especially state updated via
+  updateWindowParams()
 - schema targetTypes that exist but are not rendered, or rendered branches that lack schema coverage
 
 Keep the document concise, table/list driven, and consistent with the existing format. Do not change
