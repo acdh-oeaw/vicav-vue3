@@ -173,6 +173,7 @@ function applyGlobalFilter(row: Row<simpleTEIMetadata>, _columnId: string, filte
 
 	const query = filterValue.toLocaleLowerCase();
 	const searchableKeys: Array<SimpleMetadataAccessorKey> = [
+		"id",
 		"label",
 		"category",
 		"recordingDate",
@@ -581,6 +582,7 @@ function canOpenItem(item: simpleTEIMetadata): boolean {
 							{{ row.original.label }}
 						</a>
 						<span v-else>{{ row.original.label }}</span>
+						<span class="ml-2 text-sm text-muted-foreground">({{ row.original.id }})</span>
 						<span> &nbsp; </span>
 						<template v-if="showAudioAvailability">
 							<span
