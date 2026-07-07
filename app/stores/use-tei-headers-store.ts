@@ -375,9 +375,16 @@ function normalizeGeoReference(reference: string): string {
 		.toLowerCase();
 }
 
+function resolveGeoPlaceName(place: GeoPlace): string | undefined {
+	return place.prefLabel_placeName.$ ?? place.standard_placeName?.$ ?? place.local_placeName?.$;
+}
+
 function buildGeoPlaceMetadata(place: GeoPlace): PlaceMetadata {
+	const placeName = resolveGeoPlaceName(place);
+	const hierarchyKey = place["@type"] === "reg" ? "region" : "settlement";
+
 	return {
-		settlement: place.prefLabel_placeName.$,
+		[hierarchyKey]: placeName,
 		country: place.location.country.$,
 	};
 }
@@ -390,7 +397,7 @@ function buildGeoPlaceIndex(geoItems: Array<GeoPlaceSource> = []): Map<string, P
 			const placeMetadata = buildGeoPlaceMetadata(place);
 			const references = [
 				place["@id"],
-				place.prefLabel_placeName.$,
+				resolveGeoPlaceName(place),
 				place.standard_placeName?.$,
 				place.local_placeName?.$,
 				place.geoNames_idno.$,
