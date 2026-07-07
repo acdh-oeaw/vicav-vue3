@@ -471,11 +471,35 @@ export const useWindowsStore = defineStore("windows", () => {
 		}
 	}
 
+	function updateWindowParams(id: WindowItem["id"], params: WindowItem["params"]) {
+		const w = registry.value.get(id);
+
+		if (w == null) return;
+
+		const parsedWindow = Schema.safeParse({ targetType: w.targetType, params });
+
+		if (!parsedWindow.success) {
+			toasts.addToast({
+				title: "UpdateWindowParams Error: parameter parse failed",
+				description: "Check the console for details.",
+				type: "foreground",
+				variant: "negative",
+			});
+			console.error(parsedWindow.error);
+			return;
+		}
+
+		w.params = parsedWindow.data.params;
+		updateUrl();
+	}
+
 	return {
 		restoreState,
 		addWindow,
 		removeWindow,
 		updateQueryParam,
+		updateWindowParams,
+		updateUrl,
 		registry,
 		arrangement,
 		setWindowArrangement,
