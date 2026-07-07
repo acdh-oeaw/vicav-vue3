@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { debounce } from "@acdh-oeaw/lib";
 import {
 	ArrowDownAZ,
 	ChartNoAxesColumnIncreasing,
@@ -30,10 +31,14 @@ import {
 	type SimpleMetadataAccessorKey,
 	simpleMetadataAccessors,
 } from "@/stores/use-tei-headers-store.ts";
-import type { DataTypesEnum } from "@/types/global.ts";
+import type { DataTypesEnum, SimpleMetadataListState } from "@/types/global.ts";
 import type { simpleTEIMetadata } from "@/types/teiCorpus.ts";
 import customFacetedUniqueValues from "@/utils/customFacetedUniqueValues.ts";
-import { matchesFilterValueMap } from "@/utils/filter-value-map.ts";
+import {
+	ensureFilterValueMap,
+	FilterValueMap,
+	matchesFilterValueMap,
+} from "@/utils/filter-value-map.ts";
 
 const props = defineProps<{
 	items: Array<simpleTEIMetadata>;
@@ -42,24 +47,72 @@ const props = defineProps<{
 	searchInputId: string;
 	showAudioAvailability: boolean;
 	requireTeiAvailabilityForLink: boolean;
+	listState?: SimpleMetadataListState;
+}>();
+const emit = defineEmits<{
+	"update:listState": [listState: SimpleMetadataListState | undefined];
 }>();
 
 const openNewWindowFromAnchor = useAnchorClickHandler();
-const columnFilters = ref<ColumnFiltersState>([]);
+const columnFilters = ref<ColumnFiltersState>(deserializeColumnFilters(props.listState));
 const expanded = ref<ExpandedState>(true);
-const globalFilter = ref("");
+const globalFilter = ref(props.listState?.globalFilter ?? "");
 const grouping = ref<GroupingState>(["country", "region", "settlement"]);
 const sorting = ref<SortingState>([]);
 const columnHelper = createColumnHelper<simpleTEIMetadata>();
 const labelCollator = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });
 type SimpleMetadataSortMode = "hit-count" | "alphabetical";
-const sortMode = ref<SimpleMetadataSortMode>("alphabetical");
+const sortMode = ref<SimpleMetadataSortMode>(props.listState?.sortMode ?? "alphabetical");
 const selectedSortMode = computed<SimpleMetadataSortMode | undefined>({
 	get: () => sortMode.value,
 	set: (value) => {
 		if (value != null) sortMode.value = value;
 	},
 });
+const emitListStateUpdate = debounce(() => {
+	emit("update:listState", serializeListState());
+}, 150);
+
+watch(
+	[globalFilter, sortMode, columnFilters],
+	() => {
+		emitListStateUpdate();
+	},
+	{ deep: true },
+);
+
+function deserializeColumnFilters(listState?: SimpleMetadataListState): ColumnFiltersState {
+	return Object.entries(listState?.facets ?? {}).map(([id, values]) => {
+		return {
+			id,
+			value: new FilterValueMap(values.map((value) => [value, 1])),
+		};
+	});
+}
+
+function serializeListState(): SimpleMetadataListState | undefined {
+	const listState: SimpleMetadataListState = {};
+	const facets = serializeFacetFilters();
+
+	if (sortMode.value !== "alphabetical") listState.sortMode = sortMode.value;
+	if (globalFilter.value.length > 0) listState.globalFilter = globalFilter.value;
+	if (Object.keys(facets).length > 0) listState.facets = facets;
+
+	return Object.keys(listState).length > 0 ? listState : undefined;
+}
+
+function serializeFacetFilters(): NonNullable<SimpleMetadataListState["facets"]> {
+	const facets: NonNullable<SimpleMetadataListState["facets"]> = {};
+
+	for (const filter of columnFilters.value) {
+		const filterValueMap = ensureFilterValueMap(filter.value);
+		const values = [...filterValueMap.keys()];
+
+		if (values.length > 0) facets[filter.id] = values;
+	}
+
+	return facets;
+}
 
 function normalizePlaceSortValue(value: string): string {
 	return value.replace(/^zzz_/, "");

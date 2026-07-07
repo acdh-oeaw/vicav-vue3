@@ -21,6 +21,9 @@ interface Props {
 const debug = false;
 
 const props = defineProps<Props>();
+const emit = defineEmits<{
+	"update:params": [params: DataListWindowItem["params"]];
+}>();
 
 const teiHeadersStore = useTeiHeadersStore();
 const { simpleItems } = storeToRefs(teiHeadersStore);
@@ -56,6 +59,13 @@ const openNewWindowFromAnchor = useAnchorClickHandler();
 
 const debugString = computed(() => (debug ? JSON.stringify(groupedItems.value, null, 2) : ""));
 
+function updateListState(listState: DataListWindowItem["params"]["listState"]) {
+	emit("update:params", {
+		...props.params,
+		listState,
+	});
+}
+
 function getDataTypeName(dataType: string): string {
 	return dataTypes[dataType as DataTypesEnum]?.name ?? dataType;
 }
@@ -74,10 +84,30 @@ function hierarchyLevelClass(level: string | number): string {
 </script>
 
 <template>
-	<CorpusTextDataList v-if="specializedListType === 'CorpusText'" :items="simpleItems" />
-	<SampleTextDataList v-else-if="specializedListType === 'SampleText'" :items="simpleItems" />
-	<FeatureDataList v-else-if="specializedListType === 'Feature'" :items="simpleItems" />
-	<ProfileDataList v-else-if="specializedListType === 'Profile'" :items="simpleItems" />
+	<CorpusTextDataList
+		v-if="specializedListType === 'CorpusText'"
+		:items="simpleItems"
+		:list-state="params.listState"
+		@update:list-state="updateListState"
+	/>
+	<SampleTextDataList
+		v-else-if="specializedListType === 'SampleText'"
+		:items="simpleItems"
+		:list-state="params.listState"
+		@update:list-state="updateListState"
+	/>
+	<FeatureDataList
+		v-else-if="specializedListType === 'Feature'"
+		:items="simpleItems"
+		:list-state="params.listState"
+		@update:list-state="updateListState"
+	/>
+	<ProfileDataList
+		v-else-if="specializedListType === 'Profile'"
+		:items="simpleItems"
+		:list-state="params.listState"
+		@update:list-state="updateListState"
+	/>
 	<div v-else-if="groupedItems" class="relative isolate grid size-full overflow-auto">
 		<div v-if="debug">
 			<label for="debug">Debug</label>
