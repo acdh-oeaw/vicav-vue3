@@ -589,10 +589,10 @@ function canOpenItem(item: simpleTEIMetadata): boolean {
 								v-if="row.original.audioAvailability === 'free'"
 								title="Audio recording is publicly available"
 							>
-								<Volume2 class="mx-2 mt-[2px] size-5" />
+								<Volume2 class="mx-2 mt-0.5 size-5" />
 							</span>
 							<span v-else title="Audio recording is restricted">
-								<VolumeX class="mx-2 mt-[2px] size-5" />
+								<VolumeX class="mx-2 mt-0.5 size-5" />
 							</span>
 						</template>
 					</div>
