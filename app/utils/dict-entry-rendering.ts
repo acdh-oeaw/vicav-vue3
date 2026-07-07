@@ -72,6 +72,7 @@ export interface RenderedBibliographyItem {
 
 export interface RenderedEtymologyGroup {
 	etymologies: Array<RenderedText>;
+	levels: Array<Array<RenderedText>>;
 }
 
 export interface RenderedDictEntry {
@@ -517,21 +518,26 @@ function collectEtymologies(etym: EtymLike | undefined): Array<RenderedText> {
 function collectEtymologyGroups(etym: EtymLike | undefined): Array<RenderedEtymologyGroup> {
 	if (etym == null) return [];
 
-	const nested = collectEtymologies(etym.etym);
+	const nestedGroups = collectEtymologyGroups(etym.etym);
 	const rootGroups = asArray(etym.etymon_cit)
 		.concat(asArray(etym.etymon_cits))
 		.map((etymon) => collectTextNodes(etymon.form?.orth, etymon.form?.orths))
 		.filter((etymologies) => etymologies.length > 0);
 
 	if (rootGroups.length === 0) {
-		return nested.length === 0 ? [] : [{ etymologies: nested }];
+		return nestedGroups;
 	}
 
 	const lastRootIndex = rootGroups.length - 1;
 
 	return rootGroups.map((etymologies, index) => {
+		const nestedLevels =
+			index === lastRootIndex ? nestedGroups.flatMap((group) => group.levels) : [];
+		const levels = [etymologies].concat(nestedLevels);
+
 		return {
-			etymologies: index === lastRootIndex ? etymologies.concat(nested) : etymologies,
+			etymologies: levels.flat(),
+			levels,
 		};
 	});
 }
