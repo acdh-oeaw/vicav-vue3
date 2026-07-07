@@ -391,6 +391,10 @@ function hasSingleFilterValue(columnId: string, column: FacetedColumn): boolean 
 	return values.length <= 1;
 }
 
+function shouldPutUndefinedFacetLast(columnId: string): boolean {
+	return placeHierarchyColumnIds.includes(columnId);
+}
+
 function isEmptyPlaceHierarchyGroup(row: Row<simpleTEIMetadata>): boolean {
 	if (!row.getIsGrouped()) return false;
 	if (row.groupingColumnId == null) return false;
@@ -480,6 +484,9 @@ function canOpenItem(item: simpleTEIMetadata): boolean {
 						<DataTableFacetedFilter
 							v-if="table.getColumn(columnId)"
 							:column="table.getColumn(columnId)!"
+							:sort-mode="sortMode"
+							:sort-value="normalizePlaceSortValue"
+							:undefined-values-last="shouldPutUndefinedFacetLast(columnId)"
 						/>
 					</span>
 				</div>
