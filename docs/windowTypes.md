@@ -166,6 +166,7 @@ Rendered as
   queryString: string;
   xslt?: string;
   showMap?: boolean;
+  isQueryVisible?: boolean; // defaults to false
 }
 ```
 
@@ -370,6 +371,7 @@ additional props or events passed by window-content.vue.
 Include:
 - newly added, removed, or renamed targetType values
 - changed params fields, optional/default behavior, and enum values
+- params that control initial UI state when opening a window, such as collapsible query visibility
 - changes to shared helper fields such as TextId, TeiSource, ShowCitation, and QueryString
 - changed rendered component names, extra props, or emitted events wired in window-content.vue
 - window params that are persisted to the encoded w= URL state, especially state updated via
