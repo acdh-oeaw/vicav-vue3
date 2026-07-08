@@ -11,6 +11,7 @@ import {
 	TeiSource,
 	TextId,
 	type WindowItem,
+	type WindowItemMap,
 	type WindowItemTargetType,
 } from "@/types/global.ts";
 import * as arrange from "@/utils/window-arrangement";
@@ -49,6 +50,20 @@ const WindowState = z.intersection(
 );
 export type WindowState = z.infer<typeof WindowState>;
 
+interface WindowControlConfig<TTargetType extends WindowItemTargetType> {
+	targetTypes: ReadonlyArray<TTargetType>;
+	className: string;
+	title: string;
+	click: (windowItem: WindowItemMap[TTargetType]) => void;
+}
+
+//helper to preserve Param shape inference according to target type
+function defineWindowControl<TTargetType extends WindowItemTargetType>(
+	config: WindowControlConfig<TTargetType>,
+) {
+	return config;
+}
+
 export const useWindowsStore = defineStore("windows", () => {
 	const registry = ref(new Map<WindowItem["id"], WindowItem>());
 	const arrangement = ref<WindowArrangement>("smart-tile");
@@ -65,6 +80,66 @@ export const useWindowsStore = defineStore("windows", () => {
 	const openOrUpdateWindow = useOpenOrUpdateWindow();
 
 	const geojsonStore = useGeojsonStore();
+
+	const windowControlConfigs = [
+		defineWindowControl({
+			targetTypes: [
+				"ExploreSamples",
+				"Profile",
+				"Feature",
+				"CorpusText",
+				"SampleText",
+				"Text",
+				"FeatureValue",
+				"Location",
+			],
+			className: "wb-cite",
+			title: "Show citation",
+			click(windowItem) {
+				windowItem.params.showCitation = !windowItem.params.showCitation;
+			},
+		}),
+		defineWindowControl({
+			targetTypes: ["ListMap"],
+			className: "wb-map",
+			title: "Open map",
+			click() {
+				openOrUpdateWindow(
+					{
+						targetType: "GeojsonMap",
+						params: {
+							markerType: "petal",
+						},
+					} as unknown as WindowItem,
+					"Variety Data - Map View",
+					GeojsonMapSchema.shape.params,
+					"markerType",
+					true,
+				);
+			},
+		}),
+		defineWindowControl({
+			targetTypes: ["GeojsonMap"],
+			className: "wb-table",
+			title: "Open table",
+			click() {
+				const table = geojsonStore.table;
+				const globalFilter = (table?.getState().globalFilter as string | undefined) ?? "";
+				openOrUpdateWindow(
+					{
+						targetType: "ListMap",
+						params: {
+							queryString: globalFilter,
+						},
+					} as unknown as WindowItem,
+					globalFilter || listMapDefaultTitle,
+					ListMapSchema.shape.params,
+					"queryString",
+					true,
+				);
+			},
+		}),
+	];
 
 	async function initializeScreen() {
 		await suspense();
@@ -217,90 +292,32 @@ export const useWindowsStore = defineStore("windows", () => {
 		} as WindowItem);
 
 		const w = registry.value.get(id);
+		if (w == null) return;
 
-		if (
-			[
-				"ExploreSamples",
-				"Profile",
-				"Feature",
-				"CorpusText",
-				"SampleText",
-				"Text",
-				"FeatureValue",
-				"Location",
-			].includes(w!.targetType)
-		) {
-			w!.winbox.addControl({
-				index: 0,
-				class: "wb-cite",
-				click: function () {
-					//@ts-expect-error TODO distill a proper type for paramName
-					w!.params.showCitation = !w.params.showCitation;
-				},
-			});
-			const winboxElement = w!.winbox.dom as HTMLElement;
-			const cite = winboxElement.querySelectorAll(".wb-cite");
-			if (cite.length > 0) {
-				const el = cite[0] as HTMLSpanElement;
-				el.title = "Show citation";
-			}
-		}
-
-		if (w!.targetType === "ListMap") {
-			w.winbox.addControl({
-				index: 0,
-				class: "wb-map",
-				click: function () {
-					openOrUpdateWindow(
-						{
-							targetType: "GeojsonMap",
-							params: {
-								markerType: "petal",
-							},
-						} as unknown as WindowItem,
-						"Variety Data - Map View",
-						GeojsonMapSchema.shape.params,
-						"markerType",
-						true,
-					);
-				},
-			});
-			const winboxElement = w.winbox.dom as HTMLElement;
-			const cite = winboxElement.querySelectorAll(".wb-map");
-			if (cite.length > 0) {
-				const el = cite[0] as HTMLSpanElement;
-				el.title = "Open map";
-			}
-		}
-		if (w!.targetType === "GeojsonMap") {
-			w.winbox.addControl({
-				index: 0,
-				class: "wb-table",
-				click: function () {
-					const table = geojsonStore.table;
-					const globalFilter = (table?.getState().globalFilter as string | undefined) ?? "";
-					openOrUpdateWindow(
-						{
-							targetType: "ListMap",
-							params: {
-								queryString: globalFilter,
-							},
-						} as unknown as WindowItem,
-						globalFilter || listMapDefaultTitle,
-						ListMapSchema.shape.params,
-						"queryString",
-						true,
-					);
-				},
-			});
-			const winboxElement = w.winbox.dom as HTMLElement;
-			const cite = winboxElement.querySelectorAll(".wb-table");
-			if (cite.length > 0) {
-				const el = cite[0] as HTMLSpanElement;
-				el.title = "Open table";
-			}
-		}
+		addConfiguredWindowControls(w);
 		return w;
+	}
+
+	function addConfiguredWindowControls(windowItem: WindowItem) {
+		windowControlConfigs.forEach((config) => {
+			const targetTypes: ReadonlyArray<WindowItemTargetType> = config.targetTypes;
+			if (!targetTypes.includes(windowItem.targetType)) return;
+
+			windowItem.winbox.addControl({
+				index: 0,
+				class: config.className,
+				click: function () {
+					config.click(windowItem as never);
+				},
+			});
+
+			const winboxElement = windowItem.winbox.dom as HTMLElement;
+			const controls = winboxElement.querySelectorAll(`.${config.className}`);
+			if (controls.length > 0) {
+				const el = controls[0] as HTMLSpanElement;
+				el.title = config.title;
+			}
+		});
 	}
 
 	function findWindowByTypeAndParam(
