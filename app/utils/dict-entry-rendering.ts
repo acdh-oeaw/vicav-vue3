@@ -70,6 +70,11 @@ export interface RenderedBibliographyItem {
 	label: string;
 }
 
+export interface RenderedEtymologyGroup {
+	etymologies: Array<RenderedText>;
+	levels: Array<Array<RenderedText>>;
+}
+
 export interface RenderedDictEntry {
 	id: string;
 	sid?: string;
@@ -84,6 +89,7 @@ export interface RenderedDictEntry {
 	location?: string;
 	locations: Array<RenderedLocation>;
 	etymologies: Array<RenderedText>;
+	etymologyGroups: Array<RenderedEtymologyGroup>;
 	bibliography: Array<RenderedBibliographyItem>;
 	lemmaForms: Array<RenderedForm>;
 	variantForms: Array<RenderedForm>;
@@ -282,6 +288,7 @@ interface BibliographyLike {
 interface EtymonLike {
 	form?: {
 		orth?: TextNodeLike;
+		orths?: Array<TextNodeLike>;
 	};
 }
 
@@ -503,7 +510,36 @@ function collectEtymologies(etym: EtymLike | undefined): Array<RenderedText> {
 	const etymons = asArray(etym.etymon_cit).concat(asArray(etym.etymon_cits));
 	const nested = collectEtymologies(etym.etym);
 
-	return etymons.flatMap((etymon) => collectTextNodes(etymon.form?.orth, undefined)).concat(nested);
+	return etymons
+		.flatMap((etymon) => collectTextNodes(etymon.form?.orth, etymon.form?.orths))
+		.concat(nested);
+}
+
+function collectEtymologyGroups(etym: EtymLike | undefined): Array<RenderedEtymologyGroup> {
+	if (etym == null) return [];
+
+	const nestedGroups = collectEtymologyGroups(etym.etym);
+	const rootGroups = asArray(etym.etymon_cit)
+		.concat(asArray(etym.etymon_cits))
+		.map((etymon) => collectTextNodes(etymon.form?.orth, etymon.form?.orths))
+		.filter((etymologies) => etymologies.length > 0);
+
+	if (rootGroups.length === 0) {
+		return nestedGroups;
+	}
+
+	const lastRootIndex = rootGroups.length - 1;
+
+	return rootGroups.map((etymologies, index) => {
+		const nestedLevels =
+			index === lastRootIndex ? nestedGroups.flatMap((group) => group.levels) : [];
+		const levels = [etymologies].concat(nestedLevels);
+
+		return {
+			etymologies: levels.flat(),
+			levels,
+		};
+	});
 }
 
 function collectForm(
@@ -635,6 +671,7 @@ export function normalizeEntry(entry: RestVLEEntry): RenderedDictEntry {
 			selfHref: entry._links.self.href,
 			locations: [],
 			etymologies: [],
+			etymologyGroups: [],
 			bibliography: [],
 			lemmaForms: [],
 			variantForms: [],
@@ -699,6 +736,7 @@ export function normalizeEntry(entry: RestVLEEntry): RenderedDictEntry {
 	);
 	const grammar = collectGrammar(normalizedPayload?.gramGrp);
 	const etymologies = collectEtymologies(normalizedPayload?.etym);
+	const etymologyGroups = collectEtymologyGroups(normalizedPayload?.etym);
 	const bibliography = collectBibliographyItems(normalizedPayload?.listBibl);
 	const inflectedForms = collectForm(
 		normalizedPayload?.inflected_form,
@@ -751,6 +789,7 @@ export function normalizeEntry(entry: RestVLEEntry): RenderedDictEntry {
 		location,
 		locations,
 		etymologies,
+		etymologyGroups,
 		bibliography,
 		lemmaForms,
 		variantForms,

@@ -9,63 +9,63 @@ or the compact structured entry template.
 
 ## Component Boundary
 
-| Responsibility                     | Location                                                       |
-| ---------------------------------- | -------------------------------------------------------------- |
-| API query state and pagination     | `app/components/dict-query-window-content.vue`                 |
-| Loop over `data._embedded.entries` | `app/components/dict-query-window-content.vue`                 |
-| Raw-entry normalization            | `app/components/dict-entry.vue` via `normalizeEntry(entry)`    |
-| Structured compact rendering       | `app/components/dict-entry.vue`                                |
-| Server-rendered HTML fallback      | `app/components/dict-entry.vue` via `v-html`                   |
-| Debug raw JSON output              | `app/components/dict-entry.vue` when `debug` is true           |
-| XML/JSON entry links               | `app/components/dict-entry.vue`, using `dictId` and entry `id` |
+| Responsibility                     | Location                                                        |
+| ---------------------------------- | --------------------------------------------------------------- |
+| API query state and pagination     | `app/components/dict-query-window-content.vue`                  |
+| Loop over `data._embedded.entries` | `app/components/dict-query-window-content.vue`                  |
+| Raw-entry normalization            | `app/components/dict-entry.vue` via `normalizeEntry(entry)`     |
+| Structured compact rendering       | `app/components/dict-entry.vue`                                 |
+| Server-rendered HTML fallback      | `app/components/dict-entry.vue` via `v-html`                    |
+| Debug raw JSON output              | `app/components/dict-entry.vue` when `debug` is true            |
+| XML/JSON entry links               | `app/components/dict-entry.vue`, using entry `_links.self.href` |
 
 `DictEntry` props:
 
 | Prop       | Type                       | Behavior                                                 |
 | ---------- | -------------------------- | -------------------------------------------------------- |
 | `entry`    | `RestVLEEntry`             | Required raw API entry.                                  |
-| `dictId`   | `string \| number`         | Used to build XML/JSON entry links.                      |
+| `dictId`   | `string \| number`         | Accepted for compatibility; no longer affects rendering. |
 | `debug`    | `boolean`, default `false` | Shows raw normalized-entry source JSON.                  |
 | `expanded` | `boolean`, default `false` | Accepted for compatibility; no longer affects rendering. |
 
 ## Entry Shell
 
-| API field              | Rendered model                  | Template location                                             |
-| ---------------------- | ------------------------------- | ------------------------------------------------------------- |
-| `entry` as HTML string | `html`                          | Rendered directly with `v-html`; compact template is skipped. |
-| full `RestVLEEntry`    | `raw`                           | Debug-only JSON block when `debug` is true.                   |
-| `id`                   | `id`                            | XML/JSON link query parameter.                                |
-| `type`                 | `type`                          | Header icon: entry or example.                                |
-| `_links.self.href`     | `selfHref`                      | View-model-only; no template output.                          |
-| `sid`                  | `sid`                           | View-model-only; no template output.                          |
-| `lemma`                | `lemma`, contributes to `title` | Used only as title fallback after lemma form text.            |
-| `status`               | `status`                        | Normalized but not rendered in compact template.              |
-| `storedEntryMd5`       | `metadata[]` item `stored md5`  | Normalized but not rendered in compact template.              |
-| `took`                 | `metadata[]` item `took`        | Normalized but not rendered in compact template.              |
+| API field              | Rendered model                  | Template location                                              |
+| ---------------------- | ------------------------------- | -------------------------------------------------------------- |
+| `entry` as HTML string | `html`                          | Rendered directly with `v-html`; compact template is skipped.  |
+| full `RestVLEEntry`    | `raw`                           | Debug-only JSON block when `debug` is true.                    |
+| `id`                   | `id`                            | Used for the corpus search query.                              |
+| `type`                 | `type`                          | Header icon: entry or example.                                 |
+| `_links.self.href`     | `selfHref`                      | Header XML link; JSON link is derived by adding `format=json`. |
+| `sid`                  | `sid`                           | View-model-only; no template output.                           |
+| `lemma`                | `lemma`, contributes to `title` | Used only as title fallback after lemma form text.             |
+| `status`               | `status`                        | Header status badge when present and not `released`.           |
+| `storedEntryMd5`       | `metadata[]` item `stored md5`  | Normalized but not rendered in compact template.               |
+| `took`                 | `metadata[]` item `took`        | Normalized but not rendered in compact template.               |
 
 The header has no expand/collapse control. XML and JSON icon links are rendered in the header action
-area when both `dictId` and entry `id` are available.
+area from entry `selfHref`; JSON adds `format=json`.
 
 ## Entry Payload
 
-| API field                                                                                                       | Rendered model                                       | Template location                                                                                   |
-| --------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| `entry.entry.@id`                                                                                               | `xmlId`                                              | View-model-only; no template output.                                                                |
-| `entry.entry.@lang`                                                                                             | `entryLang`, `metadata[]` item `entry language`      | Normalized but not rendered; individual text nodes expose language as native browser tooltips.      |
-| `lemma_form.orth`, `lemma_form.orths[]`                                                                         | `lemmaForms[].orthographies`, contributes to `title` | Header lemma text; `lang` appears as a tooltip when available.                                      |
-| `lemma_form.@source`                                                                                            | `lemmaForms[].source`                                | Header source bibliography badge when source resolves through entry `listBibl`.                     |
-| `lemma_form.variant_form`, `lemma_form.variant_forms[]`                                                         | `variantForms[]`                                     | Header variant text, locations, and optional bibliography badge.                                    |
-| `lemmaVariant_form`, `lemmaVariant_forms[]`                                                                     | `variantForms[]`                                     | Header variant text, locations, and optional bibliography badge.                                    |
-| `multiWordUnit_form`                                                                                            | `lemmaForms[]`                                       | Header form text if present.                                                                        |
-| `gramGrp` and nested `gramGrp.gramGrp`                                                                          | `grammar[]`                                          | Header grammar summary: part of speech, class, synRoot, diaRoot; placeholder `-` values are hidden. |
-| `lemma_form.geographic_usg`, `lemma_form.geographic_usgs[]`, payload `geographic_usg`, example `geographic_usg` | `locations[]`                                        | Entry-level locations are normalized; lemma-form locations render in the header.                    |
-| `listBibl[]`                                                                                                    | `bibliography[]`                                     | Used to resolve source ids into compact bibliography badges, e.g. `Younes 2021, p.40`.              |
-| `etym.etymon_cit`, `etym.etymon_cits[]`                                                                         | `etymologies[]`                                      | Etymology row as `< text (lang)`; etymon text has a language tooltip when available.                |
-| payload/top-level example `feature`, `features[]`                                                               | `editors[]`                                          | Editors row as unique comma-separated editor names only.                                            |
-| `translation_cit`, `translation_cits[]` on payload and top-level example                                        | `translations[]`                                     | Normalized but not rendered in compact template.                                                    |
-| top-level example `quote`                                                                                       | `quote`                                              | Normalized and used as title fallback; not rendered as a separate row.                              |
-| `note`, `notes[]`                                                                                               | `notes[]`                                            | Normalized but not rendered in compact template.                                                    |
-| payload `def`, `defs[]`                                                                                         | none                                                 | Not rendered except through debug `raw`.                                                            |
+| API field                                                                                                       | Rendered model                                       | Template location                                                                                                                                   |
+| --------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `entry.entry.@id`                                                                                               | `xmlId`                                              | View-model-only; no template output.                                                                                                                |
+| `entry.entry.@lang`                                                                                             | `entryLang`, `metadata[]` item `entry language`      | Normalized but not rendered; individual text nodes expose language as native browser tooltips.                                                      |
+| `lemma_form.orth`, `lemma_form.orths[]`                                                                         | `lemmaForms[].orthographies`, contributes to `title` | Header lemma text; `lang` appears as a tooltip when available.                                                                                      |
+| `lemma_form.@source`                                                                                            | `lemmaForms[].source`                                | Header source bibliography badge when source resolves through entry `listBibl`.                                                                     |
+| `lemma_form.variant_form`, `lemma_form.variant_forms[]`                                                         | `variantForms[]`                                     | Header variant text, locations, and optional bibliography badge.                                                                                    |
+| `lemmaVariant_form`, `lemmaVariant_forms[]`                                                                     | `variantForms[]`                                     | Header variant text, locations, and optional bibliography badge.                                                                                    |
+| `multiWordUnit_form`                                                                                            | `lemmaForms[]`                                       | Header form text if present.                                                                                                                        |
+| `gramGrp` and nested `gramGrp.gramGrp`                                                                          | `grammar[]`                                          | Header grammar summary: part of speech, class, synRoot, diaRoot; placeholder `-` values are hidden.                                                 |
+| `lemma_form.geographic_usg`, `lemma_form.geographic_usgs[]`, payload `geographic_usg`, example `geographic_usg` | `locations[]`                                        | Entry-level locations are normalized; lemma-form locations render in the header.                                                                    |
+| `listBibl[]`                                                                                                    | `bibliography[]`                                     | Used to resolve source ids into compact bibliography badges, e.g. `Younes 2021, p.40`.                                                              |
+| `etym.etymon_cit.form.orth`, `etym.etymon_cit.form.orths[]`, `etym.etymon_cits[]`, nested `etym`                | `etymologies[]`, `etymologyGroups[].levels[]`        | Etymology row; each root group renders on its own line, same-level etymons use `; `, nested levels use `<`, and text uses language colors/tooltips. |
+| payload/top-level example `feature`, `features[]`                                                               | `editors[]`                                          | Editors row as unique comma-separated editor names only.                                                                                            |
+| `translation_cit`, `translation_cits[]` on payload and top-level example                                        | `translations[]`                                     | Normalized but not rendered in compact template.                                                                                                    |
+| top-level example `quote`                                                                                       | `quote`                                              | Normalized and used as title fallback; not rendered as a separate row.                                                                              |
+| `note`, `notes[]`                                                                                               | `notes[]`                                            | Normalized but not rendered in compact template.                                                                                                    |
+| payload `def`, `defs[]`                                                                                         | none                                                 | Not rendered except through debug `raw`.                                                                                                            |
 
 ## Forms
 
@@ -115,59 +115,62 @@ area when both `dictId` and entry `id` are available.
 
 ## Senses And Examples
 
-| API field                                                         | Rendered model                                      | Template location                                                                    |
-| ----------------------------------------------------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| `sense`, `senses[]`                                               | `senses[]`                                          | One compact sense box per sense.                                                     |
-| sense `@id`                                                       | `senses[].id`                                       | Key data and left-column label association.                                          |
-| sense ordinal                                                     | derived from array index                            | Left column as `SENSE` or `SENSE 1`, `SENSE 2`, etc.                                 |
-| sense `@ana`                                                      | `senses[].ana`, `metadata[]` item `ana`             | Normalized but not rendered in compact template.                                     |
-| sense `domain_usg`, `domain_usgs[]`                               | `metadata[]` items `domain`, `domain N`             | Normalized but not rendered in compact template.                                     |
-| sense `pragmatics_usg`, `pragmatics_usgs[]`                       | `metadata[]` items `pragmatics`, `pragmatics N`     | Normalized but not rendered in compact template.                                     |
-| sense `socioCultural_usg`                                         | `metadata[]` item `socio-cultural`                  | Normalized but not rendered in compact template.                                     |
-| sense `def`, `defs[]`                                             | `definitions[]`                                     | Normalized but not rendered in compact template.                                     |
-| sense `translationEquivalent_cit`, `translationEquivalent_cits[]` | `translations[]`                                    | Sense translation lines; language colors and language tooltips when `lang` exists.   |
-| translation equivalent `@source`                                  | `translations[].source`                             | Bibliography badge immediately after the sourced translation.                        |
-| sense `gramGrp`, `gramGrps[]`                                     | `grammar[]`                                         | Bold italic grammar line before translations, e.g. `(ʕala, l-)`.                     |
-| sense `geographic_usg`, `geographic_usgs[]`                       | `locations[]`                                       | Location badges at the bottom of the sense box.                                      |
-| sense `example_cit`, `example_cits[]`                             | `examples[]` with `kind: "direct"`                  | Compact example boxes; always rendered when present.                                 |
-| sense `related_xr`, `related_xrs[]`                               | `examples[]` with `kind: "related"`                 | Compact example boxes; always rendered when present.                                 |
-| example `quote`                                                   | `examples[].quote`                                  | Bold italic first line in example box; `lang` appears as a tooltip.                  |
-| example `@source`                                                 | `examples[].source`                                 | Bibliography badge when source resolves through entry `bibliography[]`.              |
-| example `geographic_usg`                                          | `examples[].locations[]`                            | Top-right location badges in example box.                                            |
-| example `translation_cit`, `translation_cits[]`                   | `examples[].translations[]`                         | Example translation lines; language colors and language tooltips when `lang` exists. |
-| example `@type`, `@subtype`, `@vutlsk`                            | `examples[].metadata[]`                             | Normalized but not rendered in compact template.                                     |
-| related `@type`, text `$`                                         | `examples[].metadata[]` items `relation`, `warning` | Normalized but not rendered in compact template.                                     |
-| example `feature`, `features[]`                                   | `examples[].editors[]`                              | Normalized but not rendered in compact template.                                     |
+| API field                                                         | Rendered model                                      | Template location                                                                                               |
+| ----------------------------------------------------------------- | --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `sense`, `senses[]`                                               | `senses[]`                                          | One compact sense box per sense.                                                                                |
+| sense `@id`                                                       | `senses[].id`                                       | Key data and left-column label association.                                                                     |
+| sense ordinal                                                     | derived from array index                            | Left column as `SENSE` or `SENSE 1`, `SENSE 2`, etc.                                                            |
+| sense `@ana`                                                      | `senses[].ana`, `metadata[]` item `ana`             | Normalized but not rendered in compact template.                                                                |
+| sense `domain_usg`, `domain_usgs[]`                               | `metadata[]` items `domain`, `domain N`             | Normalized but not rendered in compact template.                                                                |
+| sense `pragmatics_usg`, `pragmatics_usgs[]`                       | `metadata[]` items `pragmatics`, `pragmatics N`     | Normalized but not rendered in compact template.                                                                |
+| sense `socioCultural_usg`                                         | `metadata[]` item `socio-cultural`                  | Normalized but not rendered in compact template.                                                                |
+| sense `def`, `defs[]`                                             | `definitions[]`                                     | Normalized but not rendered in compact template.                                                                |
+| sense `translationEquivalent_cit`, `translationEquivalent_cits[]` | `translations[]`                                    | Sense translations grouped by language; entries with the same language render inline as a comma-separated list. |
+| translation equivalent `@source`                                  | `translations[].source`                             | Bibliography badge immediately after the sourced translation within the same language group.                    |
+| sense `gramGrp`, `gramGrps[]`                                     | `grammar[]`                                         | Bold italic grammar line before translations, e.g. `(ʕala, l-)`.                                                |
+| sense `geographic_usg`, `geographic_usgs[]`                       | `locations[]`                                       | Top-right location badges in the sense box.                                                                     |
+| sense `example_cit`, `example_cits[]`                             | `examples[]` with `kind: "direct"`                  | Compact example boxes; always rendered when present.                                                            |
+| sense `related_xr`, `related_xrs[]`                               | `examples[]` with `kind: "related"`                 | Compact example boxes; always rendered when present.                                                            |
+| example `quote`                                                   | `examples[].quote`                                  | Bold italic first line in example box; `lang` appears as a tooltip.                                             |
+| example `@source`                                                 | `examples[].source`                                 | Bibliography badge when source resolves through entry `bibliography[]`.                                         |
+| example `geographic_usg`                                          | `examples[].locations[]`                            | Top-right location badges in example box.                                                                       |
+| example `translation_cit`, `translation_cits[]`                   | `examples[].translations[]`                         | Example translation lines; language colors and language tooltips when `lang` exists.                            |
+| example `@type`, `@subtype`, `@vutlsk`                            | `examples[].metadata[]`                             | Normalized but not rendered in compact template.                                                                |
+| related `@type`, text `$`                                         | `examples[].metadata[]` items `relation`, `warning` | Normalized but not rendered in compact template.                                                                |
+| example `feature`, `features[]`                                   | `examples[].editors[]`                              | Normalized but not rendered in compact template.                                                                |
 
 ## Render Status Changes
 
-| Field or behavior         | Current status                                                                 |
-| ------------------------- | ------------------------------------------------------------------------------ |
-| Expand/collapse state     | Removed from rendering; all senses and examples render inline.                 |
-| XML/JSON links            | Rendered as header action buttons.                                             |
-| Entry id/status/metadata  | No longer rendered as header badges.                                           |
-| Notes                     | Normalized but hidden for now.                                                 |
-| Editors                   | Rendered as unique names only; dates, actions, and statuses are hidden.        |
-| Left-column labels        | Rendered as paired grid cells aligned with each content row.                   |
-| Language badges           | Replaced by native browser `title` tooltips on text items with language data.  |
-| Section card/table layout | Replaced by compact orange header, label column, forms row, sense boxes.       |
-| Server HTML entries       | Still rendered directly with `v-html`; compact template is skipped.            |
-| Debug output              | Still available and contains all API fields, including hidden normalized data. |
+| Field or behavior         | Current status                                                                   |
+| ------------------------- | -------------------------------------------------------------------------------- |
+| Expand/collapse state     | Removed from rendering; all senses and examples render inline.                   |
+| XML/JSON links            | Rendered as header action buttons.                                               |
+| Entry id/metadata         | No longer rendered as header badges; unreleased status still renders as a badge. |
+| Notes                     | Normalized but hidden for now.                                                   |
+| Editors                   | Rendered as unique names only; dates, actions, and statuses are hidden.          |
+| Left-column labels        | Rendered as paired grid cells aligned with each content row.                     |
+| Language badges           | Replaced by native browser `title` tooltips on text items with language data.    |
+| Section card/table layout | Replaced by compact orange header, label column, forms row, sense boxes.         |
+| Server HTML entries       | Still rendered directly with `v-html`; compact template is skipped.              |
+| Debug output              | Still available and contains all API fields, including hidden normalized data.   |
 
 ## Maintenance Prompt
 
 Use this prompt after changing `app/components/dict-entry.vue`,
-`app/components/dict-query-window-content.vue`, or `app/utils/dict-entry-rendering.ts`:
+`app/components/dict-query-window-content.vue`, `app/utils/dict-entry-rendering.ts`,
+`app/assets/openapi.json`, or the generated API client:
 
 ```text
 Review app/components/dict-entry.vue, app/components/dict-query-window-content.vue, and
-app/utils/dict-entry-rendering.ts.
+app/utils/dict-entry-rendering.ts. If the OpenAPI schema or generated API client changed, also
+review app/assets/openapi.json and app/lib/api-client/index.ts.
 
 Update docs/dict-entry-component-mapping.md so it accurately documents the current mapping from
 RestVLEEntry and nested dictionary API fields to the rendered view model and DictEntry template.
 
 Include:
 - newly rendered fields and where they appear in the template
+- API fields newly accepted by the schema/client and how normalization handles them
 - fields that moved between rows, cards, badges, collapsed hints, or debug-only output
 - renamed rendered model properties
 - fields that are normalized but no longer rendered

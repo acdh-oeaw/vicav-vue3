@@ -19,6 +19,7 @@ import {
 	type RenderedForm,
 	type RenderedGrammarItem,
 	type RenderedLocation,
+	type RenderedSense,
 	type RenderedText,
 } from "@/utils/dict-entry-rendering";
 
@@ -167,6 +168,23 @@ const senseGrammarText = (items: Array<RenderedGrammarItem>) => {
 	return values.length === 0 ? undefined : values.join(", ");
 };
 
+const groupedSenseTranslations = (sense: RenderedSense) => {
+	const groups = new Map<string, { lang: string | undefined; translations: Array<RenderedText> }>();
+
+	for (const translation of sense.translations) {
+		const key = translation.lang ?? "";
+		const group = groups.get(key);
+
+		if (group == null) {
+			groups.set(key, { lang: translation.lang, translations: [translation] });
+		} else {
+			group.translations.push(translation);
+		}
+	}
+
+	return Array.from(groups.values());
+};
+
 const locationKey = (location: RenderedLocation) => {
 	return formatLocation(location);
 };
@@ -313,25 +331,32 @@ const languageClass = (language: string | undefined) => {
 			</header>
 
 			<div class="px-4 py-3">
-				<div class="grid grid-cols-[minmax(8.75rem,12.5rem)_1fr] gap-x-6">
+				<div class="grid grid-cols-[max-content_minmax(0,1fr)] gap-x-4">
 					<div
 						v-if="hasEtymology"
 						class="px-4 py-3 text-base leading-none font-semibold text-primary uppercase"
 					>
 						Etymology
 					</div>
-					<section v-if="hasEtymology" class="py-3 text-base/snug">
-						<span
-							v-for="(etymology, etymologyIndex) in e.etymologies"
-							:key="textKey(etymology, etymologyIndex)"
-						>
-							<span v-if="etymologyIndex === 0">&lt; </span>
-							<span v-else>; </span>
-							<span class="italic" :title="languageTooltip(etymology.lang)">
-								{{ etymology.text }}
-							</span>
-							<span v-if="etymology.lang"> ({{ etymology.lang }})</span>
-						</span>
+					<section v-if="hasEtymology" class="space-y-1 py-3 text-base/snug">
+						<div v-for="(group, groupIndex) in e.etymologyGroups" :key="`etymology-${groupIndex}`">
+							<template v-for="(level, levelIndex) in group.levels" :key="levelIndex">
+								<span v-if="levelIndex > 0"> &lt; </span>
+								<span
+									v-for="(etymology, etymologyIndex) in level"
+									:key="textKey(etymology, etymologyIndex)"
+								>
+									<span v-if="etymologyIndex > 0">; </span>
+									<span
+										class="italic"
+										:class="languageClass(etymology.lang)"
+										:title="languageTooltip(etymology.lang)"
+									>
+										{{ etymology.text }}
+									</span>
+								</span>
+							</template>
+						</div>
 					</section>
 
 					<div
@@ -398,28 +423,49 @@ const languageClass = (language: string | undefined) => {
 							{{ e.senses.length > 1 ? `Sense ${String(senseIndex + 1)}` : "Sense" }}
 						</div>
 						<section class="py-0.5">
-							<div class="rounded-sm bg-primary/15 px-2 py-1">
-								<div v-if="senseGrammarText(sense.grammar)" class="mb-1 font-bold italic">
-									({{ senseGrammarText(sense.grammar) }})
+							<div class="rounded-sm border border-primary/15 bg-primary/15 px-2 py-1">
+								<div class="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-1">
+									<div v-if="senseGrammarText(sense.grammar)" class="mb-1 font-bold italic">
+										({{ senseGrammarText(sense.grammar) }})
+									</div>
+									<div class="flex max-w-72 flex-wrap justify-end gap-0.5 justify-self-end">
+										<span
+											v-for="location in sense.locations"
+											:key="locationKey(location)"
+											:class="compactBadgeClass"
+										>
+											<MapPin class="size-4 text-gray-400" />
+											{{ formatLocation(location) }}
+										</span>
+									</div>
 								</div>
 								<div class="text-base/tight">
 									<div
-										v-for="(translation, translationIndex) in sense.translations"
-										:key="textKey(translation, translationIndex)"
+										v-for="translationGroup in groupedSenseTranslations(sense)"
+										:key="translationGroup.lang ?? 'unknown'"
 										class="flex flex-wrap items-center gap-1.5"
 									>
 										<span
-											:class="languageClass(translation.lang)"
-											:title="languageTooltip(translation.lang)"
+											class="inline-flex flex-wrap items-center gap-x-1"
+											:class="languageClass(translationGroup.lang)"
+											:title="languageTooltip(translationGroup.lang)"
 										>
-											{{ translation.text }}
-											<span v-if="translation.gloss" class="text-gray-700">
-												({{ translation.gloss }})
-											</span>
-										</span>
-										<span v-if="sourceLabel(translation.source)" :class="compactBadgeClass">
-											<BookOpen class="size-4 text-gray-500" />
-											{{ sourceLabel(translation.source) }}
+											<template
+												v-for="(translation, translationIndex) in translationGroup.translations"
+												:key="textKey(translation, translationIndex)"
+											>
+												<span>{{ translation.text }}</span>
+												<span v-if="translation.gloss" class="text-gray-700">
+													({{ translation.gloss }})
+												</span>
+												<span v-if="sourceLabel(translation.source)" :class="compactBadgeClass">
+													<BookOpen class="size-4 text-gray-500" />
+													{{ sourceLabel(translation.source) }}
+												</span>
+												<span v-if="translationIndex < translationGroup.translations.length - 1">
+													,
+												</span>
+											</template>
 										</span>
 									</div>
 								</div>
@@ -439,15 +485,15 @@ const languageClass = (language: string | undefined) => {
 										:key="`${example.kind}-${example.id ?? example.quote?.text ?? exampleIndex}`"
 										class="rounded-lg bg-primary/15 p-1"
 									>
-										<div class="flex flex-wrap items-start justify-between gap-1">
+										<div class="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-1">
 											<div
 												v-if="example.quote"
-												class="font-bold italic"
+												class="min-w-0 font-bold wrap-break-word italic"
 												:title="languageTooltip(example.quote.lang)"
 											>
 												{{ example.quote.text }}
 											</div>
-											<div class="ml-auto flex flex-wrap justify-end gap-0.5">
+											<div class="flex max-w-72 flex-wrap justify-end gap-0.5 justify-self-end">
 												<span
 													v-for="item in example.bibliography"
 													:key="item"
@@ -481,17 +527,6 @@ const languageClass = (language: string | undefined) => {
 											</div>
 										</div>
 									</div>
-								</div>
-
-								<div v-if="sense.locations.length > 0" class="mt-3 flex flex-wrap gap-0.5">
-									<span
-										v-for="location in sense.locations"
-										:key="locationKey(location)"
-										:class="compactBadgeClass"
-									>
-										<MapPin class="size-4 text-gray-400" />
-										{{ formatLocation(location) }}
-									</span>
 								</div>
 							</div>
 						</section>
