@@ -23,7 +23,6 @@ const emit = defineEmits(["updateQueryParam"]);
 
 const GeojsonStore = useGeojsonStore();
 const openOrUpdateWindow = useOpenOrUpdateWindow();
-const url = GeojsonStore.wibarabGeojsonUrl;
 
 const { isPending } = GeojsonStore.loadGeojson();
 const { geojsonData, showAllDetails, featureValueTaxonomy } = storeToRefs(GeojsonStore);
@@ -202,13 +201,12 @@ function openGeoJsonMap() {
 		{
 			targetType: "GeojsonMap",
 			params: {
-				url,
 				markerType: "petal",
 			},
 		} as unknown as WindowItem,
 		"Variety Data - Map View",
 		GeojsonMapSchema.shape.params,
-		"url",
+		"markerType",
 		false,
 	);
 }

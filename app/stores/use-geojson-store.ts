@@ -3,8 +3,6 @@ import { defineStore } from "pinia";
 
 import { type FeatureCollectionType, type FeatureType, GeoFeatureSchema } from "@/types/global.ts";
 
-export const wibarabGeojsonUrl =
-	"https://raw.githubusercontent.com/wibarab/wibarab-data/main/wibarab_varieties.geojson";
 export interface TaxonomyTreeEntry {
 	label: string | undefined;
 	featureValues: Array<string>;
@@ -153,6 +151,5 @@ export const useGeojsonStore = defineStore("geojson", () => {
 		showAllDetails,
 		getSortedTaxonomyChildren,
 		getSortedTaxonomyFeatureValues,
-		wibarabGeojsonUrl,
 	};
 });

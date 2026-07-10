@@ -241,18 +241,16 @@ export const useWindowsStore = defineStore("windows", () => {
 				index: 0,
 				class: "wb-map",
 				click: function () {
-					const { wibarabGeojsonUrl } = useGeojsonStore();
 					openOrUpdateWindow(
 						{
 							targetType: "GeojsonMap",
 							params: {
-								url: wibarabGeojsonUrl,
 								markerType: "petal",
 							},
 						} as unknown as WindowItem,
 						"Variety Data - Map View",
 						GeojsonMapSchema.shape.params,
-						"url",
+						"markerType",
 						true,
 					);
 				},

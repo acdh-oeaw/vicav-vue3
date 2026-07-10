@@ -33,7 +33,7 @@ export function useOpenOrUpdateWindow() {
 				windowItem.params = {
 					...originalParams,
 					...(item.params as object),
-				} as WindowItem["params"];
+				};
 				windowItem.winbox.focus();
 				if (highlight) {
 					windowItem.winbox.addClass("highlighted");

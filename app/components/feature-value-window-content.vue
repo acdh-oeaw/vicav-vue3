@@ -88,7 +88,6 @@ const citation = computed(() => {
 const geojsonStore = useGeojsonStore();
 const openOrUpdateWindow = useOpenOrUpdateWindow();
 const { parseSearchString } = useFilterParser();
-const { wibarabGeojsonUrl } = geojsonStore;
 function getQueryString(updateQueryTo: QueryUpdateType, entry: (typeof props.params.values)[0]) {
 	return updateQueryTo === "value"
 		? `${entry.featureId}:"${entry.title}"`
@@ -105,13 +104,12 @@ function updateMap(updateQueryTo: QueryUpdateType, entry: (typeof props.params.v
 		{
 			targetType: "GeojsonMap",
 			params: {
-				url: wibarabGeojsonUrl,
 				markerType: "petal",
 			},
 		} as unknown as WindowItem,
 		"Variety Data - Map View",
 		GeojsonMapSchema.shape.params,
-		"url",
+		"markerType",
 		true,
 	);
 }
