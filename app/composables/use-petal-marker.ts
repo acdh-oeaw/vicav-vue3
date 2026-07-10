@@ -9,8 +9,6 @@ import { ensureFilterValueMap } from "@/utils/filter-value-map";
 import { useAdvancedQueries } from "./use-advanced-queries.ts";
 
 const GeojsonStore = useGeojsonStore();
-const { tables } = storeToRefs(GeojsonStore);
-const url = GeojsonStore.wibarabGeojsonUrl;
 const { buildFeatureValueId, defaultMarkers } = useMarkerStore();
 const { markers, markerSettings } = storeToRefs(useMarkerStore());
 interface PetalEntry {
@@ -117,7 +115,7 @@ function getFlowerSVG(entries: Array<PetalEntry>, center?: PetalEntry) {
 
 function getPetalMarker(feature: GeoJsonFeature<Point, MarkerProperties>, latlng: LatLng) {
 	const { AND_OPERATOR } = useAdvancedQueries();
-	const table = tables.value.get(url);
+	const table = GeojsonStore.table;
 	const getFilterValue = (col: { getFilterValue: () => unknown }) =>
 		ensureFilterValueMap(col.getFilterValue());
 	const hasActiveFilters = (col: { getFilterValue: () => unknown }) => {

@@ -85,17 +85,17 @@ const citation = computed(() => {
 	} as simpleTEIMetadata;
 });
 
-const { tables } = useGeojsonStore();
+const geojsonStore = useGeojsonStore();
 const openOrUpdateWindow = useOpenOrUpdateWindow();
 const { parseSearchString } = useFilterParser();
-const { wibarabGeojsonUrl } = useGeojsonStore();
+const { wibarabGeojsonUrl } = geojsonStore;
 function getQueryString(updateQueryTo: QueryUpdateType, entry: (typeof props.params.values)[0]) {
 	return updateQueryTo === "value"
 		? `${entry.featureId}:"${entry.title}"`
 		: `${entry.featureId}:ANY`;
 }
 function updateMap(updateQueryTo: QueryUpdateType, entry: (typeof props.params.values)[0]) {
-	const table = tables.get(wibarabGeojsonUrl);
+	const table = geojsonStore.table;
 	if (!table) return;
 	const searchString = getQueryString(updateQueryTo, entry);
 

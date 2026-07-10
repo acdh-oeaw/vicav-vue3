@@ -63,7 +63,7 @@ export const useWindowsStore = defineStore("windows", () => {
 	});
 	const openOrUpdateWindow = useOpenOrUpdateWindow();
 
-	const { tables } = useGeojsonStore();
+	const geojsonStore = useGeojsonStore();
 
 	async function initializeScreen() {
 		await suspense();
@@ -269,7 +269,7 @@ export const useWindowsStore = defineStore("windows", () => {
 				index: 0,
 				class: "wb-table",
 				click: function () {
-					const table = tables.get(w.params.url);
+					const table = geojsonStore.table;
 					const globalFilter = (table?.getState().globalFilter as string | undefined) ?? "";
 					openOrUpdateWindow(
 						{

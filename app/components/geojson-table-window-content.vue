@@ -25,15 +25,15 @@ const GeojsonStore = useGeojsonStore();
 const openOrUpdateWindow = useOpenOrUpdateWindow();
 const url = GeojsonStore.wibarabGeojsonUrl;
 
-const { isPending } = GeojsonStore.fetchGeojson(url);
-const { fetchedData, tables, showAllDetails, featureValueTaxonomy } = storeToRefs(GeojsonStore);
+const { isPending } = GeojsonStore.loadGeojson();
+const { geojsonData, showAllDetails, featureValueTaxonomy } = storeToRefs(GeojsonStore);
 const { buildFeatureTaxonomy } = GeojsonStore;
 const { data: projectData } = useProjectInfo();
 const { createColumnDefs } = useColumnGeneration();
 const { getTraversedAST, parse } = useFilterParser();
 
 const extendedFeatureNames = computed(() => {
-	const allFeatureNames = fetchedData.value.get(url)?.properties.column_headings;
+	const allFeatureNames = geojsonData.value?.properties.column_headings;
 	if (allFeatureNames)
 		allFeatureNames.find((feature) => feature.country === "Country").category = "country";
 	return allFeatureNames;
@@ -55,7 +55,7 @@ const columns = computed(() => {
 	else return [];
 });
 const columnVisibility = computed(() => {
-	const columnHeadings = fetchedData.value.get(url)?.properties.column_headings ?? [];
+	const columnHeadings = geojsonData.value?.properties.column_headings ?? [];
 	return {
 		...Object.fromEntries(
 			columnHeadings?.map((heading) => [
@@ -191,8 +191,7 @@ function registerTable(table: Table<FeatureType>) {
 		table.setGlobalFilter(normalizeOperators(queryString.value));
 	}
 
-	tables.value.set(url, table);
-	triggerRef(tables);
+	GeojsonStore.table = table;
 	tableRef.value = table;
 
 	openGeoJsonMap();
@@ -345,7 +344,7 @@ function onFeatureClick(val: Header<unknown, unknown>) {
 				:enable-filter-on-columns="false"
 				:global-filter-fn="applyGlobalFilter"
 				:initial-column-visibility="columnVisibility"
-				:items="fetchedData.get(url)?.features as Array<never>"
+				:items="geojsonData?.features as Array<never>"
 				:min-header-depth="2"
 				:sticky-header="true"
 				:visibility-change-fn="onVisibilityChange"

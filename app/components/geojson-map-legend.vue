@@ -13,13 +13,11 @@ const { getMarkerSVG } = usePetalMarker();
 interface Props {
 	params: Zod.infer<typeof GeojsonMapSchema>["params"];
 }
-const props = defineProps<Props>();
-const { params } = toRefs(props);
+defineProps<Props>();
 
 const GeojsonStore = useGeojsonStore();
-const { tables } = storeToRefs(GeojsonStore);
 
-const table = computed(() => tables.value.get(params.value.url));
+const table = computed(() => GeojsonStore.table);
 const activeFeatures = computed(() =>
 	table.value?.getVisibleLeafColumns().filter((col) => col.getCanHide()),
 );

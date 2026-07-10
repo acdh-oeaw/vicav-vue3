@@ -12,15 +12,9 @@ const props = defineProps<Props>();
 const { params } = toRefs(props);
 
 const geojsonStore = useGeojsonStore();
-const {
-	wibarabGeojsonUrl,
-	getTaxonomyTree,
-	getSortedTaxonomyChildren,
-	getSortedTaxonomyFeatureValues,
-} = geojsonStore;
-const { tables } = storeToRefs(geojsonStore);
+const { getTaxonomyTree, getSortedTaxonomyChildren, getSortedTaxonomyFeatureValues } = geojsonStore;
 
-const table = computed(() => tables.value.get(wibarabGeojsonUrl) as Table<unknown> | undefined);
+const table = computed(() => geojsonStore.table as Table<unknown> | undefined);
 
 const featureLabel = computed(() => {
 	const header = table.value?.getColumn(params.value.featureId)?.columnDef.header;
