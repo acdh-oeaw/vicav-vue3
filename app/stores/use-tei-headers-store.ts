@@ -729,7 +729,9 @@ function extractMetadata(
 	const title = resolveTitle(item, label, persons);
 	const responsibilityData = buildResponsibilityData(item, corpusMetadata);
 	const parsedItem = SimpleTEIMetadataSchema.safeParse({
-		id: item["@id"] ?? teiHeader?.fileDesc.publicationStmt.idno?.$ ?? "no_id",
+		// Note that there could be several idnos here. The one we need has a type ending in "CorpusID".
+		// At the moment we only need to care about one idno.
+		id: teiHeader?.fileDesc.publicationStmt.idno?.$ ?? item["@id"] ?? "no_id",
 		recordingDate: teiHeader?.fileDesc.sourceDesc.recordingStmt?.recording.date?.["@when"],
 		pubDate: teiHeader?.fileDesc.publicationStmt.date?.$ ?? "unknown",
 		dataType: resolvedDataType,
