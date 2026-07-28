@@ -523,7 +523,7 @@ function formatFacetValue(columnId: string, value: string): string {
 					:format-value="formatFacetValue"
 					:table="table as unknown as TanstackTable<never>"
 				/>
-				<div class="flex flex-wrap items-center gap-2">
+				<div class="flex flex-wrap items-center gap-4">
 					<span
 						v-for="columnId in visibleFacetColumnIds"
 						:key="columnId"
