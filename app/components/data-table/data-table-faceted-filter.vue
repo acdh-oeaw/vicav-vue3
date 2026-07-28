@@ -17,11 +17,14 @@ type FacetSortMode = "hit-count" | "alphabetical";
 const props = withDefaults(
 	defineProps<{
 		column: FacetedFilterColumn;
+		displayValue?: (value: string) => string;
+		filterLabel?: string;
 		sortMode?: FacetSortMode;
 		sortValue?: (value: string) => string;
 		undefinedValuesLast?: boolean;
 	}>(),
 	{
+		displayValue: (value: string) => value,
 		sortMode: "hit-count",
 		sortValue: (value: string) => value,
 		undefinedValuesLast: false,
@@ -39,12 +42,15 @@ const filteredFacets = computed(() => {
 	if (query.length === 0) return facets.value;
 
 	return facets.value.filter(([value]) => {
-		return [value, props.sortValue(value)].some((candidate) =>
+		return [value, props.displayValue(value), props.sortValue(value)].some((candidate) =>
 			candidate.toLocaleLowerCase().includes(query),
 		);
 	});
 });
 const selectedValues = computed(() => cloneFilterValueMap(props.column?.getFilterValue()));
+const filterLabel = computed(
+	() => props.filterLabel ?? String(props.column.columnDef.header ?? "filter"),
+);
 const facetSearchInputId = computed(() => {
 	return `facet-search-${String(props.column.columnDef.header ?? "filter")
 		.toLocaleLowerCase()
@@ -61,10 +67,12 @@ function compareFacets(a: readonly [string, number], b: readonly [string, number
 		if (countComparison !== 0) return countComparison;
 	}
 
-	return props.sortValue(a[0]).localeCompare(props.sortValue(b[0]), undefined, {
-		numeric: true,
-		sensitivity: "base",
-	});
+	return props
+		.sortValue(props.displayValue(a[0]))
+		.localeCompare(props.sortValue(props.displayValue(b[0])), undefined, {
+			numeric: true,
+			sensitivity: "base",
+		});
 }
 
 function compareUndefinedValues(a: string, b: string): number {
@@ -82,7 +90,10 @@ function compareUndefinedValues(a: string, b: string): number {
 
 <template>
 	<DropdownMenu>
-		<DropdownMenuTrigger class="group p-1 align-middle"
+		<DropdownMenuTrigger
+			:aria-label="`Filter by ${filterLabel}`"
+			class="group rounded-sm p-1 align-middle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+			type="button"
 			><Filter
 				class="size-4 group-hover:scale-125"
 				:class="selectedValues.size > 0 && 'fill-white'"
@@ -118,7 +129,7 @@ function compareUndefinedValues(a: string, b: string): number {
 					}
 				"
 			>
-				{{ facet[0] }}
+				{{ displayValue(facet[0]) }}
 				<Badge class="ml-2" variant="outline">{{ facet[1] }}</Badge>
 			</DropdownMenuCheckboxItem>
 			<div v-if="filteredFacets.length === 0" class="px-2 py-1.5 text-sm text-muted-foreground">

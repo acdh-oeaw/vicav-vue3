@@ -141,14 +141,14 @@ export const simpleMetadataAccessors = {
 	},
 	audioAvailability: {
 		key: "audioAvailability",
-		label: "Audio",
+		label: "Audio available",
 		getValue: (item) => item.audioAvailability,
 		filterable: true,
 		sortable: true,
 	},
 	"@hasTEIw": {
 		key: "@hasTEIw",
-		label: "TEI",
+		label: "Transcription available",
 		getValue: (item) => item["@hasTEIw"],
 		filterable: true,
 		sortable: true,
