@@ -86,7 +86,7 @@ describe("compound corpus utterances", () => {
 		);
 	});
 
-	it("renders segment and word linguistic annotations without lemma actions", async () => {
+	it("renders POS and MSD annotations without exposing root elements", async () => {
 		const wrapper = await mountSuspended(CorpusTextJsonUtterance, {
 			props: {
 				utterance: { seg: compound },
@@ -96,8 +96,9 @@ describe("compound corpus utterances", () => {
 		});
 
 		expect(wrapper.text()).toContain("compound");
-		expect(wrapper.text()).toContain("w-q-t, ʔ-n");
 		expect(wrapper.text()).toContain("noun");
+		expect(wrapper.text()).not.toContain("w-q-t");
+		expect(wrapper.text()).not.toContain("ʔ-n");
 		expect(wrapper.findAll("button")).toHaveLength(0);
 	});
 

@@ -26,7 +26,7 @@ function blocks(...tokens: Array<unknown>): AnnotationBlocks {
 }
 
 describe("corpus annotation extraction", () => {
-	it("separates lemma and linguistic annotations", () => {
+	it("extracts only annotations supported by the corpus display", () => {
 		expect(
 			extractCorpusAnnotations({
 				"@lemmaRef": "dict:DShaAr.wakt_in_000",
@@ -34,14 +34,12 @@ describe("corpus annotation extraction", () => {
 				pos: "prep",
 				synRoots: ["w-q-t", { $: "ʔ-n" }],
 				diaRoot: "w-q-t",
-			}),
+			} as Parameters<typeof extractCorpusAnnotations>[0]),
 		).toEqual({
 			lemmaRef: "dict:DShaAr.wakt_in_000",
 			linguistic: [
 				{ label: "POS", values: ["prep"] },
 				{ label: "MSD", values: ["compound"] },
-				{ label: "Syntactic root", values: ["w-q-t", "ʔ-n"] },
-				{ label: "Diachronic root", values: ["w-q-t"] },
 			],
 		});
 	});
@@ -74,7 +72,7 @@ describe("corpus annotation availability", () => {
 		expect(hasLinguisticAnnotation(segment)).toBe(true);
 	});
 
-	it("recurses through nested segments and recognizes roots-only payloads", () => {
+	it("does not expose roots-only payloads as display annotations", () => {
 		const nested = token({
 			seg: {
 				$$: [
@@ -87,7 +85,7 @@ describe("corpus annotation availability", () => {
 			},
 		});
 
-		expect(hasLinguisticAnnotation(nested)).toBe(true);
+		expect(hasLinguisticAnnotation(nested)).toBe(false);
 	});
 
 	it("keeps block-level capabilities independent and ignores empty fields", () => {

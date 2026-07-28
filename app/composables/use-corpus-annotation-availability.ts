@@ -6,15 +6,11 @@ type CorpusUtteranceToken = U["$$"][number];
 export interface CorpusAnnotationTarget {
 	"@lemmaRef"?: string;
 	"@msd"?: string;
-	diaRoot?: unknown;
-	diaRoots?: unknown;
 	pos?: string;
-	synRoot?: unknown;
-	synRoots?: unknown;
 }
 
 export interface CorpusLinguisticAnnotation {
-	label: "POS" | "MSD" | "Syntactic root" | "Diachronic root";
+	label: "POS" | "MSD";
 	values: Array<string>;
 }
 
@@ -23,28 +19,11 @@ export interface CorpusAnnotations {
 	linguistic: Array<CorpusLinguisticAnnotation>;
 }
 
-function normalizeAnnotationValues(value: unknown): Array<string> {
-	if (Array.isArray(value)) {
-		return value.flatMap(normalizeAnnotationValues);
-	}
-
-	if (typeof value === "string" && value.trim() !== "") {
-		return [value];
-	}
-
-	if (value != null && typeof value === "object" && "$" in value) {
-		return normalizeAnnotationValues(value.$);
-	}
-
-	return [];
-}
-
 function createLinguisticAnnotation(
 	label: CorpusLinguisticAnnotation["label"],
-	...values: Array<unknown>
+	value: string | undefined,
 ): CorpusLinguisticAnnotation | undefined {
-	const normalizedValues = [...new Set(values.flatMap(normalizeAnnotationValues))];
-	return normalizedValues.length > 0 ? { label, values: normalizedValues } : undefined;
+	return value?.trim() ? { label, values: [value] } : undefined;
 }
 
 export function extractCorpusAnnotations(
@@ -55,8 +34,6 @@ export function extractCorpusAnnotations(
 	const linguistic = [
 		createLinguisticAnnotation("POS", target.pos),
 		createLinguisticAnnotation("MSD", target["@msd"]),
-		createLinguisticAnnotation("Syntactic root", target.synRoot, target.synRoots),
-		createLinguisticAnnotation("Diachronic root", target.diaRoot, target.diaRoots),
 	].filter((annotation) => annotation !== undefined);
 
 	return {
