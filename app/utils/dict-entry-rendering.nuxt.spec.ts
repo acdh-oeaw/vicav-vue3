@@ -132,8 +132,8 @@ describe("dict-entry rendering", () => {
 
 		expect(normalized.bibliography).toEqual([
 			{
-				label: "Lentin 2013, p.164",
-				queryString: "Lentin 2013",
+				label: "zot:Lentin2013, p.164",
+				queryString: "zot:Lentin2013",
 				rawReference: "zot:Lentin2013",
 				sourceId: "source1",
 			},
@@ -187,9 +187,11 @@ describe("dict-entry rendering", () => {
 
 	it("derives bibliography queries from Zotero identifiers without disambiguation or page scope", () => {
 		expect(deriveBibliographyQueryString("zot:Bettini_2006_0000", "ignored, p. 10")).toBe(
-			"Bettini 2006",
+			"zot:Bettini_2006_0000",
 		);
-		expect(deriveBibliographyQueryString("zot:Lentin2013a", "ignored, p. 10")).toBe("Lentin 2013");
+		expect(deriveBibliographyQueryString("zot:Lentin2013a", "ignored, p. 10")).toBe(
+			"zot:Lentin2013a",
+		);
 		expect(deriveBibliographyQueryString(undefined, "Cantineau 1936")).toBe("Cantineau 1936");
 	});
 });
