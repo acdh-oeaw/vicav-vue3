@@ -15,6 +15,8 @@ import {
 	type RenderedText,
 } from "@/utils/dict-entry-rendering";
 
+import DictSourceAction from "./dict-source-action.vue";
+
 const props = withDefaults(
 	defineProps<{
 		entry: RestVLEEntry;
