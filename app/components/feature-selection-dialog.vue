@@ -294,7 +294,11 @@ function deselectColumn() {
 			</div>
 		</DialogTrigger>
 		<DialogContent class="sm:max-w-[425px]">
-			<form class="grid grid-rows-[auto_1fr_auto] gap-4 sm:max-h-[90vh]" @submit="onSubmit">
+			<form
+				class="grid grid-rows-[auto_1fr_auto] gap-4 sm:max-h-[90vh]"
+				data-onboarding="feature-value-picker"
+				@submit="onSubmit"
+			>
 				<DialogHeader>
 					<DialogTitle>Select feature values for {{ column.columnDef.header }}</DialogTitle>
 					<DialogDescription>

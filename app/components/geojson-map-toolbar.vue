@@ -44,7 +44,11 @@ function addMetaFilterToQuery(key: string, val: string) {
 	<TooltipProvider :delay-duration="100">
 		<div class="grid items-center border-b border-border bg-surface px-0 py-2 text-on-surface">
 			<div class="mb-1 flex flex-wrap items-center gap-y-1 px-2 font-medium text-neutral-700">
-				<div v-for="(group, catIdx) in categories?.slice(0, -2)" :key="group.id">
+				<div
+					v-for="(group, catIdx) in categories?.slice(0, -2)"
+					:key="group.id"
+					:data-onboarding="`feature-category-${group.id.replaceAll('_', '-')}`"
+				>
 					<DropdownMenu v-slot="{ open }" v-model:open="isMenuOpen[catIdx]">
 						<DropdownMenuTrigger class="flex w-full items-center gap-1 p-2 text-sm">
 							<span>{{ titleCase(group.id) }}</span>
@@ -77,12 +81,20 @@ function addMetaFilterToQuery(key: string, val: string) {
 						:key="column.id"
 						class="transition hover:text-black"
 						:column="column as Column<unknown>"
+						:data-onboarding="
+							column.id === 'traditional_classification'
+								? 'filter-traditional-classification'
+								: undefined
+						"
 						:hide-checkbox="true"
 						:table="table as Table<unknown>"
 					/>
 				</div>
 				<DropdownMenu v-slot="{ open }">
-					<DropdownMenuTrigger class="inline-flex items-center gap-1 p-2 text-sm">
+					<DropdownMenuTrigger
+						class="inline-flex items-center gap-1 p-2 text-sm"
+						data-onboarding="filter-metadata"
+					>
 						<span class="hover:text-black">Metadata filters</span>
 
 						<Tooltip>

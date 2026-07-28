@@ -49,6 +49,7 @@ defineExpose({ submitSearch, value: currentValue });
 	<div class="grid w-full max-w-full grid-cols-[1fr_auto]">
 		<div
 			class="flex min-h-10 w-full max-w-full rounded-md rounded-r-none border border-muted bg-white"
+			data-onboarding="query-input"
 		>
 			<TagSearchbar
 				v-if="mode === 'tag'"
@@ -68,6 +69,7 @@ defineExpose({ submitSearch, value: currentValue });
 			<div class="flex shrink-0 items-center border-l border-muted">
 				<Button
 					class="h-full rounded-none border-0 px-2"
+					data-onboarding="query-mode-toggle"
 					:title="mode === 'tag' ? 'Switch to text mode' : 'Switch to tag mode'"
 					variant="outline"
 					@click="toggleMode"
@@ -89,6 +91,7 @@ defineExpose({ submitSearch, value: currentValue });
 
 		<Button
 			class="h-full self-end rounded-l-none bg-header text-white hover:bg-primary"
+			data-onboarding="search-button"
 			variant="outline"
 			@click="submitSearch"
 		>
