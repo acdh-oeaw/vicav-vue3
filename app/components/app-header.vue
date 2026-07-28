@@ -179,8 +179,6 @@ function onSelectMenuItem(item: ItemType) {
 				/>
 			</div>
 		</div>
-
-			<GuidedTour class="text-foreground"/>
 	</header>
 </template>
 

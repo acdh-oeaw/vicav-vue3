@@ -82,7 +82,7 @@ function addMetaFilterToQuery(key: string, val: string) {
 						class="transition hover:text-black"
 						:column="column as Column<unknown>"
 						:data-onboarding="
-							column.id === 'traditional_classification'
+							group.id === 'traditional_classification'
 								? 'filter-traditional-classification'
 								: undefined
 						"

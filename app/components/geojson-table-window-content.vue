@@ -372,6 +372,7 @@ function onFeatureClick(val: Header<unknown, unknown>) {
 			/>
 		</div>
 
+		<GuidedTour class="text-foreground" />
 	</div>
 </template>
 

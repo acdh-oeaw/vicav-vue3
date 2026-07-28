@@ -156,17 +156,17 @@ const steps = [
 		},
 	},
 ];
-
 onMounted(() => {
-	setTimeout(wrapper.value?.start, 100);
+	wrapper.value?.start();
 });
 </script>
 
 <template>
-	<VOnboardingWrapper
-		ref="wrapper"
-		class="z-30"
-		:options="{ scrollToStep: { enabled: false } }"
-		:steps="steps"
-	/>
+	<Teleport :to="'body'">
+		<VOnboardingWrapper
+			ref="wrapper"
+			class="z-30"
+			:options="{ scrollToStep: { enabled: false } }"
+			:steps="steps"
+	/></Teleport>
 </template>
