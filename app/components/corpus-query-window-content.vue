@@ -20,7 +20,8 @@ const displayHits = ref<Array<Div & { label?: string }>>([]);
 const showHelp = ref<boolean>(false);
 const isSearching = ref(false);
 
-const inlineAnnotations = ref<false | true | "indeterminate">(true);
+const inlineLemmaAnnotations = ref<false | true | "indeterminate">(true);
+const inlineLinguisticAnnotations = ref<false | true | "indeterminate">(true);
 const inlineTranslations = ref<false | true | "indeterminate">(true);
 const words: Ref<Array<string>> = ref([]);
 
@@ -28,20 +29,29 @@ const currentPage = ref(0);
 const scrollComplete = ref<boolean>(false);
 const lastRestoredQueryString = ref<string>();
 const {
-	hasInlineAnnotations: blockHasInlineAnnotations,
 	hasInlineTranslations: blockHasInlineTranslations,
+	hasLemmaAnnotations: blockHasLemmaAnnotations,
+	hasLinguisticAnnotations: blockHasLinguisticAnnotations,
 } = useCorpusAnnotationAvailability();
 
-const hasInlineAnnotations = computed(() => {
-	return blockHasInlineAnnotations(hits.value);
+const hasLemmaAnnotations = computed(() => {
+	return blockHasLemmaAnnotations(hits.value);
+});
+
+const hasLinguisticAnnotations = computed(() => {
+	return blockHasLinguisticAnnotations(hits.value);
 });
 
 const hasInlineTranslations = computed(() => {
 	return blockHasInlineTranslations(hits.value);
 });
 
-const showInlineAnnotations = computed(() => {
-	return hasInlineAnnotations.value && inlineAnnotations.value === true;
+const showLemmaAnnotations = computed(() => {
+	return hasLemmaAnnotations.value && inlineLemmaAnnotations.value === true;
+});
+
+const showLinguisticAnnotations = computed(() => {
+	return hasLinguisticAnnotations.value && inlineLinguisticAnnotations.value === true;
 });
 
 const showInlineTranslations = computed(() => {
@@ -141,6 +151,7 @@ function utteranceContentContainsHit(
 	if (hitId == null) return false;
 	return (
 		utterance.w?.["@id"] === hitId ||
+		utterance.seg?.["@id"] === hitId ||
 		utterance.seg?.["$$"].some((segUtterance) =>
 			utteranceContentContainsHit(segUtterance, hitId),
 		) === true
@@ -242,21 +253,31 @@ function splitUtterancesAroundHit(utterances: MixedUtteranceContent, hitId?: str
 			</button>
 			<br />
 		</form>
-		<div v-if="hasInlineAnnotations || hasInlineTranslations" class="flex justify-end p-4">
-			<div v-if="hasInlineAnnotations">
+		<div
+			v-if="hasLemmaAnnotations || hasLinguisticAnnotations || hasInlineTranslations"
+			class="flex justify-end gap-3 p-4"
+		>
+			<div v-if="hasLemmaAnnotations">
 				<Checkbox
-					id="switch-annotations"
-					:default-checked="true"
-					@update:checked="inlineAnnotations = !inlineAnnotations"
+					id="switch-lemma-annotations"
+					:checked="inlineLemmaAnnotations === true"
+					@update:checked="inlineLemmaAnnotations = $event === true"
 				/>
-				<label for="switch-annotations">&nbsp;Inline Annotations</label>
+				<label for="switch-lemma-annotations">&nbsp;Lemma annotations</label>
 			</div>
-			<span v-if="hasInlineAnnotations && hasInlineTranslations">&nbsp;</span>
+			<div v-if="hasLinguisticAnnotations">
+				<Checkbox
+					id="switch-linguistic-annotations"
+					:checked="inlineLinguisticAnnotations === true"
+					@update:checked="inlineLinguisticAnnotations = $event === true"
+				/>
+				<label for="switch-linguistic-annotations">&nbsp;Linguistic annotations</label>
+			</div>
 			<div v-if="hasInlineTranslations">
 				<Checkbox
 					id="switch-translations"
-					:default-checked="true"
-					@update:checked="inlineTranslations = !inlineTranslations"
+					:checked="inlineTranslations === true"
+					@update:checked="inlineTranslations = $event === true"
 				/>
 				<label for="switch-translations">&nbsp;Inline Translations</label>
 			</div>
@@ -291,8 +312,8 @@ function splitUtterancesAroundHit(utterances: MixedUtteranceContent, hitId?: str
 											.before"
 										:key="`before-${index}`"
 										:hits="hit.hits?.[0]"
-										:inline-annotation="showInlineAnnotations"
-										:inline-translation="showInlineTranslations"
+										:inline-lemma-annotation="showLemmaAnnotations"
+										:inline-linguistic-annotation="showLinguisticAnnotations"
 										:utterance="uContent"
 									></CorpusTextJsonUtterance>
 								</div>
@@ -301,8 +322,8 @@ function splitUtterancesAroundHit(utterances: MixedUtteranceContent, hitId?: str
 										v-if="splitUtterancesAroundHit(hit.u['$$'], hit.hits?.[0]).match"
 										:highlight="true"
 										:hits="hit.hits?.[0]"
-										:inline-annotation="showInlineAnnotations"
-										:inline-translation="showInlineTranslations"
+										:inline-lemma-annotation="showLemmaAnnotations"
+										:inline-linguistic-annotation="showLinguisticAnnotations"
 										:utterance="splitUtterancesAroundHit(hit.u['$$'], hit.hits?.[0]).match!"
 									></CorpusTextJsonUtterance>
 								</div>
@@ -312,8 +333,8 @@ function splitUtterancesAroundHit(utterances: MixedUtteranceContent, hitId?: str
 											.after"
 										:key="`after-${index}`"
 										:hits="hit.hits?.[0]"
-										:inline-annotation="showInlineAnnotations"
-										:inline-translation="showInlineTranslations"
+										:inline-lemma-annotation="showLemmaAnnotations"
+										:inline-linguistic-annotation="showLinguisticAnnotations"
 										:utterance="uContent"
 									></CorpusTextJsonUtterance>
 								</div>
