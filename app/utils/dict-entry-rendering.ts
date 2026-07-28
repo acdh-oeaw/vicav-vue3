@@ -467,22 +467,12 @@ function collectGrammar(grammar: GrammarLike | string | undefined): Array<Render
 	);
 }
 
-function zoteroIdentifierTerms(reference: string): string {
-	return reference
-		.replace(/^zot:/i, "")
-		.replace(/(\d{4})(?:[_-]\d{4}|[_-]?[a-z])$/i, "$1")
-		.replace(/[_.:-]+/g, " ")
-		.replace(/(\p{L})(\d{4})$/u, "$1 $2")
-		.replace(/\s+/g, " ")
-		.trim();
-}
-
 export function deriveBibliographyQueryString(
 	rawReference: string | undefined,
 	citationLabelWithoutPageScope: string,
 ): string {
 	if (rawReference?.toLocaleLowerCase().startsWith("zot:") === true) {
-		return zoteroIdentifierTerms(rawReference);
+		return rawReference;
 	}
 
 	return citationLabelWithoutPageScope.trim();
@@ -495,7 +485,7 @@ function bibliographyTitle(item: BibliographyLike): string | undefined {
 	const rawReference = item.title?.["@ref"]?.trim();
 	if (rawReference == null || rawReference === "") return undefined;
 	if (rawReference.toLocaleLowerCase().startsWith("zot:")) {
-		return zoteroIdentifierTerms(rawReference);
+		return rawReference;
 	}
 
 	return rawReference;
