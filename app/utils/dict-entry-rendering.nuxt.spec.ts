@@ -3,7 +3,11 @@ import { describe, expect, it } from "vitest";
 
 import type { RestVLEEntry } from "@/lib/api-client";
 
-import { formatLocation, normalizeEntry } from "./dict-entry-rendering.ts";
+import {
+	deriveBibliographyQueryString,
+	formatLocation,
+	normalizeEntry,
+} from "./dict-entry-rendering.ts";
 
 describe("dict-entry rendering", () => {
 	it("normalizes compact dictionary entry display data", () => {
@@ -36,6 +40,7 @@ describe("dict-entry rendering", () => {
 						orth: { "@lang": "ar-Latn", $: "darab" },
 					},
 					inflected_form: {
+						"@source": "#source1",
 						"@type": "inflected",
 						gramGrp: {
 							aspect_gram: { "@type": "aspect", $: "imperfective" },
@@ -82,6 +87,18 @@ describe("dict-entry rendering", () => {
 					},
 					sense: {
 						"@id": "sense-1",
+						example_cit: {
+							"@id": "example-1",
+							"@source": "#source1",
+							quote: { "@lang": "ar-Latn", $: "darab al-walad" },
+							listBibl: [
+								{
+									"@id": "example-source",
+									title: { $: "Cantineau 1936" },
+									biblScope: { "@unit": "page", $: "p. 42" },
+								},
+							],
+						},
 						translationEquivalent_cit: {
 							"@source": "#source1",
 							"@type": "translationEquivalent",
@@ -113,7 +130,14 @@ describe("dict-entry rendering", () => {
 
 		const normalized = normalizeEntry(entry as unknown as RestVLEEntry);
 
-		expect(normalized.bibliography).toEqual([{ id: "source1", label: "Lentin 2013, p.164" }]);
+		expect(normalized.bibliography).toEqual([
+			{
+				label: "zot:Lentin2013, p.164",
+				queryString: "zot:Lentin2013",
+				rawReference: "zot:Lentin2013",
+				sourceId: "source1",
+			},
+		]);
 		expect(normalized.etymologies).toEqual([
 			{ lang: "tr", text: "badem" },
 			{ lang: "gr", text: "κουντοῦρα" },
@@ -141,6 +165,7 @@ describe("dict-entry rendering", () => {
 			"Beqaa, Idin",
 		]);
 		expect(normalized.inflectedForms[0]?.variants[0]?.source).toBe("source1");
+		expect(normalized.inflectedForms[0]?.source).toBe("source1");
 		expect(normalized.senses[0]?.translations[0]).toMatchObject({
 			gloss: "with a stick",
 			lang: "en",
@@ -148,5 +173,25 @@ describe("dict-entry rendering", () => {
 			text: "to hit",
 		});
 		expect(normalized.senses[0]?.locations.map(formatLocation)).toEqual(["Harran-Urfa"]);
+		expect(normalized.senses[0]?.examples[0]).toMatchObject({
+			source: "source1",
+			bibliography: [
+				{
+					label: "Cantineau 1936, p. 42",
+					queryString: "Cantineau 1936",
+					sourceId: "example-source",
+				},
+			],
+		});
+	});
+
+	it("derives bibliography queries from Zotero identifiers without disambiguation or page scope", () => {
+		expect(deriveBibliographyQueryString("zot:Bettini_2006_0000", "ignored, p. 10")).toBe(
+			"zot:Bettini_2006_0000",
+		);
+		expect(deriveBibliographyQueryString("zot:Lentin2013a", "ignored, p. 10")).toBe(
+			"zot:Lentin2013a",
+		);
+		expect(deriveBibliographyQueryString(undefined, "Cantineau 1936")).toBe("Cantineau 1936");
 	});
 });

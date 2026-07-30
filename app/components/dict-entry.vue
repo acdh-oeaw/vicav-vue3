@@ -1,20 +1,12 @@
 <script setup lang="ts">
-import {
-	BookA,
-	BookOpen,
-	Braces,
-	CircleAlert,
-	Code,
-	MapPin,
-	MessageSquareQuote,
-	Search,
-} from "@lucide/vue";
+import { BookA, Braces, CircleAlert, Code, MapPin, MessageSquareQuote, Search } from "@lucide/vue";
 
 import type { RestVLEEntry } from "@/lib/api-client";
 import { QueryString, type WindowItem } from "@/types/global.ts";
 import {
 	formatLocation,
 	normalizeEntry,
+	type RenderedBibliographyReference,
 	type RenderedDictEntry,
 	type RenderedForm,
 	type RenderedGrammarItem,
@@ -22,6 +14,8 @@ import {
 	type RenderedSense,
 	type RenderedText,
 } from "@/utils/dict-entry-rendering";
+
+import DictSourceAction from "./dict-source-action.vue";
 
 const props = withDefaults(
 	defineProps<{
@@ -44,7 +38,11 @@ const compactBadgeClass =
 	"inline-flex min-h-6 items-center gap-1 rounded-full border border-gray-300 bg-white/90 px-1.5 text-sm leading-none text-gray-900 shadow-xs";
 
 const bibliographyById = computed(() => {
-	return new Map(e.value.bibliography.map((item) => [item.id, item.label]));
+	return new Map(
+		e.value.bibliography.flatMap((item) =>
+			item.sourceId == null ? [] : [[item.sourceId, item] as const],
+		),
+	);
 });
 
 const headerForms = computed(() => {
@@ -149,7 +147,7 @@ const languageTooltip = (language: string | undefined) => {
 	return `Language: ${language}`;
 };
 
-const sourceLabel = (source: string | undefined) => {
+const sourceReference = (source: string | undefined): RenderedBibliographyReference | undefined => {
 	if (source == null) return undefined;
 	return bibliographyById.value.get(source);
 };
@@ -254,10 +252,10 @@ const languageClass = (language: string | undefined) => {
 									<MapPin class="size-4 text-gray-400" />
 									{{ formatLocation(location) }}
 								</span>
-								<span v-if="sourceLabel(form.source)" :class="compactBadgeClass">
-									<BookOpen class="size-4 text-gray-500" />
-									{{ sourceLabel(form.source) }}
-								</span>
+								<DictSourceAction
+									v-if="sourceReference(form.source)"
+									:reference="sourceReference(form.source)!"
+								/>
 							</template>
 						</div>
 						<div v-if="compactGrammar" class="pl-10 text-xl/tight">
@@ -385,10 +383,10 @@ const languageClass = (language: string | undefined) => {
 									{{ formatLocation(location) }}
 								</span>
 							</template>
-							<span v-if="sourceLabel(form.source)" :class="compactBadgeClass">
-								<BookOpen class="size-4 text-gray-500" />
-								{{ sourceLabel(form.source) }}
-							</span>
+							<DictSourceAction
+								v-if="sourceReference(form.source)"
+								:reference="sourceReference(form.source)!"
+							/>
 							<template
 								v-for="(variant, variantIndex) in form.variants"
 								:key="`inflected-${formIndex}-variant-${variantIndex}`"
@@ -410,10 +408,10 @@ const languageClass = (language: string | undefined) => {
 									<MapPin class="size-4 text-gray-400" />
 									{{ formatLocation(location) }}
 								</span>
-								<span v-if="sourceLabel(variant.source)" :class="compactBadgeClass">
-									<BookOpen class="size-4 text-gray-500" />
-									{{ sourceLabel(variant.source) }}
-								</span>
+								<DictSourceAction
+									v-if="sourceReference(variant.source)"
+									:reference="sourceReference(variant.source)!"
+								/>
 							</template>
 						</div>
 					</section>
@@ -458,10 +456,10 @@ const languageClass = (language: string | undefined) => {
 												<span v-if="translation.gloss" class="text-gray-700">
 													({{ translation.gloss }})
 												</span>
-												<span v-if="sourceLabel(translation.source)" :class="compactBadgeClass">
-													<BookOpen class="size-4 text-gray-500" />
-													{{ sourceLabel(translation.source) }}
-												</span>
+												<DictSourceAction
+													v-if="sourceReference(translation.source)"
+													:reference="sourceReference(translation.source)!"
+												/>
 												<span v-if="translationIndex < translationGroup.translations.length - 1">
 													,
 												</span>
@@ -494,18 +492,15 @@ const languageClass = (language: string | undefined) => {
 												{{ example.quote.text }}
 											</div>
 											<div class="flex max-w-72 flex-wrap justify-end gap-0.5 justify-self-end">
-												<span
+												<DictSourceAction
 													v-for="item in example.bibliography"
-													:key="item"
-													:class="compactBadgeClass"
-												>
-													<BookOpen class="size-4 text-gray-500" />
-													{{ item }}
-												</span>
-												<span v-if="sourceLabel(example.source)" :class="compactBadgeClass">
-													<BookOpen class="size-4 text-gray-500" />
-													{{ sourceLabel(example.source) }}
-												</span>
+													:key="`${item.sourceId ?? 'local'}-${item.queryString}`"
+													:reference="item"
+												/>
+												<DictSourceAction
+													v-if="sourceReference(example.source)"
+													:reference="sourceReference(example.source)!"
+												/>
 												<span
 													v-for="location in example.locations"
 													:key="locationKey(location)"

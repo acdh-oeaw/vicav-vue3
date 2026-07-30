@@ -72,7 +72,7 @@ area from entry `selfHref`; JSON adds `format=json`.
 | API field                                  | Rendered model                         | Template location                                                                   |
 | ------------------------------------------ | -------------------------------------- | ----------------------------------------------------------------------------------- |
 | form `orth`, `orths[]`                     | `orthographies[]`                      | Header forms, inflected forms, and variants; `lang` appears as a tooltip.           |
-| form `@source`                             | `source`                               | Source bibliography badge when source resolves through entry `bibliography[]`.      |
+| form `@source`                             | `source`                               | Source action when the ID resolves through entry `bibliography[]`.                  |
 | form `@type`                               | `type`, `metadata[]` item `type`       | Normalized but not rendered as a visible badge.                                     |
 | form `@subtype`                            | `subtype`, `metadata[]` item `subtype` | Normalized but not rendered in compact template.                                    |
 | form `@lang`                               | `metadata[]` item `lang`               | Normalized but not rendered; text-node language is used for tooltips.               |
@@ -86,16 +86,17 @@ area from entry `selfHref`; JSON adds `format=json`.
 
 ## Locations And Bibliography
 
-| API field                                         | Rendered model              | Template location                                                      |
-| ------------------------------------------------- | --------------------------- | ---------------------------------------------------------------------- |
-| `geographic_usg.place_name.$`                     | `locations[].place`         | Location badge text.                                                   |
-| `geographic_usg.$`                                | `locations[].place`         | Location badge text when no `place_name` exists.                       |
-| `geographic_usg.tribe_name.$`                     | `locations[].tribe`         | Appended to location badge as `Place, Tribe` or tribe-only text.       |
-| `geographic_usg.tribe_names[0].$`                 | `locations[].tribe`         | First tribe only; additional tribe names are currently not displayed.  |
-| repeated equivalent locations                     | deduped `locations[]`       | Duplicate badges are removed per display group, preserving order.      |
-| `listBibl[].@id`                                  | `bibliography[].id`         | Source lookup key after stripping `#` from `@source`.                  |
-| `listBibl[].title.@ref`, `listBibl[].biblScope.$` | `bibliography[].label`      | Source badge text; `zot:` is stripped and trailing year is spaced out. |
-| example-local `listBibl[]`                        | `examples[].bibliography[]` | Bibliography badges inside example boxes.                              |
+| API field                                    | Rendered model                | Template location                                                                     |
+| -------------------------------------------- | ----------------------------- | ------------------------------------------------------------------------------------- |
+| `geographic_usg.place_name.$`                | `locations[].place`           | Location badge text.                                                                  |
+| `geographic_usg.$`                           | `locations[].place`           | Location badge text when no `place_name` exists.                                      |
+| `geographic_usg.tribe_name.$`                | `locations[].tribe`           | Appended to location badge as `Place, Tribe` or tribe-only text.                      |
+| `geographic_usg.tribe_names[0].$`            | `locations[].tribe`           | First tribe only; additional tribe names are currently not displayed.                 |
+| repeated equivalent locations                | deduped `locations[]`         | Duplicate badges are removed per display group, preserving order.                     |
+| `listBibl[].@id`                             | `bibliography[].sourceId`     | Source lookup key after stripping `#` from `@source`.                                 |
+| `listBibl[].title.@ref`                      | `rawReference`, `queryString` | Raw ID is preserved; normalized author/year terms drive bibliography search.          |
+| `listBibl[].title`, `listBibl[].biblScope.$` | `bibliography[].label`        | Citation tooltip text; page scope is excluded from `queryString`.                     |
+| example-local `listBibl[]`                   | `examples[].bibliography[]`   | Uses the same icon action and normalized reference model as entry-level bibliography. |
 
 ## Grammar Items
 
