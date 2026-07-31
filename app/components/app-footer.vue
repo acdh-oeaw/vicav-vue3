@@ -2,6 +2,7 @@
 const env = useRuntimeConfig();
 const { data: config } = useProjectInfo();
 const funders = computed(() => config.value?.projectConfig?.funders ?? []);
+const partners = computed(() => config.value?.projectConfig?.partners ?? []);
 </script>
 
 <template>
@@ -85,7 +86,7 @@ const funders = computed(() => config.value?.projectConfig?.funders ?? []);
 					<div
 						class="mt-4 max-w-[33.333%] flex-none px-4"
 						:class="
-							(funders.length ?? 0) > 0
+							((funders.length ?? 0) || (partners.length ?? 0)) > 0
 								? 'w-auto md:w-auto lg:w-auto'
 								: 'w-3/4 sm:w-1/2 md:w-1/3 lg:w-1/3'
 						"
@@ -131,6 +132,34 @@ const funders = computed(() => config.value?.projectConfig?.funders ?? []);
 								ASK US!
 							</a>
 						</p>
+					</div>
+					<!-- .footer-widget -->
+					<div
+						v-if="(partners.length ?? 0) > 0"
+						class="mt-4 ml-auto w-full max-w-[33.333%] shrink-0 grow-0 basis-1/4 px-4 sm:w-1/3 md:w-1/3 lg:w-1/4"
+					>
+						<h6 class="sr-only mb-2 block font-bold">Funding</h6>
+						<template v-for="partner in partners" :key="partner.partnerLink">
+							<img
+								:alt="partner.logoID"
+								class="mt-2 mb-4 block"
+								:src="
+									partner.logoID?.startsWith('http')
+										? partner.logoID
+										: `/assets/images/${partner.logoID}.png`
+								"
+							/>
+							<p class="mt-0 mb-4 block text-sm">
+								{{ partner.text }}
+								<a
+									class="text-[#88dbdf] transition duration-200 ease-in-out hover:brightness-75"
+									:href="partner.partnerLink ?? '#'"
+									target="_blank"
+								>
+									{{ partner.partnerLink }}
+								</a>
+							</p>
+						</template>
 					</div>
 					<!-- .footer-widget -->
 					<div
