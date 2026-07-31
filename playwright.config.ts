@@ -20,7 +20,8 @@ const backend = (() => {
 		case "https://tunocent-api.acdh-dev.oeaw.ac.at":
 		case "https://tunocent-api.acdh.oeaw.ac.at":
 			return "tunocent";
-		case "https://wibarab-api.acdh-ch-dev.oeaw.ac.at":
+		case "https://wibarab-api.acdh-dev.oeaw.ac.at":
+		case "https://wibarab-api.acdh.oeaw.ac.at":
 			return "wibarab";
 		default:
 			// in VSCode there is "playwright.env" in settings.conf for the playwright running in the UI.
