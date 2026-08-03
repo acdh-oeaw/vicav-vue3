@@ -4,8 +4,12 @@
 
 import { Blob } from "node:buffer";
 import { type CompressionFormat, CompressionStream } from "node:stream/web";
+import { promisify } from "node:util";
+import { brotliCompress, constants as zlibconst } from "node:zlib";
 
 import { getRequestHeader, type H3Event, setResponseHeader } from "h3";
+
+const brotliCompressAsync = promisify(brotliCompress);
 
 // Cache of in-flight compressions, keyed by `${method}:${sha256(body)}`.
 // Storing the promise (not just the resolved bytes) means concurrent requests
@@ -23,12 +27,27 @@ async function sha256Hex(data: Uint8Array<ArrayBuffer>) {
 }
 
 async function compress(buffer: Uint8Array<ArrayBuffer>, method: CompressionFormat) {
-	// The types are incompatible because the type script 5.9.3 typing does not
-	// recognize brotli compression.
-	const stream = new Blob([buffer])
-		.stream()
-		.pipeThrough(new CompressionStream(method)) as ReadableStream;
-	return new Uint8Array(await new Response(stream).arrayBuffer());
+	if (method === "brotli") {
+		// The default CompressionStream("brotli") uses the highest compression quality which
+		// is unuseably slow for out on the fly compression here.
+		// Problem noted for example here https://github.com/oven-sh/bun/issues/11380
+		// and here https://github.com/koajs/compress/issues/126
+		return await brotliCompressAsync(buffer, {
+			params: {
+				// 0 = fastest, 11 = smallest, 6 is what iterable compression in node 25 and later uses
+				[zlibconst.BROTLI_PARAM_QUALITY]: 6,
+				[zlibconst.BROTLI_PARAM_MODE]: zlibconst.BROTLI_MODE_TEXT,
+				[zlibconst.BROTLI_PARAM_SIZE_HINT]: buffer.length,
+			},
+		});
+	} else {
+		// The types are incompatible because the type script 5.9.3 typing does not
+		// recognize brotli compression.
+		const stream = new Blob([buffer])
+			.stream()
+			.pipeThrough(new CompressionStream(method)) as ReadableStream;
+		return new Uint8Array(await new Response(stream).arrayBuffer());
+	}
 }
 
 // The body is buffered fully so it can be hashed: if the same body was already
