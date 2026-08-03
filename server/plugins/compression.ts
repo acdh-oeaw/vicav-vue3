@@ -6,7 +6,6 @@ import { Blob } from "node:buffer";
 import { type CompressionFormat, CompressionStream } from "node:stream/web";
 
 import { getRequestHeader, type H3Event, setResponseHeader } from "h3";
-import type { RenderResponse } from "nitropack";
 
 // Cache of in-flight compressions, keyed by `${method}:${sha256(body)}`.
 // Storing the promise (not just the resolved bytes) means concurrent requests
@@ -16,14 +15,14 @@ import type { RenderResponse } from "nitropack";
 // single in-flight request.
 const inFlight = new Map<string, Promise<Uint8Array>>();
 
-async function sha256Hex(data: ArrayBuffer) {
+async function sha256Hex(data: Uint8Array<ArrayBuffer>) {
 	const digest = await crypto.subtle.digest("SHA-256", data);
 	return Array.from(new Uint8Array(digest))
 		.map((byte) => byte.toString(16).padStart(2, "0"))
 		.join("");
 }
 
-async function compress(buffer: ArrayBuffer, method: CompressionFormat) {
+async function compress(buffer: Uint8Array<ArrayBuffer>, method: CompressionFormat) {
 	// The types are incompatible because the type script 5.9.3 typing does not
 	// recognize brotli compression.
 	const stream = new Blob([buffer])
@@ -37,9 +36,10 @@ async function compress(buffer: ArrayBuffer, method: CompressionFormat) {
 // instead of running the (CPU-bound) compression again.
 async function compressStream(
 	event: H3Event,
-	response: Partial<RenderResponse>,
+	buffer: Uint8Array<ArrayBuffer>,
+	hash: string,
 	method: CompressionFormat,
-) {
+): Promise<Uint8Array | undefined | null> {
 	const contentEncoding = method as unknown as string;
 	setResponseHeader(
 		event,
@@ -47,19 +47,13 @@ async function compressStream(
 		contentEncoding === "brotli" ? "br" : contentEncoding,
 	);
 
-	// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-	const buffer = await new Response(response.body).arrayBuffer();
-	const hash = await sha256Hex(buffer);
 	const cacheKey = `compression:${method}:${hash}`;
-	setResponseHeader(event, "ETag", hash.substring(0, 16));
 
 	const storage = useStorage();
 
-	const cached = await storage.getItemRaw<Uint8Array>(cacheKey);
+	const cached = await storage.hasItem(cacheKey);
 	if (cached) {
-		// eslint-disable-next-line require-atomic-updates -- `response` is unique per request, not shared across awaits.
-		response.body = cached;
-		return;
+		return storage.getItemRaw<Uint8Array>(cacheKey);
 	}
 
 	let compressed = inFlight.get(cacheKey);
@@ -77,22 +71,41 @@ async function compressStream(
 			});
 	}
 
-	// eslint-disable-next-line require-atomic-updates -- `response` is unique per request, not shared across awaits.
-	response.body = await compressed;
+	return compressed;
 }
 
 export default defineNitroPlugin((nitro) => {
 	nitro.hooks.hook("render:response", async (response, { event }) => {
+		const enc = new TextEncoder();
+		const buffer = enc.encode(response.body as string);
+		const hash = await sha256Hex(buffer);
+		const etag = hash.substring(0, 16);
+		const ifNoneMatch = getRequestHeader(event, "if-none-match");
+
+		setResponseHeader(event, "ETag", etag);
+		// The client already has this exact representation cached: skip
+		// compression entirely and return an empty 304.
+		if (ifNoneMatch === etag) {
+			setResponseHeader(event, "ETag", etag);
+			// eslint-disable-next-line require-atomic-updates -- `response` is unique per request, not shared across awaits.
+			response.statusCode = 304;
+			// eslint-disable-next-line require-atomic-updates -- `response` is unique per request, not shared across awaits.
+			response.body = "";
+			return;
+		}
 		const encoding = getRequestHeader(event, "accept-encoding");
 		if (encoding?.includes("br")) {
 			//			console.log('Using brotli compression')
-			await compressStream(event, response, "brotli");
+			// eslint-disable-next-line require-atomic-updates -- `response` is unique per request, not shared across awaits.
+			response.body = await compressStream(event, buffer, hash, "brotli");
 		} else if (encoding?.includes("gzip")) {
 			//			console.log('Using GZIP compression')
-			await compressStream(event, response, "gzip");
+			// eslint-disable-next-line require-atomic-updates -- `response` is unique per request, not shared across awaits.
+			response.body = await compressStream(event, buffer, hash, "gzip");
 		} else if (encoding?.includes("deflate")) {
 			//			console.log('Using deflate compression')
-			await compressStream(event, response, "deflate");
+			// eslint-disable-next-line require-atomic-updates -- `response` is unique per request, not shared across awaits.
+			response.body = await compressStream(event, buffer, hash, "deflate");
 		}
 	});
 });
