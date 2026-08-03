@@ -47,9 +47,9 @@ async function compressStream(
 		contentEncoding === "brotli" ? "br" : contentEncoding,
 	);
 
-	const cacheKey = `compression:${method}:${hash}`;
+	const cacheKey = `${method}:${hash}`;
 
-	const storage = useStorage();
+	const storage = useStorage("compression");
 
 	const cached = await storage.hasItem(cacheKey);
 	if (cached) {

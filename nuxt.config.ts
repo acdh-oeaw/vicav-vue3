@@ -65,6 +65,13 @@ export default defineNuxtConfig({
 				filePath: "./server/instrumentation.ts",
 			},
 		},
+		storage: {
+			compression: {
+				driver: "lruCache",
+				ttl: 15 * 60 * 1000,
+				max: 100,
+			},
+		},
 	},
 
 	postcss: {
