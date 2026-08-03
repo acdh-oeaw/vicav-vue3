@@ -28,6 +28,13 @@ export default defineNuxtConfig({
 		"leaflet/dist/leaflet.css",
 	],
 
+	features: {
+		// This pushes some logs to the client using ssr.
+		// Part of these logs is a timestamp so it will always change and prevent caching
+		// of compressed ssr data.
+		devLogs: false,
+	},
+
 	devtools: {
 		enabled: false, //process.env.NODE_ENV === "development",
 		//https://github.com/nuxt/devtools/issues/722
