@@ -217,9 +217,9 @@ function logInvalidTeiItem(
 	console.error(error);
 }
 
-function parseTeisForCorpusItem(item: TeiCorpus, itemIndex: number): Array<TEI> {
-	return (item.TEIs ?? []).flatMap((tei, teiIndex) => {
-		const parsedTei = TeiSchema.safeParse(tei);
+function parseTeisForCorpusItem(item: TeiCorpus, itemIndex: number): Array<Promise<Array<TEI>>> {
+	return (item.TEIs ?? []).map(async (tei, teiIndex) => {
+		const parsedTei = await TeiSchema.safeParseAsync(tei);
 
 		if (parsedTei.success) {
 			return [parsedTei.data];
@@ -231,27 +231,29 @@ function parseTeisForCorpusItem(item: TeiCorpus, itemIndex: number): Array<TEI> 
 	});
 }
 
-function parseCorpusItem(item: TeiCorpus, itemIndex: number): TeiCorpus | null {
-	const parsedCorpus = TeiCorpusSchema.safeParse(item);
+async function parseCorpusItem(item: TeiCorpus, itemIndex: number): Promise<Array<TeiCorpus>> {
+	const parsedCorpus = await TeiCorpusSchema.safeParseAsync(item);
 
 	if (!parsedCorpus.success) {
 		logInvalidCorpusItem(item, itemIndex, parsedCorpus.error);
-		return null;
+		return [];
 	}
 
-	return {
-		...parsedCorpus.data,
-		TEIs: parseTeisForCorpusItem(parsedCorpus.data, itemIndex),
-	};
+	return [
+		{
+			...parsedCorpus.data,
+			TEIs: (await Promise.all(parseTeisForCorpusItem(parsedCorpus.data, itemIndex))).flat(),
+		},
+	];
 }
 
-function parseRawItems(table: Array<unknown>): Array<TeiCorpus> {
-	return table.flatMap((item, itemIndex) => {
-		if (!isTeiCorpus(item)) return [];
+function parseRawItems(table: Array<unknown>): Array<Promise<Array<TeiCorpus>>> {
+	return table.map((item, itemIndex) => {
+		if (!isTeiCorpus(item)) return Promise.resolve([]);
 
 		const parsedCorpus = parseCorpusItem(item, itemIndex);
 
-		return parsedCorpus ? [parsedCorpus] : [];
+		return parsedCorpus;
 	});
 }
 
@@ -881,7 +883,7 @@ export const useTeiHeadersStore = defineStore("use-tei-headers-store", () => {
 			await suspense();
 
 			const staticDataTable = projectData.value?.projectConfig?.staticData?.table ?? [];
-			const parsedRawItems = parseRawItems(staticDataTable);
+			const parsedRawItems = (await Promise.all(parseRawItems(staticDataTable))).flat();
 
 			rawItems.value = parsedRawItems;
 			simpleItems.value = buildSimpleItems(parsedRawItems, parseGeoItems(staticDataTable));
