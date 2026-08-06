@@ -20,8 +20,6 @@ import { type simpleTEIMetadata, SimpleTEIMetadataSchema } from "@/types/teiCorp
 
 const TeiCorpusSchema = z.fromJSONSchema(useOpenapiSchema("TeiCorpus")) as z.ZodType<TeiCorpus>;
 const TeiSchema = z.fromJSONSchema(useOpenapiSchema("TEI")) as z.ZodType<TEI>;
-const AuthorRefSchema = z.fromJSONSchema(useOpenapiSchema("AuthorRef")) as z.ZodType<AuthorRef>;
-const AuthorSchema = z.fromJSONSchema(useOpenapiSchema("Author")) as z.ZodType<Author>;
 const GeoPlaceSchema = z.fromJSONSchema(useOpenapiSchema("GeoPlace")) as z.ZodType<GeoPlace>;
 
 const supportedResponsibilities = [
@@ -187,6 +185,14 @@ function isTeiCorpus(item: unknown): item is TeiCorpus {
 	return Object.prototype.hasOwnProperty.call(item, "TEIs");
 }
 
+function isAuthor(item: Author | AuthorRef | undefined): item is Author {
+	return Object.prototype.hasOwnProperty.call(item, "@id");
+}
+
+function isAuthorRef(item: Author | AuthorRef | string | undefined): item is AuthorRef {
+	return Object.prototype.hasOwnProperty.call(item, "@ref");
+}
+
 function logInvalidCorpusItem(item: unknown, itemIndex: number, error: z.ZodError): void {
 	if (hasIDAttribute(item)) {
 		console.error(`Error parsing item ${itemIndex.toString()} with @id: ${item["@id"]}`);
@@ -317,12 +323,8 @@ function formatDuration(durationInSeconds: number | undefined): string | undefin
 	)}:${String(seconds).padStart(2, "0")}`;
 }
 
-function resolveAuthorReference(value: unknown): string | undefined {
-	return AuthorRefSchema.safeParse(value).data?.["@ref"];
-}
-
-function resolveAuthorFromRespStmt(respStmt: RespStmt | undefined): Author | undefined {
-	return respStmt ? AuthorSchema.safeParse(respStmt.persName).data : undefined;
+function resolveAuthorFromRespStmt(respStmt: RespStmt | undefined) {
+	return respStmt && isAuthor(respStmt.persName) ? respStmt.persName : undefined;
 }
 
 function resolveAuthorDisplayName(author: Author | undefined): string | undefined {
@@ -341,19 +343,21 @@ function resolveRecordingResponsibilityName(
 	const persName = recording?.respStmt?.persName ?? recording?.p?.$ ?? "Recording record malformed";
 
 	if (!corpusMetadata) {
-		return resolveAuthorReference(persName)?.replace("corpus:", "") ?? "";
+		return isAuthorRef(persName) ? persName["@ref"].replace("corpus:", "") : "";
 	}
 
 	const matchingRespStmt = corpusMetadata.fileDesc.titleStmt.respStmts?.find((respStmt) => {
-		return resolveAuthorReference(respStmt.persName) === resolveAuthorReference(persName);
+		return (
+			isAuthorRef(respStmt.persName) &&
+			isAuthorRef(persName) &&
+			respStmt.persName["@ref"] === persName["@ref"]
+		);
 	});
 	const matchingAuthor = resolveAuthorFromRespStmt(matchingRespStmt);
 
-	return (
-		resolveAuthorDisplayName(matchingAuthor) ??
-		resolveAuthorReference(persName)?.replace("corpus:", "") ??
-		""
-	);
+	return isAuthorRef(persName)
+		? (resolveAuthorDisplayName(matchingAuthor) ?? persName["@ref"].replace("corpus:", ""))
+		: "";
 }
 
 function resolvePlaceSettlement(item: TEI): string | undefined {
@@ -489,8 +493,9 @@ function resolveResponsiblePeople(
 ): { given: string; family: string } {
 	const matchingRespStmt = corpusMetadata.fileDesc.titleStmt.respStmts?.find((corpusRespStmt) => {
 		return (
-			resolveAuthorReference(itemRespStmt.persName) ===
-			resolveAuthorReference(corpusRespStmt.persName)
+			isAuthorRef(itemRespStmt.persName) &&
+			isAuthorRef(corpusRespStmt.persName) &&
+			itemRespStmt.persName["@ref"] === corpusRespStmt.persName["@ref"]
 		);
 	});
 	const author = resolveAuthorFromRespStmt(matchingRespStmt);
