@@ -14,14 +14,22 @@ import { ensureFilterValueMap, FilterValueMap } from "../utils/filter-value-map"
 
 const { AND_OPERATOR } = useAdvancedQueries();
 
-function normalizeOperators(input: string): string {
-	// Only replace AND/OR/NOT outside of quoted values
+function mapOutsideQuotes(input: string, transform: (part: string) => string): string {
 	return input
 		.split(/(".*?")/)
-		.map((part, i) =>
-			i % 2 === 0 ? part.replace(/\b(?:and|or|not)\b/gi, (op) => op.toUpperCase()) : part,
-		)
+		.map((part, i) => (i % 2 === 0 ? transform(part) : part))
 		.join("");
+}
+
+function normalizeOperators(input: string): string {
+	// Only replace AND/OR/NOT outside of quoted values
+	return mapOutsideQuotes(input, (part) =>
+		part.replace(/\b(?:and|or|not)\b/gi, (op) => op.toUpperCase()),
+	);
+}
+
+function collapseSpaces(input: string): string {
+	return mapOutsideQuotes(input, (part) => part.replaceAll(/ {2,}/g, " "));
 }
 
 function parse(query: string) {
@@ -821,7 +829,7 @@ function syncGlobalAndColumnFilters(table: Table<unknown>) {
 		})
 		.flat();
 	currentGlobalFilter = matchQueryStringAndFilters(currentGlobalFilter, assembledColumnFilters);
-	currentGlobalFilter = currentGlobalFilter.replace(/^ OR /, "").replaceAll("  ", " ");
+	currentGlobalFilter = collapseSpaces(currentGlobalFilter.replace(/^ OR /, ""));
 	// Check if "AND" would incorrectly be overwritten with "OR"
 	const globalFilterWithAndReplacedOutside = String(table.getState().globalFilter ?? "").replaceAll(
 		/\bAND\b(?![^(]*\))/g,
@@ -839,7 +847,7 @@ function addMetaFilter(originalQuery: string, metaKey: string, metaValue: string
 	if (Array.isArray(metaValue))
 		newFilter = metaValue.map((val) => `${metaKey}:${val}`).join(" OR ");
 	else newFilter = `${metaKey}:${metaValue}`;
-	return `${originalQuery} AND ${newFilter}`.replaceAll(/ {2,}/g, " ");
+	return collapseSpaces(`${originalQuery} AND ${newFilter}`);
 }
 
 function getTraversedAST(query: string) {

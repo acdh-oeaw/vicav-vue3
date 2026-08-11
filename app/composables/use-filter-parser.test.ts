@@ -12,6 +12,7 @@ const {
 	matchQueryStringAndFilters,
 	syncGlobalAndColumnFilters,
 	normalizeParens,
+	addMetaFilter,
 } = useFilterParser();
 
 interface TestInterface {
@@ -349,6 +350,56 @@ describe("normalizeParens", () => {
 	test("mixed: nested expression is kept", () => {
 		expect(normalizeParens('((fruit:"apple" OR fruit:"banana") AND color:"red")')).toBe(
 			'((fruit:"apple" OR fruit:"banana") AND color:"red")',
+		);
+	});
+});
+
+describe("Quoted feature values are preserved verbatim", () => {
+	const spacedValue = "A < I   sikát and a - u ";
+
+	const spacedData = [
+		{ fruit: spacedValue, color: "red" },
+		{ fruit: "apple", color: "yellow" },
+	];
+
+	function createSpacedTable() {
+		return useVueTable({
+			get data() {
+				return spacedData;
+			},
+			columns,
+			getCoreRowModel: getCoreRowModel(),
+		}) as Table<unknown>;
+	}
+
+	beforeEach(() => {
+		setActivePinia(createPinia());
+	});
+
+	test("syncGlobalAndColumnFilters keeps consecutive spaces inside the value", () => {
+		const spacedTable = createSpacedTable();
+		const fruitColumn = spacedTable.getColumn("fruit");
+		expect(fruitColumn).toBeDefined();
+		fruitColumn!.toggleVisibility(true);
+		fruitColumn!.setFilterValue(new Map<string, unknown>([[spacedValue, 1]]));
+
+		syncGlobalAndColumnFilters(spacedTable);
+
+		expect(String(spacedTable.getState().globalFilter ?? "")).toBe(`fruit:"${spacedValue}"`);
+	});
+
+	test("parseSearchString maps the query string back to the exact filter value", () => {
+		const spacedTable = createSpacedTable();
+
+		parseSearchString(`fruit:"${spacedValue}"`, spacedTable);
+
+		const fruitFilter = spacedTable.getColumn("fruit")?.getFilterValue() as Map<string, unknown>;
+		expect(fruitFilter.get(spacedValue)).toBe(1);
+	});
+
+	test("addMetaFilter keeps consecutive spaces inside the value", () => {
+		expect(addMetaFilter(`fruit:"${spacedValue}"`, "color", "red")).toBe(
+			`fruit:"${spacedValue}" AND color:red`,
 		);
 	});
 });
