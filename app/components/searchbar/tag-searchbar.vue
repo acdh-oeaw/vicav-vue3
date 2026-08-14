@@ -1,6 +1,6 @@
 <script setup lang="ts">
+import { X } from "@lucide/vue";
 import type { Table } from "@tanstack/vue-table";
-import { X } from "lucide-vue-next";
 import {
 	type AcceptableValue,
 	ComboboxAnchor,
@@ -556,7 +556,7 @@ onMounted(() => {
 					@update:model-value="(val: string) => updateOperator(token.tag.id, val)"
 				>
 					<SelectTrigger
-						class="h-5 w-auto gap-0.5 rounded border-none px-1.5 text-xs font-semibold text-on-muted shadow-none focus:ring-0"
+						class="h-5 w-auto gap-0.5 rounded-sm border-none px-1.5 text-xs font-semibold text-on-muted shadow-none focus:ring-0"
 					>
 						<SelectValue />
 					</SelectTrigger>
@@ -637,7 +637,7 @@ onMounted(() => {
 			>
 				<template v-for="(item, idx) in filteredList" :key="String(item.value)">
 					<ComboboxItem
-						class="flex cursor-default rounded px-2 py-1 data-highlighted:bg-muted"
+						class="flex cursor-default rounded-sm px-2 py-1 data-highlighted:bg-muted"
 						:value="item.value"
 						@select="handleSelect"
 					>

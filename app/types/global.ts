@@ -90,6 +90,7 @@ export const BibliographyEntriesSchema = z.object({
 	params: QueryString.extend({
 		xslt: z.string().optional(),
 		showMap: z.boolean().optional(),
+		isQueryVisible: z.boolean().optional(),
 	}),
 });
 export type BibliographyEntriesWindowItem = WindowItemBase &
@@ -148,6 +149,12 @@ export const FeatureSchema = z.object({
 	params: TextId.extend(TeiSource.partial().shape).extend(ShowCitation.partial().shape),
 });
 export type FeatureWindowItem = WindowItemBase & z.infer<typeof FeatureSchema>;
+
+export const FeatureStatisticsSchema = z.object({
+	targetType: z.literal("FeatureStatistics"),
+	params: z.object({ featureId: z.string() }).extend(ShowCitation.partial().shape),
+});
+export type FeatureStatisticsWindowItem = WindowItemBase & z.infer<typeof FeatureStatisticsSchema>;
 
 export const FeatureValueSchema = z.object({
 	targetType: z.literal("FeatureValue"),
@@ -232,11 +239,18 @@ export type MarkerType = z.infer<typeof MarkerEnum>;
 export const GeojsonMapSchema = z.object({
 	targetType: z.literal("GeojsonMap"),
 	params: z.object({
-		url: z.string(),
 		markerType: MarkerEnum.optional(),
 	}),
 });
 export type GeojsonMapWindowItem = WindowItemBase & z.infer<typeof GeojsonMapSchema>;
+
+export const SimpleMetadataListSortMode = z.enum(["hit-count", "alphabetical"]);
+export const SimpleMetadataListState = z.object({
+	sortMode: SimpleMetadataListSortMode.optional(),
+	globalFilter: z.string().optional(),
+	facets: z.record(z.string(), z.array(z.string())).optional(),
+});
+export type SimpleMetadataListState = z.infer<typeof SimpleMetadataListState>;
 
 export const DataListSchema = z.object({
 	targetType: z.literal("DataList"),
@@ -249,6 +263,7 @@ export const DataListSchema = z.object({
 					value: z.string(),
 				})
 				.optional(),
+			listState: SimpleMetadataListState.optional(),
 		})
 		.extend(TextId.partial().shape),
 });
@@ -281,6 +296,7 @@ export const Schema = z.discriminatedUnion("targetType", [
 	CorpusQuerySchema,
 	CorpusTextSchema,
 	FeatureSchema,
+	FeatureStatisticsSchema,
 	FeatureValueSchema,
 	GeoMapSchema,
 	ProfileSchema,

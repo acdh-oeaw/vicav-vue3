@@ -49,7 +49,7 @@ export interface RenderedExample {
 	locations: Array<RenderedLocation>;
 	translations: Array<RenderedText>;
 	editors: Array<RenderedEditor>;
-	bibliography: Array<string>;
+	bibliography: Array<RenderedBibliographyReference>;
 	metadata: Array<RenderedMetadataItem>;
 }
 
@@ -57,6 +57,7 @@ export interface RenderedSense {
 	id?: string;
 	ana?: string;
 	definitions: Array<RenderedText>;
+	glosses: Array<RenderedText>;
 	translations: Array<RenderedText>;
 	grammar: Array<RenderedGrammarItem>;
 	locations: Array<RenderedLocation>;
@@ -64,9 +65,16 @@ export interface RenderedSense {
 	metadata: Array<RenderedMetadataItem>;
 }
 
-export interface RenderedBibliographyItem {
-	id: string;
+export interface RenderedBibliographyReference {
+	sourceId?: string;
 	label: string;
+	rawReference?: string;
+	queryString: string;
+}
+
+export interface RenderedEtymologyGroup {
+	etymologies: Array<RenderedText>;
+	levels: Array<Array<RenderedText>>;
 }
 
 export interface RenderedDictEntry {
@@ -83,7 +91,8 @@ export interface RenderedDictEntry {
 	location?: string;
 	locations: Array<RenderedLocation>;
 	etymologies: Array<RenderedText>;
-	bibliography: Array<RenderedBibliographyItem>;
+	etymologyGroups: Array<RenderedEtymologyGroup>;
+	bibliography: Array<RenderedBibliographyReference>;
 	lemmaForms: Array<RenderedForm>;
 	variantForms: Array<RenderedForm>;
 	quote?: RenderedText;
@@ -124,6 +133,7 @@ interface ExampleLike {
 		"@id"?: string;
 		title?: {
 			"@ref"?: string;
+			$?: string;
 		};
 		biblScope?: {
 			"@unit"?: string;
@@ -206,7 +216,7 @@ interface TranslationEquivalentLike {
 	form?: {
 		orth?: TextNodeLike;
 	};
-	gloss?: TextNodeLike;
+	gloss?: TextNodeLike | string;
 }
 
 interface RelatedXrLike {
@@ -229,6 +239,7 @@ interface SenseLike {
 	defs?: Array<TextNodeLike>;
 	translationEquivalent_cit?: TranslationEquivalentLike;
 	translationEquivalent_cits?: Array<TranslationEquivalentLike>;
+	glosses?: Array<TextNodeLike>;
 	geographic_usg?: EntryLocationLike;
 	geographic_usgs?: Array<EntryLocationLike>;
 	example_cit?: ExampleLike;
@@ -270,6 +281,7 @@ interface BibliographyLike {
 	"@id"?: string;
 	title?: {
 		"@ref"?: string;
+		$?: string;
 	};
 	biblScope?: {
 		"@unit"?: string;
@@ -280,6 +292,7 @@ interface BibliographyLike {
 interface EtymonLike {
 	form?: {
 		orth?: TextNodeLike;
+		orths?: Array<TextNodeLike>;
 	};
 }
 
@@ -363,7 +376,10 @@ function collectTranslationEquivalents(
 	return [...asArray(single), ...asArray(multiple)].flatMap((translation) => {
 		const lang = translation.form?.orth?.["@lang"] ?? translation["@lang"];
 		const text = translation.form?.orth?.$?.trim();
-		const gloss = translation.gloss?.$?.trim();
+		const gloss =
+			typeof translation.gloss === "string"
+				? translation.gloss.trim()
+				: translation.gloss?.$?.trim();
 
 		if (text != null && text !== "") {
 			return [{ lang, gloss, source: normalizeSource(translation["@source"]), text }];
@@ -451,44 +467,63 @@ function collectGrammar(grammar: GrammarLike | string | undefined): Array<Render
 	);
 }
 
-function formatBibliographyTitle(title: string | undefined): string | undefined {
-	if (title == null || title === "") return undefined;
+export function deriveBibliographyQueryString(
+	rawReference: string | undefined,
+	citationLabelWithoutPageScope: string,
+): string {
+	if (rawReference?.toLocaleLowerCase().startsWith("zot:") === true) {
+		return rawReference;
+	}
 
-	const label = title.replace(/^zot:/, "");
-	const match = /^(?<name>.+?)(?<year>\d{4})$/.exec(label);
-	if (match?.groups == null) return label;
-
-	const name = match.groups.name;
-	const year = match.groups.year;
-	if (name == null || year == null) return label;
-
-	return `${name} ${year}`;
+	return citationLabelWithoutPageScope.trim();
 }
 
-function formatBibliographyItem(item: BibliographyLike): string | undefined {
-	const title = formatBibliographyTitle(item.title?.["@ref"]);
-	const scope = item.biblScope?.$;
+function bibliographyTitle(item: BibliographyLike): string | undefined {
+	const visibleTitle = item.title?.$?.trim();
+	if (visibleTitle != null && visibleTitle !== "") return visibleTitle;
 
-	if (title == null && scope == null) return undefined;
-	return [title, scope].filter(Boolean).join(", ");
+	const rawReference = item.title?.["@ref"]?.trim();
+	if (rawReference == null || rawReference === "") return undefined;
+	if (rawReference.toLocaleLowerCase().startsWith("zot:")) {
+		return rawReference;
+	}
+
+	return rawReference;
+}
+
+function collectBibliographyReference(
+	item: BibliographyLike,
+): RenderedBibliographyReference | undefined {
+	const title = bibliographyTitle(item);
+	const scope = item.biblScope?.$;
+	const label = [title, scope].filter(Boolean).join(", ");
+	const queryString = deriveBibliographyQueryString(item.title?.["@ref"], title ?? "");
+
+	if (label === "" || queryString === "") return undefined;
+
+	return {
+		sourceId: item["@id"],
+		label,
+		rawReference: item.title?.["@ref"],
+		queryString,
+	};
 }
 
 function collectBibliographyItems(
 	items: Array<BibliographyLike> | BibliographyLike | undefined,
-): Array<RenderedBibliographyItem> {
+): Array<RenderedBibliographyReference> {
 	return asArray(items).flatMap((item) => {
-		const id = item["@id"];
-		const label = formatBibliographyItem(item);
-
-		if (id == null || label == null) return [];
-		return [{ id, label }];
+		const reference = collectBibliographyReference(item);
+		return reference == null ? [] : [reference];
 	});
 }
 
-function collectBibliography(example: ExampleLike | undefined): Array<string> {
+function collectBibliography(
+	example: ExampleLike | undefined,
+): Array<RenderedBibliographyReference> {
 	return asArray(example?.listBibl).flatMap((item) => {
-		const label = formatBibliographyItem(item);
-		return label == null ? [] : [label];
+		const reference = collectBibliographyReference(item);
+		return reference == null ? [] : [reference];
 	});
 }
 
@@ -498,7 +533,36 @@ function collectEtymologies(etym: EtymLike | undefined): Array<RenderedText> {
 	const etymons = asArray(etym.etymon_cit).concat(asArray(etym.etymon_cits));
 	const nested = collectEtymologies(etym.etym);
 
-	return etymons.flatMap((etymon) => collectTextNodes(etymon.form?.orth, undefined)).concat(nested);
+	return etymons
+		.flatMap((etymon) => collectTextNodes(etymon.form?.orth, etymon.form?.orths))
+		.concat(nested);
+}
+
+function collectEtymologyGroups(etym: EtymLike | undefined): Array<RenderedEtymologyGroup> {
+	if (etym == null) return [];
+
+	const nestedGroups = collectEtymologyGroups(etym.etym);
+	const rootGroups = asArray(etym.etymon_cit)
+		.concat(asArray(etym.etymon_cits))
+		.map((etymon) => collectTextNodes(etymon.form?.orth, etymon.form?.orths))
+		.filter((etymologies) => etymologies.length > 0);
+
+	if (rootGroups.length === 0) {
+		return nestedGroups;
+	}
+
+	const lastRootIndex = rootGroups.length - 1;
+
+	return rootGroups.map((etymologies, index) => {
+		const nestedLevels =
+			index === lastRootIndex ? nestedGroups.flatMap((group) => group.levels) : [];
+		const levels = [etymologies].concat(nestedLevels);
+
+		return {
+			etymologies: levels.flat(),
+			levels,
+		};
+	});
 }
 
 function collectForm(
@@ -630,6 +694,7 @@ export function normalizeEntry(entry: RestVLEEntry): RenderedDictEntry {
 			selfHref: entry._links.self.href,
 			locations: [],
 			etymologies: [],
+			etymologyGroups: [],
 			bibliography: [],
 			lemmaForms: [],
 			variantForms: [],
@@ -694,6 +759,7 @@ export function normalizeEntry(entry: RestVLEEntry): RenderedDictEntry {
 	);
 	const grammar = collectGrammar(normalizedPayload?.gramGrp);
 	const etymologies = collectEtymologies(normalizedPayload?.etym);
+	const etymologyGroups = collectEtymologyGroups(normalizedPayload?.etym);
 	const bibliography = collectBibliographyItems(normalizedPayload?.listBibl);
 	const inflectedForms = collectForm(
 		normalizedPayload?.inflected_form,
@@ -710,6 +776,7 @@ export function normalizeEntry(entry: RestVLEEntry): RenderedDictEntry {
 				id: sense["@id"],
 				ana: sense["@ana"],
 				definitions: collectTextNodes(sense.def, sense.defs),
+				glosses: collectTextNodes(undefined, sense.glosses),
 				translations: collectTranslationEquivalents(
 					sense.translationEquivalent_cit,
 					sense.translationEquivalent_cits,
@@ -745,6 +812,7 @@ export function normalizeEntry(entry: RestVLEEntry): RenderedDictEntry {
 		location,
 		locations,
 		etymologies,
+		etymologyGroups,
 		bibliography,
 		lemmaForms,
 		variantForms,

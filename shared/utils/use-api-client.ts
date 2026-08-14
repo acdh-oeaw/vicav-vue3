@@ -21,7 +21,7 @@ function basicSecurityWorker(securityData: userPass | null): RequestParams | und
 // The node code produced with build has a shared global scope.
 
 // This cache stores for each URL a mapping of ETag to response body and expiration date.
-const cache = new Map<string, { ETag: string; body: unknown; expiresAt: Date }>();
+const cache = new Map<string, { ETag: string; body: Uint8Array<ArrayBuffer>; expiresAt: Date }>();
 // Avoid multiple simultaneous requests for the same URL + query params.
 // The rest of the code at the moment only works for GET requests,
 // so URL + query params is sufficient to uniquely identify requests.
@@ -37,7 +37,7 @@ async function fetchWithETag(
 	const cachedEntry = cache.get(url);
 
 	if (cachedEntry && new Date() < cachedEntry.expiresAt) {
-		return new Response(JSON.stringify(cachedEntry.body), {
+		return new Response(cachedEntry.body, {
 			status: 200,
 			headers: {
 				"X-Cache": "fetchWithETag HIT",
@@ -72,7 +72,7 @@ async function fetchWithETag(
 		currentRequests.delete(url);
 		if (cachedEntry) {
 			console.warn("Fetch with ETag failed, returning cached version...", error);
-			return new Response(JSON.stringify(cachedEntry.body), { status: 200 });
+			return new Response(cachedEntry.body, { status: 200 });
 		} else {
 			throw new Error(
 				`Could not fetch and cache with ETag! ${error instanceof Error ? error.message : String(error)}`,
@@ -102,7 +102,7 @@ async function fetchWithETag(
 			cachedEntry.expiresAt.setSeconds(
 				cachedEntry.expiresAt.getSeconds() + (maxAge > 0 ? maxAge : 5),
 			);
-			if (cachedEntry.body) return new Response(JSON.stringify(cachedEntry.body), { status: 200 });
+			return new Response(cachedEntry.body, { status: 200 });
 		}
 		throw new Error(`Cache error!`);
 	} else if (response.ok) {
@@ -112,7 +112,7 @@ async function fetchWithETag(
 			expiresAt.setSeconds(expiresAt.getSeconds() + (maxAge > 0 ? maxAge : 5));
 			const cacheEntry = {
 				ETag: currentETag,
-				body: (await response.clone().json()) as unknown,
+				body: new Uint8Array(await response.clone().arrayBuffer()),
 				expiresAt,
 			};
 			// console.log(
@@ -120,7 +120,7 @@ async function fetchWithETag(
 			// );
 			cache.set(url, cacheEntry);
 		}
-		return new Response(JSON.stringify(await response.clone().json()), { status: 200 });
+		return response;
 	} else {
 		return response;
 	}

@@ -1,14 +1,11 @@
 // Adapted from https://reka-ui.com/examples/combobox-textarea
 
 import type { Table } from "@tanstack/vue-table";
-import { storeToRefs } from "pinia";
 
 import type { TriggerMap } from "@/components/searchbar";
 import { type TaxonomyTreeEntry, useGeojsonStore } from "@/stores/use-geojson-store.ts";
 
 const GeojsonStore = useGeojsonStore();
-const { tables } = storeToRefs(GeojsonStore);
-const url = GeojsonStore.wibarabGeojsonUrl;
 
 const {
 	getTaxonomyTree,
@@ -18,7 +15,7 @@ const {
 } = useGeojsonStore();
 
 function getFeatureList() {
-	const table = tables.value.get(url);
+	const table = GeojsonStore.table;
 	if (!table) return [];
 	const features = table
 		.getAllLeafColumns()
@@ -33,7 +30,7 @@ function getFeatureList() {
 const features = computed(() => getFeatureList());
 
 function getValueList(columns: typeof features.value) {
-	const table = tables.value.get(url);
+	const table = GeojsonStore.table;
 	if (!table) return [];
 
 	function traverseTaxonomyTree(
@@ -78,7 +75,7 @@ function getValueList(columns: typeof features.value) {
 function getMetaInfoList() {
 	const excludedMetaInfoKeys = new Set(["source_representations", "examples", "resp"]);
 
-	const table = tables.value.get(url);
+	const table = GeojsonStore.table;
 	const metaInfo = new Map<string, Set<string>>();
 	if (!table) return new Map() as TriggerMap;
 	table.getCoreRowModel().rows.forEach((row) => {

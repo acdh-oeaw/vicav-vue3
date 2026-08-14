@@ -2,6 +2,7 @@
 const env = useRuntimeConfig();
 const { data: config } = useProjectInfo();
 const funders = computed(() => config.value?.projectConfig?.funders ?? []);
+const partners = computed(() => config.value?.projectConfig?.partners ?? []);
 </script>
 
 <template>
@@ -20,7 +21,7 @@ const funders = computed(() => config.value?.projectConfig?.funders ?? []);
 			<span class="flex gap-1">
 				<span>&copy; {{ new Date().getUTCFullYear() }}</span>
 				<a class="hover:underline hover:underline-offset-2" href="https://www.oeaw.ac.at/acdh">
-					ACDH-CH
+					ACDH
 				</a>
 			</span>
 			<span>|</span>
@@ -85,14 +86,14 @@ const funders = computed(() => config.value?.projectConfig?.funders ?? []);
 					<div
 						class="mt-4 max-w-[33.333%] flex-none px-4"
 						:class="
-							(funders.length ?? 0) > 0
+							((funders.length ?? 0) || (partners.length ?? 0)) > 0
 								? 'w-auto md:w-auto lg:w-auto'
 								: 'w-3/4 sm:w-1/2 md:w-1/3 lg:w-1/3'
 						"
 					>
 						<div>
 							<p class="mt-0 mb-4 block">
-								ACDH-CH
+								ACDH
 								<br />
 								Austrian Centre for Digital Humanities
 								<br />
@@ -109,7 +110,7 @@ const funders = computed(() => config.value?.projectConfig?.funders ?? []);
 								T: +43 1 51581-2200
 								<br />
 								E:
-								<a href="mailto:acdh-ch@oeaw.ac.at">acdh-ch@oeaw.ac.at</a>
+								<a href="mailto:acdh@oeaw.ac.at">acdh@oeaw.ac.at</a>
 							</p>
 						</div>
 					</div>
@@ -120,17 +121,45 @@ const funders = computed(() => config.value?.projectConfig?.funders ?? []);
 					>
 						<h6 class="mb-2 block font-bold">HELPDESK</h6>
 						<p class="mt-0 mb-4 block">
-							ACDH-CH runs a helpdesk offering advice for questions related to various digital
+							ACDH runs a helpdesk offering advice for questions related to various digital
 							humanities topics.
 						</p>
 						<p class="mt-0 mb-4 block">
 							<a
 								class="block max-w-xs rounded-3xl border border-[#88dbdf] bg-white px-5 py-1 text-xs font-semibold text-[#88dbdf] transition-colors duration-200 ease-in-out hover:bg-[#88dbdf] hover:text-white"
-								href="mailto:acdh-ch-helpdesk@oeaw.ac.at"
+								href="mailto:acdh-helpdesk@oeaw.ac.at"
 							>
 								ASK US!
 							</a>
 						</p>
+					</div>
+					<!-- .footer-widget -->
+					<div
+						v-if="(partners.length ?? 0) > 0"
+						class="mt-4 ml-auto w-full max-w-[33.333%] shrink-0 grow-0 basis-1/4 px-4 sm:w-1/3 md:w-1/3 lg:w-1/4"
+					>
+						<h6 class="sr-only mb-2 block font-bold">Funding</h6>
+						<template v-for="partner in partners" :key="partner.partnerLink">
+							<img
+								:alt="partner.logoID"
+								class="mt-2 mb-4 block"
+								:src="
+									partner.logoID?.startsWith('http')
+										? partner.logoID
+										: `/assets/images/${partner.logoID}.png`
+								"
+							/>
+							<p class="mt-0 mb-4 block text-sm">
+								{{ partner.text }}
+								<a
+									class="text-[#88dbdf] transition duration-200 ease-in-out hover:brightness-75"
+									:href="partner.partnerLink ?? '#'"
+									target="_blank"
+								>
+									{{ partner.partnerLink }}
+								</a>
+							</p>
+						</template>
 					</div>
 					<!-- .footer-widget -->
 					<div

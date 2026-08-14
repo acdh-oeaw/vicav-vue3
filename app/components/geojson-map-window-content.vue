@@ -15,24 +15,20 @@ const { params } = toRefs(props);
 
 const GeojsonStore = useGeojsonStore();
 
-const { tables } = storeToRefs(GeojsonStore);
 const labelDisplayMode = ref<"on" | "off" | "default">("default");
 const defaultDisplayLabelsZoom = 10;
 
 const filteredMarkers = computed(() => {
-	return tables.value
-		.get(params.value.url)
-		?.getFilteredRowModel()
-		.rows.map((row) => {
-			const marker = row.original;
-			if (!("label" in marker.properties)) marker.properties.label = marker.properties.name;
-			marker.properties.targetType = "Location";
-			return marker;
-		});
+	return GeojsonStore.table?.getFilteredRowModel().rows.map((row) => {
+		const marker = row.original;
+		if (!("label" in marker.properties)) marker.properties.label = marker.properties.name;
+		marker.properties.targetType = "Location";
+		return marker;
+	});
 });
 
 const selectedRowCoordinates = computed(() => {
-	const selection = tables.value.get(params.value.url)?.getSelectedRowModel();
+	const selection = GeojsonStore.table?.getSelectedRowModel();
 	return (
 		selection?.rows.map((r) => r.original.geometry.coordinates as [number, number])[0] ?? undefined
 	);
@@ -40,8 +36,7 @@ const selectedRowCoordinates = computed(() => {
 
 const openOrUpdateWindow = useOpenOrUpdateWindow();
 function onMarkerClick(feature: Feature) {
-	const selection = tables.value
-		.get(params.value.url)
+	const selection = GeojsonStore.table
 		?.getCoreRowModel()
 		.flatRows.find((row) => row.original.id === feature.id);
 	selection?.toggleSelected(true);

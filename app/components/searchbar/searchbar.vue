@@ -1,6 +1,6 @@
 <script setup lang="ts">
+import { SquareMousePointer, TextCursorInput, X } from "@lucide/vue";
 import type { Table } from "@tanstack/vue-table";
-import { SquareMousePointer, TextCursorInput, X } from "lucide-vue-next";
 import { computed, nextTick, ref, watch } from "vue";
 
 import type { SpecialCharacters } from "@/lib/api-client";

@@ -1,6 +1,6 @@
 <script lang="ts" setup>
+import { ExternalLink, Map } from "@lucide/vue";
 import type { Table } from "@tanstack/vue-table";
-import { ExternalLink, Map } from "lucide-vue-next";
 
 import { type FeatureValueWindowItem, GeojsonMapSchema, type WindowItem } from "@/types/global.ts";
 import type { simpleTEIMetadata } from "@/types/teiCorpus";
@@ -85,17 +85,16 @@ const citation = computed(() => {
 	} as simpleTEIMetadata;
 });
 
-const { tables } = useGeojsonStore();
+const geojsonStore = useGeojsonStore();
 const openOrUpdateWindow = useOpenOrUpdateWindow();
 const { parseSearchString } = useFilterParser();
-const { wibarabGeojsonUrl } = useGeojsonStore();
 function getQueryString(updateQueryTo: QueryUpdateType, entry: (typeof props.params.values)[0]) {
 	return updateQueryTo === "value"
 		? `${entry.featureId}:"${entry.title}"`
 		: `${entry.featureId}:ANY`;
 }
 function updateMap(updateQueryTo: QueryUpdateType, entry: (typeof props.params.values)[0]) {
-	const table = tables.get(wibarabGeojsonUrl);
+	const table = geojsonStore.table;
 	if (!table) return;
 	const searchString = getQueryString(updateQueryTo, entry);
 
@@ -105,14 +104,25 @@ function updateMap(updateQueryTo: QueryUpdateType, entry: (typeof props.params.v
 		{
 			targetType: "GeojsonMap",
 			params: {
-				url: wibarabGeojsonUrl,
 				markerType: "petal",
 			},
 		} as unknown as WindowItem,
 		"Variety Data - Map View",
 		GeojsonMapSchema.shape.params,
-		"url",
+		"markerType",
 		true,
+	);
+}
+function onFeatureClick(val: Record<string, unknown>) {
+	openOrUpdateWindow(
+		{
+			targetType: "FeatureStatistics",
+			params: {
+				featureId: val.featureId,
+				showCitation: false,
+			},
+		} as unknown as WindowItem,
+		`Feature: ${val.feature}`,
 	);
 }
 </script>
@@ -134,6 +144,14 @@ function updateMap(updateQueryTo: QueryUpdateType, entry: (typeof props.params.v
 									<span class="sr-only">View Source</span
 									><ExternalLink class="inline-block size-3.5" /> </NuxtLink
 							></template>
+							<template v-else-if="entry.key === 'feature'">
+								<Button
+									class="h-auto shrink-0 p-0 font-normal text-black!"
+									variant="link"
+									@click="onFeatureClick(params.values[valueIdx])"
+									>{{ value }}</Button
+								></template
+							>
 							<template v-else> {{ value }}</template>
 
 							<Tooltip v-if="entry.updateQueryTo">

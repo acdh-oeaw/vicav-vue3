@@ -28,6 +28,13 @@ export default defineNuxtConfig({
 		"leaflet/dist/leaflet.css",
 	],
 
+	features: {
+		// This pushes some logs to the client using ssr.
+		// Part of these logs is a timestamp so it will always change and prevent caching
+		// of compressed ssr data.
+		devLogs: false,
+	},
+
 	devtools: {
 		enabled: false, //process.env.NODE_ENV === "development",
 		//https://github.com/nuxt/devtools/issues/722
@@ -56,6 +63,13 @@ export default defineNuxtConfig({
 			preset: {
 				name: "custom",
 				filePath: "./server/instrumentation.ts",
+			},
+		},
+		storage: {
+			compression: {
+				driver: "lruCache",
+				ttl: 15 * 60 * 1000,
+				max: 100,
 			},
 		},
 	},
@@ -127,7 +141,7 @@ export default defineNuxtConfig({
 				"zod",
 				"@acdh-oeaw/lib",
 				"colorjs.io/fn",
-				"lucide-vue-next",
+				"@lucide/vue",
 				"radix-vue",
 				"cva",
 				"winbox",
@@ -151,6 +165,8 @@ export default defineNuxtConfig({
 				"class-variance-authority",
 				"@lezer/highlight",
 				"vee-validate",
+				"@unovis/vue",
+				"@unovis/ts",
 			],
 		},
 	},

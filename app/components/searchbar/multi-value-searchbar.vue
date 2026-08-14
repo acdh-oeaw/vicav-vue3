@@ -324,7 +324,7 @@ onBeforeUnmount(() => {
 			>
 				<template v-for="(item, idx) in list" :key="String(item.value)">
 					<ComboboxItem
-						class="flex cursor-default rounded px-2 py-1 data-highlighted:bg-muted"
+						class="flex cursor-default rounded-sm px-2 py-1 data-highlighted:bg-muted"
 						:value="item.value"
 						@select="handleSelect"
 					>

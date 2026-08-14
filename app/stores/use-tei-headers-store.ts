@@ -5,6 +5,7 @@ import {
 	type Author,
 	type AuthorRef,
 	BiblStructType,
+	type GeoPlace,
 	type Person,
 	Responsibility,
 	type RespStmt,
@@ -19,8 +20,7 @@ import { type simpleTEIMetadata, SimpleTEIMetadataSchema } from "@/types/teiCorp
 
 const TeiCorpusSchema = z.fromJSONSchema(useOpenapiSchema("TeiCorpus")) as z.ZodType<TeiCorpus>;
 const TeiSchema = z.fromJSONSchema(useOpenapiSchema("TEI")) as z.ZodType<TEI>;
-const AuthorRefSchema = z.fromJSONSchema(useOpenapiSchema("AuthorRef")) as z.ZodType<AuthorRef>;
-const AuthorSchema = z.fromJSONSchema(useOpenapiSchema("Author")) as z.ZodType<Author>;
+const GeoPlaceSchema = z.fromJSONSchema(useOpenapiSchema("GeoPlace")) as z.ZodType<GeoPlace>;
 
 const supportedResponsibilities = [
 	Responsibility.Author,
@@ -38,6 +38,10 @@ type ResponsibilityPeople = Partial<
 	Record<Responsibility, Array<{ given: string; family: string }>>
 >;
 type PublicationMetadata = simpleTEIMetadata["publication"];
+type PlaceMetadata = simpleTEIMetadata["place"];
+interface GeoPlaceSource {
+	text: { body: { listPlace: Array<GeoPlace> } };
+}
 export type GroupedSimpleItemsByDataType = Partial<Record<DataTypesEnum, Array<simpleTEIMetadata>>>;
 export type GroupedSimpleItemsByPlace = Record<string, GroupedSimpleItemsByDataType>;
 export type GroupedSimpleItemsByRegion = Record<string, GroupedSimpleItemsByPlace>;
@@ -135,14 +139,14 @@ export const simpleMetadataAccessors = {
 	},
 	audioAvailability: {
 		key: "audioAvailability",
-		label: "Audio",
+		label: "Audio available",
 		getValue: (item) => item.audioAvailability,
 		filterable: true,
 		sortable: true,
 	},
 	"@hasTEIw": {
 		key: "@hasTEIw",
-		label: "TEI",
+		label: "Transcription available",
 		getValue: (item) => item["@hasTEIw"],
 		filterable: true,
 		sortable: true,
@@ -181,6 +185,14 @@ function isTeiCorpus(item: unknown): item is TeiCorpus {
 	return Object.prototype.hasOwnProperty.call(item, "TEIs");
 }
 
+function isAuthor(item: Author | AuthorRef | undefined): item is Author {
+	return Object.prototype.hasOwnProperty.call(item, "@id");
+}
+
+function isAuthorRef(item: Author | AuthorRef | string | undefined): item is AuthorRef {
+	return Object.prototype.hasOwnProperty.call(item, "@ref");
+}
+
 function logInvalidCorpusItem(item: unknown, itemIndex: number, error: z.ZodError): void {
 	if (hasIDAttribute(item)) {
 		console.error(`Error parsing item ${itemIndex.toString()} with @id: ${item["@id"]}`);
@@ -211,9 +223,9 @@ function logInvalidTeiItem(
 	console.error(error);
 }
 
-function parseTeisForCorpusItem(item: TeiCorpus, itemIndex: number): Array<TEI> {
-	return (item.TEIs ?? []).flatMap((tei, teiIndex) => {
-		const parsedTei = TeiSchema.safeParse(tei);
+function parseTeisForCorpusItem(item: TeiCorpus, itemIndex: number): Array<Promise<Array<TEI>>> {
+	return (item.TEIs ?? []).map(async (tei, teiIndex) => {
+		const parsedTei = await TeiSchema.safeParseAsync(tei);
 
 		if (parsedTei.success) {
 			return [parsedTei.data];
@@ -225,27 +237,60 @@ function parseTeisForCorpusItem(item: TeiCorpus, itemIndex: number): Array<TEI> 
 	});
 }
 
-function parseCorpusItem(item: TeiCorpus, itemIndex: number): TeiCorpus | null {
-	const parsedCorpus = TeiCorpusSchema.safeParse(item);
+async function parseCorpusItem(item: TeiCorpus, itemIndex: number): Promise<Array<TeiCorpus>> {
+	const parsedCorpus = await TeiCorpusSchema.safeParseAsync(item);
 
 	if (!parsedCorpus.success) {
 		logInvalidCorpusItem(item, itemIndex, parsedCorpus.error);
-		return null;
+		return [];
 	}
 
-	return {
-		...parsedCorpus.data,
-		TEIs: parseTeisForCorpusItem(parsedCorpus.data, itemIndex),
-	};
+	return [
+		{
+			...parsedCorpus.data,
+			TEIs: (await Promise.all(parseTeisForCorpusItem(parsedCorpus.data, itemIndex))).flat(),
+		},
+	];
 }
 
-function parseRawItems(table: Array<unknown>): Array<TeiCorpus> {
-	return table.flatMap((item, itemIndex) => {
-		if (!isTeiCorpus(item)) return [];
+function parseRawItems(table: Array<unknown>): Array<Promise<Array<TeiCorpus>>> {
+	return table.map((item, itemIndex) => {
+		if (!isTeiCorpus(item)) return Promise.resolve([]);
 
 		const parsedCorpus = parseCorpusItem(item, itemIndex);
 
-		return parsedCorpus ? [parsedCorpus] : [];
+		return parsedCorpus;
+	});
+}
+
+function getRecordProperty(value: unknown, key: string): unknown {
+	if (!value || typeof value !== "object") return undefined;
+
+	return (value as Record<string, unknown>)[key];
+}
+
+function parseGeoItems(table: Array<unknown>): Array<GeoPlaceSource> {
+	return table.flatMap((item) => {
+		const itemRecord = item && typeof item === "object" ? (item as Record<string, unknown>) : {};
+		const candidates = [item, itemRecord.Geo, itemRecord.TEI].filter(Boolean);
+
+		for (const candidate of candidates) {
+			const text = getRecordProperty(candidate, "text");
+			const body = getRecordProperty(text, "body");
+			const listPlace = getRecordProperty(body, "listPlace");
+
+			if (!Array.isArray(listPlace)) continue;
+
+			const places = listPlace.flatMap((place) => {
+				const parsedPlace = GeoPlaceSchema.safeParse(place);
+
+				return parsedPlace.success ? [parsedPlace.data] : [];
+			});
+
+			if (places.length > 0) return [{ text: { body: { listPlace: places } } }];
+		}
+
+		return [];
 	});
 }
 
@@ -278,12 +323,8 @@ function formatDuration(durationInSeconds: number | undefined): string | undefin
 	)}:${String(seconds).padStart(2, "0")}`;
 }
 
-function resolveAuthorReference(value: unknown): string | undefined {
-	return AuthorRefSchema.safeParse(value).data?.["@ref"];
-}
-
-function resolveAuthorFromRespStmt(respStmt: RespStmt | undefined): Author | undefined {
-	return respStmt ? AuthorSchema.safeParse(respStmt.persName).data : undefined;
+function resolveAuthorFromRespStmt(respStmt: RespStmt | undefined) {
+	return respStmt && isAuthor(respStmt.persName) ? respStmt.persName : undefined;
 }
 
 function resolveAuthorDisplayName(author: Author | undefined): string | undefined {
@@ -302,19 +343,21 @@ function resolveRecordingResponsibilityName(
 	const persName = recording?.respStmt?.persName ?? recording?.p?.$ ?? "Recording record malformed";
 
 	if (!corpusMetadata) {
-		return resolveAuthorReference(persName)?.replace("corpus:", "") ?? "";
+		return isAuthorRef(persName) ? persName["@ref"].replace("corpus:", "") : "";
 	}
 
 	const matchingRespStmt = corpusMetadata.fileDesc.titleStmt.respStmts?.find((respStmt) => {
-		return resolveAuthorReference(respStmt.persName) === resolveAuthorReference(persName);
+		return (
+			isAuthorRef(respStmt.persName) &&
+			isAuthorRef(persName) &&
+			respStmt.persName["@ref"] === persName["@ref"]
+		);
 	});
 	const matchingAuthor = resolveAuthorFromRespStmt(matchingRespStmt);
 
-	return (
-		resolveAuthorDisplayName(matchingAuthor) ??
-		resolveAuthorReference(persName)?.replace("corpus:", "") ??
-		""
-	);
+	return isAuthorRef(persName)
+		? (resolveAuthorDisplayName(matchingAuthor) ?? persName["@ref"].replace("corpus:", ""))
+		: "";
 }
 
 function resolvePlaceSettlement(item: TEI): string | undefined {
@@ -326,6 +369,89 @@ function resolvePlaceSettlement(item: TEI): string | undefined {
 	if (firstSettlementName?.$) return firstSettlementName.$;
 
 	return place?.settlement?.name.find((name) => name["@lang"] === "en")?.$;
+}
+
+function normalizeGeoReference(reference: string): string {
+	return reference
+		.trim()
+		.replace(/^geo:/i, "")
+		.normalize("NFD")
+		.replace(/[\u0300-\u036f]/g, "")
+		.replace(/[\s_-]+/g, "")
+		.toLowerCase();
+}
+
+function resolveGeoPlaceName(place: GeoPlace): string | undefined {
+	return place.prefLabel_placeName.$ ?? place.standard_placeName?.$ ?? place.local_placeName?.$;
+}
+
+function buildGeoPlaceMetadata(place: GeoPlace): PlaceMetadata {
+	const placeName = resolveGeoPlaceName(place);
+	const hierarchyKey = place["@type"] === "reg" ? "region" : "settlement";
+
+	return {
+		[hierarchyKey]: placeName,
+		country: place.location.country.$,
+	};
+}
+
+function buildGeoPlaceIndex(geoItems: Array<GeoPlaceSource> = []): Map<string, PlaceMetadata> {
+	const geoPlaceIndex = new Map<string, PlaceMetadata>();
+
+	for (const geoItem of geoItems) {
+		for (const place of geoItem.text.body.listPlace) {
+			const placeMetadata = buildGeoPlaceMetadata(place);
+			const references = [
+				place["@id"],
+				resolveGeoPlaceName(place),
+				place.standard_placeName?.$,
+				place.local_placeName?.$,
+				place.geoNames_idno.$,
+			].filter((reference): reference is string => Boolean(reference));
+
+			for (const reference of references) {
+				geoPlaceIndex.set(normalizeGeoReference(reference), placeMetadata);
+			}
+		}
+	}
+
+	return geoPlaceIndex;
+}
+
+function resolveGeoPlaceMetadata(
+	item: TEI,
+	geoPlaceIndex: Map<string, PlaceMetadata>,
+): PlaceMetadata {
+	const directPlaceReference = item.teiHeader?.profileDesc?.settingDesc?.place?.["@sameAs"];
+	const settingPlaceReference =
+		item.teiHeader?.profileDesc?.settingDesc?.setting?.placeName?.["@sameAs"];
+	const languagePlaceReference =
+		item.teiHeader?.profileDesc?.langUsage?.language?.settingDesc?.listPlace?.place?.["@sameAs"];
+	const references = [directPlaceReference, settingPlaceReference, languagePlaceReference].filter(
+		(reference): reference is string => Boolean(reference),
+	);
+
+	for (const reference of references) {
+		const placeMetadata = geoPlaceIndex.get(normalizeGeoReference(reference));
+		if (placeMetadata) return placeMetadata;
+	}
+
+	return {};
+}
+
+function resolvePlaceMetadata(
+	item: TEI,
+	placeSettlement: string | undefined,
+	geoPlaceIndex: Map<string, PlaceMetadata>,
+): PlaceMetadata {
+	const teiPlace = item.teiHeader?.profileDesc?.settingDesc?.place;
+	const geoPlace = resolveGeoPlaceMetadata(item, geoPlaceIndex);
+
+	return {
+		settlement: placeSettlement ?? geoPlace.settlement,
+		country: teiPlace?.country?.$ ?? geoPlace.country,
+		region: teiPlace?.region?.$ ?? geoPlace.region,
+	};
 }
 
 function buildSimplePerson(person: Person) {
@@ -367,8 +493,9 @@ function resolveResponsiblePeople(
 ): { given: string; family: string } {
 	const matchingRespStmt = corpusMetadata.fileDesc.titleStmt.respStmts?.find((corpusRespStmt) => {
 		return (
-			resolveAuthorReference(itemRespStmt.persName) ===
-			resolveAuthorReference(corpusRespStmt.persName)
+			isAuthorRef(itemRespStmt.persName) &&
+			isAuthorRef(corpusRespStmt.persName) &&
+			itemRespStmt.persName["@ref"] === corpusRespStmt.persName["@ref"]
 		);
 	});
 	const author = resolveAuthorFromRespStmt(matchingRespStmt);
@@ -598,6 +725,7 @@ function extractMetadata(
 	item: TEI,
 	dataTypeCollection: string,
 	corpusMetadata: TeiHeader | undefined,
+	geoPlaceIndex: Map<string, PlaceMetadata>,
 ): simpleTEIMetadata | null {
 	const teiHeader = item.teiHeader;
 	const resolvedDataType = resolveDataType(dataTypeCollection);
@@ -608,7 +736,9 @@ function extractMetadata(
 	const title = resolveTitle(item, label, persons);
 	const responsibilityData = buildResponsibilityData(item, corpusMetadata);
 	const parsedItem = SimpleTEIMetadataSchema.safeParse({
-		id: item["@id"] ?? teiHeader?.fileDesc.publicationStmt.idno?.$ ?? "no_id",
+		// Note that there could be several idnos here. The one we need has a type ending in "CorpusID".
+		// At the moment we only need to care about one idno.
+		id: teiHeader?.fileDesc.publicationStmt.idno?.$ ?? item["@id"] ?? "no_id",
 		recordingDate: teiHeader?.fileDesc.sourceDesc.recordingStmt?.recording.date?.["@when"],
 		pubDate: teiHeader?.fileDesc.publicationStmt.date?.$ ?? "unknown",
 		dataType: resolvedDataType,
@@ -619,11 +749,7 @@ function extractMetadata(
 		principal: responsibilityData.principal ?? [],
 		transcription: responsibilityData.transcription ?? [],
 		"transfer to ELAN": responsibilityData["transfer to ELAN"] ?? [],
-		place: {
-			settlement: placeSettlement,
-			country: teiHeader?.profileDesc?.settingDesc?.place?.country?.$ ?? undefined,
-			region: teiHeader?.profileDesc?.settingDesc?.place?.region?.$ ?? undefined,
-		},
+		place: resolvePlaceMetadata(item, placeSettlement, geoPlaceIndex),
 		person: persons,
 		resp:
 			resolvedDataType === "CorpusText" &&
@@ -649,12 +775,16 @@ function findCorpusMetadata(items: Array<TeiCorpus>): TeiHeader | undefined {
 	return items.find((item) => item.teiHeader && item["@id"] === "vicav_corpus")?.teiHeader;
 }
 
-function buildSimpleItems(items: Array<TeiCorpus>): Array<simpleTEIMetadata> {
+function buildSimpleItems(
+	items: Array<TeiCorpus>,
+	geoItems: Array<GeoPlaceSource> = [],
+): Array<simpleTEIMetadata> {
 	const corpusMetadata = findCorpusMetadata(items);
+	const geoPlaceIndex = buildGeoPlaceIndex(geoItems);
 
 	return items.flatMap((teiCorpus) => {
 		return (teiCorpus.TEIs ?? []).flatMap((tei) => {
-			const metadata = extractMetadata(tei, teiCorpus["@id"] ?? "", corpusMetadata);
+			const metadata = extractMetadata(tei, teiCorpus["@id"] ?? "", corpusMetadata, geoPlaceIndex);
 
 			return metadata ? [metadata] : [];
 		});
@@ -735,7 +865,7 @@ export function groupSimpleItems(
 				];
 			}),
 		),
-	) as GroupedSimpleItemsByCountry;
+	);
 }
 
 export const useTeiHeadersStore = defineStore("use-tei-headers-store", () => {
@@ -757,12 +887,11 @@ export const useTeiHeadersStore = defineStore("use-tei-headers-store", () => {
 		initializationPromise = (async () => {
 			await suspense();
 
-			const parsedRawItems = parseRawItems(
-				projectData.value?.projectConfig?.staticData?.table ?? [],
-			);
+			const staticDataTable = projectData.value?.projectConfig?.staticData?.table ?? [];
+			const parsedRawItems = (await Promise.all(parseRawItems(staticDataTable))).flat();
 
 			rawItems.value = parsedRawItems;
-			simpleItems.value = buildSimpleItems(parsedRawItems);
+			simpleItems.value = buildSimpleItems(parsedRawItems, parseGeoItems(staticDataTable));
 			persons.value = extractPersonList(findCorpusMetadata(rawItems.value));
 		})();
 

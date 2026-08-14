@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChevronUp } from "lucide-vue-next";
+import { ChevronUp } from "@lucide/vue";
 import { SelectScrollUpButton, type SelectScrollUpButtonProps } from "radix-vue";
 
 const props = defineProps<SelectScrollUpButtonProps>();

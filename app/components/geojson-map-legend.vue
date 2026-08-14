@@ -1,6 +1,6 @@
 <script setup lang="ts">
+import { ChevronDown } from "@lucide/vue";
 import type { Column } from "@tanstack/vue-table";
-import { ChevronDown } from "lucide-vue-next";
 import type Zod from "zod";
 
 import type { GeojsonMapSchema } from "@/types/global.ts";
@@ -13,13 +13,11 @@ const { getMarkerSVG } = usePetalMarker();
 interface Props {
 	params: Zod.infer<typeof GeojsonMapSchema>["params"];
 }
-const props = defineProps<Props>();
-const { params } = toRefs(props);
+defineProps<Props>();
 
 const GeojsonStore = useGeojsonStore();
-const { tables } = storeToRefs(GeojsonStore);
 
-const table = computed(() => tables.value.get(params.value.url));
+const table = computed(() => GeojsonStore.table);
 const activeFeatures = computed(() =>
 	table.value?.getVisibleLeafColumns().filter((col) => col.getCanHide()),
 );
@@ -101,7 +99,7 @@ function shouldShowOtherFeatureValues(feature: ColumnType) {
 			></ChevronDown
 		></CollapsibleTrigger>
 		<CollapsibleContent
-			class="max-h-full !overflow-auto border-muted"
+			class="max-h-full overflow-auto! border-muted"
 			:class="{ 'mt-2 border-t pt-1': activeFeatures?.length }"
 		>
 			<div v-for="feature in activeFeatures" :key="feature.id" class="my-1">

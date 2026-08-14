@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { BookA } from "lucide-vue-next";
+import { BookA } from "@lucide/vue";
 
 import type { Gap, Pc, Seg, W } from "@/lib/api-client";
 
@@ -14,8 +14,8 @@ const props = withDefaults(
 			gap?: Gap;
 			seg?: Seg;
 		};
-		inlineAnnotation: boolean;
-		inlineTranslation: boolean;
+		inlineLemmaAnnotation: boolean;
+		inlineLinguisticAnnotation: boolean;
 		highlight?: boolean;
 		hits?: string;
 	}>(),
@@ -26,7 +26,7 @@ const props = withDefaults(
 
 function renderUtterance(u: typeof props.utterance) {
 	if (!u.w) return "";
-	let renderedUtterance = u.w ? u.w["$"] : "";
+	let renderedUtterance = u.w["$"];
 	renderedUtterance +=
 		u.w["@join"] === "right" && u.w["@rendition"] === "rend:dashAfter" ? "-" : "";
 	renderedUtterance += u.w["@rendition"] === "rend:ellipsisAfter" ? "..." : "";
@@ -36,89 +36,66 @@ function renderUtterance(u: typeof props.utterance) {
 	return renderedUtterance;
 }
 
-function openDictWindow(u: typeof props.utterance) {
-	if (!u.w || !u.w["@lemmaRef"]) return;
+function openDictWindow(lemmaRef: string) {
+	const dictionaryEntryId = getDictionaryEntryId(lemmaRef);
 	addWindow({
 		targetType: "DictQuery",
-		title: u.w["@lemmaRef"]?.replace("dict:", "") || "Dictionary Entry",
+		title: dictionaryEntryId || "Dictionary Entry",
 		params: {
-			queryString: u.w["@lemmaRef"]?.replace("dict:", "") || "",
+			queryString: dictionaryEntryId,
 			textId: "dc_shawi_eng",
 			queryParams: {
-				id: u.w["@lemmaRef"]?.replace("dict:", "") || "",
+				id: dictionaryEntryId,
 			},
 			isTextInputManual: false,
 			isQueryVisible: false,
 		},
 	});
-	return;
 }
 
-const hasDictAnnotation = computed(() => {
-	return props.utterance.w?.["@lemmaRef"] != null;
+const wordAnnotations = computed(() => extractCorpusAnnotations(props.utterance.w));
+const segmentAnnotations = computed(() => extractCorpusAnnotations(props.utterance.seg));
+const wordIsHit = computed(() => {
+	return (
+		props.utterance.w?.["@id"] === props.hits ||
+		(props.highlight && props.hits == null && props.utterance.w != null)
+	);
 });
-
-const hasPosAnnotation = computed(() => {
-	return props.utterance.w?.pos != null;
-});
-
-const hasMsdAnnotation = computed(() => {
-	return props.utterance.w?.["@msd"] != null;
-});
-
-const hasTooltipAnnotation = computed(() => {
-	return hasPosAnnotation.value || hasMsdAnnotation.value;
+const segmentIsHit = computed(() => {
+	return (
+		props.utterance.seg?.["@id"] === props.hits ||
+		(props.highlight && props.hits == null && props.utterance.seg != null)
+	);
 });
 </script>
 
 <template>
 	<div
 		v-if="props.utterance.w"
-		:id="props.highlight ? props.utterance.w['@id'] : undefined"
-		class="u flex flex-col"
+		:id="props.utterance.w['@id']"
+		class="u flex flex-col items-center"
+		:class="{ 'text-primary': wordIsHit }"
+		:data-highlight-scope="wordIsHit ? 'word' : undefined"
 	>
-		<TooltipProvider v-if="!inlineAnnotation && hasTooltipAnnotation" :delay-duration="0">
-			<Tooltip>
-				<TooltipTrigger @click="openDictWindow(props.utterance)">
-					<div class="flex justify-center text-lg" :class="{ 'text-primary': props.highlight }">
-						{{ renderUtterance(props.utterance) }}
-					</div>
-				</TooltipTrigger>
-				<TooltipContent class="bg-primary" side="bottom">
-					<p v-if="hasPosAnnotation">{{ props.utterance.w.pos }}&nbsp;</p>
-					<p v-if="hasMsdAnnotation">{{ props.utterance.w["@msd"] }}&nbsp;</p>
-				</TooltipContent>
-			</Tooltip>
-		</TooltipProvider>
-		<div
-			v-else-if="!inlineAnnotation"
-			class="flex justify-center text-lg"
-			:class="{ 'text-primary': props.highlight }"
-		>
-			{{ renderUtterance(props.utterance) }}
+		<div class="flex items-start justify-center text-lg">
+			<span>{{ renderUtterance(props.utterance) }}</span>
+			<button
+				v-if="inlineLemmaAnnotation && wordAnnotations.lemmaRef"
+				:aria-label="`Open dictionary entry ${getDictionaryEntryId(wordAnnotations.lemmaRef)}`"
+				class="rounded-sm text-gray-500 hover:text-primary focus-visible:outline-2 focus-visible:outline-primary"
+				type="button"
+				@click.stop="openDictWindow(wordAnnotations.lemmaRef)"
+			>
+				<BookA aria-hidden="true" class="size-3" />
+			</button>
 		</div>
-		<!-- eslint-disable vuejs-accessibility/click-events-have-key-events, vuejs-accessibility/no-static-element-interactions -->
 		<div
-			v-if="inlineAnnotation"
-			class="flex flex-col items-center text-lg"
-			:class="{ 'text-primary': props.highlight }"
-			@click="openDictWindow(props.utterance)"
-		>
-			{{ renderUtterance(props.utterance) }}
-			<BookA v-if="inlineAnnotation && hasDictAnnotation" class="size-3 text-gray-500" />
-		</div>
-		<!-- eslint-enable -->
-		<div
-			v-if="inlineAnnotation && hasPosAnnotation"
+			v-for="annotation in inlineLinguisticAnnotation ? wordAnnotations.linguistic : []"
+			:key="annotation.label"
 			class="flex justify-center text-xs text-gray-500"
 		>
-			{{ props.utterance.w.pos }}&nbsp;
-		</div>
-		<div
-			v-if="inlineAnnotation && hasMsdAnnotation"
-			class="flex justify-center text-xs text-gray-500"
-		>
-			{{ props.utterance.w["@msd"] }}&nbsp;
+			<span class="sr-only">{{ annotation.label }}:</span>
+			{{ annotation.values.join(", ") }}&nbsp;
 		</div>
 	</div>
 	<div v-if="props.utterance.pc" class="u flex flex-col text-lg">
@@ -133,16 +110,48 @@ const hasTooltipAnnotation = computed(() => {
 			}}
 		</div>
 	</div>
-	<div v-if="props.utterance.seg" class="flex flex-row">
-		<CorpusTextJsonUtterance
-			v-for="(uContent, index) in props.utterance.seg['$$']"
-			:key="index"
-			:highlight="uContent.w?.['@id'] === props.hits"
-			:hits="props.hits"
-			:inline-annotation="props.inlineAnnotation as boolean"
-			:inline-translation="props.inlineTranslation as boolean"
-			:utterance="uContent"
-		></CorpusTextJsonUtterance>
+	<div
+		v-if="props.utterance.seg"
+		:id="props.utterance.seg['@id']"
+		class="flex flex-col items-center rounded-xs border-b-2 border-dotted border-gray-400 bg-gray-100/60"
+		:class="{ 'border-primary bg-primary/15': segmentIsHit }"
+		:data-compound-id="props.utterance.seg['@id']"
+		:data-highlight-scope="segmentIsHit ? 'segment' : undefined"
+	>
+		<div
+			v-if="
+				(inlineLemmaAnnotation && segmentAnnotations.lemmaRef) ||
+				(inlineLinguisticAnnotation && segmentAnnotations.linguistic.length > 0)
+			"
+			class="flex min-h-3 items-center justify-center gap-1 text-xs text-gray-500"
+		>
+			<button
+				v-if="inlineLemmaAnnotation && segmentAnnotations.lemmaRef"
+				:aria-label="`Open compound dictionary entry ${getDictionaryEntryId(segmentAnnotations.lemmaRef)}`"
+				class="rounded-sm hover:text-primary focus-visible:outline-2 focus-visible:outline-primary"
+				type="button"
+				@click.stop="openDictWindow(segmentAnnotations.lemmaRef)"
+			>
+				<BookA aria-hidden="true" class="size-3" />
+			</button>
+			<span
+				v-for="annotation in inlineLinguisticAnnotation ? segmentAnnotations.linguistic : []"
+				:key="annotation.label"
+			>
+				<span class="sr-only">{{ annotation.label }}:</span>
+				{{ annotation.values.join(", ") }}
+			</span>
+		</div>
+		<div class="flex flex-row">
+			<CorpusTextJsonUtterance
+				v-for="(uContent, index) in props.utterance.seg['$$']"
+				:key="uContent.w?.['@id'] ?? uContent.seg?.['@id'] ?? index"
+				:hits="props.hits"
+				:inline-lemma-annotation="props.inlineLemmaAnnotation"
+				:inline-linguistic-annotation="props.inlineLinguisticAnnotation"
+				:utterance="uContent"
+			></CorpusTextJsonUtterance>
+		</div>
 	</div>
 </template>
 

@@ -12,6 +12,10 @@ const props = defineProps<Props>();
 function updateQueryParam(queryString: string) {
 	windowsStore.updateQueryParam(props.item.id, queryString);
 }
+
+function updateWindowParams(params: WindowItem["params"]) {
+	windowsStore.updateWindowParams(props.item.id, params);
+}
 </script>
 
 <template>
@@ -31,6 +35,10 @@ function updateQueryParam(queryString: string) {
 	/>
 	<FeatureWindowContent
 		v-else-if="props.item.targetType === 'Feature'"
+		:params="props.item.params"
+	/>
+	<FeatureStatisticsWindowContent
+		v-else-if="props.item.targetType === 'FeatureStatistics'"
 		:params="props.item.params"
 	/>
 	<FeatureValueWindowContent
@@ -72,6 +80,7 @@ function updateQueryParam(queryString: string) {
 	<DataListWindowContent
 		v-else-if="props.item.targetType === 'DataList'"
 		:params="props.item.params"
+		@update:params="updateWindowParams"
 	/>
 
 	<DataTableWindowContent

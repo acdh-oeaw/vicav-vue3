@@ -1,12 +1,8 @@
-import { useQuery } from "@tanstack/vue-query";
 import type { Table } from "@tanstack/vue-table";
 import { defineStore } from "pinia";
 
 import { type FeatureCollectionType, type FeatureType, GeoFeatureSchema } from "@/types/global.ts";
 
-//Todo: maybe move this to an env variable
-export const wibarabGeojsonUrl =
-	"https://raw.githubusercontent.com/wibarab/wibarab-data/main/wibarab_varieties.geojson";
 export interface TaxonomyTreeEntry {
 	label: string | undefined;
 	featureValues: Array<string>;
@@ -14,21 +10,29 @@ export interface TaxonomyTreeEntry {
 }
 export type TaxonomyTree = Map<string, TaxonomyTreeEntry>;
 export const useGeojsonStore = defineStore("geojson", () => {
-	const fetchedData = ref(new Map<string, FeatureCollectionType>());
-	const tables = shallowRef(new Map<string, Table<FeatureType>>());
+	const geojsonData = ref<FeatureCollectionType>();
+	const table = shallowRef<Table<FeatureType>>();
 
 	const showAllDetails = ref(false);
 	const featureValueTaxonomy = shallowRef(
 		new Map<string, { label: string | undefined; taxonomy: string } | undefined>(),
 	);
 	function buildFeatureTaxonomy(
-		features: Record<string, { values: Record<string, string>; taxonomy: Record<string, string> }>,
+		features: Record<
+			string,
+			{ values: Record<string, string>; taxonomy: Array<Record<string, string>> }
+		>,
 	) {
 		for (const feature in features) {
+			const taxonomyLabels = (features[feature]?.taxonomy ?? []).reduce<Record<string, string>>(
+				(acc, entry) => ({ ...acc, ...entry }),
+				{},
+			);
 			for (const value in features[feature]?.values) {
+				const path = features[feature].values[value]!;
 				featureValueTaxonomy.value.set(`${feature}.${value}`, {
-					label: features[feature].taxonomy[features[feature].values[value]!],
-					taxonomy: features[feature].values[value]!,
+					label: taxonomyLabels[path],
+					taxonomy: path,
 				});
 			}
 		}
@@ -110,17 +114,14 @@ export const useGeojsonStore = defineStore("geojson", () => {
 		return featureValuesAndCount.sort((a, b) => b[1] - a[1]);
 	}
 
-	const fetchGeojson = (url: string) => {
-		return useQuery({
-			enabled: true,
-			queryKey: [url],
-			async queryFn() {
-				const response = await fetch(url);
-				return response.json() as Promise<FeatureCollectionType>;
-			},
-
-			select: (data) => {
-				const features = data.features.map((feature) => {
+	const loadGeojson = () => {
+		const projectInfo = useProjectInfo();
+		watch(
+			() => projectInfo.data.value,
+			(data) => {
+				const projectData = data?.projectConfig?.staticData?.geo?.[0];
+				if (!projectData) return;
+				const features = projectData.features.map((feature) => {
 					const result = GeoFeatureSchema.loose().safeParse(feature);
 					if (result.success) {
 						return result.data;
@@ -129,18 +130,20 @@ export const useGeojsonStore = defineStore("geojson", () => {
 						return null;
 					}
 				});
-				fetchedData.value.set(url, {
-					...data,
+				geojsonData.value = {
+					...projectData,
 					features,
-				} as FeatureCollectionType);
+				} as FeatureCollectionType;
 			},
-		});
+			{ immediate: true },
+		);
+		return projectInfo;
 	};
 
 	return {
-		fetchedData,
-		fetchGeojson,
-		tables,
+		geojsonData,
+		loadGeojson,
+		table,
 		getFacetsForId,
 		buildFeatureTaxonomy,
 		featureValueTaxonomy,
@@ -148,6 +151,5 @@ export const useGeojsonStore = defineStore("geojson", () => {
 		showAllDetails,
 		getSortedTaxonomyChildren,
 		getSortedTaxonomyFeatureValues,
-		wibarabGeojsonUrl,
 	};
 });

@@ -63,7 +63,7 @@ export const useWindowsStore = defineStore("windows", () => {
 	});
 	const openOrUpdateWindow = useOpenOrUpdateWindow();
 
-	const { tables } = useGeojsonStore();
+	const geojsonStore = useGeojsonStore();
 
 	async function initializeScreen() {
 		await suspense();
@@ -241,18 +241,16 @@ export const useWindowsStore = defineStore("windows", () => {
 				index: 0,
 				class: "wb-map",
 				click: function () {
-					const { wibarabGeojsonUrl } = useGeojsonStore();
 					openOrUpdateWindow(
 						{
 							targetType: "GeojsonMap",
 							params: {
-								url: wibarabGeojsonUrl,
 								markerType: "petal",
 							},
 						} as unknown as WindowItem,
 						"Variety Data - Map View",
 						GeojsonMapSchema.shape.params,
-						"url",
+						"markerType",
 						true,
 					);
 				},
@@ -269,7 +267,7 @@ export const useWindowsStore = defineStore("windows", () => {
 				index: 0,
 				class: "wb-table",
 				click: function () {
-					const table = tables.get(w.params.url);
+					const table = geojsonStore.table;
 					const globalFilter = (table?.getState().globalFilter as string | undefined) ?? "";
 					openOrUpdateWindow(
 						{
@@ -471,11 +469,35 @@ export const useWindowsStore = defineStore("windows", () => {
 		}
 	}
 
+	function updateWindowParams(id: WindowItem["id"], params: WindowItem["params"]) {
+		const w = registry.value.get(id);
+
+		if (w == null) return;
+
+		const parsedWindow = Schema.safeParse({ targetType: w.targetType, params });
+
+		if (!parsedWindow.success) {
+			toasts.addToast({
+				title: "UpdateWindowParams Error: parameter parse failed",
+				description: "Check the console for details.",
+				type: "foreground",
+				variant: "negative",
+			});
+			console.error(parsedWindow.error);
+			return;
+		}
+
+		w.params = parsedWindow.data.params;
+		updateUrl();
+	}
+
 	return {
 		restoreState,
 		addWindow,
 		removeWindow,
 		updateQueryParam,
+		updateWindowParams,
+		updateUrl,
 		registry,
 		arrangement,
 		setWindowArrangement,
