@@ -17,6 +17,13 @@ const fileFormat = ref("png");
 const printLegend = ref(true);
 const exportInProgress = ref(false);
 
+const exportHiddenSelector = "[data-feature-marker-selector], [data-legend-controls]";
+function setHiddenSelectors(node: Element, hidden: boolean) {
+	node.querySelectorAll(exportHiddenSelector).forEach((entry) => {
+		entry.classList.toggle("hidden", hidden);
+	});
+}
+
 const labelDisplaySelectValue = computed({
 	get() {
 		switch (props.displayLabels ?? "default") {
@@ -44,16 +51,12 @@ function download() {
 	if (printLegend.value) {
 		node = node?.parentElement ?? node;
 		node?.querySelector("[data-geo-map-legend]")?.classList.remove("max-h-[50%]");
-		node
-			?.querySelectorAll("[data-feature-marker-selector]")
-			.forEach((entry) => entry.classList.add("hidden"));
+		if (node) setHiddenSelectors(node, true);
 	}
 	if (node != null) {
 		exportInProgress.value = true;
 		exportNodeAsPng(node as HTMLElement, fileFormat.value).then(() => {
-			node
-				.querySelectorAll("[data-feature-marker-selector]")
-				.forEach((entry) => entry.classList.remove("hidden"));
+			setHiddenSelectors(node, false);
 			node?.querySelector("[data-geo-map-legend]")?.classList.add("max-h-[50%]");
 			exportInProgress.value = false;
 		});
@@ -65,16 +68,12 @@ function downloadLegend() {
 		exportInProgress.value = true;
 		node.classList.remove("bg-white/80", "absolute", "max-h-[50%]");
 		node.classList.add("bg-white");
-		node
-			.querySelectorAll("[data-feature-marker-selector]")
-			.forEach((entry) => entry.classList.add("hidden"));
+		setHiddenSelectors(node, true);
 		exportNodeAsPng(node as HTMLElement, fileFormat.value).then(() => {
 			exportInProgress.value = false;
 			node.classList.add("bg-white/80", "absolute", "max-h-[50%]");
 			node.classList.remove("bg-white");
-			node
-				.querySelectorAll("[data-feature-marker-selector]")
-				.forEach((entry) => entry.classList.remove("hidden"));
+			setHiddenSelectors(node, false);
 		});
 	}
 }

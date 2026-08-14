@@ -6,6 +6,7 @@ import { test } from "liqe";
 import { useGeojsonStore } from "@/stores/use-geojson-store.ts";
 import {
 	type FeatureType,
+	type FeatureValueGroup,
 	GeojsonMapSchema,
 	type ListMapWindowItem,
 	type WindowItem,
@@ -19,7 +20,10 @@ const { params } = toRefs(props);
 
 const queryString: Ref<string> = ref(params.value.queryString);
 
-const emit = defineEmits(["updateQueryParam"]);
+const emit = defineEmits<{
+	(event: "updateQueryParam", queryString: string): void;
+	(event: "update:params", params: ListMapWindowItem["params"]): void;
+}>();
 
 const GeojsonStore = useGeojsonStore();
 const openOrUpdateWindow = useOpenOrUpdateWindow();
@@ -122,8 +126,29 @@ function applyQueryString(row: Row<FeatureType>, colId: string, queryString: str
 	return test(parse(queryString), preparedRow);
 }
 
-const { addDefaultMarker, buildFeatureValueId } = useMarkerStore();
-const { markers, markerSettings } = storeToRefs(useMarkerStore());
+const {
+	addDefaultMarker,
+	buildFeatureValueId,
+	restoreFeatureValueGroups,
+	serializeFeatureValueGroups,
+} = useMarkerStore();
+const { featureValueGroups, markers, markerSettings } = storeToRefs(useMarkerStore());
+
+/*
+ * Custom feature value groups ride along in the url next to the query string: the query says
+ * which values are selected, the groups say how they are drawn together, and a shared link is
+ * only worth sharing if it carries both.
+ */
+function groupsFingerprint(groups: Array<FeatureValueGroup>) {
+	return JSON.stringify(groups.map(({ columnId, label, values }) => [columnId, label, values]));
+}
+function persistFeatureValueGroups() {
+	const groups = serializeFeatureValueGroups();
+	if (groupsFingerprint(groups) === groupsFingerprint(params.value.featureValueGroups ?? []))
+		return;
+	emit("update:params", { ...params.value, featureValueGroups: groups });
+}
+watch(featureValueGroups, persistFeatureValueGroups, { deep: true });
 function onVisibilityChange(props: { table: Table<FeatureType>; col: Record<string, boolean> }) {
 	// applyGlobalFilter(props.table);
 	const changedColumnKey = Object.keys(props.col)[0]!;
@@ -189,6 +214,7 @@ function registerTable(table: Table<FeatureType>) {
 		parseSearchString(queryString.value, table as Table<unknown>);
 		table.setGlobalFilter(normalizeOperators(queryString.value));
 	}
+	if (params.value.featureValueGroups) restoreFeatureValueGroups(params.value.featureValueGroups);
 
 	GeojsonStore.table = table;
 	tableRef.value = table;

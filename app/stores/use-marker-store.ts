@@ -3,6 +3,7 @@ import Color from "colorjs.io";
 import { defineStore } from "pinia";
 
 import type { IconType } from "@/components/ui/icon-picker/IconPicker.vue";
+import type { FeatureValueGroup } from "@/types/global.ts";
 
 interface ColorInterface {
 	id: string;
@@ -17,6 +18,11 @@ interface MarkerInterface {
 interface MarkerStyleInterface {
 	icon?: IconType;
 	colorCode?: string;
+}
+
+export type SerializedFeatureValueGroup = FeatureValueGroup;
+export interface FeatureValueGroupInterface extends SerializedFeatureValueGroup {
+	id: string;
 }
 function buildVariantColor(baseColor: string) {
 	const newColor = new Color(baseColor).to("lch");
@@ -113,6 +119,138 @@ export const useMarkerStore = defineStore("markers", () => {
 		});
 	}
 
+	const featureValueGroups = ref(new Map<string, FeatureValueGroupInterface>());
+	let featureValueGroupCounter = 0;
+
+	const groupsByColumn = computed(() => {
+		const index = new Map<string, Array<FeatureValueGroupInterface>>();
+		featureValueGroups.value.forEach((group) => {
+			const groups = index.get(group.columnId);
+			if (groups) groups.push(group);
+			else index.set(group.columnId, [group]);
+		});
+		return index;
+	});
+
+	const valueGroupKey = (columnId: string, value: string) => JSON.stringify([columnId, value]);
+
+	const groupByValue = computed(() => {
+		const index = new Map<string, FeatureValueGroupInterface>();
+		featureValueGroups.value.forEach((group) => {
+			group.values.forEach((value) => index.set(valueGroupKey(group.columnId, value), group));
+		});
+		return index;
+	});
+
+	function getFeatureValueGroups(columnId: string) {
+		return groupsByColumn.value.get(columnId) ?? [];
+	}
+
+	function getFeatureValueGroup(columnId: string, value: string) {
+		return groupByValue.value.get(valueGroupKey(columnId, value));
+	}
+
+	function isFeatureValueGroup(id: string) {
+		return featureValueGroups.value.has(id);
+	}
+
+	function resolveMarkerId(columnId: string, value: string) {
+		return getFeatureValueGroup(columnId, value)?.id ?? buildFeatureValueId(columnId, value);
+	}
+
+	function dissolveFeatureValueGroup(groupId: string) {
+		if (!featureValueGroups.value.delete(groupId)) return;
+		removeColor(groupId);
+		markerSettings.value.triggerRepaint = true;
+	}
+
+	function updateFeatureValueGroupValues(group: FeatureValueGroupInterface, values: Array<string>) {
+		if (values.length < 2) {
+			dissolveFeatureValueGroup(group.id);
+			return;
+		}
+		featureValueGroups.value.set(group.id, { ...group, values });
+		markerSettings.value.triggerRepaint = true;
+	}
+
+	function detachValueFromFeatureValueGroups(columnId: string, value: string) {
+		const group = getFeatureValueGroup(columnId, value);
+		if (!group) return;
+		updateFeatureValueGroupValues(
+			group,
+			group.values.filter((entry) => entry !== value),
+		);
+	}
+
+	function createFeatureValueGroup(columnId: string, values: Array<string>, label?: string) {
+		const uniqueValues = [...new Set(values)];
+		if (uniqueValues.length < 2) return undefined;
+		uniqueValues.forEach((value) => {
+			detachValueFromFeatureValueGroups(columnId, value);
+		});
+
+		featureValueGroupCounter += 1;
+		const groupKey = `group${String(featureValueGroupCounter)}`;
+		const id = buildFeatureValueId(columnId, groupKey);
+		addDefaultMarker(columnId, groupKey);
+
+		const templateMarker = markers.value.get(buildFeatureValueId(columnId, uniqueValues[0]));
+		if (templateMarker) {
+			markers.value.set(id, { ...templateMarker, id });
+			updateCssVariable({ id, colorCode: templateMarker.colorCode });
+		}
+
+		const group: FeatureValueGroupInterface = {
+			id,
+			columnId,
+			label: label ?? `Group ${String(featureValueGroupCounter)}`,
+			values: uniqueValues,
+		};
+		featureValueGroups.value.set(id, group);
+		markerSettings.value.triggerRepaint = true;
+		return group;
+	}
+
+	function addValueToFeatureValueGroup(groupId: string, value: string) {
+		const group = featureValueGroups.value.get(groupId);
+		if (!group || group.values.includes(value)) return;
+		detachValueFromFeatureValueGroups(group.columnId, value);
+		featureValueGroups.value.set(groupId, { ...group, values: [...group.values, value] });
+		markerSettings.value.triggerRepaint = true;
+	}
+
+	function removeValueFromFeatureValueGroup(groupId: string, value: string) {
+		const group = featureValueGroups.value.get(groupId);
+		if (!group) return;
+		updateFeatureValueGroupValues(
+			group,
+			group.values.filter((entry) => entry !== value),
+		);
+	}
+
+	function renameFeatureValueGroup(groupId: string, label: string) {
+		const group = featureValueGroups.value.get(groupId);
+		if (!group) return;
+		featureValueGroups.value.set(groupId, { ...group, label });
+	}
+
+	function serializeFeatureValueGroups(): Array<SerializedFeatureValueGroup> {
+		return [...featureValueGroups.value.values()].map(({ columnId, label, values }) => ({
+			columnId,
+			label,
+			values,
+		}));
+	}
+
+	function restoreFeatureValueGroups(groups: Array<SerializedFeatureValueGroup>) {
+		[...featureValueGroups.value.keys()].forEach((id) => {
+			dissolveFeatureValueGroup(id);
+		});
+		groups.forEach((group) => {
+			createFeatureValueGroup(group.columnId, group.values, group.label);
+		});
+	}
+
 	/* General Marker Settings */
 	function updateSettingVariables() {
 		document.documentElement.style.setProperty(
@@ -153,7 +291,7 @@ export const useMarkerStore = defineStore("markers", () => {
 	);
 
 	function updateColorValue(color: ColorInterface) {
-		assert(markers.value.has(color.id), `Entry not found in markers ${color.id}`);
+		if (!markers.value.has(color.id)) return;
 		markers.value.set(color.id, { ...markers.value.get(color.id)!, colorCode: color.colorCode });
 		refColor.value = color.colorCode;
 	}
@@ -260,5 +398,17 @@ export const useMarkerStore = defineStore("markers", () => {
 		markers,
 		markerSettings,
 		defaultMarkers,
+		featureValueGroups,
+		getFeatureValueGroups,
+		getFeatureValueGroup,
+		isFeatureValueGroup,
+		resolveMarkerId,
+		createFeatureValueGroup,
+		addValueToFeatureValueGroup,
+		removeValueFromFeatureValueGroup,
+		renameFeatureValueGroup,
+		dissolveFeatureValueGroup,
+		serializeFeatureValueGroups,
+		restoreFeatureValueGroups,
 	};
 });
