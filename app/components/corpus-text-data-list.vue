@@ -16,6 +16,7 @@ defineEmits<{
 <template>
 	<SimpleMetadataDataList
 		data-type="CorpusText"
+		:default-facets="{ '@hasTEIw': ['true'] }"
 		:items="items"
 		:list-state="listState"
 		:require-tei-availability-for-link="true"

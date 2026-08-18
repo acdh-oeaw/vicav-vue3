@@ -49,7 +49,7 @@ export interface RenderedExample {
 	locations: Array<RenderedLocation>;
 	translations: Array<RenderedText>;
 	editors: Array<RenderedEditor>;
-	bibliography: Array<string>;
+	bibliography: Array<RenderedBibliographyReference>;
 	metadata: Array<RenderedMetadataItem>;
 }
 
@@ -65,9 +65,11 @@ export interface RenderedSense {
 	metadata: Array<RenderedMetadataItem>;
 }
 
-export interface RenderedBibliographyItem {
-	id: string;
+export interface RenderedBibliographyReference {
+	sourceId?: string;
 	label: string;
+	rawReference?: string;
+	queryString: string;
 }
 
 export interface RenderedEtymologyGroup {
@@ -90,7 +92,7 @@ export interface RenderedDictEntry {
 	locations: Array<RenderedLocation>;
 	etymologies: Array<RenderedText>;
 	etymologyGroups: Array<RenderedEtymologyGroup>;
-	bibliography: Array<RenderedBibliographyItem>;
+	bibliography: Array<RenderedBibliographyReference>;
 	lemmaForms: Array<RenderedForm>;
 	variantForms: Array<RenderedForm>;
 	quote?: RenderedText;
@@ -131,6 +133,7 @@ interface ExampleLike {
 		"@id"?: string;
 		title?: {
 			"@ref"?: string;
+			$?: string;
 		};
 		biblScope?: {
 			"@unit"?: string;
@@ -278,6 +281,7 @@ interface BibliographyLike {
 	"@id"?: string;
 	title?: {
 		"@ref"?: string;
+		$?: string;
 	};
 	biblScope?: {
 		"@unit"?: string;
@@ -463,44 +467,63 @@ function collectGrammar(grammar: GrammarLike | string | undefined): Array<Render
 	);
 }
 
-function formatBibliographyTitle(title: string | undefined): string | undefined {
-	if (title == null || title === "") return undefined;
+export function deriveBibliographyQueryString(
+	rawReference: string | undefined,
+	citationLabelWithoutPageScope: string,
+): string {
+	if (rawReference?.toLocaleLowerCase().startsWith("zot:") === true) {
+		return rawReference;
+	}
 
-	const label = title.replace(/^zot:/, "");
-	const match = /^(?<name>.+?)(?<year>\d{4})$/.exec(label);
-	if (match?.groups == null) return label;
-
-	const name = match.groups.name;
-	const year = match.groups.year;
-	if (name == null || year == null) return label;
-
-	return `${name} ${year}`;
+	return citationLabelWithoutPageScope.trim();
 }
 
-function formatBibliographyItem(item: BibliographyLike): string | undefined {
-	const title = formatBibliographyTitle(item.title?.["@ref"]);
-	const scope = item.biblScope?.$;
+function bibliographyTitle(item: BibliographyLike): string | undefined {
+	const visibleTitle = item.title?.$?.trim();
+	if (visibleTitle != null && visibleTitle !== "") return visibleTitle;
 
-	if (title == null && scope == null) return undefined;
-	return [title, scope].filter(Boolean).join(", ");
+	const rawReference = item.title?.["@ref"]?.trim();
+	if (rawReference == null || rawReference === "") return undefined;
+	if (rawReference.toLocaleLowerCase().startsWith("zot:")) {
+		return rawReference;
+	}
+
+	return rawReference;
+}
+
+function collectBibliographyReference(
+	item: BibliographyLike,
+): RenderedBibliographyReference | undefined {
+	const title = bibliographyTitle(item);
+	const scope = item.biblScope?.$;
+	const label = [title, scope].filter(Boolean).join(", ");
+	const queryString = deriveBibliographyQueryString(item.title?.["@ref"], title ?? "");
+
+	if (label === "" || queryString === "") return undefined;
+
+	return {
+		sourceId: item["@id"],
+		label,
+		rawReference: item.title?.["@ref"],
+		queryString,
+	};
 }
 
 function collectBibliographyItems(
 	items: Array<BibliographyLike> | BibliographyLike | undefined,
-): Array<RenderedBibliographyItem> {
+): Array<RenderedBibliographyReference> {
 	return asArray(items).flatMap((item) => {
-		const id = item["@id"];
-		const label = formatBibliographyItem(item);
-
-		if (id == null || label == null) return [];
-		return [{ id, label }];
+		const reference = collectBibliographyReference(item);
+		return reference == null ? [] : [reference];
 	});
 }
 
-function collectBibliography(example: ExampleLike | undefined): Array<string> {
+function collectBibliography(
+	example: ExampleLike | undefined,
+): Array<RenderedBibliographyReference> {
 	return asArray(example?.listBibl).flatMap((item) => {
-		const label = formatBibliographyItem(item);
-		return label == null ? [] : [label];
+		const reference = collectBibliographyReference(item);
+		return reference == null ? [] : [reference];
 	});
 }
 

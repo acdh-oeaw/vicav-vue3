@@ -5,6 +5,7 @@ import type { ColumnFilter, Table } from "@tanstack/vue-table";
 import { ensureFilterValueMap, FilterValueMap } from "@/utils/filter-value-map";
 
 const props = defineProps<{
+	formatValue?: (columnId: string, value: string) => string;
 	table: Table<never>;
 }>();
 
@@ -24,6 +25,12 @@ function removeValFromColumnFilter(col: ColumnFilter, val: string) {
 	const map = ensureFilterValueMap(col.value);
 	map.delete(val);
 	props.table.getColumn(col.id)?.setFilterValue(map);
+}
+function getSelectedValues(col: ColumnFilter): Array<string> {
+	return [...ensureFilterValueMap(col.value).keys()];
+}
+function formatFilterValue(columnId: string, value: string): string {
+	return props.formatValue?.(columnId, value) ?? value;
 }
 </script>
 
@@ -63,13 +70,13 @@ function removeValFromColumnFilter(col: ColumnFilter, val: string) {
 				<span
 					>{{ props.table.getColumn(col.id)?.columnDef.header }}
 					<Badge
-						v-for="val in col.value"
+						v-for="val in getSelectedValues(col)"
 						:key="val"
 						class="mx-0.5 cursor-pointer"
 						title="Remove"
 						variant="secondary"
 						@click="removeValFromColumnFilter(col, val)"
-						>{{ val }}</Badge
+						>{{ formatFilterValue(col.id, val) }}</Badge
 					> </span
 				><button @click="removeFilters(col.id)">
 					<X class="size-4 hover:scale-125"></X><span class="sr-only">Remove filter</span>

@@ -34,14 +34,17 @@ import {
 import type { DataTypesEnum, SimpleMetadataListState } from "@/types/global.ts";
 import type { simpleTEIMetadata } from "@/types/teiCorpus.ts";
 import customFacetedUniqueValues from "@/utils/customFacetedUniqueValues.ts";
+import { matchesFilterValueMap } from "@/utils/filter-value-map.ts";
 import {
-	ensureFilterValueMap,
-	FilterValueMap,
-	matchesFilterValueMap,
-} from "@/utils/filter-value-map.ts";
+	deserializeSimpleMetadataFacetFilters,
+	getSimpleMetadataFacetValueLabel,
+	serializeSimpleMetadataFacetFilters,
+	type SimpleMetadataFacetSelections,
+} from "@/utils/simple-metadata-facets.ts";
 
 const props = defineProps<{
 	items: Array<simpleTEIMetadata>;
+	defaultFacets?: SimpleMetadataFacetSelections;
 	dataType: Extract<DataTypesEnum, "CorpusText" | "SampleText" | "Feature" | "Profile">;
 	targetType: Extract<DataTypesEnum, "CorpusText" | "SampleText" | "Feature" | "Profile">;
 	searchInputId: string;
@@ -54,7 +57,10 @@ const emit = defineEmits<{
 }>();
 
 const openNewWindowFromAnchor = useAnchorClickHandler();
-const columnFilters = ref<ColumnFiltersState>(deserializeColumnFilters(props.listState));
+const defaultFacets = computed(() => props.defaultFacets ?? {});
+const columnFilters = ref<ColumnFiltersState>(
+	deserializeSimpleMetadataFacetFilters(props.listState, defaultFacets.value),
+);
 const expanded = ref<ExpandedState>(true);
 const globalFilter = ref(props.listState?.globalFilter ?? "");
 const grouping = ref<GroupingState>(["country", "region", "settlement"]);
@@ -81,15 +87,6 @@ watch(
 	{ deep: true },
 );
 
-function deserializeColumnFilters(listState?: SimpleMetadataListState): ColumnFiltersState {
-	return Object.entries(listState?.facets ?? {}).map(([id, values]) => {
-		return {
-			id,
-			value: new FilterValueMap(values.map((value) => [value, 1])),
-		};
-	});
-}
-
 function serializeListState(): SimpleMetadataListState | undefined {
 	const listState: SimpleMetadataListState = {};
 	const facets = serializeFacetFilters();
@@ -102,16 +99,7 @@ function serializeListState(): SimpleMetadataListState | undefined {
 }
 
 function serializeFacetFilters(): NonNullable<SimpleMetadataListState["facets"]> {
-	const facets: NonNullable<SimpleMetadataListState["facets"]> = {};
-
-	for (const filter of columnFilters.value) {
-		const filterValueMap = ensureFilterValueMap(filter.value);
-		const values = [...filterValueMap.keys()];
-
-		if (values.length > 0) facets[filter.id] = values;
-	}
-
-	return facets;
+	return serializeSimpleMetadataFacetFilters(columnFilters.value, defaultFacets.value);
 }
 
 function normalizePlaceSortValue(value: string): string {
@@ -464,6 +452,10 @@ function countLeafRows(row: Row<simpleTEIMetadata>): number {
 function canOpenItem(item: simpleTEIMetadata): boolean {
 	return !props.requireTeiAvailabilityForLink || item["@hasTEIw"] === "true";
 }
+
+function formatFacetValue(columnId: string, value: string): string {
+	return getSimpleMetadataFacetValueLabel(columnId, value);
+}
 </script>
 
 <template>
@@ -527,17 +519,22 @@ function canOpenItem(item: simpleTEIMetadata): boolean {
 				/>
 			</div>
 			<div class="flex flex-wrap items-center justify-end gap-2">
-				<DataTableActiveFilters :table="table as unknown as TanstackTable<never>" />
-				<div class="flex flex-wrap items-center gap-1">
+				<DataTableActiveFilters
+					:format-value="formatFacetValue"
+					:table="table as unknown as TanstackTable<never>"
+				/>
+				<div class="flex flex-wrap items-center gap-4">
 					<span
 						v-for="columnId in visibleFacetColumnIds"
 						:key="columnId"
-						class="inline-flex items-center gap-1 text-sm"
+						class="inline-flex items-center gap-1.5 text-sm"
 					>
 						<span>{{ table.getColumn(columnId)?.columnDef.header }}</span>
 						<DataTableFacetedFilter
 							v-if="table.getColumn(columnId)"
 							:column="table.getColumn(columnId)!"
+							:display-value="(value) => formatFacetValue(columnId, value)"
+							:filter-label="String(table.getColumn(columnId)?.columnDef.header ?? columnId)"
 							:sort-mode="sortMode"
 							:sort-value="normalizePlaceSortValue"
 							:undefined-values-last="shouldPutUndefinedFacetLast(columnId)"

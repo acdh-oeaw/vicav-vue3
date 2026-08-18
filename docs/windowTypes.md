@@ -10,6 +10,8 @@ taken from [app/types/global.ts](../app/types/global.ts).
 - `TeiSource`: `{ teiSource: string }`
 - `ShowCitation`: `{ showCitation: boolean }`
 - `QueryString`: `{ queryString: string }`
+- `FeatureValueGroup`: `{ columnId: string; label: string; values: string[] }` — a set of feature
+  values the user merged into one legend entry and one map marker. Used by `ListMap`.
 
 Schemas commonly include `TeiSource` and `ShowCitation` through `.partial()`, which makes those
 fields optional in the window params documented below.
@@ -209,11 +211,19 @@ Rendered as [geojson-table-window-content.vue](../app/components/geojson-table-w
 
 ```ts
 {
-	queryString: string; // defaults to ""
+  queryString: string; // defaults to ""
+  featureValueGroups?: Array<FeatureValueGroup>;
 }
 ```
 
-- Event wired by `window-content.vue`: `update-query-param` updates the window query string.
+- `featureValueGroups` restores the user's custom feature value groups when the window is opened.
+  The query string says which values are selected, the groups say which of them share a marker, so a
+  shared link only reproduces the map if it carries both.
+- Events wired by `window-content.vue`:
+  - `update-query-param` updates the window query string.
+  - `update:params` replaces the window params through the generic validated `updateWindowParams()`
+    store path, which updates the encoded URL state. Emitted whenever a group is created, renamed,
+    changed or dissolved.
 
 ### `GeojsonMap`
 

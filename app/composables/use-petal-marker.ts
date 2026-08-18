@@ -9,7 +9,7 @@ import { ensureFilterValueMap } from "@/utils/filter-value-map";
 import { useAdvancedQueries } from "./use-advanced-queries.ts";
 
 const GeojsonStore = useGeojsonStore();
-const { buildFeatureValueId, defaultMarkers } = useMarkerStore();
+const { defaultMarkers, isFeatureValueGroup, resolveMarkerId } = useMarkerStore();
 const { markers, markerSettings } = storeToRefs(useMarkerStore());
 interface PetalEntry {
 	id: string;
@@ -154,12 +154,14 @@ function getPetalMarker(feature: GeoJsonFeature<Point, MarkerProperties>, latlng
 				.filter((val) => {
 					return markerSettings.value.showOtherFeatureValues || filterValue.has(val);
 				})
-				.map((val) => ({
-					id: filterValue.has(val) ? buildFeatureValueId(col.id, val) : col.id,
-					// show "empty" petals for feature values that are not in the filter
-					strokeOnly: !filterValue.has(val),
-					type: "featureValue",
-				}));
+				.map(
+					(val): PetalEntry => ({
+						id: filterValue.has(val) ? resolveMarkerId(col.id, val) : col.id,
+						// show "empty" petals for feature values that are not in the filter
+						strokeOnly: !filterValue.has(val),
+						type: "featureValue",
+					}),
+				);
 		});
 	const combinedFilters = table
 		?.getVisibleLeafColumns()
@@ -181,15 +183,27 @@ function getPetalMarker(feature: GeoJsonFeature<Point, MarkerProperties>, latlng
 										: ((featureValue as object | undefined) ?? {})),
 							),
 				)
-				.map((key) => ({
-					id: buildFeatureValueId(col.id, key),
-					type: "featureValue",
-				}));
+				.map(
+					(key): PetalEntry => ({
+						id: resolveMarkerId(col.id, key),
+						type: "featureValue",
+					}),
+				);
 		});
+
+	const petalEntries: Array<PetalEntry> = [...(featureValues ?? []), ...(combinedFilters ?? [])];
+	// values that were grouped together share a marker and are drawn as a single petal
+	const seenGroupIds = new Set<string>();
+	const groupedFeatureValues = petalEntries.filter((entry) => {
+		if (!isFeatureValueGroup(entry.id)) return true;
+		if (seenGroupIds.has(entry.id)) return false;
+		seenGroupIds.add(entry.id);
+		return true;
+	});
 
 	const htmlContent = getFlowerSVG(
 		//@ts-expect-error missing accessorFn
-		unfilteredFeatures.concat(featureValues).concat(combinedFilters),
+		unfilteredFeatures.concat(groupedFeatureValues),
 		flowerCenter,
 	).outerHTML; // Example HTML content
 	const customIcon = divIcon({
