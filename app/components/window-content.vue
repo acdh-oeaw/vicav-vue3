@@ -63,6 +63,7 @@ function updateWindowParams(params: WindowItem["params"]) {
 		v-else-if="props.item.targetType === 'ListMap'"
 		:params="props.item.params"
 		@update-query-param="updateQueryParam"
+		@update:params="updateWindowParams"
 	/>
 	<GeojsonMapWindowContent
 		v-else-if="props.item.targetType === 'GeojsonMap'"

@@ -1,17 +1,18 @@
 <script setup lang="ts">
 const props = withDefaults(
 	defineProps<{
+		text: string;
 		maxLength?: number;
 		cutWords?: "first" | "second" | false;
+		tooltipContent?: string;
 	}>(),
 	{
 		maxLength: 15,
 		cutWords: false,
 	},
 );
-const slots = defineSlots();
 const ellipsedText = computed(() => {
-	const text: string = slots.default()[0].children;
+	const text = props.text;
 	if (text.length <= props.maxLength) return text;
 
 	const firstHalf = text.split(" ").reduce((prev, curr, _idx, arr) => {
@@ -53,7 +54,7 @@ const ellipsedText = computed(() => {
 			<TooltipTrigger as-child>
 				<span>{{ ellipsedText }}</span>
 			</TooltipTrigger>
-			<TooltipContent class="bg-white"> <slot></slot> </TooltipContent
-		></Tooltip>
+			<TooltipContent class="bg-white"> {{ tooltipContent ?? text }} </TooltipContent></Tooltip
+		>
 	</TooltipProvider>
 </template>
