@@ -59,7 +59,7 @@ export default defineNuxtPlugin((nuxt) => {
 			// Normalize volatile timestamps before sending to client to up to three minutes in the past
 			for (const query of dehydrated.queries) {
 				query.state.dataUpdatedAt = Math.floor(query.state.dataUpdatedAt / THREE_MIN) * THREE_MIN;
-				query.state.errorUpdatedAt = Math.floor(query.state.dataUpdatedAt / THREE_MIN) * THREE_MIN;
+				query.state.errorUpdatedAt = Math.floor(query.state.errorUpdatedAt / THREE_MIN) * THREE_MIN;
 				query.dehydratedAt = Math.floor((query.dehydratedAt ?? 0) / THREE_MIN) * THREE_MIN;
 			}
 			state.value = dehydrated;
