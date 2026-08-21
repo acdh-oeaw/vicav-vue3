@@ -24,7 +24,8 @@ corpus metadata, then exposes query-friendly derived data for the UI.
 ## Request pipeline and caching
 
 The project config travels through three layers before it reaches the store. Each layer has a
-different scope and TTL.
+different scope and TTL. Once in the store, the parsed corpus is additionally memoized across SSR
+requests, keyed on the body-level `ETag` of the response (see Initialization below).
 
 ```
 useProjectInfo()  ──►  useApiClient() / Api.vicav.getProject()  ──►  fetchWithETag (server) | native fetch (client)  ──►  upstream /vicav/project
@@ -211,6 +212,12 @@ During SSR (or in server routes like `server/routes/status.ts` that also call `u
 - **`persons: Person[]`** — corpus-level participant list extracted from the entry with
   `@id === "vicav_corpus"`.
 
+When served from the ETag memo (the common case on a warm process), all three outputs are shared by
+reference across SSR requests, `markRaw`'d (no Vue reactive Proxy wraps them), and deeply frozen —
+see Initialization. The public ref types intentionally remain the mutable types; the immutability
+guarantee is enforced at runtime (and at compile time inside the store module, via
+`ReadonlyDeep<CacheEntry>`).
+
 ### `simpleTEIMetadata` fields
 
 - `id` — first `publicationStmt.idno.$` (no type filtering; the code comment notes the wanted idno
@@ -289,34 +296,62 @@ Declarative metadata describing each presentable field (`id`, `label`, `title`, 
 
 ### Idempotency and error semantics
 
-- `initialize()` is idempotent via a **store-scoped** `initializationPromise` (a `let` in the store
-  setup, not module scope): concurrent callers await the same in-flight promise.
-- The promise is **never reset**: a rejection (e.g. the project query failing) is cached, so
-  subsequent `initialize()` calls re-throw and the store stays empty for the lifetime of the store
-  instance. In Nuxt SSR the Pinia store is fresh per request, so each request retries; in the SPA
-  the failure is permanent until reload.
+Three guards, at two scopes:
+
+- **Same-instance re-entrancy (store-scoped):** a `let inFlight` in the store setup makes concurrent
+  `initialize()` calls on the same store instance share a single execution. It is cleared in a
+  `finally` once the run settles, so a rejected init (e.g. the project query failing) is
+  **retryable**: the next `initialize()` call starts a fresh attempt. (Before the ETag memo, the
+  promise was never reset and a failure was permanent for the lifetime of the store instance.)
+- **Parsed-corpus memo (module-scoped):** `parsedCorpusByEtag` maps the body-level `ETag` of the
+  `/vicav/project` response to the fully parsed `{ rawItems, simpleItems, persons }`. The ETag
+  changes only when the upstream body changes, so warm SSR requests skip the entire parse pipeline.
+  The map is a bounded LRU (cap 4, insertion-order eviction) so unexpected upstream ETag churn
+  cannot grow it without bound.
+- **Cross-request parse dedup (module-scoped):** `inFlightParses` maps an ETag to its in-flight
+  parse promise. On a cold miss — most importantly right after a deploy — the first request
+  registers its parse promise before awaiting it, and concurrent requests for the same ETag await
+  that promise instead of each running the full pipeline. Entries are removed in a `finally` on
+  settle (success or failure), so the map is empty except while a parse is actually running.
+- If the response carries no `ETag`, both module-scope maps are bypassed and the store falls back to
+  per-request parsing (the pre-memo behavior), logging a single `console.warn` per process
+  (`hasWarnedMissingEtag`).
 - If `staticData` or `table` is missing, `?? []` yields empty `rawItems`/`simpleItems`/`persons`
   without error.
 
-### Steps (first call)
+### Steps (cold miss; a memo hit skips steps 3–7 entirely)
 
 1. Awaits `useProjectInfo().suspense()`.
-2. Reads `projectConfig.staticData.table ?? []`.
-3. Validates entries **asynchronously in parallel** (`safeParseAsync` + `Promise.all` — a deliberate
+2. Reads `envelope = projectData.value` and `etag = envelope?.ETag`. On a memo hit for `etag`, the
+   cached entry is assigned to the refs and the call returns; on an in-flight-dedup hit, the pending
+   parse promise is awaited and its result assigned instead.
+3. Reads `projectConfig.staticData.table ?? []`.
+4. Validates entries **asynchronously in parallel** (`safeParseAsync` + `Promise.all` — a deliberate
    perf win for large corpora): each entry with a `TEIs` property is validated with
    `TeiCorpusSchema`, then every `TEIs[i]` with `TeiSchema`. Failures are logged via `console.error`
    with `@id` context (corpus and/or TEI level) but do not abort the load; the failing item is
    dropped. Non-corpus entries are skipped silently.
-4. Parses geo envelopes from the same table: probes `item`, `item.Geo`, `item.TEI` for a
+5. Parses geo envelopes from the same table: probes `item`, `item.Geo`, `item.TEI` for a
    `text.body.listPlace` array (first candidate wins) and validates each place with
    `GeoPlaceSchema`; invalid places are dropped **silently** (no log).
-5. Builds `simpleItems` via `buildSimpleItems(parsedRawItems, parseGeoItems(table))` — for each TEI,
+6. Builds `simpleItems` via `buildSimpleItems(parsedRawItems, parseGeoItems(table))` — for each TEI,
    resolves duration, settlement, persons, responsibilities, label, title, category, audio
    availability, and publication metadata; resolves geographic info by joining a `geoPlaceIndex`
    against `sameAs` refs in `settingDesc`/`langUsage`; finally validates each assembled record
    against `SimpleTEIMetadataSchema`. Invalid records are dropped **silently** (no log).
-6. Populates `persons` from the corpus-level `listPerson` of the `vicav_corpus` entry (`[]` if that
+7. Populates `persons` from the corpus-level `listPerson` of the `vicav_corpus` entry (`[]` if that
    entry is missing or failed validation).
+8. Writes the assembled `{ rawItems, simpleItems, persons }` to the memo: `markRaw()` on the three
+   root collections first (`markRaw` defines the non-enumerable `__v_skip` property and would throw
+   on an already frozen object), then a recursive `Object.freeze` (`deepFreeze`, which skips
+   already-frozen subtrees — `persons` points into the `rawItems` corpus tree and every
+   `simpleTEIMetadata.teiHeader` is embedded by reference — and uses a `WeakSet` guard against
+   circular references). Freezing happens exactly once, at cache-write time; memo hits and
+   in-flight-dedup hits hand out the frozen references as-is, and Vue reactivity triggers are
+   suppressed when the reference is unchanged. Any future in-place mutation of store-derived data
+   throws a `TypeError` in strict mode instead of silently corrupting state shared across concurrent
+   SSR requests. If the response had no `ETag`, steps 3–7 still run, but nothing is frozen or
+   cached.
 
 ## Joins performed
 
@@ -352,6 +387,7 @@ Declarative metadata describing each presentable field (`id`, `label`, `title`, 
 
 ### Direct imports
 
+- `type-fest` (type-only) — `ReadonlyDeep<T>` for the memo's internal cache-entry type.
 - `zod` (as `* as z`) — `z.fromJSONSchema`, `z.ZodType`, `z.ZodError`.
 - `@/config/dataTypes.ts` — the `dataTypes` map; used by `resolveDataType` to map a collection name
   to a `DataTypesEnum` value.
@@ -363,7 +399,7 @@ Declarative metadata describing each presentable field (`id`, `label`, `title`, 
 ### Auto-imported (Nuxt/unimport)
 
 - `defineStore` from Pinia.
-- `ref` from Vue.
+- `ref`, `markRaw` from Vue.
 - `useOpenapiSchema` (`app/composables/use-openapi-schema.ts`) — a pure function over the bundled
   `app/assets/openapi.json` (remaps `#/components/schemas/` refs to `#/$defs/`); called at module
   top level to build the Zod validators.
@@ -384,10 +420,11 @@ Declarative metadata describing each presentable field (`id`, `label`, `title`, 
 
 ## Caveats and performance notes
 
-- **Per-SSR-request re-parse:** the store is fresh per SSR request, so the full validation +
-  metadata build runs on every render even when the upstream body is unchanged (`fetchWithETag` only
-  saves the HTTP round-trip). A body-`ETag`-keyed memo for the parsed dataset is a deferred plan
-  (`docs/use-tei-headers-store-etag-memo-plan-nocode.md`).
+- **Per-SSR-request re-parse — solved:** the full validation + metadata build now runs only when the
+  body-level `ETag` of `/vicav/project` changes; warm requests are served from the module-scope memo
+  (see Initialization). In `nuxt dev` the memo, like the `fetchWithETag` `Map`s, does not persist
+  across the isolated dev-server contexts, so the re-parse still happens there. The design plan and
+  its review history are in `docs/use-tei-headers-store-etag-memo-plan-nocode.md`.
 - **Grouping is not memoized in the store** (see Grouped output); a store-level memo is deferred
   (`docs/use-tei-headers-store-grouped-items-memo.md`).
 - **Dev-server context isolation:** in `nuxt dev` the API routes and the frontend run in isolated
@@ -397,8 +434,10 @@ Declarative metadata describing each presentable field (`id`, `label`, `title`, 
   where two near-simultaneous callers can both start fetches.
 - **`304` without a cached body** throws `Cache error!`; if the upstream stops sending `ETag`, this
   layer stops caching entirely.
-- **Failed init is permanent per store instance** (see Initialization): in the SPA the store stays
-  empty until reload; SSR requests each get a fresh store.
+- **Failed init is retryable but not retried:** the store-local `inFlight` guard is cleared once the
+  run settles (see Initialization), so a later `initialize()` call would start a fresh attempt — but
+  no caller re-invokes `initialize()` after the plugin's single call, so in practice a failed init
+  still leaves the store empty until the next SSR request / page load.
 - **Duration parsing** only handles `PT<n>.0S`-shaped `@dur-iso` values (see `duration` field).
 - **Dead code:** the `placeSettlement` fallback in `resolveLabel` and the
   `"Recording record malformed"` sentinel in `resolveRecordingResponsibilityName` are unreachable.

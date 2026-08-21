@@ -1,3 +1,4 @@
+import type { ReadonlyDeep } from "type-fest";
 import * as z from "zod";
 
 import dataTypes from "@/config/dataTypes.ts";
@@ -868,34 +869,194 @@ export function groupSimpleItems(
 	);
 }
 
+interface CacheEntry {
+	rawItems: Array<TeiCorpus>;
+	simpleItems: Array<simpleTEIMetadata>;
+	persons: Array<Person>;
+}
+
+type FrozenCacheEntry = ReadonlyDeep<CacheEntry>;
+
+/**
+ * Upper bound for the module-scope parsed-corpus memo. In steady state only the current upstream
+ * deployment's ETag is live; the headroom covers rolling deploys without retaining unbounded
+ * multi-generation corpora in long-running Node worker processes.
+ */
+const PARSED_CORPUS_CACHE_CAP = 4;
+
+/**
+ * Memo of fully parsed corpora keyed on the body-level `ETag` of the `/vicav/project` response,
+ * which changes only when the upstream body changes. Module scope on purpose: Pinia stores are
+ * recreated per SSR request, so only module state survives across requests in the same Node
+ * process. Entries are shared by reference across concurrent requests; they are `markRaw`'d and
+ * deeply frozen at write time (see `setCachedParsedCorpus`) to keep that sharing safe.
+ */
+const parsedCorpusByEtag = new Map<string, FrozenCacheEntry>();
+
+/**
+ * In-flight parse promises keyed on ETag. Distinct from the memo above in scope, lifetime, and
+ * purpose: this is a short-lived dedup structure that only ever holds ETags currently being parsed
+ * (most importantly right after a deploy, when many concurrent SSR requests would otherwise each
+ * run the full parse pipeline for the same new ETag) and is empty the rest of the time.
+ */
+const inFlightParses = new Map<string, Promise<FrozenCacheEntry>>();
+
+let hasWarnedMissingEtag = false;
+
+/**
+ * Recursively freezes every nested object and array. Skips already frozen subtrees (cache entries
+ * share references — `persons` points into the `rawItems` corpus tree and every
+ * `simpleTEIMetadata.teiHeader` is embedded by reference) and guards against circular references.
+ */
+function deepFreeze(value: unknown, seen = new WeakSet<object>()): void {
+	if (typeof value !== "object" || value === null || seen.has(value) || Object.isFrozen(value)) {
+		return;
+	}
+
+	seen.add(value);
+
+	for (const nestedValue of Object.values(value)) {
+		deepFreeze(nestedValue, seen);
+	}
+
+	Object.freeze(value);
+}
+
+function getCachedParsedCorpus(etag: string): FrozenCacheEntry | undefined {
+	const cached = parsedCorpusByEtag.get(etag);
+	if (!cached) return undefined;
+
+	// Move the entry to the most-recent position so the cap evicts the least recently used ETag.
+	parsedCorpusByEtag.delete(etag);
+	parsedCorpusByEtag.set(etag, cached);
+
+	return cached;
+}
+
+/**
+ * Stores a freshly parsed corpus in the memo. `markRaw` must run before `deepFreeze`: it defines
+ * the non-enumerable `__v_skip` property, which would throw on an already frozen (non-extensible)
+ * object. Without it, every SSR request assigning the shared arrays into a `ref` would wrap — and
+ * share — the same reactive Proxy. The deep freeze then turns "no consumer mutates this data" from
+ * convention into a language-enforced invariant, which is required now that entries are shared by
+ * reference across unrelated concurrent SSR requests.
+ */
+function setCachedParsedCorpus(etag: string, entry: CacheEntry): FrozenCacheEntry {
+	markRaw(entry.rawItems);
+	markRaw(entry.simpleItems);
+	markRaw(entry.persons);
+	deepFreeze(entry.rawItems);
+	deepFreeze(entry.simpleItems);
+	deepFreeze(entry.persons);
+
+	const frozenEntry: FrozenCacheEntry = entry;
+	parsedCorpusByEtag.delete(etag);
+	parsedCorpusByEtag.set(etag, frozenEntry);
+
+	if (parsedCorpusByEtag.size > PARSED_CORPUS_CACHE_CAP) {
+		const oldestEtag = parsedCorpusByEtag.keys().next().value;
+		if (oldestEtag !== undefined) parsedCorpusByEtag.delete(oldestEtag);
+	}
+
+	return frozenEntry;
+}
+
+/**
+ * Runs the full validation and metadata build pipeline for a project static-data table.
+ */
+async function buildCacheEntry(staticDataTable: Array<unknown>): Promise<CacheEntry> {
+	const parsedRawItems = (await Promise.all(parseRawItems(staticDataTable))).flat();
+
+	return {
+		rawItems: parsedRawItems,
+		simpleItems: buildSimpleItems(parsedRawItems, parseGeoItems(staticDataTable)),
+		persons: extractPersonList(findCorpusMetadata(parsedRawItems)),
+	};
+}
+
 export const useTeiHeadersStore = defineStore("use-tei-headers-store", () => {
 	const { data: projectData, suspense } = useProjectInfo();
 	const rawItems = ref<Array<TeiCorpus>>([]);
 	const simpleItems = ref<Array<simpleTEIMetadata>>([]);
 	const persons = ref<Array<Person>>([]);
-	let initializationPromise: Promise<void> | null = null;
+	let inFlight: Promise<void> | null = null;
+
+	/**
+	 * Assigns a (frozen) memo entry to the reactive refs. The assertions back to the mutable types
+	 * are intentional: the public ref types stay unchanged, while the immutability guarantee holds
+	 * at runtime via the deep freeze applied at cache write time.
+	 */
+	function assignCacheEntry(entry: FrozenCacheEntry): void {
+		rawItems.value = entry.rawItems as Array<TeiCorpus>;
+		simpleItems.value = entry.simpleItems as Array<simpleTEIMetadata>;
+		persons.value = entry.persons as Array<Person>;
+	}
 
 	/**
 	 * Initializes the TEI header cache once from project static data.
 	 */
 	const initialize = async function () {
-		if (initializationPromise) {
-			await initializationPromise;
+		if (inFlight) {
+			await inFlight;
 			return;
 		}
 
-		initializationPromise = (async () => {
+		inFlight = (async () => {
 			await suspense();
 
-			const staticDataTable = projectData.value?.projectConfig?.staticData?.table ?? [];
-			const parsedRawItems = (await Promise.all(parseRawItems(staticDataTable))).flat();
+			const envelope = projectData.value;
+			const etag = envelope?.ETag;
 
-			rawItems.value = parsedRawItems;
-			simpleItems.value = buildSimpleItems(parsedRawItems, parseGeoItems(staticDataTable));
-			persons.value = extractPersonList(findCorpusMetadata(rawItems.value));
+			if (etag) {
+				const cached = getCachedParsedCorpus(etag);
+				if (cached) {
+					assignCacheEntry(cached);
+					return;
+				}
+
+				const pendingParse = inFlightParses.get(etag);
+				if (pendingParse) {
+					assignCacheEntry(await pendingParse);
+					return;
+				}
+
+				// Registered before awaiting, so concurrent SSR requests for the same new ETag
+				// await this promise instead of each running the full parse pipeline.
+				const parsePromise = (async () => {
+					const staticDataTable = envelope.projectConfig?.staticData?.table ?? [];
+					return setCachedParsedCorpus(etag, await buildCacheEntry(staticDataTable));
+				})();
+				inFlightParses.set(etag, parsePromise);
+
+				try {
+					assignCacheEntry(await parsePromise);
+				} finally {
+					inFlightParses.delete(etag);
+				}
+
+				return;
+			}
+
+			if (envelope && !hasWarnedMissingEtag) {
+				hasWarnedMissingEtag = true;
+				console.warn(
+					"[use-tei-headers-store] Project response carries no ETag;" +
+						" the parsed corpus is not memoized across requests.",
+				);
+			}
+
+			const entry = await buildCacheEntry(envelope?.projectConfig?.staticData?.table ?? []);
+			rawItems.value = entry.rawItems;
+			simpleItems.value = entry.simpleItems;
+			persons.value = entry.persons;
 		})();
 
-		await initializationPromise;
+		try {
+			await inFlight;
+		} finally {
+			// eslint-disable-next-line require-atomic-updates -- only writer; concurrent callers merely read and await `inFlight`
+			inFlight = null;
+		}
 	};
 
 	function getGroupedSimpleItems(options: GroupSimpleItemsOptions): GroupedSimpleItemsByCountry {
