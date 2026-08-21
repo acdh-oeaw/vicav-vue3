@@ -249,7 +249,14 @@ Declarative metadata describing each presentable field (`id`, `label`, `title`, 
   corpus `listPerson[].@id`.
 - **Responsibility join** — TEI `respStmts[].persName.@ref` (with `corpus:` prefix) matched against
   corpus `respStmts[].persName.@ref`; then `Author` is distinguished from `AuthorRef` to extract
-  `forename`/`surname` or `name`.
+  `forename`/`surname` or `name`. Discrimination uses lightweight structural type guards,
+  `isAuthor`/`isAuthorRef` (checking for an own `@id` vs. `@ref` property), **not** Zod `safeParse`.
+  These guards run inside `resolveRecordingResponsibilityName` and `resolveResponsiblePeople`, which
+  execute once per TEI item during `buildSimpleItems` — for a corpus with hundreds of items,
+  per-call Zod validation there was measurably slower than a property check, so the schema-based
+  `AuthorSchema`/`AuthorRefSchema` validators were removed in favor of the type guards (only
+  `TeiCorpusSchema`, `TeiSchema`, and `GeoPlaceSchema` remain as Zod-backed validators; see
+  "Schemas" above).
 - **Category join** — first `catRef.@target` (with `corpus:` stripped) matched against the merged
   corpus `taxonomies.categories[].@id`.
 - **Publication shape** — driven by `biblStruct.@type`; produces chapter, journal article, or thesis
@@ -302,7 +309,7 @@ shared/utils/use-api-client.ts, app/plugins/query-client.ts, and app/plugins/use
 If schema or generated client types changed, also review app/assets/openapi.json, app/lib/api-client, and
 app/types/teiCorpus.ts.
 
-Update docs/use-tei-headers-store.md so it accurately documents current implemented behavior.
+Update docs/tei-metadata-loading-caching.md so it accurately documents current implemented behavior.
 
 Include:
 - data source shape and where staticData.table is read from
