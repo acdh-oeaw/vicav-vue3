@@ -5,12 +5,20 @@ corpus metadata, then exposes query-friendly derived data for the UI.
 
 ## Data source
 
-- **Input:** `useProjectInfo().projectConfig.staticData.table` — an array of `TeiCorpus` and
-  `GeoPlace` envelope entries, provided by `app/composables/use-project-info.ts`. The data is
-  **static, project-bundled TEI metadata** (TEI/XML-derived JSON conforming to the TEI Guidelines,
-  with GeoNames-backed place references). It is not fetched live at runtime.
-- **Schemas:** Zod validators are built at module load from OpenAPI JSON schemas via
-  `useOpenapiSchema` (`TeiCorpusSchema`, `TeiSchema`, `GeoPlaceSchema`). TS types come from
+- **Input:** `projectData.value?.projectConfig?.staticData?.table ?? []`, where `projectData` is the
+  TanStack query data of `useProjectInfo()` (`app/composables/use-project-info.ts`). Per the OpenAPI
+  spec, `staticData` is nullable and `table` is an array of
+  `oneOf: [Biblio, Geo, TeiCorpus, object]`. The content is **static, project-bundled TEI metadata**
+  (TEI/XML-derived JSON conforming to the TEI Guidelines, with GeoNames-backed place references),
+  but it **is** fetched at runtime via `GET /vicav/project` through the caching pipeline below.
+- **Entry handling:** the store only consumes two entry shapes. Entries with a `TEIs` property are
+  treated as `TeiCorpus` and validated; geo envelopes are found by probing `item`, `item.Geo`, and
+  `item.TEI` for a `text.body.listPlace` array (the `Geo` schema carries places there). `Biblio`
+  entries and other generic objects are silently skipped.
+- **Schemas:** Zod validators are built at module top level from the bundled
+  `app/assets/openapi.json` via `useOpenapiSchema` (`TeiCorpusSchema`, `TeiSchema`,
+  `GeoPlaceSchema`); the composable remaps `#/components/schemas/` refs to `#/$defs/` and returns a
+  self-contained JSON schema, which is why the top-level call is safe. TS types come from
   `@/lib/api-client` (auto-generated from the same OpenAPI definition).
 
 ## Request pipeline and caching
@@ -29,12 +37,15 @@ useProjectInfo()  ──►  useApiClient() / Api.vicav.getProject()  ──► 
 
 ### Layer 1 — `useApiClient()` (`shared/utils/use-api-client.ts`)
 
-A per-call factory (auto-imported into both the Vue app and Nitro server) that returns an
-Orval-generated `Api` instance pre-configured for the current runtime:
+A per-call factory (auto-imported into both the Vue app and Nitro server) that **creates a fresh**
+Orval-generated `Api` instance per call, pre-configured for the current runtime; the two
+module-level `Map`s below outlive individual `Api` instances:
 
-- Sets `api.baseUrl` from `env.apiBaseUrl` (server) or `env.public.apiBaseUrl` (client). Defaults
-  from `nuxt.config.ts`: server is `undefined` (so the Orval default `http://localhost:8984` is
-  used); public default `https://vicav-dev.acdh.oeaw.ac.at`.
+- Sets `api.baseUrl` on the server from `env.apiBaseUrl`, falling back to `env.public.apiBaseUrl`;
+  on the client only `env.public.apiBaseUrl` is considered. With the `nuxt.config.ts` defaults
+  (server `apiBaseUrl: undefined`, public `https://vicav-dev.acdh.oeaw.ac.at`) **both** runtimes end
+  up on the public dev URL; the Orval default `http://localhost:8984` only applies when both env
+  values are unset.
 - If `env.public.apiUser` / `apiPass` are set, installs a `securityWorker` that injects
   `Authorization: Basic base64(user:pass)` on every request and forces `secure: true`.
 - Wires a `customFetch` that branches on `typeof document`:
@@ -52,7 +63,8 @@ Caching policy, in order:
 
 1. **Cache hit (fresh):** if `cache.get(url)?.expiresAt` is still in the future, return a synthetic
    `200` `Response` with the stored body and debug headers `X-Cache: fetchWithETag HIT` /
-   `X-Cache-Expires: <ISO>`. No network call.
+   `X-Cache-Expires: <ISO>` (no other headers — no `ETag`/`Content-Type`; the generated client
+   parses the body as JSON regardless). No network call.
 2. **Single-flight de-dup:** if a request to the same URL is already in flight, the second caller
    awaits the same `Promise` from `currentRequests` rather than issuing a parallel fetch (protects
    against healthy-check storms against a slow backend).
@@ -61,20 +73,25 @@ Caching policy, in order:
    the upstream signs the gzipped body).
 4. **TTL from `Cache-Control`:** `max-age` is parsed from the response (`maxAge > 0 ? maxAge : 5`
    seconds; defaults to 5 s when the header is missing). The entry's `expiresAt` is set to
-   `now + maxAge`, and a `setTimeout` reaps the entry after `2 * maxAge` of no reads.
+   `now + maxAge`; a one-shot `setTimeout` then calls `deleteFromCacheIfExpired` after `2 * maxAge`,
+   which only deletes the entry if it is expired by then (a `304` refresh in the meantime extends
+   `expiresAt` and turns the pending reap into a no-op).
 5. **`304 Not Modified`:** refresh the cached body's `expiresAt` to `now + maxAge` and return a
    `200` with the existing bytes. Throws `Cache error!` if there is no cached body to fall back to.
-6. **`200 OK`:** only stored if the response carries an `ETag` header — the cache entry is
-   `{ ETag, body: Uint8Array, expiresAt }`. Responses without `ETag` are not cached.
+6. **`200 OK`:** if the response carries an `ETag` header, the body is stored **as opaque bytes**
+   (`new Uint8Array(await response.clone().arrayBuffer())` — no JSON re-parse/re-serialize) and the
+   original `Response` is returned untouched. Responses without `ETag` are returned but not cached.
 7. **Error fallback:** on a thrown error, the in-flight entry is removed and the cached body is
    returned as a `200` with a console warning. If no cached body exists, the error is wrapped and
    rethrown.
 
 Server-only caveats:
 
-- The cache is per Nitro process, keyed on URL only (path + query). The module comment notes that in
-  the Nuxt dev server the API routes and frontend live in isolated contexts, so the global `cache`
-  does not persist across them in dev; in `nuxt build`/production, you get a single shared global.
+- The cache is per Nitro process, keyed on URL only (path + query); credentials are not part of the
+  key (fine in practice — the app is configured with a single `apiUser`/`apiPass`). The module
+  comment notes that in the Nuxt dev server the API routes and frontend live in isolated contexts,
+  so the global `cache` does not persist across them in dev; in `nuxt build`/production, you get a
+  single shared global.
 - Method is implicitly `GET` (the comment in the file explicitly says "The rest of the code at the
   moment only works for GET requests.").
 - A small race exists in the single-flight map (set / await / delete) — two near-simultaneous
@@ -84,8 +101,11 @@ Server-only caveats:
 
 ### Layer 2 — TanStack `QueryClient` (`app/plugins/query-client.ts`)
 
-`useProjectInfo` wraps `useQuery({ queryKey: ["get-project-info"], ... })` with no per-query
-overrides, so the cache entry inherits the global defaults set by the `query-client` Nuxt plugin:
+`useProjectInfo(options?)` wraps
+`useQuery({ queryKey: ["get-project-info"], enabled: options?.enabled, ... })` with no other
+per-query overrides, so the cache entry inherits the global defaults set by the `query-client` Nuxt
+plugin. The `enabled` option is currently unused by every caller (including the store), so the query
+is always enabled:
 
 - `defaultOptions.queries.staleTime = 15 * 60 * 1000` (15 minutes).
 - `defaultOptions.queries.placeholderData = keepPreviousData` (purely UX).
@@ -113,10 +133,15 @@ The `query-client` plugin uses Nuxt's `useState("vue-query")` to ferry the `Quer
 server to client:
 
 - On the **server**, after `app:rendered`, the plugin dehydrates the cache and **floors the volatile
-  timestamps to a 3-minute bucket** before serializing (`dataUpdatedAt`, `errorUpdatedAt`,
-  `dehydratedAt` all rounded down to the nearest multiple of `3 * 60 * 1000`).
+  timestamps to a 3-minute bucket** before serializing (nearest multiple of `3 * 60 * 1000`). Quirk:
+  `errorUpdatedAt` is computed from `dataUpdatedAt` (not its own value), and `dehydratedAt` is
+  floored as well.
 - On the **client**, in `app:created`, the plugin calls `hydrate(queryClient, state.value)` to
   rehydrate.
+- **Plugin ordering:** Nuxt runs `app/plugins` in file order, so `query-client.ts` registers its
+  `app:created` hydration hook before `use-tei-headers-store-init.ts` does; on the client the cache
+  is hydrated **before** the store's `initialize()` runs, and `suspense()` resolves from the
+  hydrated cache without a network round-trip.
 
 Effect: the SSR snapshot is intentionally "aged" by up to 3 minutes. Combined with the 15-minute
 `staleTime`, the project config is considered fresh for at least 12 minutes after hydration, and the
@@ -140,10 +165,10 @@ During SSR (or in server routes like `server/routes/status.ts` that also call `u
 
 1. The request goes through `fetchWithETag`. If the URL has a fresh cached entry, the body is served
    from memory without hitting the network.
-2. Otherwise an `If-None-Match` GET is issued; on `304` the body is served from the cache; on `200`
-   with `ETag` the body is stored and reaped after `2 * maxAge` of no reads. The effective
-   server-side TTL for `/vicav/project` is the upstream's `Cache-Control: max-age` (or 5 s by
-   default).
+2. Otherwise an `If-None-Match` GET is issued; on `304` the body is served from the cache (and
+   `expiresAt` is refreshed); on `200` with `ETag` the body is stored as opaque bytes and a one-shot
+   reap is scheduled for `2 * maxAge` later. The effective server-side TTL for `/vicav/project` is
+   the upstream's `Cache-Control: max-age` (or 5 s by default).
 3. The TanStack `QueryClient` then caches the parsed `data` for the rest of the SSR pass and
    dehydrates it for the client.
 
@@ -151,26 +176,33 @@ During SSR (or in server routes like `server/routes/status.ts` that also call `u
 
 ### Input types
 
-- **`TeiCorpus`** — top-level container with `@id` and a `TEIs[]` array.
+- **`TeiCorpus`** — top-level container with `@id`, `teiHeader`, a `TEIs[]` array, and optional
+  `standOff.listPerson`.
 - **`TEI`** — individual TEI document with `teiHeader.fileDesc` (titleStmt, respStmts,
   publicationStmt, sourceDesc.recordingStmt, sourceDesc.biblStruct), `teiHeader.profileDesc`
   (particDesc.listPerson, settingDesc.place, textClass.catRefs, langUsage), and
-  `teiHeader.encodingDesc.classDecl.taxonomies`. Attributes `@id` and `@hasTEIw` ("true"/"false" for
-  TEI-W transcription).
-- **`GeoPlace`** — geographic place with `@id`, `@type` ("reg" = region), prefLabel/standard/local
-  place names, `geoNames_idno`, nested `location.country`.
-- **`Person`** — corpus-level participant (`@id`, `@sex`/`sex`, `@age`, birth).
-- **`Author` / `AuthorRef`** — distinguished by `@id` vs `@ref` on `persName`.
+  `teiHeader.encodingDesc.classDecl.taxonomies`. Attributes `@id`, `@type` (const `"recording"`),
+  and `@hasTEIw` (only `"true"` occurs; absence means no TEI-W transcription).
+- **`GeoPlace`** — geographic place with `@id`, `@type` (`"geo" | "reg" | "diaGroup"`; only `"reg"`
+  maps to the region hierarchy level), prefLabel/standard/local place names, `geoNames_idno`, nested
+  `location.country` (`@key` + `$`).
+- **`Person`** — corpus-level participant (`@id`, `@sex` (`"f"|"m"|"missing"`) / `sex.$`
+  (`"F"|"M"|"D"`), `@age`, `birth` with `$`/`date`).
+- **`Author` / `AuthorRef`** — distinguished at runtime by simple type guards: `persName` has `@id`
+  (full `Author`) vs `@ref` (`AuthorRef`); no Zod validation here.
 - **`RespStmt`** — links a `persName` (author or ref) to a `Responsibility` enum value.
 
 ### Enums
 
-- `Responsibility` — `Author`, `Recording`, `Principal2`, `Transcription1`, `TransferToELAN` (the
-  five supported ones, filtered via `supportedResponsibilities`).
-- `BiblStructType` — `BookSection`, `JournalArticle`, `Thesis` (drives publication shape).
-- `Unit` — `Page`, `Volume` (used to extract `biblScope` values).
+- `Responsibility` — the generated enum has ~25 members; the store only consumes the five in
+  `supportedResponsibilities` (`Author`, `Recording`, `Principal2`, `Transcription1`,
+  `TransferToELAN`); all other `respStmt`s are ignored.
+- `BiblStructType` — the generated enum has 13 members; only `BookSection`, `JournalArticle`, and
+  `Thesis` drive a publication shape, everything else falls back to the empty publication.
+- `Unit` — `Page`, `Volume`, `Issue`; the store uses `Page` and `Volume` to extract `biblScope`
+  values.
 - `DataTypesEnum` — high-level data type (e.g., `CorpusText`, `Feature`, `Profile`); mapped from the
-  raw collection name via `@/config/dataTypes`.
+  raw collection name via `@/config/dataTypes` (`resolveDataType`; unknown collections → `"Text"`).
 
 ### Output types
 
@@ -181,25 +213,43 @@ During SSR (or in server routes like `server/routes/status.ts` that also call `u
 
 ### `simpleTEIMetadata` fields
 
-- `id` — from `idno` (CorpusID type) or `@id` fallback
-- `recordingDate`, `pubDate`
-- `dataType` — resolved via `dataTypes` config
-- `label` — title, person name, settlement, or id fallback (depends on data type and presence of
-  persons)
-- `title` — TEI title, optionally suffixed with first person name
+- `id` — first `publicationStmt.idno.$` (no type filtering; the code comment notes the wanted idno
+  has a type ending in `CorpusID`, but only one idno is considered), falling back to `TEI.@id`, then
+  `"no_id"`
+- `recordingDate` — `recording.date["@when"]` (a string in practice; the schema union with `TeiDate`
+  is never produced by the store, but the `recordingDate` accessor handles both shapes)
+- `pubDate` — `publicationStmt.date.$`, falling back to `"unknown"`
+- `dataType` — resolved via `dataTypes` config (unknown collection → `"Text"`)
+- `label` — precedence: `CorpusText` → first TEI title; else first person's name (even if empty);
+  else first TEI title; else `@id` → `idno.$` → `"no_id"`. (The trailing `placeSettlement` branch in
+  `resolveLabel` is unreachable.)
+- `title` — first TEI title, suffixed ` – <first person name>` when a named person exists; falls
+  back to `label` when there is no title
 - `author`, `recording`, `principal`, `transcription`, `transfer to ELAN` — arrays of
-  `{given, family}` resolved against corpus-level `respStmts`
-- `place` — `{settlement, country, region}` merged from inline TEI place and GeoPlace lookup
-- `person` — array of `{name, sex, age, dob}` from corpus `listPerson`
-- `resp` — recording interviewer name (resolved from corpus `respStmts` or raw `persName`)
-- `category` — taxonomy category name (only for `CorpusText` data type)
-- `duration` — formatted `HH:MM:SS` from `dur-iso`
+  `{given, family}` for the five supported responsibilities, resolved against corpus-level
+  `respStmts` (missing entries → `[]`)
+- `place` — `{settlement, country, region}`; inline TEI `settingDesc.place` values win, gaps are
+  filled from the GeoPlace index lookup
+- `person` — array of `{name, sex, age, dob}` joined from corpus `listPerson`; fallbacks
+  `sex: @sex ?? sex.$ ?? "n/a"`, `age: @age ?? "n/a"`, `dob: birth.$ ?? birth.date.$ ?? "n/a"`
+- `resp` — for `CorpusText` without `recording.respStmt`: `"Unknown"`; otherwise resolved from
+  `recording.respStmt.persName` (or `recording.p.$`): with corpus metadata, the matching corpus
+  `respStmt`'s author display name, falling back to the `corpus:`-stripped `@ref`; without corpus
+  metadata, the stripped `@ref`; a non-ref `persName` yields `""`. (The
+  `"Recording record malformed"` sentinel is never returned.)
+- `category` — taxonomy category name, only for `CorpusText` (else `""`); first `catRef.@target`
+  matched against merged corpus taxonomies; `"Unknown"` when there is no header or no match
+- `duration` — `HH:MM:SS` (hours part only when non-zero) from `@dur-iso`; parsing is `parseInt`
+  after stripping `PT` and `.0`, so only `PT<n>.0S`-shaped values are handled — the OpenAPI examples
+  also include `"03:00"` (MM:SS), which would misparse to `3`
 - `audioAvailability` — from `availability.@status`; `Feature`/`Profile` and items without duration
   are forced to `"restricted"`; default `"unknown"`
-- `@hasTEIw` — `"true"` / `"false"`
-- `teiHeader` — raw header preserved
-- `publication` — CSL-JS-shaped metadata (`refType`, `type`, `bibl` with
-  author/editor/title/container-title/issued/publisherPlace/volume/page)
+- `@hasTEIw` — normalized: `"true"` only when the raw attribute is exactly `"true"`, else `"false"`
+- `teiHeader` — raw header preserved; validated by `z.custom<TeiHeader>()` (pass-through, no checks)
+- `publication` — CSL-like metadata; `refType` is always `"external"`; `type` is `"chapter"`
+  (`bookSection`), `"journalArticle"`, `"book"` (for `thesis`), or `""` (unmapped/missing
+  `biblStruct`); `bibl` carries
+  author/editor/title/container-title/issued/publisherPlace/volume/page
 
 ### Grouped output
 
@@ -209,9 +259,14 @@ During SSR (or in server routes like `server/routes/status.ts` that also call `u
 country → region → place(settlement) → dataType → simpleTEIMetadata[]
 ```
 
-- Filtered by `options.dataTypes` (allow-list) and optional `options.filterListBy` (`{key, value}`
-  match).
-- Sorted at every level using a numeric-aware `Intl.Collator`. Default compare is by `label`.
+- Filtered by `options.dataTypes` (allow-list) and optional `options.filterListBy` (strict string
+  equality via the accessor's `getValue`).
+- Sorted at every level using a numeric-aware `Intl.Collator` (module-scoped, reused); the default
+  compare is by `label`; sorting is non-mutating (`toSorted`).
+- Items with missing geo fields land in the `""` bucket at the respective level.
+- Not memoized in the store: every call re-filters, re-sorts, and rebuilds the tree. The current
+  single call site wraps the result in a Vue `computed`; a store-level memo is a deferred plan
+  (`docs/use-tei-headers-store-grouped-items-memo.md`).
 
 ### `simpleMetadataAccessors`
 
@@ -222,50 +277,82 @@ Declarative metadata describing each presentable field (`id`, `label`, `title`, 
 
 ## Initialization
 
-`initialize()` is idempotent (guarded by a module-level `initializationPromise`). On first call it:
+### Trigger — `app/plugins/use-tei-headers-store-init.ts`
+
+- **Server:** the plugin awaits `teiHeadersStore.initialize()` directly, so the SSR render blocks
+  until the project data is fetched and parsed. A rejected init fails the render (the query error is
+  logged server-side by the `query-client` plugin's `onError`).
+- **Client:** the plugin hooks `app:created` (after the `query-client` hydration hook, see Layer 3)
+  and awaits `initialize()` there; the framework does not wait for it, so components reading the
+  store see empty arrays until init resolves.
+- Components never call `initialize()` themselves; they only read the store's refs.
+
+### Idempotency and error semantics
+
+- `initialize()` is idempotent via a **store-scoped** `initializationPromise` (a `let` in the store
+  setup, not module scope): concurrent callers await the same in-flight promise.
+- The promise is **never reset**: a rejection (e.g. the project query failing) is cached, so
+  subsequent `initialize()` calls re-throw and the store stays empty for the lifetime of the store
+  instance. In Nuxt SSR the Pinia store is fresh per request, so each request retries; in the SPA
+  the failure is permanent until reload.
+- If `staticData` or `table` is missing, `?? []` yields empty `rawItems`/`simpleItems`/`persons`
+  without error.
+
+### Steps (first call)
 
 1. Awaits `useProjectInfo().suspense()`.
-2. Reads `projectConfig.staticData.table`.
-3. Validates each entry with `TeiCorpusSchema`; for each corpus, recursively validates its `TEIs[i]`
-   with `TeiSchema`. Failures are logged with `@id` context but do not abort the load.
-4. Parses geo entries from the same table by looking for `text.body.listPlace` and validating each
-   place with `GeoPlaceSchema`.
+2. Reads `projectConfig.staticData.table ?? []`.
+3. Validates entries **asynchronously in parallel** (`safeParseAsync` + `Promise.all` — a deliberate
+   perf win for large corpora): each entry with a `TEIs` property is validated with
+   `TeiCorpusSchema`, then every `TEIs[i]` with `TeiSchema`. Failures are logged via `console.error`
+   with `@id` context (corpus and/or TEI level) but do not abort the load; the failing item is
+   dropped. Non-corpus entries are skipped silently.
+4. Parses geo envelopes from the same table: probes `item`, `item.Geo`, `item.TEI` for a
+   `text.body.listPlace` array (first candidate wins) and validates each place with
+   `GeoPlaceSchema`; invalid places are dropped **silently** (no log).
 5. Builds `simpleItems` via `buildSimpleItems(parsedRawItems, parseGeoItems(table))` — for each TEI,
    resolves duration, settlement, persons, responsibilities, label, title, category, audio
    availability, and publication metadata; resolves geographic info by joining a `geoPlaceIndex`
    against `sameAs` refs in `settingDesc`/`langUsage`; finally validates each assembled record
-   against `SimpleTEIMetadataSchema`. Invalid results are dropped.
-6. Populates `persons` from the corpus-level `listPerson` of the `vicav_corpus` entry.
+   against `SimpleTEIMetadataSchema`. Invalid records are dropped **silently** (no log).
+6. Populates `persons` from the corpus-level `listPerson` of the `vicav_corpus` entry (`[]` if that
+   entry is missing or failed validation).
 
 ## Joins performed
 
-- **Corpus metadata** — the `TeiCorpus` with `@id === "vicav_corpus"` provides the canonical
-  `respStmts`, `listPerson`, and `taxonomies` referenced by individual TEIs.
-- **Geo join** — `normalizeGeoReference` strips `geo:`, diacritics, whitespace/underscores/dashes,
-  and lowercases. A `Map` is keyed on `@id`, all place-name variants, and `geoNames_idno`. TEIs look
-  up by any of `settingDesc.place.@sameAs`, `settingDesc.setting.placeName.@sameAs`, or
-  `langUsage.language.settingDesc.listPlace.place.@sameAs`.
-- **Person join** — TEI `listPerson[].@sameAs` (with `corpus:` prefix stripped) matched against
-  corpus `listPerson[].@id`.
-- **Responsibility join** — TEI `respStmts[].persName.@ref` (with `corpus:` prefix) matched against
-  corpus `respStmts[].persName.@ref`; then `Author` is distinguished from `AuthorRef` to extract
-  `forename`/`surname` or `name`. Discrimination uses lightweight structural type guards,
-  `isAuthor`/`isAuthorRef` (checking for an own `@id` vs. `@ref` property), **not** Zod `safeParse`.
-  These guards run inside `resolveRecordingResponsibilityName` and `resolveResponsiblePeople`, which
-  execute once per TEI item during `buildSimpleItems` — for a corpus with hundreds of items,
-  per-call Zod validation there was measurably slower than a property check, so the schema-based
-  `AuthorSchema`/`AuthorRefSchema` validators were removed in favor of the type guards (only
-  `TeiCorpusSchema`, `TeiSchema`, and `GeoPlaceSchema` remain as Zod-backed validators; see
-  "Schemas" above).
+- **Corpus metadata** — the validated `TeiCorpus` with `@id === "vicav_corpus"` provides the
+  canonical `respStmts`, `listPerson`, and `taxonomies` referenced by individual TEIs. If it is
+  missing (absent or failed validation), `persons` is `[]`, `category` is `""`/`"Unknown"`,
+  responsibility arrays are empty, and `resp` falls back to the stripped `@ref`.
+- **Geo join** — `normalizeGeoReference` strips a `geo:` prefix (case-insensitive), diacritics
+  (NFD), whitespace/underscores/dashes, and lowercases. The index `Map` is keyed on `@id`, all
+  place-name variants (prefLabel/standard/local), and `geoNames_idno`. TEIs look up by any of
+  `settingDesc.place.@sameAs`, `settingDesc.setting.placeName.@sameAs`, or
+  `langUsage.language.settingDesc.listPlace.place.@sameAs` (first hit wins). `@type === "reg"`
+  places fill the `region` slot, all others fill `settlement`; `country` comes from
+  `location.country.$`.
+- **Person join** — TEI `listPerson[].@sameAs` (falling back to the node's `$` text), with the
+  `corpus:` prefix stripped, matched against corpus `listPerson[].@id`.
+- **Responsibility join** — TEI `respStmts[].persName.@ref` matched against corpus
+  `respStmts[].persName.@ref` (both sides must be `@ref` objects); the matched corpus `persName` is
+  then read as a full `Author` to extract `forename`/`surname` (or `name` → `given` with empty
+  `family`; otherwise `{given: "", family: ""}`). `Author`/`AuthorRef` discrimination uses
+  lightweight structural type guards (`isAuthor`/`isAuthorRef`, own `@id` vs `@ref`) rather than Zod
+  `safeParse` — per-call Zod validation there was measurably slower for large corpora, so the old
+  `AuthorSchema`/`AuthorRefSchema` validators were removed (only `TeiCorpusSchema`, `TeiSchema`, and
+  `GeoPlaceSchema` remain Zod-backed).
 - **Category join** — first `catRef.@target` (with `corpus:` stripped) matched against the merged
-  corpus `taxonomies.categories[].@id`.
-- **Publication shape** — driven by `biblStruct.@type`; produces chapter, journal article, or thesis
-  CSL-like objects, falling back to an empty external publication.
+  corpus `taxonomies.categories[].@id`; the name comes from `catDesc.name.$`, falling back to
+  `catDesc.$`.
+- **Publication shape** — driven by `biblStruct.@type` (`bookSection` → `"chapter"`,
+  `journalArticle` → `"journalArticle"`, `thesis` → `"book"`); anything else yields the empty
+  external publication. `volume`/`page` come from `monogr.imprint.biblScopes` matched by `@unit`.
 
 ## Dependencies
 
-### Direct imports (relative)
+### Direct imports
 
+- `zod` (as `* as z`) — `z.fromJSONSchema`, `z.ZodType`, `z.ZodError`.
 - `@/config/dataTypes.ts` — the `dataTypes` map; used by `resolveDataType` to map a collection name
   to a `DataTypesEnum` value.
 - `@/lib/api-client` — types/enums: `Author`, `AuthorRef`, `BiblStructType`, `GeoPlace`, `Person`,
@@ -275,25 +362,47 @@ Declarative metadata describing each presentable field (`id`, `label`, `title`, 
 
 ### Auto-imported (Nuxt/unimport)
 
-- `z` (Zod) — `z.fromJSONSchema`, `z.ZodType`, `z.ZodError`.
 - `defineStore` from Pinia.
 - `ref` from Vue.
-- `useOpenapiSchema` (`app/composables/use-openapi-schema.ts`) — supplies the JSON schemas used to
-  build the Zod validators.
+- `useOpenapiSchema` (`app/composables/use-openapi-schema.ts`) — a pure function over the bundled
+  `app/assets/openapi.json` (remaps `#/components/schemas/` refs to `#/$defs/`); called at module
+  top level to build the Zod validators.
 - `useProjectInfo` (`app/composables/use-project-info.ts`) — provides
   `projectData.value.projectConfig.staticData.table` and the `suspense()` promise. Wraps `useQuery`
   against `["get-project-info"]`; inherits the 15-minute `staleTime` and SSR hydration from
   `app/plugins/query-client.ts`.
 - `useApiClient` (`shared/utils/use-api-client.ts`, auto-imported into both the Vue app and the
-  Nitro server via Nuxt's generated `.nuxt/imports.d.ts`) — constructs an Orval `Api` instance with
-  the runtime-configured base URL, optional basic-auth `securityWorker`, and a `customFetch` that is
+  Nitro server via Nuxt's generated `.nuxt/imports.d.ts`) — creates an Orval `Api` instance with the
+  runtime-configured base URL, optional basic-auth `securityWorker`, and a `customFetch` that is
   `fetchWithETag` on the server (ETag-conditional GET layer backed by two module-level `Map`s; TTL
-  from upstream `Cache-Control: max-age`, default 5 s; reaped after `2 * maxAge`) and the native
-  `fetch` on the client.
+  from upstream `Cache-Control: max-age`, default 5 s; one-shot reap after `2 * maxAge`) and the
+  native `fetch` on the client.
 
 ### Transitive
 
-- `zod`, `pinia`, Vue 3 reactivity.
+- `pinia`, Vue 3 reactivity.
+
+## Caveats and performance notes
+
+- **Per-SSR-request re-parse:** the store is fresh per SSR request, so the full validation +
+  metadata build runs on every render even when the upstream body is unchanged (`fetchWithETag` only
+  saves the HTTP round-trip). A body-`ETag`-keyed memo for the parsed dataset is a deferred plan
+  (`docs/use-tei-headers-store-etag-memo-plan-nocode.md`).
+- **Grouping is not memoized in the store** (see Grouped output); a store-level memo is deferred
+  (`docs/use-tei-headers-store-grouped-items-memo.md`).
+- **Dev-server context isolation:** in `nuxt dev` the API routes and the frontend run in isolated
+  contexts, so the `fetchWithETag` `Map`s do not persist across them; production builds share one
+  global scope.
+- **Single-flight race:** the `currentRequests` set/await/delete sequence has a small race window
+  where two near-simultaneous callers can both start fetches.
+- **`304` without a cached body** throws `Cache error!`; if the upstream stops sending `ETag`, this
+  layer stops caching entirely.
+- **Failed init is permanent per store instance** (see Initialization): in the SPA the store stays
+  empty until reload; SSR requests each get a fresh store.
+- **Duration parsing** only handles `PT<n>.0S`-shaped `@dur-iso` values (see `duration` field).
+- **Dead code:** the `placeSettlement` fallback in `resolveLabel` and the
+  `"Recording record malformed"` sentinel in `resolveRecordingResponsibilityName` are unreachable.
+- **Hydration quirk:** `errorUpdatedAt` is derived from `dataUpdatedAt` (see Layer 3).
 
 ## Maintenance Prompt
 
