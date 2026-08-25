@@ -22,6 +22,7 @@ import {
 import { useToastsStore } from "./use-toasts-store.ts";
 
 const narrowScreenBreakpoint = 1024;
+const listMapDefaultTitle = "Variety data";
 
 export type WindowRegistry = Map<WindowItem["id"], WindowItem>;
 
@@ -276,7 +277,7 @@ export const useWindowsStore = defineStore("windows", () => {
 								queryString: globalFilter,
 							},
 						} as unknown as WindowItem,
-						globalFilter,
+						globalFilter || listMapDefaultTitle,
 						ListMapSchema.shape.params,
 						"queryString",
 						true,
@@ -463,7 +464,7 @@ export const useWindowsStore = defineStore("windows", () => {
 			const wi = QueryString.safeParse(w.params);
 			if (wi.success && "queryString" in w.params) {
 				w.params.queryString = query;
-				w.winbox.setTitle(query);
+				w.winbox.setTitle(w.targetType === "ListMap" ? query || listMapDefaultTitle : query);
 				updateUrl();
 			}
 		}
