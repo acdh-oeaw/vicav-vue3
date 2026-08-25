@@ -43,7 +43,10 @@ function addMetaFilterToQuery(key: string, val: string) {
 <template>
 	<TooltipProvider :delay-duration="100">
 		<div class="grid items-center border-b border-border bg-surface px-0 py-2 text-on-surface">
-			<div class="mb-1 flex flex-wrap items-center gap-y-1 px-2 font-medium text-neutral-700">
+			<div
+				class="mb-1 flex flex-wrap items-center gap-y-1 px-2 font-medium text-neutral-700"
+				data-onboarding="feature-categories"
+			>
 				<div
 					v-for="(group, catIdx) in categories?.slice(0, -2)"
 					:key="group.id"
@@ -54,6 +57,7 @@ function addMetaFilterToQuery(key: string, val: string) {
 							<span>{{ titleCase(group.id) }}</span>
 							<Badge
 								v-if="group.getLeafColumns().filter((c) => c.getIsVisible()).length"
+								data-onboarding="feature-category-count"
 								variant="outline"
 								>{{ group.getLeafColumns().filter((c) => c.getIsVisible()).length }}</Badge
 							>

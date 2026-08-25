@@ -308,7 +308,12 @@ function deselectColumn() {
 				</DialogHeader>
 
 				<FormField class="overflow-auto" name="items">
-					<Button class="ml-auto w-fit" type="button" variant="outline" @click="toggleAllValues"
+					<Button
+						class="ml-auto w-fit"
+						data-onboarding="select-all-values"
+						type="button"
+						variant="outline"
+						@click="toggleAllValues"
 						>{{ allValuesSelected ? "Deselect" : "Select" }} all values</Button
 					>
 					<FormItem class="-mt-px overflow-auto">
@@ -384,7 +389,9 @@ function deselectColumn() {
 				</FormField>
 
 				<DialogFooter>
-					<Button type="submit" variant="default"> Save changes </Button>
+					<Button data-onboarding="save-feature-values" type="submit" variant="default">
+						Save changes
+					</Button>
 				</DialogFooter>
 			</form>
 		</DialogContent>

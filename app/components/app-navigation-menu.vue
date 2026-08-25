@@ -27,7 +27,11 @@ onScopeDispose(() => {
 </script>
 
 <template>
-	<NavigationMenu v-model="currentMenu" class="w-full max-w-full justify-between border-none">
+	<NavigationMenu
+		v-model="currentMenu"
+		class="w-full max-w-full justify-between border-none"
+		data-onboarding="main-navigation"
+	>
 		<NavigationMenuList>
 			<NavigationMenuItem v-for="menu of menus" :key="menu.id">
 				<NavigationMenuTrigger

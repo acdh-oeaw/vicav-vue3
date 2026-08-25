@@ -322,6 +322,7 @@ function onRenameGroup(groupId: string, event: Event) {
 								dropTargetId === dropTargetIdFor(feature.id, entry.key),
 						}"
 						:data-legend-drop-target="dropTargetIdFor(feature.id, entry.key)"
+						data-onboarding="legend-value"
 						:group="sortableGroupName(feature.id)"
 						:list="[entry]"
 						:move="onDragMove"

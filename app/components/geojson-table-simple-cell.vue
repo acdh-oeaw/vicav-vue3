@@ -25,6 +25,7 @@ function openLocationWindow() {
 <template>
 	<Button
 		class="max-w-[500px] cursor-pointer flex-col items-start truncate py-0 font-medium text-black"
+		data-onboarding="location-link"
 		variant="link"
 		@click="openLocationWindow"
 		><div class="text-start">{{ valuePrimary }}</div>

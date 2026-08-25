@@ -353,6 +353,7 @@ function onRowClick(row: CellRow) {
 				<Button
 					class="h-auto shrink-0 truncate p-0 text-black!"
 					:class="{ 'font-medium': row.highlighted, 'font-normal': !row.highlighted }"
+					data-onboarding="feature-value-link"
 					variant="link"
 					@click="onRowClick(row)"
 					><Ellipsis

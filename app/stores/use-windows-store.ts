@@ -181,6 +181,9 @@ export const useWindowsStore = defineStore("windows", () => {
 			},
 			root: rootElement,
 		});
+		// window ids are random, so the kind of content is the only stable way to address a window
+		// from the outside (the guided tour attaches its steps to elements inside specific windows)
+		(winbox.dom as HTMLElement).dataset.windowType = targetType;
 		//focus window content on every click
 		enableWindowBodyKeyboardScrollFocus(winbox.body);
 		//focus window when opened the first time (=now)

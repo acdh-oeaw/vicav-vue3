@@ -329,7 +329,7 @@ function onFeatureClick(val: Header<unknown, unknown>) {
 					@select="jumpToRow"
 				/>
 			</div>
-			<div class="flex gap-2">
+			<div class="flex gap-2" data-onboarding="table-actions">
 				<Toggle
 					v-model:model-value="showAllDetails"
 					class="h-8 text-neutral-700"
