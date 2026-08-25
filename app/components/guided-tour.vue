@@ -1,94 +1,169 @@
 <script setup lang="ts">
+import type { AttachableElement, StepEntity } from "v-onboarding";
 import { ref } from "vue";
 
+interface TourStep extends StepEntity {
+	/**
+	 * When set, the step does not offer a "Next" button and the tour only advances once the user
+	 * has clicked something: the element the step is attached to (`true`), or the element named
+	 * here — useful when the step highlights a whole panel but hinges on one button inside it.
+	 */
+	requireClick?: boolean | AttachableElement;
+	/**
+	 * How long to wait for the step's element to turn up before giving up on the step, in
+	 * milliseconds. Raise it where the user has to work through a menu or a dialog first.
+	 */
+	waitTimeout?: number;
+	/**
+	 * How long to let the layout settle before the step is positioned, in milliseconds. Raise it
+	 * for steps that follow an interaction with a lot of reflow behind it.
+	 */
+	settleDelay?: number;
+}
+
+/** Long enough to survive a window opening and rendering, short enough not to feel stuck. */
+const DEFAULT_WAIT_TIMEOUT = 10_000;
+/**
+ * Opening a window re-tiles the ones already on screen, and the arrangement runs behind a 150ms
+ * debounce. v-onboarding refreshes its cut-out on scroll and on resize only, so an element that is
+ * merely moved leaves the highlight behind: let the shuffling finish before positioning the step.
+ */
+const DEFAULT_SETTLE_DELAY = 400;
+
 const wrapper = ref();
-const steps = [
+const stepDefinitions: Array<TourStep> = [
 	{
 		attachTo: { element: "#results-table" },
 		content: {
 			title: "The Variety Table",
 			description:
-				"Every row is a documented language variety (a city, region, or community). Columns appear here once you filter by a linguistic feature, showing the actual attested form for each variety.",
+				"Every row is a documented language variety: a city, a region, or a community. This table is your starting point, and whatever you filter here is what the map beside it shows.",
 		},
 	},
 	{
 		attachTo: { element: "#results-table tbody tr:first-child" },
+		requireClick: true,
 		content: {
-			title: "Inspect a Variety",
+			title: "Find a Variety on the Map",
 			description:
-				"Click any row to open a detail panel below the table listing every recorded feature, source, and metadata entry for that variety.",
+				"Click anywhere in a row to select that variety. The map view centers and zooms in on its location, so table and map always talk about the same place.",
 		},
 	},
 	{
-		attachTo: { element: '[data-onboarding="jump-to-location"]' },
+		attachTo: { element: '#results-table tbody tr:first-child [data-onboarding="location-link"]' },
+		requireClick: true,
 		content: {
-			title: "Jump to a Location",
+			title: "Open a Variety",
 			description:
-				"Use this search box to quickly scroll the table (and center the map) on a specific city or variety by name, without scrolling through all 344 entries.",
+				"Click the name of the variety to open it in its own window, listing every feature recorded for that location together with the values attested there.",
 		},
 	},
 	{
-		attachTo: { element: '[data-onboarding="show-details"]' },
+		attachTo: { element: '[data-window-type="Location"] [data-onboarding="feature-link"]' },
+		requireClick: true,
 		content: {
-			title: "Show Details Toggle",
+			title: "From Variety to Feature",
 			description:
-				"Turn this on to expand extra metadata columns inline in the table instead of opening the detail panel for each row individually.",
+				"In that window every feature name is a link. Click one to open its statistics: how the values of this feature are distributed across all varieties, not just this one.",
 		},
 	},
 	{
-		attachTo: { element: '[data-onboarding="export-data"]' },
+		attachTo: { element: '[data-window-type="Location"] [data-onboarding="feature-value-link"]' },
+		requireClick: true,
 		content: {
-			title: "Export Data",
+			title: "From Variety to Feature Value",
 			description:
-				"Download the currently filtered table results as a file, useful once you've narrowed the data down with the filters we'll cover next.",
+				"The values themselves are links too. Click one to open the individual observation behind it, with the people recorded, the metadata collected, and the source it came from.",
 		},
 	},
 	{
-		attachTo: { element: "#pagesizeSelect" },
+		attachTo: { element: '[data-onboarding="windows-menu"]' },
 		content: {
-			title: "Page Size",
+			title: "Getting Cluttered?",
 			description:
-				"Control how many varieties are listed per page: 10, 20, 30, 40, or 50 rows at a time.",
+				"Every view opens as its own window, so a few clicks fill the screen quickly. This menu lists all open windows and brings one back to the front; the × in a window's title bar closes it again.",
 		},
 	},
 	{
-		attachTo: { element: "#pageSelect" },
+		attachTo: {
+			element: '[data-window-type="FeatureValue"] [data-onboarding="feature-value-source"]',
+		},
 		content: {
-			title: "Pagination",
+			title: "Where a Value Comes From",
 			description:
-				"Jump directly to any page of results, or use the first/previous/next/last arrows beside it to move sequentially through all matching varieties.",
+				"Each observation names its source, either a publication or a fieldwork campaign. Following that link is what makes a value verifiable and citable.",
 		},
 	},
 	{
-		attachTo: { element: '[data-onboarding="map-container"]' },
+		attachTo: { element: '[data-window-type="FeatureValue"] [data-onboarding="show-on-map"]' },
+		requireClick: true,
+		waitTimeout: 60_000,
 		content: {
-			title: "The Map View",
+			title: "Show on Map",
 			description:
-				"Each dot represents a variety with recorded data. Pan and zoom like any web map; the marker count and legend at the bottom left update live as you filter.",
+				'Click "Show on map" to turn this single observation into a query: table and map are filtered down to every variety that attests this feature value.',
 		},
 	},
 	{
-		attachTo: { element: '[data-onboarding="feature-category-personal-pronouns"]' },
+		attachTo: { element: '[data-onboarding="feature-category-count"]' },
+		settleDelay: 1_000,
 		content: {
-			title: "Linguistic Feature Categories",
+			title: "A (1) Appeared",
 			description:
-				"These menus (Personal Pronouns, Consonant Phenomena, Vowel Phenomena, Phonotactics, Verbal Morphology, Syntax, Lexicon) group the hundreds of tracked linguistic features. Open one to drill down into sub-features.",
+				"Look at the feature menus in the map toolbar: one of them now carries a badge. Each menu counts how many of its features are part of the current query.",
+		},
+	},
+	{
+		attachTo: { element: '[data-onboarding="feature-category-count"]' },
+		requireClick: true,
+		waitTimeout: 60_000,
+		content: {
+			title: "Back to the Whole Feature",
+			description:
+				"Open that menu and click the feature with the badge. The query only holds the one value you came from, so let's look at all of them.",
 		},
 	},
 	{
 		attachTo: { element: '[data-onboarding="feature-value-picker"]' },
+		requireClick: '[data-onboarding="save-feature-values"]',
 		content: {
-			title: "Selecting Feature Values",
+			title: "Select All Values",
 			description:
-				'Picking a specific feature (e.g. "Independent personal pronoun 3SG.M") opens a checklist of attested values, each with a count of how many varieties use it. Check the ones you want visible and click "Save changes" to apply the filter to both the map and table.',
+				'Here every attested value is listed with the number of varieties using it. Click "Select all values" to put the complete feature on the map, then "Save changes".',
 		},
 	},
 	{
-		attachTo: { element: '[data-onboarding="filter-traditional-classification"]' },
+		attachTo: { element: '[data-onboarding="map-legend"]' },
+		options: { popper: { placement: "right" } },
 		content: {
-			title: "Classification & Country Filters",
+			title: "Customize Your Markers",
 			description:
-				"Beyond linguistic features, you can filter by Traditional Classification (e.g. sedentary vs. Bedouin dialects) or by Country the same way: pick values from the checklist and save.",
+				"The legend lists every value now drawn on the map. Click the marker in front of a value to give it a different shape or color, or to hide it from the map entirely.",
+		},
+	},
+	{
+		attachTo: { element: '[data-onboarding="legend-value"]' },
+		options: { popper: { placement: "right" } },
+		content: {
+			title: "Group Values Together",
+			description:
+				"Too many values to tell apart? Drag one value onto another to merge them into a group that shares a single marker. Groups can be renamed, extended by dragging more values in, and dissolved again.",
+		},
+	},
+	{
+		attachTo: { element: "#results-table" },
+		content: {
+			title: "Groups Carry Over",
+			description:
+				"Back in the table the grouped values now appear under the group's name and marker, so the reading you built on the map is the one you get in the data.",
+		},
+	},
+	{
+		attachTo: { element: '[data-onboarding="table-actions"]' },
+		content: {
+			title: "Details and Export",
+			description:
+				'"Show details" expands the metadata behind each value directly in the table instead of opening a window per value. "Export data" downloads the current selection as CSV or Excel, filters included.',
 		},
 	},
 	{
@@ -96,66 +171,165 @@ const steps = [
 		content: {
 			title: "Metadata Filters",
 			description:
-				"This menu filters by data-collection metadata rather than language features, things like Source, Religion, Tribe, Age Group, Gender, and First Language of the speakers recorded.",
+				"These filters narrow the data by who was recorded rather than by language: source, religion, tribe, age group, gender, and first language. They apply to the features already in your query.",
+		},
+	},
+	{
+		attachTo: { element: '[data-onboarding="feature-categories"]' },
+		content: {
+			title: "Add a Second Feature",
+			description:
+				"Now pick a second feature from any of these categories and select a few of its values. Combining features is where querying this data gets interesting.",
 		},
 	},
 	{
 		attachTo: { element: '[data-onboarding="query-input"]' },
 		content: {
-			title: "The Query Box",
+			title: "Your Query, Assembled",
 			description:
-				'Every filter you apply above is added here as a query chip, and the same box also shows a plain-text query string (e.g. ft_pr_sg_p3_m:"hū / huw / hūw"). You can combine multiple filters this way to narrow results precisely.',
+				"Everything you selected is collected here as chips, both features side by side. Click a chip to change it, or the × to drop it again.",
 		},
 	},
 	{
-		attachTo: { element: '[data-onboarding="query-mode-toggle"]' },
+		attachTo: { element: '[data-onboarding="query-operator"]' },
 		content: {
-			title: "Text Mode",
+			title: "OR or AND",
 			description:
-				"Prefer typing your own query? Click this icon to switch between the guided dropdown mode and a raw text mode where you can write the query syntax directly.",
+				"Features are joined with OR by default: a variety qualifies if it matches either of them. Switch this to AND to keep only the varieties that attest both.",
 		},
 	},
 	{
-		attachTo: { element: '[data-onboarding="search-button"]' },
+		attachTo: { element: '[data-onboarding="main-navigation"]' },
 		content: {
-			title: "Running a Search",
+			title: "That's the Tour",
 			description:
-				"Once your filters or typed query are set, click Search to apply them, this updates the table rows and the map markers together, so both views always stay in sync.",
-		},
-	},
-	{
-		attachTo: { element: '[data-onboarding="map-legend"]' },
-		content: {
-			title: "Map Legend",
-			description:
-				"This panel shows the total marker count and, when a feature is selected, a color/icon breakdown of which value each marker represents. Click it to expand or collapse.",
-		},
-	},
-	{
-		attachTo: { element: '[data-onboarding="marker-settings"]' },
-		content: {
-			title: "Marker Settings",
-			description:
-				"Customize how markers are displayed: toggle labels, switch to greyscale, adjust marker size and stroke width, or show all feature values for a location instead of just the selected one.",
-		},
-	},
-	{
-		attachTo: { element: '[data-onboarding="map-download"]' },
-		content: {
-			title: "Download Map Data",
-			description:
-				"Export the currently visible map markers and their data, handy for offline analysis or sharing a filtered subset of the dataset.",
-		},
-	},
-	{
-		attachTo: { element: '[data-onboarding="app-logo"]' },
-		content: {
-			title: "You're All Set",
-			description:
-				"That covers the table, the map, and how filtering and querying keep both in sync. Explore the feature menus above to start building your own queries.",
+				"You have seen how table, map, and windows work together, and how filtering keeps them in sync. For query syntax, the data model, and where the material comes from, see the manual in the menu above.",
 		},
 	},
 ];
+
+function resolveElement(target: AttachableElement): HTMLElement | null {
+	const element =
+		typeof target === "string"
+			? document.querySelector(target)
+			: typeof target === "function"
+				? target()
+				: unref(target);
+	return element instanceof HTMLElement ? element : null;
+}
+
+/**
+ * Steps attach to elements that only exist once the user has opened the right window or dialog,
+ * so a step waits for its element instead of silently attaching to nothing.
+ */
+function waitForElement(target: AttachableElement, timeout: number) {
+	return new Promise<HTMLElement | null>((resolve) => {
+		const found = resolveElement(target);
+		if (found) {
+			resolve(found);
+			return;
+		}
+
+		const settle = (element: HTMLElement | null) => {
+			clearTimeout(timer);
+			observer.disconnect();
+			resolve(element);
+		};
+		const observer = new MutationObserver(() => {
+			const element = resolveElement(target);
+			if (element) settle(element);
+		});
+		const timer = setTimeout(() => {
+			settle(null);
+		}, timeout);
+
+		observer.observe(document.body, { childList: true, subtree: true });
+	});
+}
+
+function delay(ms: number) {
+	return new Promise<void>((resolve) => {
+		setTimeout(resolve, ms);
+	});
+}
+
+/**
+ * Leaves the step at `index`, finishing the tour when it was the last one. Deferred by a task so
+ * the application can handle the click that triggered it and re-render first.
+ */
+function leaveStep(index: number, direction: number) {
+	setTimeout(() => {
+		const target = index + direction;
+		if (target >= stepDefinitions.length) wrapper.value?.finish();
+		else if (target >= 0) wrapper.value?.goToStep(target);
+	}, 0);
+}
+
+/** Advances the tour as soon as `target` is clicked. Returns the matching teardown. */
+function advanceOnClick(target: AttachableElement, index: number) {
+	let handled = false;
+	const onClick = (event: MouseEvent) => {
+		if (handled || !(event.target instanceof Node)) return;
+		const element = resolveElement(target);
+		if (!element?.contains(event.target)) return;
+		handled = true;
+		leaveStep(index, 1);
+	};
+
+	// Capture phase, so the click is registered even if the application stops its propagation.
+	document.addEventListener("click", onClick, true);
+	return () => {
+		document.removeEventListener("click", onClick, true);
+	};
+}
+
+function prepareStep(step: TourStep, index: number): StepEntity {
+	const { requireClick, settleDelay, waitTimeout, ...entity } = step;
+	let teardown: (() => void) | null = null;
+
+	return {
+		...entity,
+		options: {
+			...entity.options,
+			// keeps the tooltip from flashing at the previous position while `beforeStep` waits
+			hideNextStepDuringHook: true,
+			hideButtons: { ...entity.options?.hideButtons, next: Boolean(requireClick) },
+		},
+		on: {
+			...entity.on,
+			beforeStep: async (options) => {
+				const element = await waitForElement(
+					entity.attachTo.element,
+					waitTimeout ?? DEFAULT_WAIT_TIMEOUT,
+				);
+				if (!element) {
+					// Nothing to point at, and with the "Next" button possibly hidden there would be no
+					// way out of the step either, so move along instead of stranding the user.
+					leaveStep(index, options?.direction ?? 1);
+					return;
+				}
+				await entity.on?.beforeStep?.(options);
+				// the click that got us here may still be opening or re-tiling windows around the element
+				await delay(settleDelay ?? DEFAULT_SETTLE_DELAY);
+				console.log("delay is over", step);
+				if (requireClick) {
+					teardown = advanceOnClick(
+						requireClick === true ? entity.attachTo.element : requireClick,
+						index,
+					);
+				}
+			},
+			afterStep: async (options) => {
+				teardown?.();
+				teardown = null;
+				await entity.on?.afterStep?.(options);
+			},
+		},
+	};
+}
+
+const steps = stepDefinitions.map(prepareStep);
+
 onMounted(() => {
 	wrapper.value?.start();
 });
@@ -165,8 +339,14 @@ onMounted(() => {
 	<Teleport :to="'body'">
 		<VOnboardingWrapper
 			ref="wrapper"
-			class="z-30"
-			:options="{ scrollToStep: { enabled: false } }"
+			class="z-110"
+			:options="{
+				scrollToStep: { enabled: false },
+				// the tour talks the user through clicking the application itself, so the overlay may
+				// not swallow those clicks: v-onboarding's interaction lock also installs a focus trap
+				// that cancels every click outside the tooltip
+				overlay: { preventOverlayInteraction: false },
+			}"
 			:steps="steps"
 	/></Teleport>
 </template>
