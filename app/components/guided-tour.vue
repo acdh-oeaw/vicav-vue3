@@ -311,7 +311,6 @@ function prepareStep(step: TourStep, index: number): StepEntity {
 				await entity.on?.beforeStep?.(options);
 				// the click that got us here may still be opening or re-tiling windows around the element
 				await delay(settleDelay ?? DEFAULT_SETTLE_DELAY);
-				console.log("delay is over", step);
 				if (requireClick) {
 					teardown = advanceOnClick(
 						requireClick === true ? entity.attachTo.element : requireClick,
