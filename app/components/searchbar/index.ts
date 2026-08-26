@@ -45,29 +45,6 @@ const properties: Array<keyof CSSStyleDeclaration> = [
 const isBrowser = typeof window !== "undefined";
 const isFirefox = isBrowser && window.navigator.userAgent.toLowerCase().includes("firefox");
 
-function getSelectionOffset(element: HTMLElement) {
-	element.focus();
-	if ((document.getSelection()?.rangeCount ?? -1) <= 0) return 0;
-	const _range = document.getSelection()?.getRangeAt(0);
-	if (!_range) return -1;
-	const range = _range.cloneRange();
-	range.selectNodeContents(element);
-	range.setEnd(_range.endContainer, _range.endOffset);
-	return range.toString().length;
-}
-// Source - https://stackoverflow.com/a/3866442
-// Posted by Nico Burns, modified by community. See post 'Timeline' for change history
-// Retrieved 2026-02-12, License - CC BY-SA 3.0
-
-export function setEndOfContenteditable(element: HTMLElement) {
-	const range = document.createRange(); //Create a range (a range is a like the selection but invisible)
-	range.selectNodeContents(element); //Select the entire contents of the element with the range
-	range.collapse(false); //collapse the range to the end point. false means collapse to end rather than the start
-	const selection = window.getSelection(); //get the selection object (allows you to change selection)
-	selection?.removeAllRanges(); //remove any selections already made
-	selection?.addRange(range); //make the range you have just created the visible selection
-}
-
 function getCaretCoordinates(
 	element: HTMLInputElement | HTMLTextAreaElement,
 	position: number,
@@ -161,12 +138,10 @@ export type TriggerMap = Map<
 	}>
 >;
 
-export function getTriggerOffset(element: HTMLTextAreaElement, triggers: TriggerMap) {
-	const value = element.textContent;
-	const selectionStart = getSelectionOffset(element);
-	for (let i = selectionStart; i >= 0; i--) {
+export function getTriggerOffset(text: string, cursorOffset: number, triggers: TriggerMap) {
+	for (let i = cursorOffset; i >= 0; i--) {
 		for (const trigger of [...triggers.keys()].toSorted((a, b) => b.length - a.length)) {
-			if (value.substring(i - trigger.length + 1, i + 1) === trigger) {
+			if (text.substring(i - trigger.length + 1, i + 1) === trigger) {
 				return i - trigger.length + 1;
 			}
 		}
@@ -174,33 +149,29 @@ export function getTriggerOffset(element: HTMLTextAreaElement, triggers: Trigger
 	return -1;
 }
 
-export function getTrigger(element: HTMLTextAreaElement, triggers: TriggerMap) {
-	const value = element.textContent;
-
-	const selectionOffset = getSelectionOffset(element);
+export function getTrigger(text: string, cursorOffset: number, triggers: TriggerMap) {
 	for (const trigger of [...triggers.keys()].toSorted((a, b) => b.length - a.length)) {
-		const triggerStart = selectionOffset - trigger.length;
-		if (triggerStart >= 0 && value.substring(triggerStart, selectionOffset) === trigger) {
-			// const secondPreviousChar = value[triggerStart - 1];
-			// const isIsolated = !secondPreviousChar || /\W/.test(secondPreviousChar);
-			// console.log("Tested trigger: ", `*${trigger}*`, value, selectionStart, secondPreviousChar);
-			// if (isIsolated) {
+		const triggerStart = cursorOffset - trigger.length;
+		if (triggerStart >= 0 && text.substring(triggerStart, cursorOffset) === trigger) {
 			return trigger;
-			// }
 		}
 	}
 	return null;
 }
 
-export function getSearchValue(element: HTMLTextAreaElement, triggers: TriggerMap) {
-	const offset = getTriggerOffset(element, triggers);
-	const trigger = getTrigger(element, triggers);
-	// if (offset === -1) return "";
-	return element.textContent.slice(offset + (trigger?.length ?? 0), getSelectionOffset(element));
+export function getSearchValue(text: string, cursorOffset: number, triggers: TriggerMap) {
+	const offset = getTriggerOffset(text, cursorOffset, triggers);
+	const trigger = getTrigger(text, cursorOffset, triggers);
+	return text.slice(offset + (trigger?.length ?? 0), cursorOffset);
 }
 
-export function getAnchorRect(element: HTMLTextAreaElement, triggers: TriggerMap) {
-	const offset = getTriggerOffset(element, triggers);
+export function getAnchorRect(
+	element: HTMLTextAreaElement,
+	text: string,
+	cursorOffset: number,
+	triggers: TriggerMap,
+) {
+	const offset = getTriggerOffset(text, cursorOffset, triggers);
 	const { left, top, height } = getCaretCoordinates(element, offset + 1);
 	const { x, y } = element.getBoundingClientRect();
 	return {
@@ -240,7 +211,7 @@ export interface TagItem {
 	id: string;
 	rawValue: string;
 	/** Operator connecting this tag to the one before it (undefined for the first tag). */
-	operator?: Operator;
+	operator?: string;
 	/** If set, this tag is a parenthesized group containing these sub-tags. */
 	children?: Array<TagItem>;
 }
@@ -327,7 +298,7 @@ export function buildRawValue(items: Array<TagItem>): string {
 		.join(" ");
 }
 
-export function tokenToTagItem(clause: string, operator?: Operator): TagItem {
+export function tokenToTagItem(clause: string, operator?: string): TagItem {
 	const children = parseGroupChildren(clause);
 	return { id: crypto.randomUUID(), rawValue: clause, operator, ...(children ? { children } : {}) };
 }
@@ -336,10 +307,7 @@ export function parseGroupChildren(clause: string): Array<TagItem> | null {
 	if (!clause.startsWith("(") || !clause.endsWith(")")) return null;
 	const inner = clause.slice(1, -1).trim();
 	return splitQueryIntoTokens(inner).map((childToken, j) =>
-		tokenToTagItem(
-			childToken.clause,
-			j > 0 ? ((childToken.operator as Operator | undefined) ?? "AND") : undefined,
-		),
+		tokenToTagItem(childToken.clause, j > 0 ? (childToken.operator ?? "AND") : undefined),
 	);
 }
 
@@ -356,6 +324,14 @@ export function parseTagClause(
 
 	if (rest.startsWith("(")) return null;
 
+	// CQL format: [keyword=value] — featureKey is "[keyword=" so it matches the trigger key
+	if (rest.startsWith("[")) {
+		const eqIdx = rest.indexOf("=");
+		if (eqIdx === -1) return null;
+		return { prefix, featureKey: rest.slice(0, eqIdx + 1), rawValue: rest.slice(eqIdx + 1) };
+	}
+
+	// Lucene format: feature:value
 	const colonIdx = rest.indexOf(":");
 	if (colonIdx === -1) return null;
 
@@ -364,6 +340,61 @@ export function parseTagClause(
 		featureKey: rest.slice(0, colonIdx + 1),
 		rawValue: rest.slice(colonIdx + 1),
 	};
+}
+
+export function splitCqlQuery(query: string): Array<{ clause: string }> {
+	const result: Array<{ clause: string }> = [];
+	let i = 0;
+	const q = query.trim();
+
+	while (i < q.length) {
+		if (/\s/.test(q[i]!)) {
+			i++;
+			continue;
+		}
+
+		if (q[i] === "[") {
+			let token = "[";
+			i++;
+			let depth = 1;
+			while (i < q.length && depth > 0) {
+				const c = q[i]!;
+				if (c === "[") {
+					depth++;
+					token += c;
+					i++;
+				} else if (c === "]") {
+					depth--;
+					token += c;
+					i++;
+				} else if (c === '"') {
+					token += '"';
+					i++;
+					while (i < q.length && q[i] !== '"') {
+						if (q[i] === "\\") {
+							token += q[i++]!;
+						}
+						if (i < q.length) {
+							token += q[i++]!;
+						}
+					}
+					if (i < q.length) {
+						token += '"';
+						i++;
+					}
+				} else {
+					token += c;
+					i++;
+				}
+			}
+			result.push({ clause: token });
+			continue;
+		}
+
+		i++;
+	}
+
+	return result;
 }
 
 export function getFlatTags(tag: TagItem): Array<TagItem> {
