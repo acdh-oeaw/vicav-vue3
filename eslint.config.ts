@@ -22,9 +22,33 @@ const configs = defineConfig(
 	tailwindcssConfig,
 	{
 		settings: {
-			tailwindcss: {
-				config: resolve("./app/styles/index.css"),
+			"better-tailwindcss": {
+				entryPoint: resolve("./app/styles/index.css"),
 			},
+		},
+		rules: {
+			"better-tailwindcss/no-unknown-classes": [
+				"error",
+				{
+					ignore: [
+						"^aVicText$",
+						"^biblQueryBtn$",
+						"^corpus-utterance$",
+						"^dvStats$",
+						"^footer-logo-widget$",
+						"^ib(?:-[a-z-]+)?$",
+						"^ie(?:-[a-z-]+)?$",
+						"^not-prose$",
+						"^play$",
+						"^spQueryText$",
+						"^stop$",
+						"^svg-icon$",
+						"^titlestring$",
+						"^u$",
+						"^vh$",
+					],
+				},
+			],
 		},
 	},
 	playwrightConfig,

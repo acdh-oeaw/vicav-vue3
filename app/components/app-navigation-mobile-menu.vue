@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ChevronRightIcon, MenuIcon } from "lucide-vue-next";
+import { MenuIcon } from "@lucide/vue";
 
 import type { ItemType, MainItemType } from "@/lib/api-client";
 
@@ -19,6 +19,11 @@ function close() {
 	isSidepanelOpen.value = false;
 }
 
+function selectItem(item: ItemType) {
+	emit("select-menu-item", item);
+	close();
+}
+
 onMounted(() => {
 	window.addEventListener("resize", close, { passive: true });
 });
@@ -30,45 +35,37 @@ onScopeDispose(() => {
 
 <template>
 	<Sheet v-model:open="isSidepanelOpen">
-		<Menubar class="w-full border-none">
+		<div class="flex w-full items-center justify-between">
 			<WindowListDropdown :is-mobile="true" />
-		</Menubar>
-		<SheetTrigger aria-label="Toggle menu" class="cursor-default">
-			<MenuIcon class="mx-3 my-1.5 size-5" />
-		</SheetTrigger>
+			<SheetTrigger aria-label="Toggle navigation" class="cursor-default">
+				<MenuIcon class="mx-3 my-1.5 size-5" />
+			</SheetTrigger>
+		</div>
 		<SheetContent class="overflow-y-auto">
-			<SheetTitle class="sr-only">Navigation menu</SheetTitle>
-			<div class="grid divide-y divide-border py-8">
-				<details v-for="menu of menus" :key="menu.id" class="group py-4" name="menu-accordion">
-					<summary class="flex cursor-pointer list-none items-center justify-between font-medium">
-						{{ menu.title }}
-						<ChevronRightIcon class="size-4 transition group-open:rotate-90" />
-					</summary>
-					<ul class="mt-2 grid gap-1" role="list">
-						<template v-for="(item, index) of menu.item">
-							<li v-if="item.type === 'item'" :key="item.id">
+			<SheetHeader>
+				<SheetTitle class="sr-only">Navigation menu</SheetTitle>
+				<SheetDescription class="sr-only">Site navigation</SheetDescription>
+			</SheetHeader>
+			<nav aria-label="Main navigation">
+				<Accordion class="w-full" collapsible type="single">
+					<AccordionItem v-for="menu of menus" :key="menu.id" :value="menu.id">
+						<AccordionTrigger>{{ menu.title }}</AccordionTrigger>
+						<AccordionContent>
+							<template v-for="(item, index) of menu.item" :key="item.id ?? `sep-${index}`">
 								<button
-									class="cursor-default py-1 text-on-background/75 transition hover:text-on-background"
-									@click="
-										() => {
-											emit('select-menu-item', item);
-											isSidepanelOpen = false;
-										}
-									"
+									v-if="item.type === 'item'"
+									class="w-full cursor-pointer rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent hover:text-on-accent focus-visible:ring-2 focus-visible:outline-none"
+									type="button"
+									@click="selectItem(item)"
 								>
 									{{ item.title }}
 								</button>
-							</li>
-							<li
-								v-else-if="item.type === 'separator'"
-								:key="`separator-${index}`"
-								class="-mx-1 my-1 h-px bg-muted"
-								role="separator"
-							/>
-						</template>
-					</ul>
-				</details>
-			</div>
+								<div v-else-if="item.type === 'separator'" class="my-1 w-full border-b" />
+							</template>
+						</AccordionContent>
+					</AccordionItem>
+				</Accordion>
+			</nav>
 		</SheetContent>
 	</Sheet>
 </template>

@@ -9,9 +9,7 @@ import { ensureFilterValueMap } from "@/utils/filter-value-map";
 import { useAdvancedQueries } from "./use-advanced-queries.ts";
 
 const GeojsonStore = useGeojsonStore();
-const { tables } = storeToRefs(GeojsonStore);
-const url = "https://raw.githubusercontent.com/wibarab/wibarab-data/main/wibarab_varieties.geojson";
-const { buildFeatureValueId, defaultMarkers } = useMarkerStore();
+const { defaultMarkers, isFeatureValueGroup, resolveMarkerId } = useMarkerStore();
 const { markers, markerSettings } = storeToRefs(useMarkerStore());
 interface PetalEntry {
 	id: string;
@@ -19,10 +17,24 @@ interface PetalEntry {
 	type?: "feature" | "featureValue";
 }
 
-function getCircleSVG(fill: string, symmetrical = false, containerLength = 12) {
+function isMarkerHidden(id: string) {
+	return markers.value.get(id)?.hidden ?? false;
+}
+
+function getCircleSVG(
+	fill: string,
+	symmetrical = false,
+	containerLength = markerSettings.value.size,
+) {
 	const center = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-	center.setAttribute("cx", symmetrical ? String(containerLength / 2) : "6");
-	center.setAttribute("cy", symmetrical ? String(containerLength / 2) : "12");
+	center.setAttribute(
+		"cx",
+		symmetrical ? String(containerLength / 2) : String(markerSettings.value.size / 2),
+	);
+	center.setAttribute(
+		"cy",
+		symmetrical ? String(containerLength / 2) : String(markerSettings.value.size),
+	);
 	center.setAttribute("r", symmetrical ? "3" : "2.5");
 	center.style.fill = fill;
 	center.style.filter = "var(--greyscale)";
@@ -71,27 +83,30 @@ function getMarkerSVG(petalValue: PetalEntry) {
 function getFlowerSVG(entries: Array<PetalEntry>, center?: PetalEntry) {
 	const div = document.createElement("div");
 	div.className = "hover:scale-150 transition origin-center relative -translate-y-1/2";
-	const NUM_PETALS = entries.length;
+	const visibleEntries = entries.filter((entry) => !isMarkerHidden(entry.id));
+	const visibleCenter = center && !isMarkerHidden(center.id) ? center : undefined;
+	const NUM_PETALS = visibleEntries.length;
 	const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-	svg.setAttribute("width", "12px");
-	svg.setAttribute("height", "12px");
+	svg.setAttribute("width", `${String(markerSettings.value.size)}px`);
+	svg.setAttribute("height", `${String(markerSettings.value.size)}px`);
 	svg.classList.add("overflow-visible");
 
-	for (const [i, value] of entries.entries()) {
+	for (const [i, value] of visibleEntries.entries()) {
 		const useLucideIcon =
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 			markers.value.has(value.id) && !markers.value.get(value.id)?.icon?.custom;
 		const petal = getMarkerSVG(value);
-		petal.style.transform = `rotate(${String((i * 360) / NUM_PETALS)}deg) ${useLucideIcon && (entries.length > 1 || center) ? "translateY(-3px)" : ""}`;
+		petal.style.transform = `rotate(${String((i * 360) / NUM_PETALS)}deg) ${useLucideIcon && (visibleEntries.length > 1 || visibleCenter) ? "translateY(-3px)" : ""}`;
 		svg.appendChild(petal);
 	}
 
-	if (center && markerSettings.value.showCenter) {
-		const centerMarker = getMarkerSVG(center);
-		centerMarker.style.transform = "translateY(6px)";
+	if (visibleCenter && markerSettings.value.showCenter) {
+		const centerMarker = getMarkerSVG(visibleCenter);
+		centerMarker.style.transform = `translateY(${String(markerSettings.value.size / 2)}px)`;
 		svg.appendChild(centerMarker);
 	}
-	if (entries.length === 0 && !center) svg.appendChild(getCircleSVG(`hsl(var(--color-primary))`));
+	if (visibleEntries.length === 0 && !visibleCenter)
+		svg.appendChild(getCircleSVG(`hsl(var(--color-primary))`));
 
 	div.appendChild(svg);
 
@@ -100,7 +115,7 @@ function getFlowerSVG(entries: Array<PetalEntry>, center?: PetalEntry) {
 
 function getPetalMarker(feature: GeoJsonFeature<Point, MarkerProperties>, latlng: LatLng) {
 	const { AND_OPERATOR } = useAdvancedQueries();
-	const table = tables.value.get(url);
+	const table = GeojsonStore.table;
 	const getFilterValue = (col: { getFilterValue: () => unknown }) =>
 		ensureFilterValueMap(col.getFilterValue());
 	const hasActiveFilters = (col: { getFilterValue: () => unknown }) => {
@@ -112,17 +127,23 @@ function getPetalMarker(feature: GeoJsonFeature<Point, MarkerProperties>, latlng
 		.filter(
 			(col) => col.getCanFilter() && Object.keys(feature.properties).find((k) => k === col.id),
 		);
+	const filteredFeaturesCount = table
+		?.getVisibleLeafColumns()
+		.filter((col) => col.getCanFilter()).length;
 	let unfilteredFeatures =
 		features?.filter((col) => !col.getIsFiltered() || !hasActiveFilters(col)) ?? [];
 	if (features?.length === 1 && unfilteredFeatures.length === 1) unfilteredFeatures = [];
-	const flowerCenter = features?.length === 1 ? features[0] : undefined;
+	const flowerCenter =
+		features?.length === 1 && filteredFeaturesCount === 1 ? features[0] : undefined;
 
 	const featureValues = table
 		?.getVisibleLeafColumns()
 		.filter((col) => col.getIsFiltered() && col.getFilterValue() && hasActiveFilters(col))
 		.flatMap((col) => {
 			const filterValue = getFilterValue(col);
-			return Object.keys(feature.properties[col.id as keyof MarkerProperties] ?? {})
+			const featureValue = feature.properties[col.id as keyof MarkerProperties];
+
+			return (typeof featureValue === "string" ? [featureValue] : Object.keys(featureValue ?? {}))
 				.filter(
 					(val) =>
 						![...filterValue.keys()].find(
@@ -133,18 +154,21 @@ function getPetalMarker(feature: GeoJsonFeature<Point, MarkerProperties>, latlng
 				.filter((val) => {
 					return markerSettings.value.showOtherFeatureValues || filterValue.has(val);
 				})
-				.map((val) => ({
-					id: filterValue.has(val) ? buildFeatureValueId(col.id, val) : col.id,
-					// show "empty" petals for feature values that are not in the filter
-					strokeOnly: !filterValue.has(val),
-					type: "featureValue",
-				}));
+				.map(
+					(val): PetalEntry => ({
+						id: filterValue.has(val) ? resolveMarkerId(col.id, val) : col.id,
+						// show "empty" petals for feature values that are not in the filter
+						strokeOnly: !filterValue.has(val),
+						type: "featureValue",
+					}),
+				);
 		});
 	const combinedFilters = table
 		?.getVisibleLeafColumns()
 		.filter((col) => col.getIsFiltered() && col.getFilterValue() && hasActiveFilters(col))
 		.flatMap((col) => {
 			const filterValue = getFilterValue(col);
+			const featureValue = feature.properties[col.id as keyof MarkerProperties];
 			return [...filterValue.keys()]
 				.filter(
 					(key) =>
@@ -154,19 +178,32 @@ function getPetalMarker(feature: GeoJsonFeature<Point, MarkerProperties>, latlng
 							.every(
 								(k) =>
 									k in
-									((feature.properties[col.id as keyof MarkerProperties] as object | undefined) ??
-										{}),
+									(typeof featureValue === "string"
+										? { [featureValue]: true }
+										: ((featureValue as object | undefined) ?? {})),
 							),
 				)
-				.map((key) => ({
-					id: buildFeatureValueId(col.id, key),
-					type: "featureValue",
-				}));
+				.map(
+					(key): PetalEntry => ({
+						id: resolveMarkerId(col.id, key),
+						type: "featureValue",
+					}),
+				);
 		});
+
+	const petalEntries: Array<PetalEntry> = [...(featureValues ?? []), ...(combinedFilters ?? [])];
+	// values that were grouped together share a marker and are drawn as a single petal
+	const seenGroupIds = new Set<string>();
+	const groupedFeatureValues = petalEntries.filter((entry) => {
+		if (!isFeatureValueGroup(entry.id)) return true;
+		if (seenGroupIds.has(entry.id)) return false;
+		seenGroupIds.add(entry.id);
+		return true;
+	});
 
 	const htmlContent = getFlowerSVG(
 		//@ts-expect-error missing accessorFn
-		unfilteredFeatures.concat(featureValues).concat(combinedFilters),
+		unfilteredFeatures.concat(groupedFeatureValues),
 		flowerCenter,
 	).outerHTML; // Example HTML content
 	const customIcon = divIcon({

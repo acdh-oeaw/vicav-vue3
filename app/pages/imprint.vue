@@ -25,11 +25,12 @@ const imprint = await useFetch(String(createImprintUrl(defaultLocale, redmineId)
 			×
 		</NuxtLink>
 		<h1>Imprint</h1>
-		<!-- eslint-disable-next-line vue/no-v-html -->
+		<!-- eslint-disable vue/no-v-html -->
 		<div
 			v-if="imprint.data.value"
 			class="max-h-screen overflow-y-scroll"
 			v-html="imprint.data.value"
 		/>
+		<!-- eslint-enable vue/no-v-html -->
 	</div>
 </template>

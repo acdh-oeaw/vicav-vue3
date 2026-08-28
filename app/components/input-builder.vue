@@ -85,12 +85,14 @@ watch(
 	<!-- eslint-disable tailwindcss/no-custom-classname -->
 	<div class="ib">
 		<div class="ib-buttons">
+			<!-- eslint-disable vue/no-v-html -->
 			<button
 				v-for="(c, i) in specialCharacters"
 				:key="i"
 				@click.prevent="InsertSnippet(c.value)"
 				v-html="c.text ? c.text : c.value"
 			></button>
+			<!-- eslint-enable vue/no-v-html -->
 		</div>
 		<div class="ib-input-row">
 			<div class="ib-textinput">
@@ -103,7 +105,7 @@ watch(
 					@keydown.enter.prevent="submit"
 				/>
 			</div>
-			<div v-if="selectOptions.size > 0" class="ib-select">
+			<div v-if="props.selectOptions.size > 0" class="ib-select">
 				<!-- eslint-disable-next-line vuejs-accessibility/form-control-has-label -->
 				<select v-model="mySelectOption">
 					<option v-for="([key, value], i) in props.selectOptions" :key="i" :value="key">

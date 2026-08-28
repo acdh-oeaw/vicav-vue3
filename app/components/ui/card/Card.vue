@@ -16,7 +16,7 @@ const props = withDefaults(defineProps<Props>(), {
 	<Primitive
 		:as="as"
 		:as-child="asChild"
-		:class="twMerge('text-card-foreground rounded-xl border bg-card shadow', props.class)"
+		:class="twMerge('text-card-foreground rounded-xl border bg-card shadow-sm', props.class)"
 	>
 		<slot />
 	</Primitive>

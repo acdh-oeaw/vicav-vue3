@@ -7,6 +7,7 @@ import {
 	circleMarker,
 	geoJSON,
 	latLng,
+	type Layer,
 	type Map as LeafletMap,
 	map as createMap,
 	maplibreGL,
@@ -30,11 +31,14 @@ interface Props {
 	width: number;
 	markerType?: MarkerType;
 	selection?: [number, number];
-	displayLabels?: number;
+	displayLabels?: "on" | "off" | "default";
+	defaultDisplayLabelsZoom?: number;
 	useCustomClickHandler?: boolean;
 }
 
 const props = defineProps<Props>();
+const labelDisplayMode = computed(() => props.displayLabels ?? "default");
+const defaultDisplayLabelsZoom = computed(() => props.defaultDisplayLabelsZoom ?? 10);
 
 const emit = defineEmits<{
 	(event: "ready", map: LeafletMap): void;
@@ -222,21 +226,28 @@ function updateMarkers(updateViewport = true) {
 		if (marker.geometry.coordinates.length > 0) featureGroup.addData(marker);
 	});
 
-	if (props.displayLabels)
-		featureGroup.eachLayer((layer) => {
-			layer.on("mouseover", () => {
-				if (props.displayLabels && (context.map?.getZoom() ?? 0) >= props.displayLabels)
-					context.map?.eachLayer((l) => {
-						if (l !== layer) l.closeTooltip();
-					});
-			});
-			layer.on("mouseout", () => {
-				if (props.displayLabels && (context.map?.getZoom() ?? 0) >= props.displayLabels)
-					context.map?.eachLayer((l) => {
-						l.openTooltip();
-					});
-			});
+	featureGroup.eachLayer((layer) => {
+		layer.on("mouseover", () => {
+			if (shouldShowLabels()) {
+				context.map?.eachLayer((l) => {
+					if (l !== layer) l.closeTooltip();
+				});
+			} else {
+				showHoverTooltip(layer);
+			}
 		});
+		layer.on("mouseout", () => {
+			if (shouldShowLabels()) {
+				context.map?.eachLayer((l) => {
+					l.openTooltip();
+				});
+			} else {
+				syncLayerTooltip(layer);
+			}
+		});
+	});
+
+	updateTooltips();
 
 	if (updateViewport) fitAllMarkersOnViewport();
 	updatePopups();
@@ -262,36 +273,53 @@ function fitAllMarkersOnViewport() {
 	}
 }
 
-const lastZoom = ref<number | null>(null);
+function getTooltipContent(feature: Feature<Point, MarkerProperties>) {
+	return `${feature.properties.name}${feature.properties.hitCount ? ` (${feature.properties.hitCount})` : ""}`;
+}
+
+function getLayerFeature(layer: Layer) {
+	return "feature" in layer
+		? (layer.feature as Feature<Point, MarkerProperties> | undefined)
+		: undefined;
+}
+
+function shouldShowLabels() {
+	if (labelDisplayMode.value === "on") return true;
+	if (labelDisplayMode.value === "off" || !context.map) return false;
+	return context.map.getZoom() >= defaultDisplayLabelsZoom.value;
+}
+
+function syncLayerTooltip(layer: Layer) {
+	const feature = getLayerFeature(layer);
+	if (feature == null) return;
+
+	layer.unbindTooltip();
+	if (!shouldShowLabels()) return;
+
+	layer.bindTooltip(getTooltipContent(feature), {
+		permanent: true,
+		sticky: false,
+		offset: [12, 0],
+	});
+}
+
+function showHoverTooltip(layer: Layer) {
+	const feature = getLayerFeature(layer);
+	if (feature == null) return;
+
+	layer.unbindTooltip();
+	layer.bindTooltip(getTooltipContent(feature), {
+		permanent: false,
+		sticky: true,
+	});
+	layer.openTooltip();
+}
+
 function updateTooltips() {
-	if (!context.map || !props.displayLabels) return;
-	const zoom = context.map!.getZoom();
-	if (zoom < props.displayLabels && (!lastZoom.value || lastZoom.value >= props.displayLabels)) {
-		context.map?.eachLayer((l) => {
-			const tooltip = l.getTooltip();
-			if (tooltip) {
-				l.unbindTooltip().bindTooltip(tooltip.getContent()!, {
-					permanent: false,
-					sticky: true,
-				});
-			}
-		});
-	} else if (
-		zoom >= props.displayLabels &&
-		(!lastZoom.value || lastZoom.value < props.displayLabels)
-	) {
-		context.map?.eachLayer((l) => {
-			const tooltip = l.getTooltip();
-			if (tooltip) {
-				l.unbindTooltip().bindTooltip(tooltip.getContent()!, {
-					permanent: true,
-					sticky: false,
-					offset: [12, 0],
-				});
-			}
-		});
-	}
-	lastZoom.value = zoom;
+	if (!context.map || !context.featureGroups.markers) return;
+	context.featureGroups.markers.eachLayer((layer) => {
+		syncLayerTooltip(layer);
+	});
 }
 
 onMounted(async () => {
@@ -315,12 +343,9 @@ onMounted(async () => {
 
 	context.featureGroups.markers = geoJSON<MarkerProperties, Point>(undefined, {
 		onEachFeature(feature, layer) {
-			const tooltipContent = `${feature.properties.name}${feature.properties.hitCount ? ` (${feature.properties.hitCount})` : ""}`;
-
-			layer.bindTooltip(tooltipContent, {
-				permanent: false,
-				sticky: true,
-			});
+			if (shouldShowLabels()) {
+				syncLayerTooltip(layer);
+			}
 
 			layer.on({
 				async click() {
@@ -359,6 +384,11 @@ onMounted(async () => {
 watch(
 	() => props.markers,
 	() => updateMarkers(),
+);
+
+watch(
+	() => [props.displayLabels, props.defaultDisplayLabelsZoom],
+	() => updateMarkers(false),
 );
 
 watch(

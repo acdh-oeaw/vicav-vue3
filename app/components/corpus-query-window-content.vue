@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Info } from "lucide-vue-next";
+import { Info } from "@lucide/vue";
 import InfiniteLoading from "v3-infinite-loading";
 import type { StateHandler } from "v3-infinite-loading/lib/types";
 import type Zod from "zod";
@@ -11,25 +11,62 @@ import type { CorpusQuerySchema } from "@/types/global.ts";
 const api = useApiClient();
 const { simpleItems } = useTeiHeadersStore();
 const props = defineProps<{ params: Zod.infer<typeof CorpusQuerySchema>["params"] }>();
+const emit = defineEmits<{
+	updateQueryParam: [queryString: string];
+}>();
 const queryString = ref(props.params.queryString);
 const hits = ref<Array<Div & { label?: string }>>([]);
 const displayHits = ref<Array<Div & { label?: string }>>([]);
 const showHelp = ref<boolean>(false);
 const isSearching = ref(false);
 
-const inlineAnnotations = ref<false | true | "indeterminate">(true);
+const inlineLemmaAnnotations = ref<false | true | "indeterminate">(true);
+const inlineLinguisticAnnotations = ref<false | true | "indeterminate">(true);
 const inlineTranslations = ref<false | true | "indeterminate">(true);
+const words: Ref<Array<string>> = ref([]);
 
 const currentPage = ref(0);
 const scrollComplete = ref<boolean>(false);
+const lastRestoredQueryString = ref<string>();
+const {
+	hasInlineTranslations: blockHasInlineTranslations,
+	hasLemmaAnnotations: blockHasLemmaAnnotations,
+	hasLinguisticAnnotations: blockHasLinguisticAnnotations,
+} = useCorpusAnnotationAvailability();
 
-async function searchCorpus() {
+const hasLemmaAnnotations = computed(() => {
+	return blockHasLemmaAnnotations(hits.value);
+});
+
+const hasLinguisticAnnotations = computed(() => {
+	return blockHasLinguisticAnnotations(hits.value);
+});
+
+const hasInlineTranslations = computed(() => {
+	return blockHasInlineTranslations(hits.value);
+});
+
+const showLemmaAnnotations = computed(() => {
+	return hasLemmaAnnotations.value && inlineLemmaAnnotations.value === true;
+});
+
+const showLinguisticAnnotations = computed(() => {
+	return hasLinguisticAnnotations.value && inlineLinguisticAnnotations.value === true;
+});
+
+const showInlineTranslations = computed(() => {
+	return hasInlineTranslations.value && inlineTranslations.value === true;
+});
+
+async function searchCorpus(options: { updateRoute?: boolean } = {}) {
+	const { updateRoute = true } = options;
 	isSearching.value = true;
 	currentPage.value = 0;
 	hits.value = [];
 	displayHits.value = [];
 	try {
 		if (words.value.length > 0) queryString.value = `[word="${words.value.join("|")}"]`;
+		if (updateRoute) emit("updateQueryParam", queryString.value);
 
 		const result = await api.vicav.searchCorpus(
 			{
@@ -71,6 +108,17 @@ const handleInfiniteScroll = async function ($state: StateHandler) {
 	}
 };
 
+watch(
+	() => props.params.queryString,
+	(value) => {
+		if (value === "" || value === lastRestoredQueryString.value) return;
+		queryString.value = value;
+		lastRestoredQueryString.value = value;
+		if (!isSearching.value) void searchCorpus({ updateRoute: false });
+	},
+	{ flush: "post", immediate: true },
+);
+
 const openNewWindowFromAnchor = useAnchorClickHandler();
 
 const { data: config } = useProjectInfo();
@@ -92,10 +140,28 @@ const wordOptions = computed(() => {
 	});
 });
 
-const words: Ref<Array<string>> = ref([]);
+function utteranceContentContainsHit(
+	utterance: MixedUtteranceContent[number],
+	hitId?: string,
+): boolean {
+	if (hitId == null) return false;
+	return (
+		utterance.w?.["@id"] === hitId ||
+		utterance.seg?.["@id"] === hitId ||
+		utterance.seg?.["$$"].some((segUtterance) =>
+			utteranceContentContainsHit(segUtterance, hitId),
+		) === true
+	);
+}
+
+function getHitKey(hit: Div, index: number) {
+	return [hit["@docRef"], hit["@id"], hit.hits?.join(","), index].filter(Boolean).join("-");
+}
 
 function splitUtterancesAroundHit(utterances: MixedUtteranceContent, hitId?: string) {
-	const matchIndex = utterances.findIndex((utterance) => utterance.w?.["@id"] === hitId);
+	const matchIndex = utterances.findIndex((utterance) =>
+		utteranceContentContainsHit(utterance, hitId),
+	);
 
 	if (matchIndex === -1) {
 		return {
@@ -111,22 +177,37 @@ function splitUtterancesAroundHit(utterances: MixedUtteranceContent, hitId?: str
 		after: utterances.slice(matchIndex + 1),
 	};
 }
+
+const { cqlConfig: attributeConfig } = useCqlAttributes();
+
+const cqlConfig = computed<CqlConfig>(() =>
+	attributeConfig.value.map((attr) =>
+		// `word` suggestions are fetched dynamically (driven by `wordSearch` below).
+		attr.key === "word"
+			? {
+					...attr,
+					values: wordOptions.value.map((o) => ({ value: o.value, displayValue: o.label })),
+				}
+			: attr,
+	),
+);
+const { cqlTriggers } = useCqlTriggers(cqlConfig);
 </script>
 
 <template>
 	<!-- eslint-disable vue/no-v-html -->
 	<div class="p-2">
 		<form
-			class="block w-full rounded border border-gray-300 bg-gray-50 p-2.5 px-4 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
+			class="block w-full rounded-sm border border-gray-300 bg-gray-50 p-2.5 px-4 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
 		>
-			<label class="mb-2 flex w-48! p-0 font-bold" for="word_tags">
-				<span class="grow">Search for exact words</span>
-				<a href="#" title="More information" @click="showHelp = true"
+			<label class="mb-2 flex p-0 font-bold" for="word_tags">
+				<span class="mr-2">Search for words or enter a CQL query</span>
+				<a href="#" title="More information" @click="showHelp = !showHelp"
 					><span class="hidden">More information</span>
 					<Info class="size-4" />
 				</a>
 			</label>
-			<div v-if="showHelp" class="flex items-center gap-2">
+			<div v-if="showHelp" class="mb-2 flex flex-col gap-2">
 				<span class="text-gray-500"
 					>Enter beginning of the word to trigger autocomplete suggestions from the words occurring
 					in the corpus. Autocomplete is accent-insensitive, allowing for a simplified word form
@@ -138,66 +219,61 @@ function splitUtterancesAroundHit(utterances: MixedUtteranceContent, hitId?: str
 					Example: w.?n would yield results like "wen", "win", "w.*n" would yield results for "wen,
 					win or weyn" as well.
 				</span>
-			</div>
-			<TagsSelect
-				v-if="wordOptions"
-				id="word_tags"
-				v-model="words"
-				v-model:search-term="wordSearch"
-				:filter-function="(i) => i"
-				:options="wordOptions"
-				placeholder="Search for words..."
-				:special-characters="specialCharacters"
-			/>
-
-			<label class="mb-2 flex w-40! p-0 font-bold" for="word_tags">
-				<span class="grow">Advanced search</span>
-			</label>
-			<div class="mb-2 flex items-center gap-2">
-				<Info class="size-4" />
 				<span class="text-gray-500"
-					>Enter a proper CQL query with exact transliateration characters. (<a
+					>Alternatively, enter a proper CQL query with exact transliateration characters. (<a
 						class="content-center"
-						href="https://howto.acdh.oeaw.ac.at/de/resources/corpus-query-language-im-austrian-media-corpus"
+						href="https://campus.dariah.eu/resources/hosted/corpus-query-language-im-austrian-media-corpus"
 						target="_blank"
 						title="More information about CQL syntax"
 						><span>More info</span></a
 					>)
 				</span>
 			</div>
-			<InputExtended
-				v-if="specialCharacters"
-				id="query"
+			<Searchbar
 				v-model="queryString"
-				aria-label="Search"
-				placeholder="Search in corpus ..."
+				v-model:search-term="wordSearch"
+				:dynamic-keys="['word']"
+				feature-trigger="["
+				free-trigger-key="word"
+				:on-submit="
+					(v) => {
+						if (!isSearching) {
+							queryString = v;
+							searchCorpus();
+						}
+					}
+				"
+				query-mode="cql"
 				:special-characters="specialCharacters"
-				@submit="searchCorpus"
+				:triggers="cqlTriggers"
 			/>
-			<button
-				class="inline-block h-10 w-full rounded border-2 border-solid border-primary bg-on-primary text-center align-middle font-bold whitespace-nowrap text-primary hover:bg-primary hover:text-on-primary disabled:border-gray-400 disabled:text-gray-400 hover:disabled:bg-on-primary hover:disabled:text-gray-400"
-				:disabled="isSearching || (queryString === '' && words.length == 0)"
-				@click.prevent.stop="searchCorpus"
-			>
-				Query
-			</button>
 			<br />
 		</form>
-		<div class="flex justify-end p-4">
-			<div>
+		<div
+			v-if="hasLemmaAnnotations || hasLinguisticAnnotations || hasInlineTranslations"
+			class="flex justify-end gap-3 p-4"
+		>
+			<div v-if="hasLemmaAnnotations">
 				<Checkbox
-					id="switch-annotations"
-					:default-checked="true"
-					@update:checked="inlineAnnotations = !inlineAnnotations"
+					id="switch-lemma-annotations"
+					:checked="inlineLemmaAnnotations === true"
+					@update:checked="inlineLemmaAnnotations = $event === true"
 				/>
-				<label for="switch-annotations">&nbsp;Inline Annotations</label>
+				<label for="switch-lemma-annotations">&nbsp;Lemma annotations</label>
 			</div>
-			&nbsp;
-			<div>
+			<div v-if="hasLinguisticAnnotations">
+				<Checkbox
+					id="switch-linguistic-annotations"
+					:checked="inlineLinguisticAnnotations === true"
+					@update:checked="inlineLinguisticAnnotations = $event === true"
+				/>
+				<label for="switch-linguistic-annotations">&nbsp;Linguistic annotations</label>
+			</div>
+			<div v-if="hasInlineTranslations">
 				<Checkbox
 					id="switch-translations"
-					:default-checked="true"
-					@update:checked="inlineTranslations = !inlineTranslations"
+					:checked="inlineTranslations === true"
+					@update:checked="inlineTranslations = $event === true"
 				/>
 				<label for="switch-translations">&nbsp;Inline Translations</label>
 			</div>
@@ -208,7 +284,7 @@ function splitUtterancesAroundHit(utterances: MixedUtteranceContent, hitId?: str
 		<div v-if="hits && displayHits.length > 0">
 			<div class="my-2">Query: "{{ queryString }}"</div>
 			<table>
-				<tr v-for="hit in displayHits" :key="hit['@id']">
+				<tr v-for="(hit, hitIndex) in displayHits" :key="getHitKey(hit, hitIndex)">
 					<td class="p-0">
 						<a
 							:data-hits="hit.hits![0]"
@@ -231,8 +307,9 @@ function splitUtterancesAroundHit(utterances: MixedUtteranceContent, hitId?: str
 										v-for="(uContent, index) in splitUtterancesAroundHit(hit.u['$$'], hit.hits?.[0])
 											.before"
 										:key="`before-${index}`"
-										:inline-annotation="inlineAnnotations as boolean"
-										:inline-translation="inlineTranslations as boolean"
+										:hits="hit.hits?.[0]"
+										:inline-lemma-annotation="showLemmaAnnotations"
+										:inline-linguistic-annotation="showLinguisticAnnotations"
 										:utterance="uContent"
 									></CorpusTextJsonUtterance>
 								</div>
@@ -240,8 +317,9 @@ function splitUtterancesAroundHit(utterances: MixedUtteranceContent, hitId?: str
 									<CorpusTextJsonUtterance
 										v-if="splitUtterancesAroundHit(hit.u['$$'], hit.hits?.[0]).match"
 										:highlight="true"
-										:inline-annotation="inlineAnnotations as boolean"
-										:inline-translation="inlineTranslations as boolean"
+										:hits="hit.hits?.[0]"
+										:inline-lemma-annotation="showLemmaAnnotations"
+										:inline-linguistic-annotation="showLinguisticAnnotations"
 										:utterance="splitUtterancesAroundHit(hit.u['$$'], hit.hits?.[0]).match!"
 									></CorpusTextJsonUtterance>
 								</div>
@@ -250,15 +328,16 @@ function splitUtterancesAroundHit(utterances: MixedUtteranceContent, hitId?: str
 										v-for="(uContent, index) in splitUtterancesAroundHit(hit.u['$$'], hit.hits?.[0])
 											.after"
 										:key="`after-${index}`"
-										:inline-annotation="inlineAnnotations as boolean"
-										:inline-translation="inlineTranslations as boolean"
+										:hits="hit.hits?.[0]"
+										:inline-lemma-annotation="showLemmaAnnotations"
+										:inline-linguistic-annotation="showLinguisticAnnotations"
 										:utterance="uContent"
 									></CorpusTextJsonUtterance>
 								</div>
 							</div>
 						</div>
 						<div
-							v-if="inlineTranslations && hit.Translation_spanGrp"
+							v-if="showInlineTranslations && hit.Translation_spanGrp"
 							class="flex max-w-full flex-row px-6 py-3 italic"
 						>
 							{{ hit.Translation_spanGrp.span["$"] }}

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Check } from "lucide-vue-next";
+import { Check } from "@lucide/vue";
 import { SelectItem, SelectItemIndicator, type SelectItemProps, SelectItemText } from "radix-vue";
 
 const props = defineProps<SelectItemProps>();
@@ -9,7 +9,7 @@ const props = defineProps<SelectItemProps>();
 	<SelectItem
 		v-bind="props"
 		:class="[
-			'focus:text-accent-foreground relative flex w-full cursor-default items-center rounded-sm px-2 py-1.5 text-sm outline-hidden select-none focus:bg-accent data-disabled:pointer-events-none data-disabled:opacity-50',
+			'relative flex w-full cursor-default items-center rounded-sm px-2 py-1.5 text-sm outline-hidden select-none focus:text-accent-foreground focus:bg-accent data-disabled:pointer-events-none data-disabled:opacity-50',
 			$attrs.class,
 		]"
 	>

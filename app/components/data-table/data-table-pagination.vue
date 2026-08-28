@@ -1,21 +1,20 @@
 <script setup lang="ts">
+import { ChevronFirstIcon, ChevronLastIcon, ChevronLeftIcon, ChevronRightIcon } from "@lucide/vue";
 import type { Table } from "@tanstack/vue-table";
-import {
-	ChevronFirstIcon,
-	ChevronLastIcon,
-	ChevronLeftIcon,
-	ChevronRightIcon,
-} from "lucide-vue-next";
 
 interface DataTablePaginationProps {
 	table: Table<never>;
+	openToSide?: "top" | "right" | "bottom" | "left";
+	pageSelect?: boolean;
 }
 
-defineProps<DataTablePaginationProps>();
+const props = defineProps<DataTablePaginationProps>();
+
+const hasPagination = computed(() => props.table.options.getPaginationRowModel != null);
 </script>
 
 <template>
-	<div class="flex items-center justify-between px-2">
+	<div v-if="hasPagination" class="flex items-center justify-between px-2">
 		<div class="flex items-center space-x-6 lg:space-x-8">
 			<div class="flex items-center space-x-2">
 				<p id="pagesizeSelect" class="text-sm font-medium">Pagesize:</p>
@@ -27,7 +26,7 @@ defineProps<DataTablePaginationProps>();
 					<SelectTrigger class="h-8 w-[70px]">
 						<SelectValue :placeholder="`${table.getState().pagination.pageSize}`" />
 					</SelectTrigger>
-					<SelectContent class="bg-white">
+					<SelectContent class="bg-white" :side="openToSide">
 						<SelectItem
 							v-for="(pageSize, index) in [10, 20, 30, 40, 50] as Array<never>"
 							:key="index"
@@ -38,9 +37,31 @@ defineProps<DataTablePaginationProps>();
 					</SelectContent>
 				</Select>
 			</div>
-			<div class="flex w-[100px] items-center justify-center text-sm font-medium">
-				Page {{ table.getState().pagination.pageIndex + 1 }} of
-				{{ table.getPageCount() }}
+			<div class="flex items-center space-x-2 text-sm font-medium">
+				<template v-if="pageSelect">
+					<label for="pageSelect">Page</label>
+					<Select
+						aria-labelledby="pageSelect"
+						:model-value="`${table.getState().pagination.pageIndex + 1}`"
+						@update:model-value="table.setPageIndex(parseInt($event) - 1)"
+					>
+						<SelectTrigger id="pageSelect" class="h-8 w-17.5">
+							<SelectValue :placeholder="`${table.getState().pagination.pageIndex + 1}`" />
+						</SelectTrigger>
+						<SelectContent class="bg-white" :side="openToSide">
+							<SelectItem v-for="page in table.getPageCount()" :key="page" :value="`${page}`">
+								{{ page }}
+							</SelectItem>
+						</SelectContent>
+					</Select>
+					<span>of {{ table.getPageCount() }}</span>
+				</template>
+				<template v-else>
+					<span
+						>Page {{ table.getState().pagination.pageIndex + 1 }} of
+						{{ table.getPageCount() }}</span
+					>
+				</template>
 			</div>
 			<div class="flex items-center space-x-2">
 				<Button

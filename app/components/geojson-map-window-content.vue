@@ -15,22 +15,20 @@ const { params } = toRefs(props);
 
 const GeojsonStore = useGeojsonStore();
 
-const { tables } = storeToRefs(GeojsonStore);
+const labelDisplayMode = ref<"on" | "off" | "default">("default");
+const defaultDisplayLabelsZoom = 10;
 
 const filteredMarkers = computed(() => {
-	return tables.value
-		.get(params.value.url)
-		?.getFilteredRowModel()
-		.rows.map((row) => {
-			const marker = row.original;
-			if (!("label" in marker.properties)) marker.properties.label = marker.properties.name;
-			marker.properties.targetType = "Location";
-			return marker;
-		});
+	return GeojsonStore.table?.getFilteredRowModel().rows.map((row) => {
+		const marker = row.original;
+		if (!("label" in marker.properties)) marker.properties.label = marker.properties.name;
+		marker.properties.targetType = "Location";
+		return marker;
+	});
 });
 
 const selectedRowCoordinates = computed(() => {
-	const selection = tables.value.get(params.value.url)?.getSelectedRowModel();
+	const selection = GeojsonStore.table?.getSelectedRowModel();
 	return (
 		selection?.rows.map((r) => r.original.geometry.coordinates as [number, number])[0] ?? undefined
 	);
@@ -38,8 +36,7 @@ const selectedRowCoordinates = computed(() => {
 
 const openOrUpdateWindow = useOpenOrUpdateWindow();
 function onMarkerClick(feature: Feature) {
-	const selection = tables.value
-		.get(params.value.url)
+	const selection = GeojsonStore.table
 		?.getCoreRowModel()
 		.flatRows.find((row) => row.original.id === feature.id);
 	selection?.toggleSelected(true);
@@ -62,7 +59,8 @@ function onMarkerClick(feature: Feature) {
 		>
 			<GeoMap
 				v-if="filteredMarkers"
-				:display-labels="10"
+				:default-display-labels-zoom="defaultDisplayLabelsZoom"
+				:display-labels="labelDisplayMode"
 				:height="height"
 				:marker-type="params.markerType"
 				:markers="filteredMarkers as Array<Feature<Point, MarkerProperties>>"
@@ -76,10 +74,14 @@ function onMarkerClick(feature: Feature) {
 			</Centered>
 			<GeojsonMapLegend
 				v-if="filteredMarkers"
-				class="absolute bottom-0 left-0 max-h-full"
+				class="absolute bottom-2 left-2 max-h-[50%] rounded-md shadow-lg"
 				:params="params"
 			></GeojsonMapLegend>
-			<GeojsonMapControls class="absolute top-0 left-0"></GeojsonMapControls>
+			<GeojsonMapControls
+				class="absolute top-2 left-2"
+				:display-labels="labelDisplayMode"
+				@update:display-labels="labelDisplayMode = $event"
+			></GeojsonMapControls>
 		</VisualisationContainer>
 	</div>
 </template>

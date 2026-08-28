@@ -3,6 +3,45 @@ import type Zod from "zod";
 
 import type { BibliographyEntriesSchema } from "@/types/global.ts";
 
+const biblioEntrySelector = [
+	".dvBiblBlock",
+	".dvAuthor",
+	".dvBibArticle",
+	".dvBibBook",
+	".dvBibBookSection",
+	".dvThesis",
+].join(",");
+
+export interface BiblioTeiQueryResult {
+	stats: string;
+	html: string;
+	hasResults: boolean;
+}
+
+export function parseBiblioTeiResponse(text: string): BiblioTeiQueryResult {
+	const doc = new DOMParser().parseFromString(text, "text/html");
+	const stats = doc.querySelector("div.dvStats");
+	const hasResults = doc.querySelector(biblioEntrySelector) != null;
+
+	stats?.parentElement?.removeChild(stats);
+
+	if (!hasResults) {
+		return {
+			stats: stats == null ? "0 results" : stats.textContent.trim(),
+			html: "",
+			hasResults: false,
+		};
+	}
+
+	const serializer = new XMLSerializer();
+
+	return {
+		stats: stats == null ? "" : stats.textContent.trim(),
+		html: serializer.serializeToString(doc),
+		hasResults: true,
+	};
+}
+
 export function useBiblioTeiQuery(
 	params: MaybeRef<Zod.infer<typeof BibliographyEntriesSchema>["params"]>,
 	options?: { enabled?: boolean },
@@ -12,7 +51,7 @@ export function useBiblioTeiQuery(
 		enabled: options?.enabled,
 		queryKey: ["get-biblio-tei", params] as const,
 		async queryFn({ queryKey: [, params] }) {
-			if (params.queryString === "") return "";
+			if (params.queryString === "") return null;
 			const apiParams: { query: string; xslt?: string } = {
 				query: params.queryString,
 			};
@@ -21,11 +60,7 @@ export function useBiblioTeiQuery(
 				headers: { accept: "application/xml" },
 			});
 			const text = await response.text();
-			const doc = Document.parseHTMLUnsafe(text);
-			const stats = doc.querySelector("div.dvStats");
-			stats!.parentElement!.removeChild(stats!);
-			const s = new XMLSerializer();
-			return { stats: stats?.textContent, html: s.serializeToString(doc) };
+			return parseBiblioTeiResponse(text);
 		},
 	});
 }

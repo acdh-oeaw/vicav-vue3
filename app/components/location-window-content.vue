@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { Cell, Column, Row } from "@tanstack/vue-table";
 
-import type { LocationWindowItem } from "@/types/global.ts";
+import type { LocationWindowItem, WindowItem } from "@/types/global.ts";
 import type { simpleTEIMetadata } from "@/types/teiCorpus";
 
 interface Props {
@@ -47,6 +47,20 @@ function getNonFeatureValue(col: (typeof columns.value)[0]) {
 	if (!value || typeof value === "string") return value;
 	return (value as unknown as Array<Record<string, string>>).map((entry) => entry.name).join(" / ");
 }
+
+const openOrUpdateWindow = useOpenOrUpdateWindow();
+function onFeatureClick(col: Column<PatchedFeatureType, unknown>) {
+	openOrUpdateWindow(
+		{
+			targetType: "FeatureStatistics",
+			params: {
+				featureId: col.id,
+				showCitation: false,
+			},
+		} as unknown as WindowItem,
+		`Feature: ${col.columnDef.header}`,
+	);
+}
 </script>
 
 <template>
@@ -57,7 +71,16 @@ function getNonFeatureValue(col: (typeof columns.value)[0]) {
 		<Table>
 			<TableBody>
 				<TableRow v-for="col in columns" :key="col.column.id">
-					<TableCell class="capitalize">{{ col.column.columnDef.header }}</TableCell>
+					<TableCell class="capitalize"
+						><Button
+							v-if="col.column.id.startsWith('ft_')"
+							class="h-auto shrink-0 p-0 font-normal text-black!"
+							variant="link"
+							@click="onFeatureClick(col.column)"
+							>{{ col.column.columnDef.header }}</Button
+						>
+						<template v-else>{{ col.column.columnDef.header }}</template>
+					</TableCell>
 					<TableCell>
 						<GeojsonTablePropertyCell
 							v-if="!['name', 'country', 'alternateNames'].includes(col.column.id)"
@@ -66,7 +89,7 @@ function getNonFeatureValue(col: (typeof columns.value)[0]) {
 							:highlighted-values="getHighlightedValues(col.column)"
 							:value="rowOriginal.properties[col.column.columnDef.id!]"
 						></GeojsonTablePropertyCell>
-						<span v-else class="font-light">{{ getNonFeatureValue(col) }}</span>
+						<span v-else class="font-normal">{{ getNonFeatureValue(col) }}</span>
 					</TableCell>
 				</TableRow>
 			</TableBody>

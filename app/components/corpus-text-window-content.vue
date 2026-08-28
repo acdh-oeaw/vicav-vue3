@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import "v3-infinite-loading/lib/style.css"; //required if you're not going to override default slots
 
-import { Pause, Play } from "lucide-vue-next";
+import { Pause, Play } from "@lucide/vue";
 import InfiniteLoading from "v3-infinite-loading";
 import type { StateHandler } from "v3-infinite-loading/lib/types";
 import type Zod from "zod";

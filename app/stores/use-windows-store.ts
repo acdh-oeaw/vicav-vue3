@@ -4,6 +4,8 @@ import { z } from "zod";
 
 import type { QueryParamsType } from "@/lib/api-client";
 import {
+	GeojsonMapSchema,
+	ListMapSchema,
 	QueryString,
 	Schema,
 	TeiSource,
@@ -12,7 +14,10 @@ import {
 	type WindowItemTargetType,
 } from "@/types/global.ts";
 import * as arrange from "@/utils/window-arrangement";
-import { enableWindowBodyKeyboardFocus } from "@/utils/window-body-focus.ts";
+import {
+	enableWindowBodyKeyboardScrollFocus,
+	focusWindowBodyKeyboardScrollTarget,
+} from "@/utils/window-body-focus.ts";
 
 import { useToastsStore } from "./use-toasts-store.ts";
 
@@ -56,6 +61,9 @@ export const useWindowsStore = defineStore("windows", () => {
 	const initialScreenSetup = computed(() => {
 		return data.value?.projectConfig?.panel ?? [];
 	});
+	const openOrUpdateWindow = useOpenOrUpdateWindow();
+
+	const geojsonStore = useGeojsonStore();
 
 	async function initializeScreen() {
 		await suspense();
@@ -173,7 +181,10 @@ export const useWindowsStore = defineStore("windows", () => {
 			},
 			root: rootElement,
 		});
-		enableWindowBodyKeyboardFocus(winbox.body);
+		//focus window content on every click
+		enableWindowBodyKeyboardScrollFocus(winbox.body);
+		//focus window when opened the first time (=now)
+		void focusWindowBodyKeyboardScrollTarget(winbox.body, null, { afterRender: true });
 
 		const teiSourceParse = TeiSource.safeParse(params);
 		if (teiSourceParse.success) {
@@ -222,6 +233,61 @@ export const useWindowsStore = defineStore("windows", () => {
 			if (cite.length > 0) {
 				const el = cite[0] as HTMLSpanElement;
 				el.title = "Show citation";
+			}
+		}
+
+		if (w!.targetType === "ListMap") {
+			w.winbox.addControl({
+				index: 0,
+				class: "wb-map",
+				click: function () {
+					openOrUpdateWindow(
+						{
+							targetType: "GeojsonMap",
+							params: {
+								markerType: "petal",
+							},
+						} as unknown as WindowItem,
+						"Variety Data - Map View",
+						GeojsonMapSchema.shape.params,
+						"markerType",
+						true,
+					);
+				},
+			});
+			const winboxElement = w.winbox.dom as HTMLElement;
+			const cite = winboxElement.querySelectorAll(".wb-map");
+			if (cite.length > 0) {
+				const el = cite[0] as HTMLSpanElement;
+				el.title = "Open map";
+			}
+		}
+		if (w!.targetType === "GeojsonMap") {
+			w.winbox.addControl({
+				index: 0,
+				class: "wb-table",
+				click: function () {
+					const table = geojsonStore.table;
+					const globalFilter = (table?.getState().globalFilter as string | undefined) ?? "";
+					openOrUpdateWindow(
+						{
+							targetType: "ListMap",
+							params: {
+								queryString: globalFilter,
+							},
+						} as unknown as WindowItem,
+						globalFilter,
+						ListMapSchema.shape.params,
+						"queryString",
+						true,
+					);
+				},
+			});
+			const winboxElement = w.winbox.dom as HTMLElement;
+			const cite = winboxElement.querySelectorAll(".wb-table");
+			if (cite.length > 0) {
+				const el = cite[0] as HTMLSpanElement;
+				el.title = "Open table";
 			}
 		}
 		return w;
@@ -395,12 +461,34 @@ export const useWindowsStore = defineStore("windows", () => {
 		const w = registry.value.get(id);
 		if (w) {
 			const wi = QueryString.safeParse(w.params);
-			if (wi.success) {
-				wi.data.queryString = query;
+			if (wi.success && "queryString" in w.params) {
+				w.params.queryString = query;
 				w.winbox.setTitle(query);
 				updateUrl();
 			}
 		}
+	}
+
+	function updateWindowParams(id: WindowItem["id"], params: WindowItem["params"]) {
+		const w = registry.value.get(id);
+
+		if (w == null) return;
+
+		const parsedWindow = Schema.safeParse({ targetType: w.targetType, params });
+
+		if (!parsedWindow.success) {
+			toasts.addToast({
+				title: "UpdateWindowParams Error: parameter parse failed",
+				description: "Check the console for details.",
+				type: "foreground",
+				variant: "negative",
+			});
+			console.error(parsedWindow.error);
+			return;
+		}
+
+		w.params = parsedWindow.data.params;
+		updateUrl();
 	}
 
 	return {
@@ -408,6 +496,8 @@ export const useWindowsStore = defineStore("windows", () => {
 		addWindow,
 		removeWindow,
 		updateQueryParam,
+		updateWindowParams,
+		updateUrl,
 		registry,
 		arrangement,
 		setWindowArrangement,

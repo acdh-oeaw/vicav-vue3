@@ -16,7 +16,7 @@ const animationClasses = {
 <template>
 	<CollapsibleContent
 		v-bind="props"
-		:class="twMerge('overflow-hidden transition-all ', animationClasses[props.orientation])"
+		:class="twMerge('overflow-hidden transition-all', animationClasses[props.orientation])"
 	>
 		<slot />
 	</CollapsibleContent>
