@@ -20,8 +20,8 @@ http://localhost:3000 **Test Framework:** Playwright **Last Updated:** 2026-04-0
 
 ### 1.1 Desktop Menu (Viewport >= 1024px)
 
-The desktop menu is displayed as a horizontal navigation bar using Radix UI Menubar component with
-the following menu categories:
+The desktop menu is displayed as a horizontal navigation bar using Reka UI NavigationMenu component
+with the following menu categories:
 
 | Menu Category          | Dropdown Items                                                                                                                                                                                                                                                                                                                                                                                     |
 | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -68,7 +68,7 @@ Each category expands to reveal its sub-items in a collapsible list format.
 1. Navigate to homepage at http://localhost:3000 on desktop viewport (1280x720)
    - expect: Page should load without errors
    - expect: Header should be visible
-   - expect: Desktop menu (Menubar) should be visible on desktop viewport (≥1024px)
+   - expect: Desktop menu (NavigationMenu) should be visible on desktop viewport (≥1024px)
    - expect: Menu items should be visible with correct titles from API
 2. Resize viewport to mobile (375x667) and verify desktop menu is hidden
    - expect: Desktop menu should not be visible on mobile viewport (<1024px)
@@ -395,7 +395,7 @@ Each category expands to reveal its sub-items in a collapsible list format.
 1. Navigate to homepage and set viewport to 1024x768
    - expect: Page should load with desktop menu visible at 1024px width
 2. Verify visible elements at 1024px width
-   - expect: Desktop menu (Menubar) should be visible
+   - expect: Desktop menu (NavigationMenu) should be visible
    - expect: Mobile menu toggle should NOT be visible
 3. Resize viewport to 1280x720 and verify desktop menu
    - expect: Desktop menu should remain visible at widths > 1024px
@@ -432,10 +432,12 @@ Each category expands to reveal its sub-items in a collapsible list format.
 
 **Steps:**
 
-1. Navigate to homepage
-2. Press Tab key repeatedly
-3. Verify focus moves through menu items in order
-   - expect: Focus indicator should be visible on each menu item as Tab is pressed
+1. Navigate to homepage (1920x1080)
+2. Press Tab key: Skip Link → Logo → First menu trigger (Project)
+3. Arrow Right moves between menu triggers (Project → Bibliographies → Profiles → Feature Lists →
+   Samples → Texts → Dictionaries → Tools & Technology → Windows)
+4. Verify focus moves through menu items in order
+   - expect: Focus indicator should be visible on each menu trigger as Tab/ArrowRight is pressed
 
 #### 2.5.2 Enter Key Opens Focused Menu
 
@@ -467,10 +469,13 @@ Each category expands to reveal its sub-items in a collapsible list format.
 
 **Steps:**
 
-1. Open "Project" menu
-2. Use Down Arrow to navigate through sub-items
-3. Verify focus moves through: Mission -> News -> Types of Text/Data -> Contributors -> Linguistics
+1. Open "Project" menu (click or Enter on trigger)
+2. Press ArrowDown — focus moves into the content to the first item (Mission)
+3. Use ArrowDown to navigate: Mission → News → Types of Text/Data → Contributors → Linguistics
+4. Use ArrowUp to navigate back
+5. Verify focus moves through items
    - expect: Each sub-item should receive focus in sequence
+   - expect: ArrowUp from first item moves to last item (if loop enabled) or stops
 
 ---
 
@@ -643,8 +648,9 @@ Each category expands to reveal its sub-items in a collapsible list format.
 1. Navigate to homepage at 1280x720
    - expect: Page should load with desktop menu visible
 2. Check accessibility tree for proper ARIA roles
-   - expect: Menu should have proper role attributes (role="menubar")
-   - expect: Menu items should have role="menuitem"
+   - expect: Main menu uses NavigationMenu (disclosure pattern) — triggers are buttons, items are
+     buttons inside content
+   - expect: Windows dropdown still uses Menubar (role="menubar", role="menuitem")
    - expect: Menu triggers should be focusable
 3. Verify accessible names for menu components
    - expect: Menu should have aria-label or proper labeling
@@ -680,7 +686,7 @@ Each category expands to reveal its sub-items in a collapsible list format.
    - expect: Page should load with desktop menu visible
 2. Open a menu dropdown that contains separators and verify they render correctly
    - expect: Menu items with type='separator' should render as visual separators
-   - expect: Separators should have role='separator' for accessibility
+   - expect: Separators have data-slot="navigation-menu-separator" attribute
 
 #### 2.9.2 Mobile menu renders separators correctly
 
@@ -789,6 +795,14 @@ Each category expands to reveal its sub-items in a collapsible list format.
 
 5. **Initial Windows:** The homepage loads with three initial windows already open: Mission, News,
    and All Bibl. Locations on Map.
+
+6. **Component Migration:** The main navigation menu was migrated from Menubar to NavigationMenu
+   (commit 88c2657). This affects test selectors:
+   - Main menu triggers/items use `button` role (was `menuitem`)
+   - Main menu dropdown uses `[data-slot=navigation-menu-content]` (was `[role='menu']`)
+   - Main menu root uses `[data-slot=navigation-menu]` (was `[role='menubar']`)
+   - Windows dropdown still uses Menubar — selectors for it remain unchanged
+   - Separators use `[data-slot=navigation-menu-separator]` (was `[role='separator']`)
 
 ---
 
