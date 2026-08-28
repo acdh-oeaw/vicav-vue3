@@ -3,96 +3,101 @@ import "v3-infinite-loading/lib/style.css";
 
 import {
 	AlignVerticalSpaceBetween,
+	BookA,
 	ChevronsLeftRightEllipsis,
 	Copy,
 	Languages,
-} from "lucide-vue-next";
+} from "@lucide/vue";
 import InfiniteLoading from "v3-infinite-loading";
 import type { StateHandler } from "v3-infinite-loading/lib/types";
 import type { z } from "zod";
 
-import type { Div, U } from "@/lib/api-client";
+import type { Div } from "@/lib/api-client";
 import { useTeiHeadersStore } from "@/stores/use-tei-headers-store.ts";
 import type { CorpusTextSchema } from "@/types/global.ts";
+import { getCorpusRowText } from "@/utils/corpus-transcription.ts";
 
 const props = defineProps<{
 	params: z.infer<typeof CorpusTextSchema>["params"] & { label?: string };
 }>();
 
 const toastStore = useToastsStore();
-const { simpleItems } = useTeiHeadersStore();
+const { simpleItems, persons } = useTeiHeadersStore();
 const teiHeader = simpleItems.find((header) => header.id === props.params.textId);
+const resolvePersonNameById = computed(() => {
+	return function (personId: string | undefined): string | undefined {
+		if (!personId) return undefined;
+
+		return persons.find((person) => person["@id"] === personId)?.name?.$;
+	};
+});
 
 const currentPage = ref(1);
 const infinite = ref<typeof InfiniteLoading | null>(null);
 const scrollComplete = ref<boolean>(false);
 const utterancesWrapper = ref<HTMLElement | null>(null);
+const {
+	getUtterances,
+	hasInlineTranslations: blockHasInlineTranslations,
+	hasLemmaAnnotations: blockHasLemmaAnnotations,
+	hasLinguisticAnnotations: blockHasLinguisticAnnotations,
+} = useCorpusAnnotationAvailability();
 
 const annotationBlocks = ref<Array<Div>>([]);
 const displayAnnotationBlocks = ref<Array<Div>>([]);
-const inlineAnnotations = ref<false | true | "indeterminate">(true);
+const inlineLemmaAnnotations = ref<false | true | "indeterminate">(true);
+const inlineLinguisticAnnotations = ref<false | true | "indeterminate">(true);
 const inlineTranslations = ref<false | true | "indeterminate">(true);
 const denseTeiHeader = ref<false | true | "indeterminate">(true);
+
+const hasLemmaAnnotations = computed(() => {
+	return blockHasLemmaAnnotations(annotationBlocks.value);
+});
+
+const hasLinguisticAnnotations = computed(() => {
+	return blockHasLinguisticAnnotations(annotationBlocks.value);
+});
+
+const hasInlineTranslations = computed(() => {
+	return blockHasInlineTranslations(annotationBlocks.value);
+});
+
+const showLemmaAnnotations = computed(() => {
+	return hasLemmaAnnotations.value && inlineLemmaAnnotations.value === true;
+});
+
+const showLinguisticAnnotations = computed(() => {
+	return hasLinguisticAnnotations.value && inlineLinguisticAnnotations.value === true;
+});
+
+const showInlineTranslations = computed(() => {
+	return hasInlineTranslations.value && inlineTranslations.value === true;
+});
+
 const enabledOptions = computed<Array<string>>({
 	get() {
 		return [
-			...(inlineAnnotations.value === true ? ["annotations"] : []),
-			...(inlineTranslations.value === true ? ["translations"] : []),
+			...(showLemmaAnnotations.value ? ["lemma-annotations"] : []),
+			...(showLinguisticAnnotations.value ? ["linguistic-annotations"] : []),
+			...(showInlineTranslations.value ? ["translations"] : []),
 			...(denseTeiHeader.value === true ? ["dense-tei-header"] : []),
 		];
 	},
 	set(values: Array<string>) {
-		inlineAnnotations.value = values.includes("annotations");
-		inlineTranslations.value = values.includes("translations");
+		inlineLemmaAnnotations.value =
+			hasLemmaAnnotations.value && values.includes("lemma-annotations");
+		inlineLinguisticAnnotations.value =
+			hasLinguisticAnnotations.value && values.includes("linguistic-annotations");
+		inlineTranslations.value = hasInlineTranslations.value && values.includes("translations");
 		denseTeiHeader.value = values.includes("dense-tei-header");
 	},
 });
 
 const api = useApiClient();
 
-function getUtterances(div: Div): Array<U> {
-	return [div.u, ...(div.us ?? [])].filter((u) => u !== undefined);
-}
-
-function renderUtteranceTokenText(token: U["$$"][number]): string {
-	if (token.w) {
-		let renderedText = token.w["$"];
-		renderedText +=
-			token.w["@join"] === "right" && token.w["@rendition"] === "rend:dashAfter" ? "-" : "";
-		renderedText += token.w["@rendition"] === "rend:ellipsisAfter" ? "..." : "";
-		renderedText +=
-			token.w["@join"] === "right" && token.w["@rendition"] === "rend:withBowBelow" ? "_" : "";
-		renderedText += token.w["@join"] === "right" ? "" : " ";
-		return renderedText;
-	}
-
-	if (token.pc) {
-		return `${token.pc["$"]} `;
-	}
-
-	if (token.gap) {
-		return token.gap["@rendition"] === "rend:ellipsisInSquareBrackets" ? "[...] " : "";
-	}
-
-	if (token.seg) {
-		return token.seg["$$"].map(renderUtteranceTokenText).join("");
-	}
-
-	return "";
-}
-
-function getRowText(div: Div): string {
-	return getUtterances(div)
-		.map((utterance) =>
-			utterance["$$"].map(renderUtteranceTokenText).join("").replace(/\s+/g, " ").trim(),
-		)
-		.filter(Boolean)
-		.join("\n");
-}
-
 async function copyRowText(div: Div) {
 	try {
-		await navigator.clipboard.writeText(getRowText(div));
+		await navigator.clipboard.writeText(getCorpusRowText(div, getUtterances));
 		toastStore.addToast({
 			title: "Copied",
 			description: "Transcription copied to clipboard.",
@@ -172,20 +177,30 @@ onMounted(async () => {
 		<div class="sticky top-0 z-10 flex justify-end bg-white p-4">
 			<TooltipProvider>
 				<ToggleGroup v-model="enabledOptions" type="multiple" variant="outline">
-					<Tooltip>
+					<Tooltip v-if="hasLemmaAnnotations">
 						<TooltipTrigger as-child>
-							<ToggleGroupItem class="hover:bg-primary" value="annotations">
-								<ChevronsLeftRightEllipsis class="h-4 w-4" />
+							<ToggleGroupItem class="hover:bg-primary" value="lemma-annotations">
+								<BookA class="size-4" />
+							</ToggleGroupItem>
+						</TooltipTrigger>
+						<TooltipContent class="border-black bg-black text-white">
+							Show lemma annotations and dictionary links in utterances.
+						</TooltipContent>
+					</Tooltip>
+					<Tooltip v-if="hasLinguisticAnnotations">
+						<TooltipTrigger as-child>
+							<ToggleGroupItem class="hover:bg-primary" value="linguistic-annotations">
+								<ChevronsLeftRightEllipsis class="size-4" />
 							</ToggleGroupItem>
 						</TooltipTrigger>
 						<TooltipContent class="border-black bg-black text-white">
 							Show inline linguistic annotations in utterances.
 						</TooltipContent>
 					</Tooltip>
-					<Tooltip>
+					<Tooltip v-if="hasInlineTranslations">
 						<TooltipTrigger as-child>
 							<ToggleGroupItem class="hover:bg-primary" value="translations">
-								<Languages class="h-4 w-4" />
+								<Languages class="size-4" />
 							</ToggleGroupItem>
 						</TooltipTrigger>
 						<TooltipContent class="border-black bg-black text-white">
@@ -195,7 +210,7 @@ onMounted(async () => {
 					<Tooltip>
 						<TooltipTrigger as-child>
 							<ToggleGroupItem class="hover:bg-primary" value="dense-tei-header">
-								<AlignVerticalSpaceBetween class="h-4 w-4" />
+								<AlignVerticalSpaceBetween class="size-4" />
 							</ToggleGroupItem>
 						</TooltipTrigger>
 						<TooltipContent class="border-black bg-black text-white">
@@ -254,7 +269,11 @@ onMounted(async () => {
 								:key="uIndex"
 								class="flex justify-center"
 							>
-								{{ u["@who"]?.replace("corpus:", "") || "N/A" }}
+								{{
+									resolvePersonNameById(u["@who"]?.replace("corpus:", "")) ??
+									u["@who"]?.replace("corpus:", "") ??
+									"N/A"
+								}}
 							</div>
 						</td>
 						<td>
@@ -267,15 +286,15 @@ onMounted(async () => {
 									<CorpusTextJsonUtterance
 										v-for="(uContent, index) in u['$$']"
 										:key="index"
-										:highlight="uContent.w?.['@id'] === props.params.hits"
-										:inline-annotation="inlineAnnotations as boolean"
-										:inline-translation="inlineTranslations as boolean"
+										:hits="props.params.hits"
+										:inline-lemma-annotation="showLemmaAnnotations"
+										:inline-linguistic-annotation="showLinguisticAnnotations"
 										:utterance="uContent"
 									></CorpusTextJsonUtterance>
 								</div>
 							</div>
 							<div
-								v-if="inlineTranslations && a.Translation_spanGrp"
+								v-if="showInlineTranslations && a.Translation_spanGrp"
 								class="flex max-w-full flex-row px-6 py-3 italic"
 							>
 								{{ a.Translation_spanGrp.span["$"] }}

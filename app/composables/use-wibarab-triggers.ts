@@ -1,14 +1,11 @@
 // Adapted from https://reka-ui.com/examples/combobox-textarea
 
 import type { Table } from "@tanstack/vue-table";
-import { storeToRefs } from "pinia";
 
 import type { TriggerMap } from "@/components/searchbar";
 import { type TaxonomyTreeEntry, useGeojsonStore } from "@/stores/use-geojson-store.ts";
 
 const GeojsonStore = useGeojsonStore();
-const { tables } = storeToRefs(GeojsonStore);
-const url = "https://raw.githubusercontent.com/wibarab/wibarab-data/main/wibarab_varieties.geojson";
 
 const {
 	getTaxonomyTree,
@@ -18,7 +15,7 @@ const {
 } = useGeojsonStore();
 
 function getFeatureList() {
-	const table = tables.value.get(url);
+	const table = GeojsonStore.table;
 	if (!table) return [];
 	const features = table
 		.getAllLeafColumns()
@@ -33,7 +30,7 @@ function getFeatureList() {
 const features = computed(() => getFeatureList());
 
 function getValueList(columns: typeof features.value) {
-	const table = tables.value.get(url);
+	const table = GeojsonStore.table;
 	if (!table) return [];
 
 	function traverseTaxonomyTree(
@@ -59,11 +56,17 @@ function getValueList(columns: typeof features.value) {
 			const taxonomy =
 				getTaxonomyTree(item.col.id).get(item.col.id) ?? getTaxonomyTree(item.col.id).get("");
 			const facets = getFacetsForId(table as Table<unknown>, item.col.id);
-			return traverseTaxonomyTree(taxonomy!, facets).map(({ key, label, level }) => ({
-				value: `"${key}"`,
-				displayValue: `${Array.from(Array(level))
-					.map(() => "\t")
-					.join("")}${label}`,
+			if (taxonomy) {
+				return traverseTaxonomyTree(taxonomy, facets).map(({ key, label, level }) => ({
+					value: `"${key}"`,
+					displayValue: `${Array.from(Array(level))
+						.map(() => "\t")
+						.join("")}${label}`,
+				}));
+			}
+			return facets.map((f) => ({
+				value: `"${f[0]}"`,
+				displayValue: f[0],
 			}));
 		})
 		.flat();
@@ -72,7 +75,7 @@ function getValueList(columns: typeof features.value) {
 function getMetaInfoList() {
 	const excludedMetaInfoKeys = new Set(["source_representations", "examples", "resp"]);
 
-	const table = tables.value.get(url);
+	const table = GeojsonStore.table;
 	const metaInfo = new Map<string, Set<string>>();
 	if (!table) return new Map() as TriggerMap;
 	table.getCoreRowModel().rows.forEach((row) => {
@@ -113,7 +116,10 @@ const metaInfoKeys = computed(() =>
 	[...metaInfo.value.keys()].map((key) => ({ value: `${key}:`, displayValue: key })),
 );
 
-const operators = ["and", "or"].map((o) => ({ displayValue: o, value: o.toUpperCase() }));
+const operators = ["and", "or", "and not", "or not"].map((o) => ({
+	displayValue: o,
+	value: o.toUpperCase(),
+}));
 
 const wibarabTriggers = computed(() => {
 	const map = {

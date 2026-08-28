@@ -1,11 +1,8 @@
 <script lang="ts" setup>
+import { ChevronDown } from "@lucide/vue";
 import type { Column, Table } from "@tanstack/vue-table";
-import { ChevronDown } from "lucide-vue-next";
 
-import { useMarkerStore } from "@/stores/use-marker-store.ts";
-import { FilterValueMap } from "@/utils/filter-value-map";
-
-const props = defineProps<{
+const _props = defineProps<{
 	item: Column<unknown>;
 	table: Table<unknown>;
 }>();
@@ -17,13 +14,6 @@ function titleCase(s: string) {
 }
 
 const isCollapsibleOpen = ref(false);
-
-const { markers } = storeToRefs(useMarkerStore());
-const { setMarker } = useMarkerStore();
-
-const activeFeatures = computed(() =>
-	props.table?.getVisibleLeafColumns().filter((col) => col.getCanHide()),
-);
 </script>
 
 <template>
@@ -62,30 +52,6 @@ const activeFeatures = computed(() =>
 		</Collapsible>
 	</template>
 	<template v-else>
-		<DropdownMenuCheckboxItem
-			:checked="item.getIsVisible()"
-			@mouseover.prevent
-			@select.prevent
-			@update:checked="
-				(value) => {
-					item.toggleVisibility(!!value);
-					item.setFilterValue(new FilterValueMap());
-				}
-			"
-		>
-			<span class="flex-1">{{ item.columnDef.header }}</span>
-
-			<div v-if="item.getIsVisible()" @click.stop>
-				<MarkerSelector
-					:icon-categories="['shapes']"
-					:model-value="markers.get(item.id)!"
-					:type="activeFeatures?.length === 1 ? ['color'] : ['icon']"
-					:use-popover-modal="true"
-					@click.capture.stop
-					@update:model-value="(props) => setMarker(props)"
-				></MarkerSelector>
-			</div>
-			<FeatureSelectionDialog :column="item as Column<unknown>" :table="table" />
-		</DropdownMenuCheckboxItem>
+		<FeatureSelectionDialog :column="item as Column<unknown>" :table="table" />
 	</template>
 </template>

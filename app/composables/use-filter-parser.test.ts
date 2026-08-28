@@ -6,8 +6,14 @@ import { useFilterParser } from "./use-filter-parser.ts";
 
 const { AND_OPERATOR } = useAdvancedQueries();
 
-const { parseSearchString, isInQuery, matchQueryStringAndFilters, syncGlobalAndColumnFilters } =
-	useFilterParser();
+const {
+	parseSearchString,
+	isInQuery,
+	matchQueryStringAndFilters,
+	syncGlobalAndColumnFilters,
+	normalizeParens,
+	addMetaFilter,
+} = useFilterParser();
 
 interface TestInterface {
 	fruit: string;
@@ -258,6 +264,142 @@ describe("Test matchQueryStringAndFilters function", () => {
 
 		expect(String(table2.getState().globalFilter ?? "")).toBe(
 			'(fruit:"apple" AND NOT fruit:"banana") OR color:"red"',
+		);
+	});
+});
+
+describe("normalizeParens", () => {
+	test("empty string is returned unchanged", () => {
+		expect(normalizeParens("")).toBe("");
+	});
+
+	test("whitespace-only string is returned as empty", () => {
+		expect(normalizeParens("   ")).toBe("");
+	});
+
+	test("simple tag without parens is unchanged", () => {
+		expect(normalizeParens('fruit:"apple"')).toBe('fruit:"apple"');
+	});
+
+	test("single tag wrapped in parens is unwrapped", () => {
+		expect(normalizeParens('(fruit:"apple")')).toBe('fruit:"apple"');
+	});
+
+	test("double-wrapped single tag is fully unwrapped", () => {
+		expect(normalizeParens('((fruit:"apple"))')).toBe('fruit:"apple"');
+	});
+
+	test("negated tag wrapped in parens is unwrapped", () => {
+		expect(normalizeParens('(NOT fruit:"apple")')).toBe('NOT fruit:"apple"');
+	});
+
+	test("AND expression in parens is kept", () => {
+		expect(normalizeParens('(fruit:"apple" AND fruit:"banana")')).toBe(
+			'(fruit:"apple" AND fruit:"banana")',
+		);
+	});
+
+	test("OR expression in parens is kept", () => {
+		expect(normalizeParens('(fruit:"apple" OR fruit:"banana")')).toBe(
+			'(fruit:"apple" OR fruit:"banana")',
+		);
+	});
+
+	test("single-tag parens nested inside a larger expression are unwrapped", () => {
+		expect(normalizeParens('(fruit:"apple") AND color:"red"')).toBe(
+			'fruit:"apple" AND color:"red"',
+		);
+	});
+
+	test("multiple single-tag parens in OR are all unwrapped", () => {
+		expect(normalizeParens('(fruit:"apple") OR (fruit:"banana")')).toBe(
+			'fruit:"apple" OR fruit:"banana"',
+		);
+	});
+
+	test("mixed: single-tag parens unwrapped, multi-term group kept", () => {
+		expect(normalizeParens('(fruit:"apple") OR (fruit:"banana" AND color:"red")')).toBe(
+			'fruit:"apple" OR (fruit:"banana" AND color:"red")',
+		);
+	});
+
+	test("triple expression is kept", () => {
+		expect(normalizeParens('(fruit:"apple" OR fruit:"banana" OR color:"red")')).toBe(
+			'(fruit:"apple" OR fruit:"banana" OR color:"red")',
+		);
+	});
+
+	test("triple expression without parentheses is kept", () => {
+		expect(normalizeParens('fruit:"apple" AND fruit:"banana" AND color:"red"')).toBe(
+			'fruit:"apple" AND fruit:"banana" AND color:"red"',
+		);
+	});
+
+	test("AND: nested expression is kept", () => {
+		expect(normalizeParens('((fruit:"apple" AND fruit:"banana") AND color:"red")')).toBe(
+			'((fruit:"apple" AND fruit:"banana") AND color:"red")',
+		);
+	});
+
+	test("OR: nested expression is kept", () => {
+		expect(normalizeParens('((fruit:"apple" OR fruit:"banana") OR color:"red")')).toBe(
+			'((fruit:"apple" OR fruit:"banana") OR color:"red")',
+		);
+	});
+
+	test("mixed: nested expression is kept", () => {
+		expect(normalizeParens('((fruit:"apple" OR fruit:"banana") AND color:"red")')).toBe(
+			'((fruit:"apple" OR fruit:"banana") AND color:"red")',
+		);
+	});
+});
+
+describe("Quoted feature values are preserved verbatim", () => {
+	const spacedValue = "A < I   sikát and a - u ";
+
+	const spacedData = [
+		{ fruit: spacedValue, color: "red" },
+		{ fruit: "apple", color: "yellow" },
+	];
+
+	function createSpacedTable() {
+		return useVueTable({
+			get data() {
+				return spacedData;
+			},
+			columns,
+			getCoreRowModel: getCoreRowModel(),
+		}) as Table<unknown>;
+	}
+
+	beforeEach(() => {
+		setActivePinia(createPinia());
+	});
+
+	test("syncGlobalAndColumnFilters keeps consecutive spaces inside the value", () => {
+		const spacedTable = createSpacedTable();
+		const fruitColumn = spacedTable.getColumn("fruit");
+		expect(fruitColumn).toBeDefined();
+		fruitColumn!.toggleVisibility(true);
+		fruitColumn!.setFilterValue(new Map<string, unknown>([[spacedValue, 1]]));
+
+		syncGlobalAndColumnFilters(spacedTable);
+
+		expect(String(spacedTable.getState().globalFilter ?? "")).toBe(`fruit:"${spacedValue}"`);
+	});
+
+	test("parseSearchString maps the query string back to the exact filter value", () => {
+		const spacedTable = createSpacedTable();
+
+		parseSearchString(`fruit:"${spacedValue}"`, spacedTable);
+
+		const fruitFilter = spacedTable.getColumn("fruit")?.getFilterValue() as Map<string, unknown>;
+		expect(fruitFilter.get(spacedValue)).toBe(1);
+	});
+
+	test("addMetaFilter keeps consecutive spaces inside the value", () => {
+		expect(addMetaFilter(`fruit:"${spacedValue}"`, "color", "red")).toBe(
+			`fruit:"${spacedValue}" AND color:red`,
 		);
 	});
 });

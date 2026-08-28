@@ -14,14 +14,22 @@ import { ensureFilterValueMap, FilterValueMap } from "../utils/filter-value-map"
 
 const { AND_OPERATOR } = useAdvancedQueries();
 
-function normalizeOperators(input: string): string {
-	// Only replace AND/OR/NOT outside of quoted values
+function mapOutsideQuotes(input: string, transform: (part: string) => string): string {
 	return input
 		.split(/(".*?")/)
-		.map((part, i) =>
-			i % 2 === 0 ? part.replace(/\b(?:and|or|not)\b/gi, (op) => op.toUpperCase()) : part,
-		)
+		.map((part, i) => (i % 2 === 0 ? transform(part) : part))
 		.join("");
+}
+
+function normalizeOperators(input: string): string {
+	// Only replace AND/OR/NOT outside of quoted values
+	return mapOutsideQuotes(input, (part) =>
+		part.replace(/\b(?:and|or|not)\b/gi, (op) => op.toUpperCase()),
+	);
+}
+
+function collapseSpaces(input: string): string {
+	return mapOutsideQuotes(input, (part) => part.replaceAll(/ {2,}/g, " "));
 }
 
 function parse(query: string) {
@@ -52,6 +60,38 @@ function ensureColumnFilterMap(
 	const filterValue = ensureFilterValueMap(col.getFilterValue());
 	if (!(col.getFilterValue() instanceof FilterValueMap)) col.setFilterValue(filterValue);
 	return { column: col, filterValue };
+}
+
+function stripRedundantParens(ast: LiqeQuery): LiqeQuery {
+	switch (ast.type) {
+		case "ParenthesizedExpression": {
+			const inner = stripRedundantParens(ast.expression);
+			if (inner.type === "Tag" || inner.type === "UnaryOperator") return inner;
+			return { ...ast, expression: inner };
+		}
+		case "LogicalExpression":
+			return {
+				...ast,
+				left: stripRedundantParens(ast.left),
+				right: stripRedundantParens(ast.right),
+			};
+		case "UnaryOperator":
+			return { ...ast, operand: stripRedundantParens(ast.operand) };
+		case "EmptyExpression":
+		case "Tag":
+		default:
+			return ast;
+	}
+}
+
+function normalizeParens(query: string): string {
+	const trimmed = query.trim();
+	if (trimmed.length === 0) return trimmed;
+	try {
+		return stringifyAST(stripRedundantParens(parse(trimmed))).trim();
+	} catch {
+		return trimmed;
+	}
 }
 
 function parseSearchString(searchString: string, table: Table<unknown>) {
@@ -429,6 +469,7 @@ function isInQuery(query: LiqeQuery | string, filter: LiqeQuery | string): boole
 
 function assembleFilter(columnId: string, key: string) {
 	let assembledFilter = `${columnId}:"${key}"`;
+	if (key === "*") assembledFilter = `${columnId}:ANY`;
 	if (key.includes(AND_OPERATOR)) {
 		assembledFilter = key
 			.split(AND_OPERATOR)
@@ -668,7 +709,8 @@ function stringifyAST(ast: LiqeQuery, parentOp?: "AND" | "OR"): string {
 			// Wrap in parentheses if:
 			// - parent is AND (both AND and OR need parens inside AND)
 			// - this is AND and parent is OR (AND needs parens to clarify precedence)
-			const needsParens = parentOp === "AND" || (parentOp === "OR" && op === "AND");
+			const needsParens =
+				(parentOp === "AND" && op !== "AND") || (parentOp === "OR" && op === "AND");
 			return needsParens ? `(${inner})` : inner;
 		}
 		case "ParenthesizedExpression":
@@ -787,7 +829,7 @@ function syncGlobalAndColumnFilters(table: Table<unknown>) {
 		})
 		.flat();
 	currentGlobalFilter = matchQueryStringAndFilters(currentGlobalFilter, assembledColumnFilters);
-	currentGlobalFilter = currentGlobalFilter.replace(/^ OR /, "").replaceAll("  ", " ");
+	currentGlobalFilter = collapseSpaces(currentGlobalFilter.replace(/^ OR /, ""));
 	// Check if "AND" would incorrectly be overwritten with "OR"
 	const globalFilterWithAndReplacedOutside = String(table.getState().globalFilter ?? "").replaceAll(
 		/\bAND\b(?![^(]*\))/g,
@@ -805,7 +847,7 @@ function addMetaFilter(originalQuery: string, metaKey: string, metaValue: string
 	if (Array.isArray(metaValue))
 		newFilter = metaValue.map((val) => `${metaKey}:${val}`).join(" OR ");
 	else newFilter = `${metaKey}:${metaValue}`;
-	return `${originalQuery} AND ${newFilter}`.replaceAll(/ {2,}/g, " ");
+	return collapseSpaces(`${originalQuery} AND ${newFilter}`);
 }
 
 function getTraversedAST(query: string) {
@@ -859,6 +901,7 @@ export function useFilterParser() {
 		getTraversedAST,
 		validateQuery,
 		normalizeOperators,
+		normalizeParens,
 		addMetaFilter,
 		parse,
 	};

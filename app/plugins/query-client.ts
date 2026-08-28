@@ -14,11 +14,14 @@ export default defineNuxtPlugin((nuxt) => {
 	const toastsStore = useToastsStore();
 	const { addToast } = toastsStore;
 
+	const THREE_MIN = 3 * 60 * 1000;
+	const FIFTEEN_MIN = 15 * 60 * 1000;
+
 	const queryClient = new QueryClient({
 		defaultOptions: {
 			queries: {
 				placeholderData: keepPreviousData,
-				staleTime: 1000 * 60 * 15,
+				staleTime: FIFTEEN_MIN,
 			},
 		},
 		queryCache: new QueryCache({
@@ -51,12 +54,22 @@ export default defineNuxtPlugin((nuxt) => {
 
 	if (import.meta.server) {
 		nuxt.hooks.hook("app:rendered", () => {
-			state.value = dehydrate(queryClient);
+			const dehydrated = dehydrate(queryClient);
+
+			// Normalize volatile timestamps before sending to client to up to three minutes in the past
+			for (const query of dehydrated.queries) {
+				query.state.dataUpdatedAt = Math.floor(query.state.dataUpdatedAt / THREE_MIN) * THREE_MIN;
+				query.state.errorUpdatedAt = Math.floor(query.state.errorUpdatedAt / THREE_MIN) * THREE_MIN;
+				query.dehydratedAt = Math.floor((query.dehydratedAt ?? 0) / THREE_MIN) * THREE_MIN;
+			}
+			state.value = dehydrated;
 		});
 	}
 
 	if (import.meta.client) {
 		nuxt.hooks.hook("app:created", () => {
+			// The maximum caching friendly approach would be to set the times to 0 or NaN above and
+			// restore them here to the current timestamp in the browser.
 			hydrate(queryClient, state.value);
 		});
 	}

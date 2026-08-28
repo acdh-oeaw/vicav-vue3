@@ -28,6 +28,13 @@ export default defineNuxtConfig({
 		"leaflet/dist/leaflet.css",
 	],
 
+	features: {
+		// This pushes some logs to the client using ssr.
+		// Part of these logs is a timestamp so it will always change and prevent caching
+		// of compressed ssr data.
+		devLogs: false,
+	},
+
 	devtools: {
 		enabled: false, //process.env.NODE_ENV === "development",
 		//https://github.com/nuxt/devtools/issues/722
@@ -58,6 +65,13 @@ export default defineNuxtConfig({
 				filePath: "./server/instrumentation.ts",
 			},
 		},
+		storage: {
+			compression: {
+				driver: "lruCache",
+				ttl: 15 * 60 * 1000,
+				max: 100,
+			},
+		},
 	},
 
 	postcss: {
@@ -79,13 +93,13 @@ export default defineNuxtConfig({
 		// See https://nuxt.com/docs/guide/runtime-config
 		BOTS: "disabled",
 		apiBaseUrl: undefined,
+		// Server-only: the NoSketch Engine instance is proxied through /api/cql-attributes
+		// because it does not send CORS headers (browser cannot call it directly).
+		noskeBaseUrl: "https://shawi-noske-main.acdh-dev.oeaw.ac.at",
+		noskeCorpus: "shawi",
 		public: {
 			apiBaseUrl: "https://vicav-dev.acdh.oeaw.ac.at",
 			appBaseUrl: "http://localhost:3000",
-			mapTileLayerAttribution:
-				"https://api.mapbox.com/styles/v1/acdh/cmj1dhylp005x01r4dw4p9ghx/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoiYWNkaCIsImEiOiJjbWoxOHBsNjEwZjc5M2VyNzBvZ2x2ejlkIn0.itr6_jU4L58IgS2H8aDySA",
-			mapTileLayerUrl:
-				'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery &copy; <a href="http://mapbox.com">Mapbox</a>',
 			matomoBaseUrl: "",
 			matomoId: "",
 			redmineId: "",
@@ -127,7 +141,7 @@ export default defineNuxtConfig({
 				"zod",
 				"@acdh-oeaw/lib",
 				"colorjs.io/fn",
-				"lucide-vue-next",
+				"@lucide/vue",
 				"radix-vue",
 				"cva",
 				"winbox",
@@ -151,6 +165,8 @@ export default defineNuxtConfig({
 				"class-variance-authority",
 				"@lezer/highlight",
 				"vee-validate",
+				"@unovis/vue",
+				"@unovis/ts",
 			],
 		},
 	},

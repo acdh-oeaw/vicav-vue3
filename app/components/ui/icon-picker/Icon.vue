@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import * as LucideIcons from "lucide-vue-next";
+import * as LucideIcons from "@lucide/vue";
 import type { SVGAttributes } from "vue";
 
 const props = withDefaults(

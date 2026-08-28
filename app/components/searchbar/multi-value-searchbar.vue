@@ -3,11 +3,9 @@ import { syntaxHighlighting } from "@codemirror/language";
 import { tooltips } from "@codemirror/view";
 import type { Table } from "@tanstack/vue-table";
 import { computedWithControl } from "@vueuse/core";
-import { ChevronDown, FunnelPlus, X } from "lucide-vue-next";
 import {
 	type AcceptableValue,
 	ComboboxAnchor,
-	ComboboxCancel,
 	ComboboxContent,
 	ComboboxInput,
 	ComboboxItem,
@@ -28,28 +26,40 @@ import {
 	getTriggerOffset,
 	getValue,
 	replaceValue,
-	setEndOfContenteditable,
 	type TriggerMap,
 } from "./index.ts";
 import { queryHighlightStyle, queryLanguageSupport, wordHover } from "./query-language.ts";
+import { cqlHighlightStyle, cqlLanguageSupport } from "./query-language-cql.ts";
 
 const props = defineProps<{
-	table: Table<unknown>;
+	table?: Table<unknown>;
 	triggers: TriggerMap;
+	queryMode?: "lucene" | "cql";
+	onSubmit?: (value: string) => void;
+	dynamicTriggers?: ReadonlyArray<string>;
 }>();
 
-const { parseSearchString, validateQuery, normalizeOperators, addMetaFilter } = useFilterParser();
+const emit = defineEmits<{ "update:searchTerm": [value: string] }>();
+
+const { parseSearchString, validateQuery, normalizeOperators, normalizeParens } = useFilterParser();
 
 const { contains } = useFilter({ sensitivity: "base" });
 
-const cmExtensions = computed(() => [
-	queryLanguageSupport,
-	wordHover(props.triggers),
-	syntaxHighlighting(queryHighlightStyle),
-	tooltips({ parent: document.body }),
-]);
-
-console.log(props.triggers);
+const cmExtensions = computed(() => {
+	if (props.queryMode === "cql") {
+		return [
+			cqlLanguageSupport,
+			syntaxHighlighting(cqlHighlightStyle),
+			tooltips({ parent: document.body }),
+		];
+	}
+	return [
+		queryLanguageSupport,
+		wordHover(props.triggers),
+		syntaxHighlighting(queryHighlightStyle),
+		tooltips({ parent: document.body }),
+	];
+});
 
 const value = ref("");
 const trigger = ref<string | null>(null);
@@ -59,13 +69,26 @@ const searchValue = ref("");
 
 const textareaRef = ref<InstanceType<typeof ComboboxInput>>();
 
+function getCm() {
+	return textareaRef.value as unknown as InstanceType<typeof CodeMirror>;
+}
+
+function getCursorOffset() {
+	return getCm()?.getCursor() ?? 0;
+}
+
 const reference = computedWithControl(
 	() => [searchValue.value, open.value],
 	() =>
 		({
 			getBoundingClientRect: () => {
 				if (textareaRef.value?.$el) {
-					const { x, y, height } = getAnchorRect(textareaRef.value?.$el, props.triggers);
+					const { x, y, height } = getAnchorRect(
+						textareaRef.value.$el,
+						value.value,
+						getCursorOffset(),
+						props.triggers,
+					);
 					return { x, y, height, top: y, left: x, width: 0 };
 				} else {
 					return null;
@@ -74,11 +97,17 @@ const reference = computedWithControl(
 		}) as ReferenceElement,
 );
 
+const isDynamicTrigger = computed(() =>
+	(props.dynamicTriggers ?? []).includes(trigger.value ?? ""),
+);
+
 const list = computed(() => {
 	const textarea = textareaRef.value?.$el;
 	if (!textarea) return;
 
 	const _list = getList(trigger.value, props.triggers);
+
+	if (isDynamicTrigger.value) return _list;
 	return _list.filter((item) => contains(String(item.value), searchValue.value));
 });
 
@@ -89,18 +118,33 @@ watch(
 	},
 );
 
-function handleChange(ev: InputEvent | PointerEvent) {
-	const target = ev.target as HTMLTextAreaElement;
-	const _trigger = getTrigger(target, props.triggers);
-	const _searchValue = getSearchValue(target, props.triggers);
+watch([trigger, searchValue], () => {
+	if (isDynamicTrigger.value) emit("update:searchTerm", searchValue.value.replace(/^"/, ""));
+});
+
+function handleChange() {
+	const text = value.value;
+	const cursorOffset = getCursorOffset();
+	const _trigger = getTrigger(text, cursorOffset, props.triggers);
+	const _searchValue = getSearchValue(text, cursorOffset, props.triggers);
 	if (_trigger !== null) {
+		// in CQL mode only open the dropdown at natural token boundaries,
+		// e.g. start of doc, after whitespace, or after "]"
+		if (_trigger === "" && props.queryMode === "cql") {
+			const charBefore = cursorOffset > 0 ? (text[cursorOffset - 1] ?? null) : null;
+			if (charBefore !== null && !/[\s\]]/.test(charBefore)) {
+				trigger.value = null;
+				open.value = false;
+				searchValue.value = _searchValue;
+				return;
+			}
+		}
 		trigger.value = _trigger;
 		open.value = true;
 	} else if (_searchValue == null) {
 		trigger.value = null;
 		open.value = false;
 	}
-	// value.value = target.textContent;
 	searchValue.value = _searchValue;
 
 	if (_trigger === null) open.value = false;
@@ -108,17 +152,49 @@ function handleChange(ev: InputEvent | PointerEvent) {
 
 function handleSelect(ev: CustomEvent) {
 	highlighted.value = null;
+	const cm = getCm();
 	const textarea = textareaRef.value?.$el;
 
-	if (!textarea) return;
+	if (!cm || !textarea) return;
 
-	const offset = getTriggerOffset(textarea, props.triggers) - 1;
+	const cursorPos = cm.getCursor() ?? 0;
 	const selectedValue = getValue(ev.detail.value, trigger.value, props.triggers)?.value;
 
 	if (!selectedValue) return;
 
 	// prevent setting `ComboboxInput`
 	ev.preventDefault();
+
+	// CQL keyword selection: insert [keyword=""] and place cursor between the quotes.
+	if (props.queryMode === "cql" && (trigger.value === "[" || trigger.value === "")) {
+		let keyword: string;
+		let insertStart: number;
+		let deleteLength: number;
+
+		if (trigger.value === "[") {
+			// Cursor is after "[" + searchValue; position of "[" = cursorPos - 1 - searchValue.length
+			keyword = selectedValue.replace(/=$/, "");
+			insertStart = Math.max(0, cursorPos - 1 - searchValue.value.length);
+			deleteLength = 1 + searchValue.value.length;
+		} else {
+			// "" trigger: selectedValue is "[keyword=" (bracket-prefixed); insert at cursor
+			keyword = selectedValue.slice(1, -1);
+			insertStart = cursorPos;
+			deleteLength = 0;
+		}
+
+		const inserted = `[${keyword}=""]`;
+		const cursorPosition = insertStart + keyword.length + 3; // after [keyword="
+
+		cm.replaceRange(inserted, insertStart, insertStart + deleteLength);
+		cm.setCursor(cursorPosition);
+		trigger.value = null;
+		caretOffset.value = cursorPosition;
+		nextTick().then(() => handleChange());
+		return;
+	}
+
+	const offset = getTriggerOffset(value.value, cursorPos, props.triggers) - 1;
 	value.value = replaceValue(
 		value.value ?? "",
 		offset,
@@ -127,40 +203,62 @@ function handleSelect(ev: CustomEvent) {
 		trigger.value ?? "",
 	);
 	trigger.value = null;
-	const nextCaretOffset = offset + selectedValue?.length;
-	caretOffset.value = nextCaretOffset;
-
 	nextTick().then(() => {
-		setEndOfContenteditable(textarea);
-		handleChange({ target: textarea } as InputEvent);
+		const end = value.value.length;
+		cm.setCursor(end);
+		caretOffset.value = end;
+		handleChange();
 	});
 }
 
 function submitSearch() {
+	if (props.onSubmit) {
+		props.onSubmit(value.value);
+		return;
+	}
+	if (!props.table) return;
 	parseSearchString(value.value, props.table);
-	props.table.setGlobalFilter(normalizeOperators(value.value));
+	props.table.setGlobalFilter(normalizeParens(normalizeOperators(value.value)));
 }
 
+function clear() {
+	value.value = "";
+	open.value = false;
+	submitSearch();
+}
+
+async function insertSnippet(snippet: string) {
+	const cm = getCm();
+	const textarea = textareaRef.value?.$el;
+	if (!cm || !textarea) return;
+	const cursorPos = cm.getCursor() ?? value.value.length;
+	cm.replaceRange(snippet, cursorPos, cursorPos);
+	const pos = cursorPos + snippet.length;
+	cm.setCursor(pos);
+	caretOffset.value = pos;
+	await nextTick();
+	handleChange();
+}
+
+defineExpose({ submitSearch, value, clear, insertSnippet });
+
 onMounted(() => {
-	value.value = props.table.getState().globalFilter;
+	if (props.table) value.value = props.table.getState().globalFilter;
 	nextTick(() => (open.value = false));
 });
 
 watch(
-	() => props.table.getState().globalFilter,
+	() => props.table?.getState().globalFilter,
 	(newVal) => {
-		value.value = newVal;
+		if (newVal !== undefined) value.value = newVal;
 	},
 );
 
-const queryWarnings = computed(() => validateQuery(value.value));
-
-const { metaInfo } = useWibarabTriggers();
-const isMetaMenuOpen = ref([...metaInfo.value.keys()].map(() => false));
-function addMetaFilterToQuery(key: string, val: string) {
-	value.value = addMetaFilter(value.value, key, val);
-	submitSearch();
-}
+const queryWarnings = computed(() => {
+	if (props.queryMode === "cql" || props.onSubmit)
+		return { isValid: true, warnings: [] as Array<string> };
+	return validateQuery(value.value);
+});
 
 const highlighted = ref<string | null>(null);
 function setHighlight(el: { ref: HTMLElement; value: AcceptableValue } | undefined) {
@@ -183,131 +281,71 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-	<div class="grid w-full max-w-full grid-cols-[1fr_auto_auto] gap-x-2 overflow-x-hidden">
-		<ComboboxRoot
-			v-model:open="open"
-			class="flex w-full flex-col overflow-x-hidden"
-			ignore-filter
-			:reset-search-term-on-blur="false"
-			@highlight="setHighlight"
-		>
-			<Label class="sr-only text-sm font-semibold" for="search"> search </Label>
-
-			<div class="flex w-full rounded-md border border-muted">
-				<ComboboxInput id="search" :as-child="true" autocomplete="off" class="w-full p-2">
-					<CodeMirror
-						ref="textareaRef"
-						v-model="value"
-						class="w-full overflow-x-auto p-2"
-						:extensions="cmExtensions"
-						:lang="queryLanguageSupport"
-						placeholder="Click to get a list of available features"
-						@input="handleChange"
-						@keydown.delete="
-							() => {
-								open = false;
-								highlighted = null;
-							}
-						"
-						@keydown.enter="eventListener"
-						@keydown.left.right="open = false"
-						@pointerdown="
-							(e: PointerEvent) => {
-								handleChange(e);
-								// open = false;
-							}
-						"
-					/>
-				</ComboboxInput>
-				<ComboboxCancel as-child>
-					<Button
-						class="self-center p-2"
-						variant="ghost"
-						@click="
-							value = '';
-							submitSearch();
-						"
-						><X class="size-4"></X
-					></Button>
-				</ComboboxCancel>
-			</div>
-			<ComboboxAnchor :reference="reference" />
-
-			<ComboboxPortal>
-				<ComboboxContent
-					v-if="list?.length"
-					align="start"
-					class="max-h-48 max-w-80 overflow-x-hidden overflow-y-auto rounded-md border border-neutral-500/30 bg-white p-1.5"
-					position="popper"
-					side="bottom"
-				>
-					<template v-for="(item, idx) in list" :key="String(item.value)">
-						<ComboboxItem
-							class="flex cursor-default rounded px-2 py-1 data-highlighted:bg-muted"
-							:value="item.value"
-							@select="handleSelect"
-						>
-							<span class="truncate whitespace-pre">{{ item.displayValue }}</span>
-						</ComboboxItem>
-						<ComboboxSeparator
-							v-if="item.value.startsWith('ft') && !list[idx + 1]?.value.startsWith('ft')"
-							><span>&nbsp;</span></ComboboxSeparator
-						>
-					</template>
-				</ComboboxContent>
-			</ComboboxPortal>
-		</ComboboxRoot>
-		<DropdownMenu>
-			<DropdownMenuTrigger as-child
-				><Button
-					class="h-full self-end"
-					:disabled="!(value?.length > 0 && queryWarnings.isValid)"
-					variant="outline"
-					@click="submitSearch"
-					><FunnelPlus class="size-4" /></Button
-			></DropdownMenuTrigger>
-
-			<DropdownMenuContent class="max-h-[var(--radix-dropdown-menu-content-available-height)] w-52">
-				<Collapsible
-					v-for="([key, val], idx) in metaInfo"
-					:key="key"
-					v-model:open="isMetaMenuOpen[idx]"
-				>
-					<CollapsibleTrigger class="flex w-full items-center gap-1 p-2 text-sm">
-						<span class="capitalize">{{ key }}</span>
-						<ChevronDown
-							class="size-4"
-							:class="isMetaMenuOpen[idx] ? 'rotate-180' : ''"
-						></ChevronDown>
-					</CollapsibleTrigger>
-					<CollapsibleContent>
-						<Button
-							v-for="entry in val.toSorted((a, b) => a.displayValue.localeCompare(b.displayValue))"
-							:key="entry.value"
-							class="h-auto w-full justify-start p-1 pl-4 text-start text-sm font-normal whitespace-normal"
-							variant="ghost"
-							@click="() => addMetaFilterToQuery(key, entry.value)"
-							>{{ entry.displayValue }}</Button
-						>
-					</CollapsibleContent>
-				</Collapsible>
-			</DropdownMenuContent>
-		</DropdownMenu>
-		<Button class="h-full self-end" variant="outline" @click="submitSearch">Search</Button>
-		<div v-if="queryWarnings.warnings.length" class="mt-1 ml-1 text-xs text-orange-700">
-			<div v-for="(warning, idx) in queryWarnings.warnings" :key="idx">{{ warning }}</div>
-		</div>
-		<div
-			v-else-if="!table.getFilteredRowModel().flatRows.length"
-			class="mt-1 ml-1 text-xs text-on-muted"
-		>
-			Your query returned no results.
-		</div>
-	</div>
+	<ComboboxRoot
+		v-model:open="open"
+		class="flex w-full overflow-x-hidden"
+		ignore-filter
+		:reset-search-term-on-blur="false"
+		@highlight="setHighlight"
+	>
+		<Label class="sr-only text-sm font-semibold" for="search"> search </Label>
+		<ComboboxInput id="search" :as-child="true" autocomplete="off">
+			<CodeMirror
+				ref="textareaRef"
+				v-model="value"
+				class="min-h-10 w-full overflow-x-auto p-1"
+				:extensions="cmExtensions"
+				:lang="queryMode === 'cql' ? cqlLanguageSupport : queryLanguageSupport"
+				:placeholder="
+					queryMode === 'cql'
+						? 'Type a CQL query, e.g. [word=&quot;…&quot; &amp; pos=&quot;…&quot;]'
+						: 'Click to get a list of available features'
+				"
+				@input="() => handleChange()"
+				@keydown.delete="
+					() => {
+						open = false;
+						highlighted = null;
+					}
+				"
+				@keydown.enter="eventListener"
+				@keydown.left.right="open = false"
+				@pointerdown="() => handleChange()"
+			/>
+		</ComboboxInput>
+		<ComboboxAnchor :reference="reference" />
+		<ComboboxPortal>
+			<ComboboxContent
+				v-if="list?.length"
+				align="start"
+				class="max-h-48 max-w-80 overflow-x-hidden overflow-y-auto rounded-md border border-neutral-500/30 bg-white p-1.5"
+				position="popper"
+				side="bottom"
+			>
+				<template v-for="(item, idx) in list" :key="String(item.value)">
+					<ComboboxItem
+						class="flex cursor-default rounded-sm px-2 py-1 data-highlighted:bg-muted"
+						:value="item.value"
+						@select="handleSelect"
+					>
+						<span class="truncate whitespace-pre">{{ item.displayValue }}</span>
+					</ComboboxItem>
+					<ComboboxSeparator
+						v-if="item.value.startsWith('ft') && !list[idx + 1]?.value.startsWith('ft')"
+						><span>&nbsp;</span></ComboboxSeparator
+					>
+				</template>
+			</ComboboxContent>
+		</ComboboxPortal>
+	</ComboboxRoot>
 </template>
 
 <style>
 @reference "@/styles/index.css";
+
+.cm-content {
+	white-space: unset !important;
+}
 
 .cm-scroller {
 	font-family: inherit !important;
@@ -320,18 +358,6 @@ onBeforeUnmount(() => {
 .cm-filter {
 	@apply text-amber-900;
 }
-
-.cm-filter::before {
-	@apply mr-0.5 opacity-80;
-
-	content: "🛈";
-}
-
-/* .cm-feature::before {
-	@apply bg-emerald-900 inline-block size-2 rounded-full mr-1;
-
-	content: "";
-} */
 
 .cm-feature-value {
 	@apply text-amber-700 font-medium;

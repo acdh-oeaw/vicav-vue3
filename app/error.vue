@@ -18,7 +18,7 @@ const props = defineProps<Props>();
 		class="flex size-full flex-col items-center justify-center bg-[url('/images/tlemcen.jpg')] bg-cover"
 	>
 		<div
-			class="max-w-sm overflow-hidden rounded shadow-lg backdrop-blur-sm"
+			class="max-w-sm overflow-hidden rounded-sm shadow-lg backdrop-blur-sm"
 			style="background-color: hsl(0deg 0% 100% / 25%)"
 		>
 			<div class="px-6 py-4">
@@ -90,7 +90,7 @@ const props = defineProps<Props>();
 				</div>
 				<h1 class="my-2 text-[300%] font-bold">Oops!</h1>
 				<p
-					class="rounded p-4 text-xl text-gray-700"
+					class="rounded-sm p-4 text-xl text-gray-700"
 					style="background-color: hsl(0deg 0% 100% / 50%)"
 				>
 					<span v-if="props.error?.statusCode == 404">

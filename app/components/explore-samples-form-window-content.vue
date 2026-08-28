@@ -279,7 +279,7 @@ const openSearchResultsNewWindow = function () {
 <template>
 	<div class="relative isolate grid size-full overflow-auto">
 		<form
-			class="block w-full rounded border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
+			class="block w-full rounded-sm border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
 		>
 			<div class="flex flex-row gap-2.5">
 				<label for="place">Place</label>
@@ -376,7 +376,7 @@ const openSearchResultsNewWindow = function () {
 			</div>
 
 			<button
-				class="inline-block h-10 w-full rounded border-2 border-solid border-primary bg-on-primary text-center align-middle font-bold whitespace-nowrap text-primary hover:bg-primary hover:text-on-primary disabled:border-gray-400 disabled:text-gray-400 hover:disabled:bg-on-primary hover:disabled:text-gray-400"
+				class="inline-block h-10 w-full rounded-sm border-2 border-solid border-primary bg-on-primary text-center align-middle font-bold whitespace-nowrap text-primary hover:bg-primary hover:text-on-primary hover:disabled:bg-on-primary hover:disabled:text-gray-400 disabled:border-gray-400 disabled:text-gray-400"
 				:disabled="submitDisabled"
 				@click.prevent.stop="openSearchResultsWindow"
 			>
@@ -384,7 +384,7 @@ const openSearchResultsNewWindow = function () {
 			</button>
 
 			<button
-				class="mt-2 inline-block h-10 w-full rounded border-2 border-solid border-primary bg-on-primary text-center align-middle font-bold whitespace-nowrap text-primary hover:bg-primary hover:text-on-primary disabled:border-gray-400 disabled:text-gray-400 hover:disabled:bg-on-primary hover:disabled:text-gray-400"
+				class="mt-2 inline-block h-10 w-full rounded-sm border-2 border-solid border-primary bg-on-primary text-center align-middle font-bold whitespace-nowrap text-primary hover:bg-primary hover:text-on-primary hover:disabled:bg-on-primary hover:disabled:text-gray-400 disabled:border-gray-400 disabled:text-gray-400"
 				:disabled="submitDisabled"
 				@click.prevent.stop="openSearchResultsNewWindow"
 			>

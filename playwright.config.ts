@@ -14,13 +14,14 @@ const backend = (() => {
 		case "http://localhost:8984":
 			// http://localhost:8984 needs to be moved according to the backend running
 			return "vicav";
-		case "https://shawi.acdh-ch-dev.oeaw.ac.at":
-			// case "https://shawi-api.acdh.oeaw.ac.at": This is the next production backend.
+		case "https://shawi-api.acdh-dev.oeaw.ac.at":
+		case "https://shawi-api.acdh.oeaw.ac.at":
 			return "shawi";
 		case "https://tunocent-api.acdh-dev.oeaw.ac.at":
 		case "https://tunocent-api.acdh.oeaw.ac.at":
 			return "tunocent";
-		case "https://wibarab-api.acdh-ch-dev.oeaw.ac.at":
+		case "https://wibarab-api.acdh-dev.oeaw.ac.at":
+		case "https://wibarab-api.acdh.oeaw.ac.at":
 			return "wibarab";
 		default:
 			// in VSCode there is "playwright.env" in settings.conf for the playwright running in the UI.

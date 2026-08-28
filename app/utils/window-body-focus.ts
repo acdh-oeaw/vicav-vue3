@@ -1,3 +1,5 @@
+import { nextTick } from "vue";
+
 const interactiveContentSelector = [
 	"a[href]",
 	"button",
@@ -12,12 +14,20 @@ const interactiveContentSelector = [
 	"[contenteditable='true']",
 	"[role='button']",
 	"[role='checkbox']",
+	"[role='combobox']",
 	"[role='link']",
+	"[role='listbox']",
 	"[role='menuitem']",
+	"[role='option']",
+	"[role='textbox']",
 	"[tabindex]:not([tabindex='-1'])",
 ].join(", ");
 
-export function shouldPreserveFocusTarget(target: EventTarget | null): boolean {
+interface FocusKeyboardScrollTargetOptions {
+	afterRender?: boolean;
+}
+
+function shouldPreserveFocusTarget(target: EventTarget | null): boolean {
 	if (!(target instanceof Element)) return false;
 
 	return target.closest(interactiveContentSelector) != null;
@@ -39,11 +49,11 @@ function isScrollable(element: HTMLElement): boolean {
 	return canScrollY || canScrollX;
 }
 
-export function getKeyboardScrollFocusTarget(
-	body: HTMLElement,
-	target: EventTarget | null,
-): HTMLElement {
-	if (!(target instanceof HTMLElement)) return body;
+function getKeyboardScrollFocusTarget(body: HTMLElement, target?: EventTarget | null): HTMLElement {
+	if (!(target instanceof HTMLElement)) {
+		const candidates = [body, ...body.querySelectorAll<HTMLElement>("*")];
+		return candidates.find((element) => isScrollable(element)) ?? body;
+	}
 
 	let element: HTMLElement | null = target;
 
@@ -57,16 +67,37 @@ export function getKeyboardScrollFocusTarget(
 	return body;
 }
 
-export function enableWindowBodyKeyboardFocus(body: HTMLElement): void {
+function focusKeyboardScrollTarget(body: HTMLElement, target?: EventTarget | null): void {
+	if (shouldPreserveFocusTarget(target ?? null)) return;
+
+	const focusTarget = getKeyboardScrollFocusTarget(body, target);
+	if (focusTarget.tabIndex < 0) {
+		focusTarget.tabIndex = -1;
+	}
+	focusTarget.focus({ preventScroll: true });
+}
+
+export async function focusWindowBodyKeyboardScrollTarget(
+	body: HTMLElement,
+	target?: EventTarget | null,
+	options: FocusKeyboardScrollTargetOptions = {},
+): Promise<void> {
+	if (options.afterRender === true) {
+		await nextTick();
+		await new Promise<void>((resolve) => {
+			requestAnimationFrame(() => {
+				resolve();
+			});
+		});
+	}
+
+	focusKeyboardScrollTarget(body, target);
+}
+
+export function enableWindowBodyKeyboardScrollFocus(body: HTMLElement): void {
 	body.tabIndex = -1;
 
 	body.addEventListener("pointerdown", (event) => {
-		if (shouldPreserveFocusTarget(event.target)) return;
-
-		const target = getKeyboardScrollFocusTarget(body, event.target);
-		if (target.tabIndex < 0) {
-			target.tabIndex = -1;
-		}
-		target.focus({ preventScroll: true });
+		void focusWindowBodyKeyboardScrollTarget(body, event.target);
 	});
 }
