@@ -17,6 +17,9 @@
 			"name": "server: nuxt",
 			"outputCapture": "std",
 			"program": "${workspaceFolder}/node_modules/nuxt/bin/nuxt.mjs",
+			"env": {
+				"NUXT_PUBLIC_API_BASE_URL": "https://tunocent-api.acdh-dev.oeaw.ac.at"
+			},
 			"args": ["dev"]
 		}
 	],
