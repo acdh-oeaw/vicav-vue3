@@ -65,12 +65,21 @@ Trigger lookups should be scoped to `[data-slot=navigation-menu-list]` with `exa
 
 ## Quirks
 
-### E2E requires a pre-built app
+### `NUXT_PUBLIC_*` vars are read at server start, not baked at build time
 
-The Playwright `webServer` runs `pnpm run start:local`, which starts the **built** server
-(`.output/server/index.mjs`). `NUXT_PUBLIC_*` variables are baked into the client bundle at build
-time, so after changing `NUXT_PUBLIC_API_BASE_URL` in `.env.local` you must re-run `pnpm run build`
-— otherwise the tests run against the wrong backend.
+`NUXT_PUBLIC_API_BASE_URL` and other `runtimeConfig.public` values are re-read from the environment
+every time `.output/server/index.mjs` starts (Nitro's `nitro.envPrefix: "NUXT_"` re-applies `NUXT_*`
+env vars to `runtimeConfig` on startup and per-request). Restarting the built server with a
+different `NUXT_PUBLIC_API_BASE_URL` changes the backend without a rebuild.
+
+No rebuild is needed for `test:e2e` either: `playwright.config.ts` reads the env var directly in the
+test-runner process to pick `testMatch`, and `webServer` starts the server with the same
+`.env.local`. The actual pitfall is `webServer.reuseExistingServer: true` (local only) — if a server
+is already listening on port 3000 from a previous run, Playwright reuses it as-is and won't restart
+it with the new env var. Kill any process on port 3000 before changing backends locally.
+
+To re-verify: start `.output/server/index.mjs` with `PORT=<port>` and
+`NUXT_PUBLIC_API_BASE_URL=<url>`, `curl` `/`, and check `apiBaseUrl:"..."` in the HTML payload.
 
 ### Backend selection is exact-match
 
