@@ -26,7 +26,7 @@ the following menu categories:
 | **Feature Lists**      | Explanation, Cross-examine the VICAV Feature Lists, Show All Feature Lists on Map, Contribute a Feature List                                                                                                                                                                                                                                                                                       |
 | **Samples**            | Explanation, Show All Samples on Map, Contribute a Sample Text                                                                                                                                                                                                                                                                                                                                     |
 | **Texts**              | Explanation and Overview                                                                                                                                                                                                                                                                                                                                                                           |
-| **Dictionaries**       | All Dictionaries in Bibl. on Map, All VICAV Dictionaries on Map, Query the VICAV Dictionaries, TUNICO Dictionary, Damascus Dictionary, Cairo Dictionary, Baghdad Dictionary, MSA Dictionary, Technicalities, Contribute a Dictionary/Glossary                                                                                                                                                      |
+| **Dictionaries**       | All Dictionaries in Bibl. on Map, All VICAV Dictionaries on Map, Query the VICAV Dictionaries, TUNICO Dictionary, Damascus Dictionary, Cairo Dictionary, Baghdad Dictionary, MSA Dictionary, Technicalities, Contribute a Dictionary                                                                                                                                                               |
 | **Tools & Technology** | Dictionary Editor (VLE), Arabic Research Tools, Corpora (Spoken Varieties), Corpora (MSA), Special Corpora, Corpora (Historical Varieties), Dictionaries, Language Processing Tools, Other Websites & Projects, Learning Materials, Textbook Syrian Arabic (Sound files), Textbook Baghdad Arabic (Sound files), Vocabularies on Smartphones, Available Programs, Available Data, Keyboard Layouts |
 | **Windows**            | Mission, News, All Bibl. Locations on Map, Arrangement (None, Cascade, Tile, Smart tile, Column 5 Flex)                                                                                                                                                                                                                                                                                            |
 
@@ -201,7 +201,7 @@ Each category expands to reveal its sub-items in a collapsible list format.
    - Baghdad Dictionary
    - MSA Dictionary
    - Technicalities
-   - Contribute a Dictionary/Glossary
+   - Contribute a Dictionary
    - expect: All 10 menu items are visible with proper separators
 
 #### 2.2.8 Tools & Technology Menu Dropdown

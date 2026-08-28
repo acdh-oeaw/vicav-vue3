@@ -26,7 +26,7 @@ test.describe("Desktop Menu - Dictionaries Dropdown", () => {
 			"Baghdad Dictionary",
 			"MSA Dictionary",
 			"Technicalities",
-			"Contribute a Dictionary/Glossary",
+			"Contribute a Dictionary",
 		];
 
 		for (const item of expectedItems) {
