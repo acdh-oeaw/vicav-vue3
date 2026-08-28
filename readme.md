@@ -5,6 +5,8 @@ codebase serves four distinct app instances — **VICAV**, **SHAWI**, **TUNOCENT
 selected at runtime by the backend URL. Content is presented in MDI windows (WinBox) whose state is
 serialized in the URL.
 
+This README file is AI generated and maintained using AI.
+
 ## Tech stack
 
 | Category      | Technology                                                                        |
@@ -47,46 +49,52 @@ Open http://127.0.0.1:3000 in your browser.
 
 Copy `.env.example` to `.env.local` and adjust as needed.
 
-| Variable                      | Description                                                                                                     |
-| ----------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `NUXT_PUBLIC_API_BASE_URL`    | **Required.** Base URL of the backend API. Determines which app (VICAV, SHAWI, TUNOCENT, Wibarab) is displayed. |
-| `NUXT_PUBLIC_APP_BASE_URL`    | Public URL of this frontend (default: `http://localhost:3000`).                                                 |
-| `NUXT_PUBLIC_REDMINE_ID`      | Redmine project ID for the imprint service.                                                                     |
-| `NUXT_PUBLIC_MATOMO_BASE_URL` | Matomo analytics base URL (optional).                                                                           |
-| `NUXT_PUBLIC_MATOMO_ID`       | Matomo site ID (optional).                                                                                      |
-| `NUXT_PUBLIC_API_USER`        | API username for authenticated endpoints (optional).                                                            |
-| `NUXT_PUBLIC_API_PASS`        | API password for authenticated endpoints (optional).                                                            |
-| `BOTS`                        | Set to `enabled` to allow web crawlers; defaults to `disabled`.                                                 |
-| `OTEL_EXPORTER_OTLP_ENDPOINT` | OpenTelemetry collector endpoint (e.g., `http://127.0.0.1:4317`).                                               |
+| Variable                      | Description                                                                                                                            |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `NUXT_PUBLIC_API_BASE_URL`    | **Required.** Base URL of the backend API. Determines which app (VICAV, SHAWI, TUNOCENT, Wibarab) is displayed.                        |
+| `NUXT_PUBLIC_APP_BASE_URL`    | Public URL of this frontend (default: `http://localhost:3000`).                                                                        |
+| `NUXT_PUBLIC_REDMINE_ID`      | Redmine project ID for the imprint service.                                                                                            |
+| `NUXT_PUBLIC_MATOMO_BASE_URL` | Matomo analytics base URL (analytics is only active when `NUXT_PUBLIC_MATOMO_ID` is also set; `.env.example` ships the ACDH instance). |
+| `NUXT_PUBLIC_MATOMO_ID`       | Matomo site ID (optional).                                                                                                             |
+| `NUXT_PUBLIC_API_USER`        | API username for authenticated endpoints (optional).                                                                                   |
+| `NUXT_PUBLIC_API_PASS`        | API password for authenticated endpoints (optional).                                                                                   |
+| `NUXT_PUBLIC_CURRENT_GIT_SHA` | Set automatically by `pnpm run dev` / `pnpm build` via `git describe`; used as the OpenTelemetry service version.                      |
+| `NUXT_API_BASE_URL`           | Server-only backend URL for server-side requests (defaults to `NUXT_PUBLIC_API_BASE_URL`; set for internal K8s communication).         |
+| `BOTS`                        | Set to `enabled` to allow web crawlers; defaults to `disabled`.                                                                        |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | OpenTelemetry collector endpoint (e.g., `http://127.0.0.1:4317`).                                                                      |
 
 ### Backend URLs
 
 Set `NUXT_PUBLIC_API_BASE_URL` to one of the following to switch apps:
 
-| App      | Backend URL                                                            |
-| -------- | ---------------------------------------------------------------------- |
-| VICAV    | `https://vicav-dev.acdh.oeaw.ac.at` or `https://vicav.acdh.oeaw.ac.at` |
-| SHAWI    | `https://shawi-api.acdh-dev.oeaw.ac.at`                                |
-| TUNOCENT | `https://tunocent-api.acdh-dev.oeaw.ac.at`                             |
-| Wibarab  | `https://wibarab-api.acdh-dev.oeaw.ac.at`                              |
+| App      | Backend URL                                                                          |
+| -------- | ------------------------------------------------------------------------------------ |
+| VICAV    | `https://vicav-dev.acdh.oeaw.ac.at` or `https://vicav.acdh.oeaw.ac.at`               |
+| SHAWI    | `https://shawi-api.acdh-dev.oeaw.ac.at` or `https://shawi-api.acdh.oeaw.ac.at`       |
+| TUNOCENT | `https://tunocent-api.acdh-dev.oeaw.ac.at` or `https://tunocent-api.acdh.oeaw.ac.at` |
+| Wibarab  | `https://wibarab-api.acdh-dev.oeaw.ac.at` or `https://wibarab-api.acdh.oeaw.ac.at`   |
 
 ## Scripts
 
-| Command                                         | Description                                           |
-| ----------------------------------------------- | ----------------------------------------------------- |
-| `pnpm run dev`                                  | Start the development server (http://127.0.0.1:3000). |
-| `pnpm build`                                    | Build the production server.                          |
-| `pnpm run start`                                | Start the production server (requires a prior build). |
-| `pnpm run start:local`                          | Start production server with `.env.local` loaded.     |
-| `pnpm run start:preview`                        | Preview the built app locally.                        |
-| `pnpm run test`                                 | Run all tests (format, lint, typecheck, unit, E2E).   |
-| `pnpm run test:unit`                            | Run Vitest unit tests.                                |
-| `pnpm run test:e2e`                             | Run Playwright E2E tests (requires a built app).      |
-| `pnpm run test:e2e:ui`                          | Run Playwright E2E tests with interactive UI.         |
-| `pnpm run validate`                             | Run format check, lint, typecheck, and unit tests.    |
-| `pnpm run format:check` / `pnpm run format:fix` | Check / fix code formatting.                          |
-| `pnpm run lint:check` / `pnpm run lint:fix`     | Check / fix lint errors.                              |
-| `pnpm run types:check`                          | Run Nuxt type checking.                               |
+| Command                                         | Description                                                                                                                |
+| ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm run dev`                                  | Start the development server (http://127.0.0.1:3000).                                                                      |
+| `pnpm build`                                    | Build the production server (also regenerates the API client).                                                             |
+| `pnpm run start`                                | Start the production server (requires a prior build).                                                                      |
+| `pnpm run start:local`                          | Start production server with `.env.local` loaded.                                                                          |
+| `pnpm run start:preview`                        | Preview the built app locally.                                                                                             |
+| `pnpm run test`                                 | Run the full check suite: env dump, Playwright browser install, format, lint, typecheck, unit, E2E. Requires `.env.local`. |
+| `pnpm run test:unit`                            | Run Vitest unit tests.                                                                                                     |
+| `pnpm run test:e2e`                             | Run Playwright E2E tests (requires a built app).                                                                           |
+| `pnpm run test:e2e:ui`                          | Run Playwright E2E tests with interactive UI.                                                                              |
+| `pnpm run test:e2e:debug`                       | Run Playwright E2E tests in debug mode.                                                                                    |
+| `pnpm run test:e2e:codegen`                     | Record a new Playwright test via codegen.                                                                                  |
+| `pnpm run generate:api-client`                  | Download `openapi.json` and regenerate the TypeScript API client.                                                          |
+| `pnpm run validate`                             | Run format check, lint, typecheck, and unit tests.                                                                         |
+| `pnpm run analyze`                              | Nuxt bundle analysis.                                                                                                      |
+| `pnpm run format:check` / `pnpm run format:fix` | Check / fix code formatting.                                                                                               |
+| `pnpm run lint:check` / `pnpm run lint:fix`     | Check / fix lint errors.                                                                                                   |
+| `pnpm run types:check`                          | Run Nuxt type checking.                                                                                                    |
 
 ## Testing
 
@@ -121,31 +129,38 @@ organization.
 
 ```
 vicav-vue3/
-├── app/                    # Nuxt application source
-│   ├── assets/             # Static assets (OpenAPI spec, map styles)
-│   ├── components/        # Vue components
-│   ├── composables/       # Vue composables (business logic)
-│   ├── config/            # App configuration (i18n, imprint, data types)
-│   ├── layouts/           # Page layouts
-│   ├── lib/               # Generated API client (gitignored)
-│   ├── pages/             # Route pages
-│   ├── stores/            # Pinia stores
-│   ├── styles/            # Global CSS / Tailwind
-│   ├── types/             # TypeScript type definitions
-│   └── utils/             # Utility functions
-├── server/                 # Server-side Nitro routes & plugins
-│   ├── api/               # API endpoints (NoSketch proxy, export)
-│   ├── plugins/           # Server plugins
-│   └── routes/            # Custom routes (status)
-├── shared/                 # Shared utilities
-├── e2e/                   # Playwright E2E tests
-│   └── pages/             # Test specs per app
-├── docs/                  # Architecture documentation
-├── specs/                 # Test plans
-├── .devcontainer/         # Devcontainer configuration
-├── playwright.config.ts   # Playwright configuration
-├── vitest.config.ts       # Vitest configuration
-└── nuxt.config.ts         # Nuxt configuration
+├── app/                       # Nuxt application source
+│   ├── assets/                # Static assets (OpenAPI spec, map styles)
+│   ├── components/            # Vue components
+│   ├── composables/           # Vue composables (business logic)
+│   ├── config/                # App configuration (i18n, imprint, data types)
+│   ├── layouts/               # Page layouts
+│   ├── lib/                   # Generated API client (gitignored)
+│   ├── pages/                 # Route pages
+│   ├── plugins/               # Nuxt plugins (query client, store init)
+│   ├── stores/                # Pinia stores
+│   ├── styles/                # Global CSS / Tailwind
+│   ├── types/                 # TypeScript type definitions
+│   └── utils/                 # Utility functions
+├── server/                    # Server-side Nitro routes & plugins
+│   ├── api/                   # API endpoints (NoSketch proxy, export)
+│   ├── instrumentation.ts     # OpenTelemetry preset (nitro `otel.preset`)
+│   ├── plugins/               # Server plugins
+│   └── routes/                # Custom routes (status)
+├── shared/                    # Shared utilities (API client wrapper)
+├── e2e/                       # Playwright E2E tests
+│   └── pages/                 # Test specs per app
+├── docs/                      # Architecture documentation
+├── specs/                     # Test plans
+├── public/                    # Public assets (favicon, robots.txt, css)
+├── patches/                   # pnpm patches (winbox, liqe, @types/winbox)
+├── .devcontainer/             # Devcontainer configuration
+├── checkenv.mjs               # Dumps the environment (run by `pnpm run test`)
+├── heroku-postbuild-cleanup.js # CI image cleanup (run by `heroku-postbuild`)
+├── pnpm-workspace.yaml        # pnpm workspace settings (Node version, shell)
+├── playwright.config.ts       # Playwright configuration
+├── vitest.config.ts           # Vitest configuration
+└── nuxt.config.ts             # Nuxt configuration
 ```
 
 ## Architecture highlights
@@ -180,8 +195,8 @@ vicav-vue3/
 
 ## CI/CD
 
-The project uses GitHub Actions (`.github/workflows/starter.yaml`) on the `main` and `develop`
-branches:
+The project uses GitHub Actions (`.github/workflows/starter.yaml`), triggered on every push to any
+branch and via `workflow_dispatch`:
 
 1. **Build**: Creates a Herokuish image containing the built Nuxt app.
 2. **Test**: Runs Vitest and Playwright E2E tests against each backend variant.
@@ -189,24 +204,23 @@ branches:
 
 ### Environments
 
-| Branch / Trigger | Environment | URL pattern                    |
-| ---------------- | ----------- | ------------------------------ |
-| `main`           | Production  | TBD                            |
-| `develop`        | Development | TBD                            |
-| Other branches   | Review      | only deployed for internal use |
+| Branch / Trigger     | Environment       |
+| -------------------- | ----------------- |
+| `main` or a `v*` tag | `production`      |
+| `develop`            | `review/develop`  |
+| Any other branch     | `review/<branch>` |
 
-Each app variant (SHAWI, TUNOCENT, Wibarab) has its own GitHub environment (`-shawi`, `-tunocent`,
-`-wibarab`) with separate backend configurations.
+Each app variant (SHAWI, TUNOCENT, Wibarab) additionally gets a suffixed environment per branch
+(`-shawi`, `-tunocent`, `-wibarab`) with separate backend configurations.
 
 ### GitHub variables & secrets
 
-Configure environment variables in the repository settings:
+Configure in the repository settings (per environment):
 
-- **Variables** (prefixed with `NUXT_PUBLIC_`): `NUXT_PUBLIC_API_BASE_URL`,
-  `NUXT_PUBLIC_APP_BASE_URL`, etc.
-- **Secrets** (non‑public): Currnetly unused.
-
-Repository: GitHub Variables and Secrets
+- **Variables**: `NUXT_PUBLIC_API_BASE_URL`, `NUXT_PUBLIC_APP_BASE_URL`, etc., plus
+  `KUBE_INGRESS_BASE_DOMAIN` (used to derive the deployment URL).
+- **Secrets**: `ENVIRONMENT_WRITE_TOKEN` (fine-grained PAT used to copy template variables into new
+  review environments) and the Kubernetes credentials consumed by the reusable workflows.
 
 ### Testing CI deployment locally
 
@@ -287,8 +301,17 @@ The global map configuration has been moved from environment variables to
 ## Development container
 
 A `.devcontainer` configuration is provided for VS Code Remote - Containers. It uses the
-`pnpm:10-node24` image, forwards port 3000, and pre‑configures the Wibarab backend for development.
+`gplane/pnpm:10-node24` image, forwards port 3000, and pre‑configures the Wibarab backend for
+development.
 
 ## License
 
 MIT — see the `license` file for details.
+
+## Maintenance Prompt
+
+Use this prompt before releasing a new version:
+
+```text
+Check `readme.md` for accuracy and completeness.
+```
