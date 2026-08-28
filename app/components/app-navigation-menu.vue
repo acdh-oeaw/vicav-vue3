@@ -41,7 +41,7 @@ onScopeDispose(() => {
 							v-if="item.type === 'item'"
 							:key="item.id"
 							as="button"
-							class="cursor-pointer"
+							class="w-full cursor-pointer text-left"
 							type="button"
 							@select="
 								() => {
