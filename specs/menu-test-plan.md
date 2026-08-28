@@ -37,7 +37,7 @@ with the following menu categories:
 
 ### 1.2 Mobile Menu (Viewport < 1024px)
 
-The mobile menu is triggered by a "Toggle menu" button using Sheet component. When opened, it
+The mobile menu is triggered by a "Toggle navigation" button using Sheet component. When opened, it
 displays a dialog with expandable menu categories:
 
 - Project
@@ -306,8 +306,8 @@ Each category expands to reveal its sub-items in a collapsible list format.
 
 1. Set viewport to 480x800 (mobile)
 2. Navigate to the homepage
-3. Locate the "Toggle menu" button
-   - expect: Toggle menu button should be visible in the navigation area
+3. Locate the "Toggle navigation" button
+   - expect: Toggle navigation button should be visible in the navigation area
 
 #### 2.3.3 Mobile Menu Opens on Toggle Click
 
@@ -317,7 +317,7 @@ Each category expands to reveal its sub-items in a collapsible list format.
 
 1. Set viewport to 480x800
 2. Navigate to the homepage
-3. Click the "Toggle menu" button
+3. Click the "Toggle navigation" button
 4. Verify a dialog/overlay with "Navigation menu" appears
    - expect: Mobile navigation dialog should appear with all main menu categories
 
@@ -433,10 +433,14 @@ Each category expands to reveal its sub-items in a collapsible list format.
 **Steps:**
 
 1. Navigate to homepage (1920x1080)
-2. Press Tab key: Skip Link → Logo → First menu trigger (Project)
-3. Arrow Right moves between menu triggers (Project → Bibliographies → Profiles → Feature Lists →
-   Samples → Texts → Dictionaries → Tools & Technology → Windows)
-4. Verify focus moves through menu items in order
+2. Reset focus to the body: Winbox moves focus into the last open window on page load, and when
+   tabbing from the body, browsers skip the off-screen skip link and (in Firefox/WebKit) the logo
+   link without an accessible name. The test clicks a neutral spot in the header first.
+3. Press Tab until the first menu trigger (Project) is focused (1-3 Tabs depending on browser)
+4. Arrow Right moves between menu triggers (Project → Bibliographies → Profiles → Feature Lists →
+   Samples → Texts → Dictionaries → Tools & Technology). The Windows menubar trigger is a separate
+   Menubar component and is not part of the NavigationMenu arrow-key navigation.
+5. Verify focus moves through menu items in order
    - expect: Focus indicator should be visible on each menu trigger as Tab/ArrowRight is pressed
 
 #### 2.5.2 Enter Key Opens Focused Menu
@@ -469,7 +473,8 @@ Each category expands to reveal its sub-items in a collapsible list format.
 
 **Steps:**
 
-1. Open "Project" menu (click or Enter on trigger)
+1. Open "Project" menu (click on trigger; WebKit does not move focus to buttons on mouse click, so
+   the test focuses the trigger explicitly)
 2. Press ArrowDown — focus moves into the content to the first item (Mission)
 3. Use ArrowDown to navigate: Mission → News → Types of Text/Data → Contributors → Linguistics
 4. Use ArrowUp to navigate back
@@ -665,7 +670,7 @@ Each category expands to reveal its sub-items in a collapsible list format.
    - expect: Page should load with mobile menu visible
 2. Open mobile menu and check accessibility tree
    - expect: Mobile menu sheet should have proper ARIA attributes
-   - expect: Sheet should have aria-label="Toggle menu" on trigger
+   - expect: Sheet should have aria-label="Toggle navigation" on trigger
    - expect: Sheet content should have proper title (role="dialog" with aria-labelledby)
 3. Verify semantic HTML for expandable sections
    - expect: Menu categories in mobile menu should be properly structured
