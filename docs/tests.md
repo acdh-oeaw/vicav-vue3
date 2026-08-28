@@ -39,12 +39,13 @@ The npm scripts use `dotenv -e .env.local` to inject the var into both the app a
 ## Current Vicav Menu Data (live)
 
 - **Project**: Mission, News, Types of Text/Data, Contributors, Linguistics
-- **Bibliographies**: Explanation + 8 more items
+- **Bibliographies**: 8 items (first is Explanation)
 - **Profiles**: Explanation + List, Show All Profiles on Map, Contribute a Profile
 - **Feature Lists**: Explanation, Cross-examine, Show All on Map, Contribute
 - **Samples**: Explanation, Show All on Map, Contribute
 - **Texts**: Explanation and Overview
-- **Dictionaries**: 11 items
+- **Dictionaries**: 10 items (last is "Contribute a Dictionary/Glossary", so substring names like
+  "Contribute a Dictionary" match)
 - **Tools & Technology**: 16 items
 
 ## Selector Patterns
@@ -58,6 +59,9 @@ The npm scripts use `dotenv -e .env.local` to inject the var into both the app a
 
 **Windows dropdown** (`window-list-dropdown.vue`) still uses Menubar — keep `menuitem` selectors for
 it.
+
+Trigger lookups should be scoped to `[data-slot=navigation-menu-list]` with `exact: true` (see
+"Locator name collisions" below); content items are scoped to `[data-slot=navigation-menu-content]`.
 
 ## Quirks
 
@@ -100,6 +104,62 @@ projects are commented out.
 
 E2E tests hit the real backend APIs, so they can break when backend **content** changes (e.g., menu
 items, dictionary entries) rather than frontend code. See "Current Vicav Menu Data (live)" above.
+
+### NavigationMenu triggers: clicks are swallowed by design
+
+reka-ui's `NavigationMenuTrigger` ignores clicks that follow a pointermove (hover-open design, ~200
+ms debounce). Playwright's `.click()` **always** dispatches a pointermove first, so under automation
+a trigger click never toggles the menu directly — the menu opens via the hover debounce, and an open
+menu **cannot be closed by clicking its trigger**. In tests: wait for
+`[data-slot=navigation-menu-content]` to be visible after `.click()` before asserting or pressing
+keys; close with `Escape` (handled globally) or by moving the mouse away. The Windows Menubar
+trigger has no such guard — plain clicks work there.
+
+### WebKit does not focus buttons on mouse click
+
+After `.click()`, focus stays on `<body>` in webkit (chromium/firefox focus the button). Call
+`.focus()` explicitly on the trigger before sending arrow keys.
+
+### Tab order is not the DOM order
+
+On load, Winbox moves focus into the last open window (`.winbox.focus`), so Tab starts inside a
+window. And when tabbing from `<body>`, all browsers skip the off-screen skip link; firefox and
+webkit additionally skip the logo link, which has no accessible name (`<img alt="">`). Observed
+first stops: chromium → logo → Project (2 Tabs); firefox/webkit → Project (1 Tab). Pattern used by
+the keyboard tests: `page.mouse.click(5, 30)` (neutral spot in the header padding → focus body),
+then a Tab loop (max 4) until the trigger is focused — don't assert an exact Tab sequence.
+
+### Locator name collisions (substring matching)
+
+`getByRole(name)` matches by **substring** by default (use `exact: true` to opt out). The default
+windows include a map window whose layer buttons are named "Profiles", "Samples", "Features", "VICAV
+Dictionaries" — these collide with menu trigger names page-wide. Scope trigger lookups to
+`[data-slot=navigation-menu-list]` + `exact: true`, and item lookups to
+`[data-slot=navigation-menu-content]`. Note the content is teleported **inside** the
+`[data-slot=navigation-menu]` root, so scoping to the root does not exclude items (e.g.
+"Cross-examine the VICAV Feature Lists" substring-matches "Feature Lists").
+
+### Clicks before hydration are no-ops
+
+Menu handlers only exist after client hydration. Under parallel load a test can click a trigger
+before hydration finishes; the click is then silently dropped and the test times out waiting for the
+dropdown. Every test should first `await expect(page.locator("#window-root")).toBeInViewport()`
+(hydration + window restore), which is also the established suite convention.
+
+### Aborting the API still serves SSR data
+
+`page.route(...).abort()` only intercepts **browser** requests; the SSR fetch to the backend still
+succeeds. In `api-error-handling.test.ts` the menu is therefore rendered from SSR HTML but
+non-interactive (`**/_nuxt/**` is also aborted, so nothing hydrates): triggers are visible, clicking
+does nothing, and `#window-root` never appears.
+
+### NavigationMenu DOM/ARIA notes
+
+reka-ui NavigationMenu uses no ARIA menu roles: root is `nav[data-slot=navigation-menu]`, the list
+is `ul[data-slot=navigation-menu-list]`, triggers/items are plain buttons, content is a div with
+`aria-labelledby` pointing at the trigger (so `getByLabel("<trigger>")` still resolves the open
+content). `unmountOnHide` is on, so only the open dropdown's content exists in the DOM — item
+lookups are unique without scoping, except where a name repeats inside one menu.
 
 ### `e2e/seed.spec.ts` never runs
 
