@@ -65,7 +65,8 @@ await page.waitForTimeout(500);
 await page.getByText("List all entries").click();
 ```
 
-**Menu item names** (exact text):
+**Menu item names** (exact text; these examples are tunocent-derived — for the vicav item names, see
+`specs/menu-test-plan.md` §1):
 
 - Profiles: "List all entries", "Show profiles on map"
 - Feature Lists: "List all feature lists", "Show feature lists on map", "Search and compare feature
