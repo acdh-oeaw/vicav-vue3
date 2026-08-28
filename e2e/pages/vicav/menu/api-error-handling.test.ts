@@ -5,7 +5,9 @@ import { expect, test } from "@playwright/test";
 
 test.describe("Edge Cases - API Error Handling", () => {
 	test("should handle API errors gracefully", async ({ page }) => {
-		// 1. Mock API to return error and navigate to homepage
+		// 1. Mock API to return error and navigate to homepage.
+		// Aborting the Nuxt assets as well prevents client-side hydration,
+		// so the page is served purely from the SSR HTML.
 		await page.route("**/vicav/**", async (route) => {
 			// Abort the request to simulate network/API error
 			await route.abort("failed");
@@ -36,17 +38,14 @@ test.describe("Edge Cases - API Error Handling", () => {
 		// The main content area should still be present
 		await expect(page.locator("main")).toBeVisible();
 
-		// expect: Main menu items are rendered (but not clickable)
-		// Desktop menu may still render but should not be functional
-		const projectMenuItem = page.getByRole("menuitem", { name: "Project" });
+		// expect: Main menu items are rendered (from the SSR HTML)
+		const project = page
+			.locator("[data-slot=navigation-menu-list]")
+			.getByRole("button", { name: "Project", exact: true });
+		await expect(project).toBeVisible();
 
-		// Menu items may render but should not be interactive when API fails
-		// Try to click on Project menu - it should not open a dropdown
-		await projectMenuItem.click({ timeout: 5000 });
-
-		// Verify no dropdown menu appears when clicking on menu item (API error state)
-		// The dropdown should NOT be visible since API failed
-		const projectMenu = page.locator('[data-state="open"]').first();
-		await expect(projectMenu).toBeHidden({ timeout: 2000 });
+		// expect: The items are not clickable (no client-side hydration)
+		await project.click();
+		await expect(page.locator("[data-slot=navigation-menu-content]")).not.toBeAttached();
 	});
 });

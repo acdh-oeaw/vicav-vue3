@@ -12,7 +12,7 @@ test.describe("Accessibility - Mobile Menu", () => {
 
 		// expect: Page should load with mobile menu visible
 		// 2. Open mobile menu and check accessibility tree
-		const toggleButton = page.getByRole("button", { name: /Toggle menu/i });
+		const toggleButton = page.getByRole("button", { name: /Toggle navigation/i });
 
 		// expect: Toggle button should have aria-label before opening
 		await expect(toggleButton).toHaveAttribute("aria-label", /toggle/i);

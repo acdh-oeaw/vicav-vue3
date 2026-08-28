@@ -10,22 +10,29 @@ test.describe("Desktop Menu - Single Menu Open", () => {
 		await page.goto("/");
 		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
 
-		await page.getByRole("menuitem", { name: "Project" }).click();
+		// Scope trigger lookups to the menu list to avoid same-named buttons elsewhere.
+		const triggers = page.locator("[data-slot=navigation-menu-list]");
+		const projectTrigger = triggers.getByRole("button", { name: "Project", exact: true });
+		await projectTrigger.click();
 
 		// Verify Project dropdown is open
-		await expect(page.getByRole("menuitem", { name: "Mission" })).toBeVisible();
+		const content = page.locator("[data-slot=navigation-menu-content]");
+		await expect(content.getByRole("button", { name: "Mission" })).toBeVisible();
 
-		// 2. Click on "Bibliographies" menu
-		await page.getByRole("menuitem", { name: "Bibliographies" }).hover();
+		// 2. Move the mouse to the "Bibliographies" trigger
+		await triggers.getByRole("button", { name: "Bibliographies", exact: true }).hover();
 
 		// 3. Verify that Project menu is closed and Bibliographies is open
 		// expect: Only one dropdown should be open at a time
-		await expect(page.getByRole("menuitem", { name: "Mission" })).toBeHidden();
-		await expect(page.getByRole("menuitem", { name: "Explanation" })).toBeVisible();
+		await expect(content.getByRole("button", { name: "Mission" })).toBeHidden();
+		await expect(content.getByRole("button", { name: "Explanation" })).toBeVisible();
 
-		// 4. Clicking the Profiles menu closes the menu
-		await page.getByRole("menuitem", { name: "Bibliographies" }).click();
-		await expect(page.getByRole("menuitem", { name: "Mission" })).toBeHidden();
-		await expect(page.getByRole("menuitem", { name: "Explanation" })).toBeHidden();
+		// 4. Close the menu.
+		// Note: Playwright's click always dispatches a pointermove first, and
+		// reka-ui suppresses trigger clicks right after a pointermove (it treats
+		// the menu as hover-opened), so use Escape to close instead.
+		await page.keyboard.press("Escape");
+		await expect(content.getByRole("button", { name: "Mission" })).toBeHidden();
+		await expect(content.getByRole("button", { name: "Explanation" })).toBeHidden();
 	});
 });

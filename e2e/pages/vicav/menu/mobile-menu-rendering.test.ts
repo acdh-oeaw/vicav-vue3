@@ -17,7 +17,7 @@ test.describe("Mobile Menu Rendering", () => {
 		await expect(page.locator("header")).toBeVisible();
 
 		// 2. Click the mobile menu toggle button
-		await page.getByRole("button", { name: /Toggle menu/i }).click();
+		await page.getByRole("button", { name: /Toggle navigation/i }).click();
 
 		// expect: Mobile menu sheet should open when toggle button is clicked
 		await expect(page.getByRole("dialog")).toBeVisible();

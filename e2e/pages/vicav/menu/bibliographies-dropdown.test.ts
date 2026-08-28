@@ -10,14 +10,18 @@ test.describe("Desktop Menu - Bibliographies Dropdown", () => {
 		await page.goto("/");
 		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
 
-		// 2. Click on the "Bibliographies" menu item
-		await page.getByRole("menuitem", { name: "Bibliographies" }).click();
+		// 2. Click on the "Bibliographies" trigger
+		// (scoped to the menu list to avoid same-named buttons elsewhere)
+		const trigger = page
+			.locator("[data-slot=navigation-menu-list]")
+			.getByRole("button", { name: "Bibliographies", exact: true });
+		await trigger.click();
 
 		// expect: Bibliographies menu should be expanded
-		await expect(page.getByRole("menuitem", { name: "Bibliographies" })).toHaveAttribute(
-			"aria-expanded",
-			"true",
-		);
+		await expect(trigger).toHaveAttribute("aria-expanded", "true");
+
+		const content = page.locator("[data-slot=navigation-menu-content]");
+		await expect(content).toBeVisible();
 
 		// 3. Verify the dropdown menu appears with the following items:
 		const expectedItems = [
@@ -32,11 +36,11 @@ test.describe("Desktop Menu - Bibliographies Dropdown", () => {
 		];
 
 		for (const item of expectedItems) {
-			await expect(page.getByRole("menuitem", { name: item })).toBeVisible();
+			await expect(content.getByRole("button", { name: item })).toBeVisible();
 		}
 
 		// expect: Dropdown should display all 8 menu items with proper separators
-		const dropdownItems = page.locator("[role='menu'] >> role=menuitem");
+		const dropdownItems = content.locator("[data-slot=navigation-menu-link]");
 		await expect(dropdownItems).toHaveCount(8);
 	});
 });

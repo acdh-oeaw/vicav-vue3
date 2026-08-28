@@ -14,8 +14,10 @@ test.describe("Edge Cases - Rapid Clicking", () => {
 		await page.goto("/");
 		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
 
-		// 2. Rapidly click through different menu categories
-		await page.getByRole("menuitem", { name: "Project" }).click();
+		// 2. Rapidly hover through different menu categories
+		// (scoped to the menu list to avoid same-named buttons elsewhere)
+		const triggers = page.locator("[data-slot=navigation-menu-list]");
+		await triggers.getByRole("button", { name: "Project", exact: true }).click();
 		for (let i = 0; i < 10; i++) {
 			for (const name of [
 				"Project",
@@ -25,10 +27,11 @@ test.describe("Edge Cases - Rapid Clicking", () => {
 				"Samples",
 				"Tools & Technology",
 			]) {
-				await page.getByRole("menuitem", { name: name, exact: true }).hover();
-				await expect(
-					page.getByRole("menuitem", { name: name, exact: true }).first(),
-				).toHaveAttribute("aria-expanded", "true");
+				await triggers.getByRole("button", { name: name, exact: true }).hover();
+				await expect(triggers.getByRole("button", { name: name, exact: true })).toHaveAttribute(
+					"aria-expanded",
+					"true",
+				);
 			}
 		}
 

@@ -11,18 +11,23 @@ test.describe("Edge Cases - Long Menu Item Names", () => {
 		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
 
 		// 2. Open "Tools & Technology" menu
-		await page.getByRole("menuitem", { name: "Tools & Technology" }).click();
+		await page
+			.locator("[data-slot=navigation-menu-list]")
+			.getByRole("button", { name: "Tools & Technology", exact: true })
+			.click();
+		const content = page.locator("[data-slot=navigation-menu-content]");
+		await expect(content).toBeVisible();
 
 		// 3. Verify long items display correctly
 		// expect: Long item names are fully visible without truncation issues
 		await expect(
-			page.getByRole("menuitem", { name: "Textbook Syrian Arabic (Sound files)" }),
+			content.getByRole("button", { name: "Textbook Syrian Arabic (Sound files)" }),
 		).toBeVisible();
 		await expect(
-			page.getByRole("menuitem", { name: "Textbook Baghdad Arabic (Sound files)" }),
+			content.getByRole("button", { name: "Textbook Baghdad Arabic (Sound files)" }),
 		).toBeVisible();
 		await expect(
-			page.getByRole("menuitem", { name: "Textbook Syrian Arabic (Sound files)" }),
+			content.getByRole("button", { name: "Textbook Syrian Arabic (Sound files)" }),
 		).toHaveText(/Textbook Syrian Arabic/);
 	});
 });

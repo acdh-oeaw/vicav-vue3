@@ -11,16 +11,24 @@ test.describe("Accessibility - Desktop Menu", () => {
 		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
 
 		// expect: Page should load with desktop menu visible
-		// 2. Check accessibility tree for proper ARIA roles
-		// expect: Menu should have proper role attributes (role="menubar")
-		await expect(page.locator("[role='menubar']").first()).toHaveAttribute("role", "menubar");
-		// expect: Menu items should have role="menuitem"
-		await expect(page.getByRole("menuitem", { name: "Project" })).toHaveAttribute(
-			"role",
-			"menuitem",
-		);
+		// 2. Check accessibility tree for proper roles.
+		// The main menu uses NavigationMenu (disclosure pattern): triggers and items
+		// are buttons, no menubar/menu roles.
+		await expect(page.locator("[data-slot=navigation-menu]")).toBeVisible();
+		await expect(page.locator("[role=menubar][data-slot=navigation-menu]")).toHaveCount(0);
+
+		// expect: The Windows dropdown still uses Menubar (role="menubar", role="menuitem")
+		await expect(page.getByRole("menuitem", { name: "Windows" })).toBeVisible();
+
+		// expect: Triggers are buttons with aria-expanded, initially closed
+		// (scoped to the menu list to avoid same-named buttons elsewhere)
+		const project = page
+			.locator("[data-slot=navigation-menu-list]")
+			.getByRole("button", { name: "Project", exact: true });
+		await expect(project).toHaveAttribute("aria-expanded", "false");
+
 		// expect: Menu triggers should be focusable
-		await page.getByRole("menuitem", { name: "Project" }).focus();
-		await expect(page.getByRole("menuitem", { name: "Project" })).toBeFocused();
+		await project.focus();
+		await expect(project).toBeFocused();
 	});
 });

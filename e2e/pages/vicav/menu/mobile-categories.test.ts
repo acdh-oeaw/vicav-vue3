@@ -10,7 +10,7 @@ test.describe("Mobile Menu - All Categories Visible", () => {
 		await page.goto("/");
 		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
 
-		await page.getByRole("button", { name: /Toggle menu/i }).click();
+		await page.getByRole("button", { name: /Toggle navigation/i }).click();
 
 		// 2. Verify the following categories are listed:
 		const expectedCategories = [

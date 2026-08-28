@@ -16,7 +16,11 @@ test.describe("Edge Cases - Loading State", () => {
 
 		// expect: Initial page load should show loading state or skeleton while API fetches
 		// expect: Menu should appear once API data loads
-		await expect(page.getByRole("menuitem", { name: "Project" })).toBeVisible({ timeout: 30000 });
+		await expect(
+			page
+				.locator("[data-slot=navigation-menu-list]")
+				.getByRole("button", { name: "Project", exact: true }),
+		).toBeVisible({ timeout: 30000 });
 
 		// 2. Wait for API response and verify menu renders correctly
 		// expect: No error messages should be visible

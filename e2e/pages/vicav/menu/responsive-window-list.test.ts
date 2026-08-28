@@ -29,7 +29,8 @@ test.describe("Responsive Behavior - Window List", () => {
 		await page.getByRole("menuitem", { name: "Windows" }).click();
 		await expect(page.getByRole("menuitem", { name: "Mission" })).toBeVisible();
 
-		await page.getByRole("button", { name: /Toggle menu/i }).click();
-		await expect(page.locator("//details[@name='menu-accordion'][1]")).toBeVisible();
+		// 4. Open the mobile menu and verify the accordion is rendered
+		await page.getByRole("button", { name: /Toggle navigation/i }).click();
+		await expect(page.locator('[role="dialog"] nav[aria-label="Main navigation"]')).toBeVisible();
 	});
 });

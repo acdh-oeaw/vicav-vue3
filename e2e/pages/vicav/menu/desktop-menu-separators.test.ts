@@ -12,11 +12,17 @@ test.describe("Menu Separators - Desktop", () => {
 
 		// expect: Page should load with desktop menu visible
 		// 2. Open a menu dropdown that contains separators (e.g., Dictionaries)
-		await page.getByRole("menuitem", { name: "Dictionaries" }).click();
+		await page
+			.locator("[data-slot=navigation-menu-list]")
+			.getByRole("button", { name: "Dictionaries", exact: true })
+			.click();
+		const content = page.locator("[data-slot=navigation-menu-content]");
+		await expect(content).toBeVisible();
 
 		// expect: Menu items with type='separator' should render as visual separators
-		await expect(page.locator("[role='separator']").first()).toBeVisible();
-		// expect: Separators should have role='separator' for accessibility
-		await expect(page.locator("[role='separator']").first()).toHaveAttribute("role", "separator");
+		// (plain divs with a data-slot attribute, no ARIA role)
+		const separators = content.locator("[data-slot=navigation-menu-separator]");
+		await expect(separators.first()).toBeVisible();
+		await expect(separators.first()).toHaveAttribute("data-slot", "navigation-menu-separator");
 	});
 });

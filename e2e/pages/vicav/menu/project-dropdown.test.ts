@@ -10,28 +10,32 @@ test.describe("Desktop Menu - Project Dropdown", () => {
 		await page.goto("/");
 		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
 
-		// 2. Click on the "Project" menu item
-		await page.getByRole("menuitem", { name: "Project" }).click();
+		// 2. Click on the "Project" trigger
+		// (scoped to the menu list to avoid same-named buttons elsewhere)
+		const trigger = page
+			.locator("[data-slot=navigation-menu-list]")
+			.getByRole("button", { name: "Project", exact: true });
+		await trigger.click();
 
 		// expect: Project menu should be expanded (active state)
-		await expect(page.getByRole("menuitem", { name: "Project" })).toHaveAttribute(
-			"aria-expanded",
-			"true",
-		);
+		await expect(trigger).toHaveAttribute("aria-expanded", "true");
+
+		const content = page.locator("[data-slot=navigation-menu-content]");
+		await expect(content).toBeVisible();
 
 		// 3. Verify the dropdown menu appears with the following items:
 		const expectedItems = ["Mission", "News", "Types of Text/Data", "Contributors", "Linguistics"];
 
 		for (const item of expectedItems) {
-			await expect(page.getByRole("menuitem", { name: item })).toBeVisible();
+			await expect(content.getByRole("button", { name: item })).toBeVisible();
 		}
 
 		// expect: Dropdown should display all 5 menu items
-		const dropdownItems = page.locator("[role='menu'] >> role=menuitem");
+		const dropdownItems = content.locator("[data-slot=navigation-menu-link]");
 		await expect(dropdownItems).toHaveCount(5);
 
 		// expect: Each menu item should be clickable
-		await page.getByRole("menuitem", { name: "Mission" }).click();
+		await content.getByRole("button", { name: "Mission" }).click();
 		await expect(
 			page
 				.locator("div")

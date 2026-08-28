@@ -11,8 +11,8 @@ test.describe("Mobile Menu - Open on Toggle Click", () => {
 		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
 
 		// 2. Navigate to the homepage
-		// 3. Click the "Toggle menu" button
-		await page.getByRole("button", { name: /Toggle menu/i }).click();
+		// 3. Click the "Toggle navigation" button
+		await page.getByRole("button", { name: /Toggle navigation/i }).click();
 
 		// 4. Verify a dialog/overlay with "Navigation menu" appears
 		// expect: Mobile navigation dialog should appear with all main menu categories
