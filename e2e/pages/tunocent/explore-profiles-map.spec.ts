@@ -3,19 +3,17 @@ import { expect, test } from "@playwright/test";
 test("Take screenshots of map views", async ({ page }) => {
 	await page.goto("/");
 	await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
+	// close initial About window
+	await page.locator(".wb-close").first().click();
 
 	// Open Feature Lists map
-	await page.getByRole("menuitem", { name: "Profiles" }).click();
-	await page.getByRole("menuitem", { name: "Feature Lists" }).click();
+	await page.getByRole("button", { name: "Profiles" }).click();
+	await page.getByRole("button", { name: "Feature Lists", exact: true }).click();
+	await page.getByRole("button", { name: "Show feature lists on map" }).click();
 
-	await page.evaluate(() => {
-		const allElements = document.querySelectorAll("*");
-		for (const el of allElements) {
-			if (el.textContent.includes("Show feature lists on map")) {
-				(el as HTMLElement).click();
-			}
-		}
-	});
+	// Verify the map content is present
+	await expect(page.locator(".winbox").first().locator("[data-geo-map]")).toBeVisible();
+
 	// Take screenshot of Feature Lists map
 	// await page.waitForTimeout(3000);
 
@@ -28,18 +26,13 @@ test("Take screenshots of map views", async ({ page }) => {
 	// Close current map first
 	await page.locator(".wb-close").first().click();
 
-	await page.getByRole("menuitem", { name: "Profiles" }).click();
-	await page.getByRole("menuitem", { name: "Feature Lists" }).click();
-	await page.getByRole("menuitem", { name: "Profiles" }).click();
+	await page.getByRole("button", { name: "Profiles" }).click();
+	await page.getByRole("button", { name: "Feature Lists", exact: true }).click();
+	await page.getByRole("button", { name: "Profiles" }).click();
+	await page.getByRole("button", { name: "Show profiles on map" }).click();
 
-	await page.evaluate(() => {
-		const allElements = document.querySelectorAll("*");
-		for (const el of allElements) {
-			if (el.textContent.includes("Show profiles on map")) {
-				(el as HTMLElement).click();
-			}
-		}
-	});
+	// Verify the map content is present
+	await expect(page.locator(".winbox").first().locator("[data-geo-map]")).toBeVisible();
 	// Take screenshot of Profiles map
 	// await page.waitForTimeout(3000);
 
