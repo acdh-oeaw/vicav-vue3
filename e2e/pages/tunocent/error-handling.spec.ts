@@ -33,9 +33,6 @@ test.describe("Error Handling & Edge Cases", () => {
 		await expect(page.locator("main")).toBeVisible();
 	});
 
-	// does not work and last time checked returns a 404 with some json content
-	test("TC-036: Invalid URL", async ({ page }) => {
-		const response = await page.goto("/invalid-page-12345");
-		expect(response?.status()).toBe(404);
-	});
+	// 404 tests are broken and a fix is not planned (playwright #33962)
+	// They throw RESPONSE_CODE_FAILURE errors and return 200 or 404
 });
