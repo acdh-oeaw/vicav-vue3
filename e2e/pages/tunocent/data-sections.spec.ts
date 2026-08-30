@@ -8,6 +8,8 @@ test.describe("Data Sections", () => {
 	test.beforeEach(async ({ page }) => {
 		await page.goto("/");
 		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
+		// close initial About window
+		await page.locator(".wb-close").first().click();
 	});
 
 	async function getNewestWindow(page: Page) {

@@ -4,10 +4,12 @@ test.describe("Error Handling & Edge Cases", () => {
 	test.beforeEach(async ({ page }) => {
 		await page.goto("/");
 		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
+		// close initial About window
+		await page.locator(".wb-close").first().click();
 	});
 
 	test("TC-034: Empty Search Results", async ({ page }) => {
-		await page.getByRole("menuitem", { name: "Feature Lists" }).click();
+		await page.getByRole("button", { name: "Feature Lists" }).click();
 
 		await page.keyboard.press("ArrowDown");
 		await page.keyboard.press("ArrowDown");
@@ -23,7 +25,7 @@ test.describe("Error Handling & Edge Cases", () => {
 			await route.continue();
 		});
 
-		await page.getByRole("menuitem", { name: "Profiles" }).click();
+		await page.getByRole("button", { name: "Profiles" }).click();
 
 		await page.keyboard.press("ArrowDown");
 		await page.keyboard.press("Enter");
@@ -31,9 +33,9 @@ test.describe("Error Handling & Edge Cases", () => {
 		await expect(page.locator("main")).toBeVisible();
 	});
 
+	// does not work and last time checked returns a 404 with some json content
 	test("TC-036: Invalid URL", async ({ page }) => {
-		test.slow();
-		const response = await page.goto("/invalid-page-12345", { timeout: 40000 });
+		const response = await page.goto("/invalid-page-12345");
 		expect(response?.status()).toBe(404);
 	});
 });
