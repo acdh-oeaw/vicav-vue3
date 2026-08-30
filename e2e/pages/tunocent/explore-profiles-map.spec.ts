@@ -28,7 +28,7 @@ test("Take screenshots of map views", async ({ page }) => {
 
 	await page.getByRole("button", { name: "Profiles" }).click();
 	await page.getByRole("button", { name: "Feature Lists", exact: true }).click();
-	await page.getByRole("button", { name: "Profiles" }).click();
+	await page.getByRole("button", { name: "Profiles", exact: true }).click();
 	await page.getByRole("button", { name: "Show profiles on map" }).click();
 
 	// Verify the map content is present
