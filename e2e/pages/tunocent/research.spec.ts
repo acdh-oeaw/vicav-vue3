@@ -7,7 +7,7 @@ test.describe("Research Section", () => {
 	});
 
 	test("TC-017: Research - Publications", async ({ page }) => {
-		await page.getByRole("menuitem", { name: "Research" }).click();
+		await page.getByRole("button", { name: "Research" }).click();
 
 		await page.keyboard.press("ArrowDown");
 		await page.keyboard.press("Enter");
@@ -16,7 +16,7 @@ test.describe("Research Section", () => {
 	});
 
 	test("TC-018: Research - Presentations", async ({ page }) => {
-		await page.getByRole("menuitem", { name: "Research" }).click();
+		await page.getByRole("button", { name: "Research" }).click();
 
 		await page.keyboard.press("ArrowDown");
 		await page.keyboard.press("ArrowDown");
@@ -26,7 +26,7 @@ test.describe("Research Section", () => {
 	});
 
 	test("TC-019: Research - Conference", async ({ page }) => {
-		await page.getByRole("menuitem", { name: "Research" }).click();
+		await page.getByRole("button", { name: "Research" }).click();
 
 		await page.keyboard.press("ArrowDown");
 		await page.keyboard.press("ArrowDown");

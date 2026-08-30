@@ -7,12 +7,12 @@ test.describe("Window Management", () => {
 	});
 
 	// eslint-disable-next-line playwright/expect-expect
-	test.fixme("TC-020: Window Arrangement - Cascade", async ({ page }) => {
-		await page.getByRole("menuitem", { name: "Profiles" }).click();
+	test("TC-020: Window Arrangement - Cascade", async ({ page }) => {
+		await page.getByRole("button", { name: "Profiles" }).click();
 		await page.keyboard.press("ArrowDown");
 		await page.keyboard.press("Enter");
 
-		await page.getByRole("menuitem", { name: "Feature Lists" }).click();
+		await page.getByRole("button", { name: "Feature Lists", exact: true }).click();
 		await page.keyboard.press("ArrowDown");
 		await page.keyboard.press("Enter");
 
@@ -22,12 +22,12 @@ test.describe("Window Management", () => {
 	});
 
 	// eslint-disable-next-line playwright/expect-expect
-	test.fixme("TC-021: Window Arrangement - Tile", async ({ page }) => {
-		await page.getByRole("menuitem", { name: "Profiles" }).click();
+	test("TC-021: Window Arrangement - Tile", async ({ page }) => {
+		await page.getByRole("button", { name: "Profiles" }).click();
 		await page.keyboard.press("ArrowDown");
 		await page.keyboard.press("Enter");
 
-		await page.getByRole("menuitem", { name: "Feature Lists" }).click();
+		await page.getByRole("button", { name: "Feature Lists", exact: true }).click();
 		await page.keyboard.press("ArrowDown");
 		await page.keyboard.press("Enter");
 
@@ -38,12 +38,12 @@ test.describe("Window Management", () => {
 	});
 
 	// eslint-disable-next-line playwright/expect-expect
-	test.fixme("TC-022: Window Arrangement - Smart Tile", async ({ page }) => {
-		await page.getByRole("menuitem", { name: "Profiles" }).click();
+	test("TC-022: Window Arrangement - Smart Tile", async ({ page }) => {
+		await page.getByRole("button", { name: "Profiles" }).click();
 		await page.keyboard.press("ArrowDown");
 		await page.keyboard.press("Enter");
 
-		await page.getByRole("menuitem", { name: "Feature Lists" }).click();
+		await page.getByRole("button", { name: "Feature Lists", exact: true }).click();
 		await page.keyboard.press("ArrowDown");
 		await page.keyboard.press("Enter");
 
@@ -55,7 +55,7 @@ test.describe("Window Management", () => {
 	});
 
 	test("TC-023: Window Close", async ({ page }) => {
-		await page.getByRole("menuitem", { name: "Profiles" }).click();
+		await page.getByRole("button", { name: "Profiles" }).click();
 		await page.keyboard.press("ArrowDown");
 		await page.keyboard.press("Enter");
 

@@ -24,14 +24,14 @@ test.describe("Homepage & Navigation", () => {
 		];
 
 		for (const item of menuItems) {
-			await expect(page.getByRole("menuitem", { name: item })).toBeVisible();
+			await expect(page.getByRole("button", { name: item })).toBeVisible();
 		}
 	});
 
 	test("TC-003: Navigation Menu Click", async ({ page }) => {
-		await page.getByRole("menuitem", { name: "Profiles" }).click();
+		await page.getByRole("button", { name: "Profiles" }).click();
 
-		await page.getByRole("menuitem", { name: "Feature Lists" }).hover();
+		await page.getByRole("button", { name: "Feature Lists" }).hover();
 
 		await expect(page.locator(".window, [class*='window']").first()).toBeVisible();
 	});
