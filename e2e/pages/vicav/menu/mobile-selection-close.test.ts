@@ -10,7 +10,7 @@ test.describe("Mobile Menu - Close on Selection", () => {
 		await page.goto("/");
 		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
 
-		await page.getByRole("button", { name: /Toggle menu/i }).click();
+		await page.getByRole("button", { name: /Toggle navigation/i }).click();
 
 		// Verify mobile menu is open
 		await expect(page.getByRole("dialog")).toBeVisible();

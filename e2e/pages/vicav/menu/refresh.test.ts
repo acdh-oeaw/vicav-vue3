@@ -11,8 +11,12 @@ test.describe("Edge Cases - Page Refresh", () => {
 		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
 
 		// 2. Interact with menus (open dropdowns, select items)
-		await page.getByRole("menuitem", { name: "Project" }).click();
-		await expect(page.getByRole("menuitem", { name: "Mission" })).toBeVisible();
+		await page
+			.locator("[data-slot=navigation-menu-list]")
+			.getByRole("button", { name: "Project", exact: true })
+			.click();
+		const content = page.locator("[data-slot=navigation-menu-content]");
+		await expect(content.getByRole("button", { name: "Mission" })).toBeVisible();
 
 		// 3. Refresh the page
 		await page.reload();
@@ -20,7 +24,10 @@ test.describe("Edge Cases - Page Refresh", () => {
 
 		// 4. Verify menus still work correctly
 		// expect: Menu functionality is restored after refresh
-		await page.getByRole("menuitem", { name: "Project" }).click();
-		await expect(page.getByRole("menuitem", { name: "Mission" })).toBeVisible();
+		await page
+			.locator("[data-slot=navigation-menu-list]")
+			.getByRole("button", { name: "Project", exact: true })
+			.click();
+		await expect(content.getByRole("button", { name: "Mission" })).toBeVisible();
 	});
 });

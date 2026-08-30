@@ -179,9 +179,9 @@ export NUXT_PUBLIC_API_BASE_URL="https://tunocent-api.acdh-dev.oeaw.ac.at"
 #### TC-003: Navigation Menu Click
 
 - **Steps**:
-  1. Click on "Profiles" menu item
+  1. Click on "Profiles" button (main nav uses `getByRole("button")`)
   2. Verify dropdown submenu appears
-  3. Click on "List all entries" option
+  3. Press ArrowDown + Enter to select "List all entries"
 - **Expected**: Window opens with profiles table
 
 #### TC-004: Windows Menu Functionality
@@ -199,86 +199,91 @@ export NUXT_PUBLIC_API_BASE_URL="https://tunocent-api.acdh-dev.oeaw.ac.at"
 #### TC-005: Profiles - List All Entries
 
 - **Steps**:
-  1. Navigate to homepage
-  2. Click Profiles > List all entries
-- **Expected**: Table displays with profiles data (approximately 71 entries)
+  1. Hover on "Profiles" button
+  2. Click "List all entries"
+- **Expected**: Window opens with `<ul>` list content
 
 #### TC-006: Profiles - Show on Map
 
 - **Steps**:
-  1. Navigate to homepage
-  2. Click Profiles > Show profiles on map
+  1. Hover on "Profiles" button
+  2. Click "Show profiles on map"
+  3. Window opens with `[data-geo-map]` element visible
 - **Expected**: Map displays with approximately 72 markers
 
 #### TC-007: Feature Lists - List All
 
 - **Steps**:
-  1. Navigate to homepage
-  2. Click Feature Lists > List all feature lists
-- **Expected**: Table displays with 195 feature list entries
+  1. Hover on "Feature Lists" button
+  2. Click "List all feature lists"
+- **Expected**: Window opens with `<ul>` list content
 
 #### TC-008: Feature Lists - Show on Map
 
 - **Steps**:
-  1. Navigate to homepage
-  2. Click Feature Lists > Show feature lists on map
+  1. Hover on "Feature Lists" button
+  2. Click "Show feature lists on map"
+  3. Window opens with `[data-geo-map]` element visible
 - **Expected**: Map displays with 196 markers
 
 #### TC-009: Feature Lists - Search Interface
 
 - **Steps**:
-  1. Navigate to homepage
-  2. Click Feature Lists > Search and compare feature lists
-- **Expected**: Search form window opens with input fields (Place, Speaker, Age, Sex, Word,
-  Features, Translation, Comment)
+  1. Hover on "Feature Lists" button
+  2. Click "Search and compare feature lists"
+- **Expected**: Search form with labels: Place, Speaker identifier, Age, Sex, Word, Features,
+  Translation, Comment + Query button
 
 #### TC-010: Sample Texts - List All
 
 - **Steps**:
-  1. Navigate to homepage
-  2. Click Sample Texts > List all sample texts
-- **Expected**: Table displays with 185 sample text entries
+  1. Hover on "Sample Texts" button
+  2. Click "List all sample texts"
+- **Expected**: Window opens with `<ul>` list content
 
 #### TC-011: Sample Texts - Show on Map
 
 - **Steps**:
-  1. Navigate to homepage
-  2. Click Sample Texts > Show sample texts on map
+  1. Hover on "Sample Texts" button
+  2. Click "Show sample texts on map"
+  3. Window opens with `[data-geo-map]` element visible
 - **Expected**: Map displays with markers
 
 #### TC-012: Sample Texts - Search Interface
 
 - **Steps**:
-  1. Navigate to homepage
-  2. Click Sample Texts > Search and compare sample texts
-- **Expected**: Search form window opens with input fields plus Sentences filter
+  1. Hover on "Sample Texts" button
+  2. Click "Search and compare sample texts"
+- **Expected**: Search form with labels: Place, Speaker identifier, Age, Sex, Word, Sentences,
+  Comment + Query button
 
 #### TC-013: Corpus Texts - List All
 
 - **Steps**:
-  1. Navigate to homepage
-  2. Click Corpus Texts > List all transcribed entries
-- **Expected**: Table displays with 24 corpus text entries
+  1. Hover on "Corpus Texts" button
+  2. Click "List all transcribed entries"
+- **Expected**: Window opens with `<ul>` list content
 
 #### TC-014: Corpus Texts - Search
 
 - **Steps**:
-  1. Navigate to homepage
-  2. Click Corpus Texts > Search the corpus
-- **Expected**: Search form with "Search for exact words" input and "Advanced search" CQL input
+  1. Hover on "Corpus Texts" button
+  2. Click "Search the corpus"
+- **Expected**: Search form with text input and "Search for words or enter a CQL query" text
 
 #### TC-015: Browse Data - List All
 
 - **Steps**:
-  1. Navigate to homepage
-  2. Click Browse data > List all data recordings
-- **Expected**: Table displays with 2,683 data recording entries
+  1. Hover on "Browse data" button
+  2. Click "List all data recordings"
+- **Expected**: Window opens with `<table>` or `<ul>` content
 
 #### TC-016: Browse Data - Show Locations
 
 - **Steps**:
-  1. Navigate to homepage
-  2. Click Browse data > Show all locations
+  1. Hover on "Browse data" button
+  2. Click "Show all locations"
+  3. Window opens with `[data-geo-map]` element visible
 - **Expected**: Map displays recording locations
 
 ---
@@ -506,11 +511,16 @@ e2e/
 
 ---
 
+## Menu Technical Details
+
+## See `../docs/menu.md`
+
 ## Notes
 
 1. **Window Timing**: Some windows may take time to load data from API - appropriate waits may be
    needed
 2. **Map Rendering**: Map snapshots may need visual verification beyond assertions
 3. **Data Counts**: Actual counts may vary - tests should use >= or <= assertions where appropriate
-4. **Menu Behavior**: Menu submenus may require hover or click depending on desktop/mobile view
+4. **Menu Behavior**: Always use `getByRole("button", ...)` for main nav,
+   `getByRole("menuitem", ...)` for Windows dropdown
 5. **Search Autocomplete**: TagsSelect components may need typing delays for dropdown population

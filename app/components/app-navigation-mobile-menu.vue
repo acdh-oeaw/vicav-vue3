@@ -60,7 +60,11 @@ onScopeDispose(() => {
 								>
 									{{ item.title }}
 								</button>
-								<div v-else-if="item.type === 'separator'" class="my-1 w-full border-b" />
+								<div
+									v-else-if="item.type === 'separator'"
+									class="my-1 w-full border-b"
+									data-slot="navigation-menu-separator"
+								/>
 							</template>
 						</AccordionContent>
 					</AccordionItem>

@@ -10,11 +10,16 @@ test.describe("Menu Item - Project News", () => {
 		await page.goto("/");
 		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
 
-		// 2. Click on "Project" menu
-		await page.getByRole("menuitem", { name: "Project" }).click();
+		// 2. Click on "Project" trigger
+		await page
+			.locator("[data-slot=navigation-menu-list]")
+			.getByRole("button", { name: "Project", exact: true })
+			.click();
+		const content = page.locator("[data-slot=navigation-menu-content]");
+		await expect(content).toBeVisible();
 
 		// 3. Click on "News" sub-item
-		await page.getByRole("menuitem", { name: "News" }).click();
+		await content.getByRole("button", { name: "News" }).click();
 
 		// 4. Verify a window/popup with "News" content appears
 		// expect: New window opens displaying News content

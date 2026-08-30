@@ -22,8 +22,13 @@ test.describe("Windows Integration", () => {
 		// 3. Open a menu item to create a window, then verify it appears in Windows dropdown
 		// Close Windows dropdown first
 		await page.keyboard.press("Escape");
-		await page.getByRole("menuitem", { name: "Project" }).click();
-		await page.getByRole("menuitem", { name: "Types of Text/Data" }).click();
+		await page
+			.locator("[data-slot=navigation-menu-list]")
+			.getByRole("button", { name: "Project", exact: true })
+			.click();
+		const content = page.locator("[data-slot=navigation-menu-content]");
+		await expect(content).toBeVisible();
+		await content.getByRole("button", { name: "Types of Text/Data" }).click();
 
 		// Open Windows dropdown again
 		await page.getByRole("menuitem", { name: "Windows" }).click();

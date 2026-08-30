@@ -29,7 +29,7 @@ async function sha256Hex(data: Uint8Array<ArrayBuffer>) {
 async function compress(buffer: Uint8Array<ArrayBuffer>, method: CompressionFormat) {
 	if (method === "brotli") {
 		// The default CompressionStream("brotli") uses the highest compression quality which
-		// is unuseably slow for out on the fly compression here.
+		// is unuseably slow for our on the fly compression here.
 		// Problem noted for example here https://github.com/oven-sh/bun/issues/11380
 		// and here https://github.com/koajs/compress/issues/126
 		return await brotliCompressAsync(buffer, {

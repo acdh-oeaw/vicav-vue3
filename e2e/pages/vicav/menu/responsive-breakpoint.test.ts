@@ -12,25 +12,25 @@ test.describe("Responsive Behavior - Breakpoint", () => {
 
 		// expect: Page should load with desktop menu visible at 1024px width
 		// 2. Verify visible elements at 1024px width
-		// expect: Desktop menu (Menubar) should be visible
-		await expect(page.locator("(//*[@role='menubar'])[1]/..")).toBeVisible();
+		// expect: Desktop menu (NavigationMenu) should be visible
+		await expect(page.locator("[data-slot=navigation-menu]")).toBeVisible();
 		// expect: Mobile menu toggle should NOT be visible
-		await expect(page.getByRole("button", { name: /Toggle menu/i })).toBeHidden();
+		await expect(page.getByRole("button", { name: /Toggle navigation/i })).toBeHidden();
 
 		// 3. Resize viewport to 1280x720 and verify desktop menu
 		await page.setViewportSize({ width: 1920, height: 1080 });
 		// expect: Desktop menu should remain visible at widths > 1024px
-		await expect(page.locator("(//*[@role='menubar'])[1]/..")).toBeVisible();
+		await expect(page.locator("[data-slot=navigation-menu]")).toBeVisible();
 
 		// 4. Resize viewport to 1023x768
 		await page.setViewportSize({ width: 1023, height: 768 });
 		// expect: At 1023px width, mobile menu should appear and desktop menu should hide
-		await expect(page.locator("(//*[@role='menubar'])[1]/..")).toBeHidden();
+		await expect(page.locator("[data-slot=navigation-menu]")).toBeHidden();
 
 		// 5. Verify mobile menu is shown at < 1024px
 		// expect: At 1023px width, mobile menu toggle should be visible
-		await expect(page.getByRole("button", { name: /Toggle menu/i })).toBeVisible();
+		await expect(page.getByRole("button", { name: /Toggle navigation/i })).toBeVisible();
 		// expect: Desktop menu should NOT be visible
-		await expect(page.locator("(//*[@role='menubar'])[1]/..")).toBeHidden();
+		await expect(page.locator("[data-slot=navigation-menu]")).toBeHidden();
 	});
 });

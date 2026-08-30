@@ -44,4 +44,8 @@ dist
 
 # opencode
 
-.opencode/*.*
+.opencode/**
+.claude/**
+
+# private AI transcripts
+AI-transcripts

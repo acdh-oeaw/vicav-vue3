@@ -11,8 +11,8 @@ test.describe("Mobile Menu - Toggle Button Visibility", () => {
 		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
 
 		// 2. Navigate to the homepage
-		// 3. Locate the "Toggle menu" button
-		// expect: Toggle menu button should be visible in the navigation area
-		await expect(page.getByRole("button", { name: /Toggle menu/i })).toBeVisible();
+		// 3. Locate the "Toggle navigation" button
+		// expect: Toggle navigation button should be visible in the navigation area
+		await expect(page.getByRole("button", { name: /Toggle navigation/i })).toBeVisible();
 	});
 });

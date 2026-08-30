@@ -10,16 +10,18 @@ test.describe("Desktop Menu - Close on Outside Click", () => {
 		await page.goto("/");
 		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
 
-		await page.getByRole("menuitem", { name: "Project" }).click();
-
-		// Verify dropdown is open
-		await expect(page.getByRole("menuitem", { name: "Mission" })).toBeVisible();
+		await page
+			.locator("[data-slot=navigation-menu-list]")
+			.getByRole("button", { name: "Project", exact: true })
+			.click();
+		const content = page.locator("[data-slot=navigation-menu-content]");
+		await expect(content.getByRole("button", { name: "Mission" })).toBeVisible();
 
 		// 2. Click on the main content area of the page
 		await page.locator("#window-root").click({ position: { x: 100, y: 100 } });
 
 		// 3. Verify the dropdown is closed
 		// expect: Dropdown menu should close when clicking outside
-		await expect(page.getByRole("menuitem", { name: "Mission" })).toBeHidden();
+		await expect(content.getByRole("button", { name: "Mission" })).toBeHidden();
 	});
 });

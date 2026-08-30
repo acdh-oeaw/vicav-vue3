@@ -10,7 +10,7 @@ test.describe("Mobile Menu - Category Expand", () => {
 		await page.goto("/");
 		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
 
-		await page.getByRole("button", { name: /Toggle menu/i }).click();
+		await page.getByRole("button", { name: /Toggle navigation/i }).click();
 
 		// Mobile menu items don't have menuitem role, use getByText within the dialog
 		const dialog = page.locator('[role="dialog"]');
