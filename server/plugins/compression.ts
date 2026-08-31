@@ -102,10 +102,14 @@ export default defineNitroPlugin((nitro) => {
 		const ifNoneMatch = getRequestHeader(event, "if-none-match");
 
 		setResponseHeader(event, "ETag", etag);
+		setResponseHeader(
+			event,
+			"Cache-Control",
+			`public, max-age=0, must-revalidate`,
+		);
 		// The client already has this exact representation cached: skip
 		// compression entirely and return an empty 304.
 		if (ifNoneMatch === etag) {
-			setResponseHeader(event, "ETag", etag);
 			// eslint-disable-next-line require-atomic-updates -- `response` is unique per request, not shared across awaits.
 			response.statusCode = 304;
 			// eslint-disable-next-line require-atomic-updates -- `response` is unique per request, not shared across awaits.
