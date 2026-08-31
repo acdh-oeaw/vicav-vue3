@@ -344,9 +344,6 @@ importers:
       nitropack:
         specifier: ^2.13.4
         version: 2.13.4(oxc-parser@0.133.0)(vite@7.3.6(@types/node@24.13.3)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.48.0)(yaml@2.9.0))
-      playwright-network-cache:
-        specifier: ^0.3.0
-        version: 0.3.0
       prettier:
         specifier: ^3.8.4
         version: 3.8.4
@@ -6782,10 +6779,6 @@ packages:
     resolution: {integrity: sha512-h7Qlt6m4REp25qvIdvbDtVmD4LqVXfpRxhORv9L0jzETM05p4fuPJ3dKyuSXQxDSbXnmS79HAgi9589lGSpLkg==}
     engines: {node: '>=18'}
     hasBin: true
-
-  playwright-network-cache@0.3.0:
-    resolution: {integrity: sha512-vvmGLbvl7UVAk5o9HNMyaW6xQJ5bTwFQqtCRyLOiPw45SP9bSx3yASnem65ekbqIf5ToU575Iyu8cJDTe1WIgg==}
-    engines: {node: '>=20'}
 
   playwright@1.61.1:
     resolution: {integrity: sha512-DWnY5o3YbLWK4GovuAVwpqL+1VwGNdUGrRr++8j8PtQQzvAVZUIMjKQ90fY689sEJZJBbZVw1rXaOKSTitkzPQ==}
@@ -15959,13 +15952,6 @@ snapshots:
       pathe: 2.0.3
 
   playwright-core@1.61.1: {}
-
-  playwright-network-cache@0.3.0:
-    dependencies:
-      debug: 4.4.3
-      mime-types: 3.0.2
-    transitivePeerDependencies:
-      - supports-color
 
   playwright@1.61.1:
     dependencies:
