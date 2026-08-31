@@ -4,31 +4,36 @@ import { expect, test } from "@playwright/test";
 // seed: e2e/seed.spec.ts
 
 test.describe("Desktop Menu - Single Menu Open", () => {
-	test("should only open one dropdown at a time", async ({ page }) => {
-		// 1. Click on About menu to open it
-		await page.setViewportSize({ width: 1920, height: 1080 });
+	test.beforeEach(async ({ page }) => {
 		await page.goto("/");
 		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
+		// close initial About window
+		await page.locator(".wb-close").first().click();
+	});
 
+	test("should only open one dropdown at a time", async ({ page }) => {
 		// Get the menubar and click on About
-		const menubar = page.locator("[role='menubar']").first();
-		await menubar.getByRole("menuitem", { name: "About" }).click();
+		const menubar = page.locator("[data-slot=navigation-menu-list]");
+		await menubar.getByRole("button", { name: "About" }).click();
 
 		// Verify About dropdown is open - use getByText for submenu items
 		await expect(page.getByText("Team")).toBeVisible();
 
 		// 2. Move the mouse to Profiles menu using the same menubar
-		await menubar.getByRole("menuitem", { name: "Profiles" }).hover();
+		await menubar.getByRole("button", { name: "Places" }).hover();
+		await expect(page.getByText("Team")).toBeHidden();
+		await expect(page.getByText("The Shawi Project")).toBeHidden();
 
 		// 3. Verify About menu is closed and Profiles menu is open
 		// expect: Only one dropdown menu should be open at a time when clicking different menu items
 		// Use getByText for submenu items to avoid strict mode issues
-		await expect(page.getByText("Explanation")).toBeVisible();
-		await expect(page.getByText("Team")).toBeHidden();
+		await menubar.getByRole("button", { name: "About" }).hover();
+		await expect(page.getByText("The Shawi Project")).toBeVisible();
+		await expect(page.getByText("Team")).toBeVisible();
 
 		// 4. Clicking the Profiles menu closes the menu
-		await menubar.getByRole("menuitem", { name: "Profiles" }).click();
+		await menubar.getByRole("button", { name: "Places" }).click();
 		await expect(page.getByText("Team")).toBeHidden();
-		await expect(page.getByText("Explanation")).toBeHidden();
+		await expect(page.getByText("The Shawi Project")).toBeHidden();
 	});
 });
