@@ -58,6 +58,7 @@ Two module-level `Map`s back `fetchWithETag`:
 ```ts
 const cache = new Map<string, { ETag: string; body: Uint8Array<ArrayBuffer>; expiresAt: Date }>();
 const currentRequests = new Map<string, Promise<Response>>();
+const currentRequestRefs = new Map<string, number>(); // refcount of awaiters per in-flight URL
 ```
 
 Caching policy, in order:
@@ -66,9 +67,11 @@ Caching policy, in order:
    `200` `Response` with the stored body and debug headers `X-Cache: fetchWithETag HIT` /
    `X-Cache-Expires: <ISO>` (no other headers — no `ETag`/`Content-Type`; the generated client
    parses the body as JSON regardless). No network call.
-2. **Single-flight de-dup:** if a request to the same URL is already in flight, the second caller
-   awaits the same `Promise` from `currentRequests` rather than issuing a parallel fetch (protects
-   against healthy-check storms against a slow backend).
+2. **Single-flight de-dup:** if a request to the same URL is already in flight, all concurrent
+   callers await the same `Promise` from `currentRequests` rather than issuing parallel fetches
+   (protects against healthy-check storms against a slow backend). Every caller increments
+   `currentRequestRefs[url]` synchronously before awaiting, and the entry is removed only when the
+   last awaiter resumes (refcount drops to zero).
 3. **Conditional GET with ETag:** otherwise, perform a `GET` carrying
    `If-None-Match: <previous ETag>` (the trailing `--gzip` suffix is stripped before sending, since
    the upstream signs the gzipped body).
@@ -80,8 +83,9 @@ Caching policy, in order:
 5. **`304 Not Modified`:** refresh the cached body's `expiresAt` to `now + maxAge` and return a
    `200` with the existing bytes. Throws `Cache error!` if there is no cached body to fall back to.
 6. **`200 OK`:** if the response carries an `ETag` header, the body is stored **as opaque bytes**
-   (`new Uint8Array(await response.clone().arrayBuffer())` — no JSON re-parse/re-serialize) and the
-   original `Response` is returned untouched. Responses without `ETag` are returned but not cached.
+   (`new Uint8Array(await response.clone().arrayBuffer())` — no JSON re-parse/re-serialize) and a
+   fresh `response.clone()` is returned so concurrent awaiters do not share a body stream. Responses
+   without `ETag` are also returned as `response.clone()` but are not cached.
 7. **Error fallback:** on a thrown error, the in-flight entry is removed and the cached body is
    returned as a `200` with a console warning. If no cached body exists, the error is wrapped and
    rethrown.
@@ -95,8 +99,8 @@ Server-only caveats:
   single shared global.
 - Method is implicitly `GET` (the comment in the file explicitly says "The rest of the code at the
   moment only works for GET requests.").
-- A small race exists in the single-flight map (set / await / delete) — two near-simultaneous
-  callers after the first deletion can both start fetches.
+- `fetchWithETag` is `export`ed purely so `shared/utils/use-api-client.test.ts` can call it directly
+  under a stubbed `globalThis.fetch` — do not remove the `export`.
 - If the upstream stops sending `ETag`, this layer effectively stops caching (the entry is never
   written). Without `Cache-Control: max-age`, the effective server-side TTL is 5 seconds.
 
