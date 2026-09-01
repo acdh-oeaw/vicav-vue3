@@ -5,6 +5,7 @@ export function useDicts(options?: { enabled?: boolean }) {
 
 	return useQuery({
 		enabled: options?.enabled,
+		retry: false,
 		queryKey: ["get-dicts"] as const,
 		async queryFn() {
 			const response = await api.restvle.getDicts({}, { headers: { accept: "application/json" } });

@@ -11,6 +11,7 @@ export function useProfileById(
 
 	return useQuery({
 		enabled: options?.enabled,
+		retry: false,
 		queryKey: ["get-profile-by-id", params] as const,
 		async queryFn({ queryKey: [, params] }) {
 			const response = await api.vicav.getProfile(

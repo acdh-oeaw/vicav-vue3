@@ -5,6 +5,8 @@ export function useProjectInfo(options?: { enabled?: boolean }) {
 
 	return useQuery({
 		enabled: options?.enabled,
+		retry: false,
+		structuralSharing: false,
 		queryKey: ["get-project-info"] as const,
 		async queryFn() {
 			const response = await api.vicav.getProject({ headers: { accept: "application/json" } });

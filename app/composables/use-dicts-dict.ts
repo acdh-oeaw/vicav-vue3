@@ -11,6 +11,7 @@ export function useDictsDict(
 
 	return useQuery({
 		enabled: options?.enabled,
+		retry: false,
 		queryKey: ["get-dicts", params] as const,
 		async queryFn({ queryKey: [, params] }) {
 			const response = await api.restvle.getDictDictName(params.id, {
