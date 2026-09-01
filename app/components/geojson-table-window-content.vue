@@ -395,10 +395,10 @@ function onFeatureClick(val: Header<unknown, unknown>) {
 				@table-ready="registerTable"
 			></DataTable>
 		</div>
-		<div class="flex items-center justify-between py-2">
-			<div class="text-sm">
-				<span class="mx-2 font-medium">Total:</span
-				><span> {{ tableRef?.getFilteredRowModel().flatRows.length }} rows</span>
+		<div class="flex flex-wrap items-center justify-between gap-y-1 py-2">
+			<div class="px-2 text-sm whitespace-nowrap">
+				<span class="font-medium">{{ tableRef?.getFilteredRowModel().flatRows.length }}</span>
+				rows
 			</div>
 			<DataTablePagination
 				v-if="tableRef"
