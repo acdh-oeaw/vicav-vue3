@@ -22,6 +22,7 @@ export default defineNuxtPlugin((nuxt) => {
 			queries: {
 				placeholderData: keepPreviousData,
 				staleTime: FIFTEEN_MIN,
+				structuralSharing: false,
 			},
 		},
 		queryCache: new QueryCache({
