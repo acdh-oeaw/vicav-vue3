@@ -276,8 +276,7 @@ country → region → place(settlement) → dataType → simpleTEIMetadata[]
   compare is by `label`; sorting is non-mutating (`toSorted`).
 - Items with missing geo fields land in the `""` bucket at the respective level.
 - Not memoized in the store: every call re-filters, re-sorts, and rebuilds the tree. The current
-  single call site wraps the result in a Vue `computed`; a store-level memo is a deferred plan
-  (`docs/use-tei-headers-store-grouped-items-memo.md`).
+  single call site wraps the result in a Vue `computed`; a store-level memo is a deferred plan.
 
 ### `simpleMetadataAccessors`
 
@@ -427,10 +426,8 @@ Three guards, at two scopes:
 - **Per-SSR-request re-parse — solved:** the full validation + metadata build now runs only when the
   body-level `ETag` of `/vicav/project` changes; warm requests are served from the module-scope memo
   (see Initialization). In `nuxt dev` the memo, like the `fetchWithETag` `Map`s, does not persist
-  across the isolated dev-server contexts, so the re-parse still happens there. The design plan and
-  its review history are in `docs/use-tei-headers-store-etag-memo-plan-nocode.md`.
-- **Grouping is not memoized in the store** (see Grouped output); a store-level memo is deferred
-  (`docs/use-tei-headers-store-grouped-items-memo.md`).
+  across the isolated dev-server contexts, so the re-parse still happens there.
+- **Grouping is not memoized in the store** (see Grouped output); a store-level memo is deferred.
 - **Dev-server context isolation:** in `nuxt dev` the API routes and the frontend run in isolated
   contexts, so the `fetchWithETag` `Map`s do not persist across them; production builds share one
   global scope.
