@@ -21,7 +21,7 @@ import {
 
 import { useToastsStore } from "./use-toasts-store.ts";
 
-const narrowScreenBreakpoint = 1024;
+export const narrowScreenBreakpoint = 1024;
 const listMapDefaultTitle = "Variety data";
 
 export type WindowRegistry = Map<WindowItem["id"], WindowItem>;

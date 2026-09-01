@@ -4,6 +4,7 @@ import type { ColumnDef, Header, Row, Table } from "@tanstack/vue-table";
 import { test } from "liqe";
 
 import { useGeojsonStore } from "@/stores/use-geojson-store.ts";
+import { narrowScreenBreakpoint } from "@/stores/use-windows-store.ts";
 import {
 	type FeatureType,
 	type FeatureValueGroup,
@@ -26,6 +27,7 @@ const emit = defineEmits<{
 }>();
 
 const GeojsonStore = useGeojsonStore();
+const windowsStore = useWindowsStore();
 const openOrUpdateWindow = useOpenOrUpdateWindow();
 
 const { isPending } = GeojsonStore.loadGeojson();
@@ -235,6 +237,21 @@ function openGeoJsonMap() {
 		"markerType",
 		false,
 	);
+	void nextTick(splitTableAndMapWindows);
+}
+
+function splitTableAndMapWindows() {
+	const viewport = document.getElementById(windowRootId)?.getBoundingClientRect();
+	if (!viewport || viewport.width < narrowScreenBreakpoint) return;
+
+	const windows = Array.from(windowsStore.registry.values());
+	const table = windows.find((w) => w.targetType === "ListMap");
+	const map = windows.find((w) => w.targetType === "GeojsonMap");
+	if (!table || !map) return;
+
+	const tableWidth = Math.floor(viewport.width * 0.25);
+	table.winbox.resize(tableWidth, viewport.height).move(0, 0);
+	map.winbox.resize(viewport.width - tableWidth, viewport.height).move(tableWidth, 0);
 }
 
 function onRowClick(row: Row<FeatureType>) {
