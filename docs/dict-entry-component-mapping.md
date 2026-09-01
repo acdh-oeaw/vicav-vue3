@@ -94,7 +94,7 @@ area from entry `selfHref`; JSON adds `format=json`.
 | `geographic_usg.tribe_names[0].$`            | `locations[].tribe`           | First tribe only; additional tribe names are currently not displayed.                 |
 | repeated equivalent locations                | deduped `locations[]`         | Duplicate badges are removed per display group, preserving order.                     |
 | `listBibl[].@id`                             | `bibliography[].sourceId`     | Source lookup key after stripping `#` from `@source`.                                 |
-| `listBibl[].title.@ref`                      | `rawReference`, `queryString` | Raw ID is preserved; normalized author/year terms drive bibliography search.          |
+| `listBibl[].title.@ref`                      | `rawReference`, `queryString` | Raw ID preserved; `zot:` refs go to the endpoint as-is; others by citation title.     |
 | `listBibl[].title`, `listBibl[].biblScope.$` | `bibliography[].label`        | Citation tooltip text; page scope is excluded from `queryString`.                     |
 | example-local `listBibl[]`                   | `examples[].bibliography[]`   | Uses the same icon action and normalized reference model as entry-level bibliography. |
 
