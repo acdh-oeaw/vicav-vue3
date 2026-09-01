@@ -11,6 +11,7 @@ export function useTextById(
 
 	return useQuery({
 		enabled: options?.enabled,
+		retry: false,
 		queryKey: ["get-text-by-id", params] as const,
 		async queryFn({ queryKey: [, params] }) {
 			const response = await api.vicav.getText(

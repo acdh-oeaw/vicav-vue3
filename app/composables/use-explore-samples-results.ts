@@ -13,6 +13,7 @@ export function useExploreSamplesResult(
 
 	return useQuery({
 		enabled: options?.enabled,
+		retry: false,
 		queryKey: ["get-compare", params] as const,
 		async queryFn({ queryKey: [, params] }) {
 			const response = await api.vicav.getCompare(
