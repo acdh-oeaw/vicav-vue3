@@ -5,8 +5,8 @@ test.describe("map page", () => {
 		await page.goto("/?w=W10=&a=smart-tile");
 		await page.getByRole("navigation").getByRole("button", { name: "Bibliographies" }).click();
 		await page.getByLabel("Bibliographies").getByText("All Bibl. Locations on Map").click();
-		await expect(page.getByRole("button", { name: "Bibl. Locations" })).toBeVisible();
-		await expect(page.getByRole("button", { name: "Bibl. Locations" })).toContainClass(
+		await expect(page.getByRole("button", { name: "Bibl. Locations", exact: true })).toBeVisible();
+		await expect(page.getByRole("button", { name: "Bibl. Locations", exact: true })).toContainClass(
 			"data-selected:bg-accent",
 		);
 	});
