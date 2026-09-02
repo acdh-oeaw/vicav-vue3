@@ -59,8 +59,13 @@ const stepDefinitions: Array<TourStep> = [
 		},
 	},
 	{
-		attachTo: { element: '[data-window-type="Location"] [data-onboarding="feature-link"]' },
+		attachTo: {
+			element: '[data-window-type="Location"] tr:nth-child(24) [data-onboarding="feature-link"]',
+		},
 		requireClick: true,
+		options: {
+			scrollToStep: { enabled: true, options: { container: "nearest" } as ScrollIntoViewOptions },
+		},
 		content: {
 			title: "From Variety to Feature",
 			description:
@@ -68,7 +73,10 @@ const stepDefinitions: Array<TourStep> = [
 		},
 	},
 	{
-		attachTo: { element: '[data-window-type="Location"] [data-onboarding="feature-value-link"]' },
+		attachTo: {
+			element:
+				'[data-window-type="Location"] tr:nth-child(24) [data-onboarding="feature-value-link"]',
+		},
 		requireClick: true,
 		content: {
 			title: "From Variety to Feature Value",
