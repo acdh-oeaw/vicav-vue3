@@ -209,6 +209,7 @@ function onRenameGroup(groupId: string, event: Event) {
 		v-model:open="collapsibleOpen"
 		class="flex h-fit w-56 flex-col bg-white p-4 text-xs"
 		data-geo-map-legend
+		data-onboarding="map-legend"
 	>
 		<CollapsibleTrigger class="flex w-full justify-between"
 			><span class="font-medium">{{ activeRows?.length }} total markers</span
@@ -321,6 +322,7 @@ function onRenameGroup(groupId: string, event: Event) {
 								dropTargetId === dropTargetIdFor(feature.id, entry.key),
 						}"
 						:data-legend-drop-target="dropTargetIdFor(feature.id, entry.key)"
+						data-onboarding="legend-value"
 						:group="sortableGroupName(feature.id)"
 						:list="[entry]"
 						:move="onDragMove"

@@ -157,7 +157,7 @@ function onSelectMenuItem(item: ItemType) {
 <template>
 	<header class="border-b border-border bg-header text-on-header">
 		<div class="flex items-center justify-between gap-4 px-8 py-4">
-			<NuxtLink class="flex shrink-0" href="/">
+			<NuxtLink class="flex shrink-0" data-onboarding="app-logo" href="/">
 				<!-- eslint-disable-next-line tailwindcss/no-custom-classname -->
 				<span v-if="titlestring" class="titlestring">{{ titlestring }}</span>
 				<img v-if="logo" alt="" class="h-10" :src="logo" />
