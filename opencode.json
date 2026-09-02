@@ -1,8 +1,5 @@
 {
 	"$schema": "https://opencode.ai/config.json",
-	"experimental": {
-		"chatMaxRetries": 5
-	},
 	"mcp": {
 		"playwright-test": {
 			"type": "local",
@@ -58,6 +55,7 @@
 				"playwright-test*browser_console_messages": true,
 				"playwright-test*browser_evaluate": true,
 				"playwright-test*browser_generate_locator": true,
+				"playwright-test*browser_network_request": true,
 				"playwright-test*browser_network_requests": true,
 				"playwright-test*browser_snapshot": true,
 				"playwright-test*test_debug": true,
@@ -84,9 +82,10 @@
 				"playwright-test*browser_hover": true,
 				"playwright-test*browser_navigate": true,
 				"playwright-test*browser_navigate_back": true,
+				"playwright-test*browser_network_request": true,
 				"playwright-test*browser_network_requests": true,
 				"playwright-test*browser_press_key": true,
-				"playwright-test*browser_run_code": true,
+				"playwright-test*browser_run_code_unsafe": true,
 				"playwright-test*browser_select_option": true,
 				"playwright-test*browser_snapshot": true,
 				"playwright-test*browser_take_screenshot": true,

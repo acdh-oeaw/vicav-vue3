@@ -17,11 +17,12 @@ pnpm run validate   # Format, lint, typecheck, unit tests
 
 ### Specs (Test Plans)
 
-| File                                                                   | Purpose                                                                                                                        |
-| ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| [specs/menu-test-plan.md](./specs/menu-test-plan.md)                   | Comprehensive menu test plan for VICAV; covers desktop/mobile menus, dropdowns, keyboard nav, accessibility, window management |
-| [specs/tunocent-menu-test-plan.md](./specs/tunocent-menu-test-plan.md) | Test plan for TUNOCENT (Tunisia Arabic varieties) app; includes profiles, feature lists, sample texts, corpus search           |
-| [specs/shawi-menu-test-plan.md](./specs/shawi-menu-test-plan.md)       | Test plan for SHAWI (Shared Arabic World Information) app; covers menu, windows, footer, imprint page                          |
+| File                                                                               | Purpose                                                                                                                        |
+| ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| [specs/menu-test-plan.md](./specs/menu-test-plan.md)                               | Comprehensive menu test plan for VICAV; covers desktop/mobile menus, dropdowns, keyboard nav, accessibility, window management |
+| [specs/tunocent-menu-test-plan.md](./specs/tunocent-menu-test-plan.md)             | Test plan for TUNOCENT (Tunisia Arabic varieties) app; includes profiles, feature lists, sample texts, corpus search           |
+| [specs/shawi-menu-test-plan.md](./specs/shawi-menu-test-plan.md)                   | Test plan for SHAWI (Shared Arabic World Information) app; covers menu, windows, footer, imprint page                          |
+| [specs/text-window-display-test-plan.md](./specs/text-window-display-test-plan.md) | Test plan for VICAV first-load Text windows; asserts text is displayed (loading resolved) and correct textId content loaded    |
 
 ### Docs (Architecture & Features)
 
