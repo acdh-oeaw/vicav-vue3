@@ -36,6 +36,26 @@ The npm scripts use `dotenv -e .env.local` to inject the var into both the app a
 - `e2e/pages/vicav/menu/` — 41 test files
 - `e2e/pages/tunocent/`, `e2e/pages/shawi/`, `e2e/pages/wibarab/` — other backends
 
+## Prefer Live API Examples over `openapi.json`
+
+`app/assets/openapi.json` is a generated/stale artifact. Its example responses only cover VICAV (and
+an empty SHAWI panel) and do **not** reflect TUNOCENT, WIBARAB, or the current live data of any
+backend. When you need to know what an endpoint actually returns — project config / `panel`, the
+menu tree, a text's rendered HTML, a data list, a dictionary entry — **fetch it from the live
+backend** instead of trusting the `openapi.json` examples:
+
+```bash
+# Project config (initial windows / panel + menus)
+curl -s -H "Accept: application/json" "<backend-url>/vicav/project"
+
+# A text's rendered HTML
+curl -s -H "Accept: application/xml" "<backend-url>/vicav/text?id=<textId>"
+```
+
+Substitute `<backend-url>` from the "Backend Switching" table (or `.env.local`). This applies to
+**every** backend (VICAV, TUNOCENT, SHAWI, WIBARAB) and every endpoint. The `openapi.json` is still
+authoritative for the _schema_ (request/response shapes); only its _examples_ are stale.
+
 ## Current Vicav Menu Data (live)
 
 - **Project**: Mission, News, Types of Text/Data, Contributors, Linguistics
@@ -47,6 +67,78 @@ The npm scripts use `dotenv -e .env.local` to inject the var into both the app a
 - **Dictionaries**: 10 items (last is "Contribute a Dictionary/Glossary", so substring names like
   "Contribute a Dictionary" match)
 - **Tools & Technology**: 16 items
+
+## Initial Windows & Text-Window Verification
+
+### Initial windows are backend-defined, not in the repo
+
+The windows that open on first load of `/` are defined **server-side** in the backend project config
+(`GET /vicav/project` → `projectConfig.panel`), **not** in the repo's `app/assets/openapi.json`.
+That file only documents the VICAV example (`panel` at lines 112-152: Mission, News, "All Bibl.
+Locations on Map") and an empty SHAWI panel (line 2070); TUNOCENT and wibarab are absent. To learn a
+backend's initial windows, query the live backend:
+
+```bash
+curl -s -H "Accept: application/json" "<backend-url>/vicav/project" | grep -o '"panel".*'
+```
+
+Verified live (2026-09-03):
+
+| Backend  | Initial windows (title · targetType · textId)                                             |
+| -------- | ----------------------------------------------------------------------------------------- |
+| vicav    | Mission (Text, vicavMission) · News (Text, vicavNews) · All Bibl. Locations on Map (WMap) |
+| tunocent | Welcome to TUNOCENT (Text, tunocentOpeningPage) — a single window                         |
+| shawi    | none (empty `panel`)                                                                      |
+
+Restoration pipeline: `useProjectInfo()` (SSR-prefetched) → `initialScreenSetup` computed
+(`app/stores/use-windows-store.ts:61-63`) → `initializeScreen()` navigates to `/?w=<base64(panel)>`
+→ `restoreState()` → `addWindow()` per entry, triggered on mount when `route.path === "/"`
+(`app/components/window-manager.client.vue:16-18`).
+
+### Verifying a Text window loaded (and the correct text)
+
+A `Text` window (`window-content.vue:27` → `text-window-content.vue`) fetches via `useTextById()`
+(`app/composables/use-text-by-id.ts`: `retry: false`, `GET /vicav/text?id=<textId>`,
+`Accept: application/xml`) and renders the returned HTML into
+`<div v-if="data" class="prose max-w-3xl p-8">`. While `isPending || isPlaceholderData` the wrapper
+is `opacity-50 grayscale` with a centered `LoadingIndicator`
+(`<svg><title>Loading...</title></svg>`). A failed fetch leaves `.prose` absent (no retry), so an
+empty window + spinner is the tell-tale sign.
+
+To assert a Text window **loaded**:
+
+1. Hydration gate first:
+   `await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 })`.
+2. Scope to the window by its title bar —
+   `page.locator(".winbox", { has: page.locator(".wb-title", { hasText: /^<title>$/ }) })`. **Not**
+   `.winbox.focus` (on first load focus is the _last_ restored window).
+3. `await expect(winbox.locator(".prose")).toBeVisible({ timeout: 15000 })` — `.prose` only exists
+   once data resolved.
+4. `await expect(winbox.locator("svg").filter({ has: page.locator("title", { hasText: /Loading/ }) })).not.toBeVisible()`
+   — spinner gone.
+
+To prove it loaded the **correct** text (right `textId`), assert unique, stable phrases scoped to
+`winbox.locator(".prose")` — never page-wide `getByText` (locator name collisions). A good
+discriminator is the document `<h2>` plus one or two body phrases. Playwright normalizes whitespace,
+so phrases match across the backend's source line breaks.
+
+TUNOCENT opening text (`tunocentOpeningPage`) — verified unique phrases:
+
+- heading `The TUNOCENT project` (the About text's `<h2>` is only `TUNOCENT`, so this is unique to
+  the opening page)
+- `learn about the TUNOCENT-project, its team members and activities`
+- `transcribed narratives, ethnographic texts and conversations`
+- (semi-volatile, mirror live counts — secondary only) `71 Profiles`, `195 Feature lists`,
+  `24 Corpus texts`, `2683 entries`
+
+**Triage** (content vs frontend):
+`curl -s -H "Accept: application/xml" "<backend-url>/vicav/text?id=<textId>"` — if the phrase is
+still in the response the failure is a frontend regression; if it's gone it's a backend content
+change (update the phrase, not the code).
+
+A full worked example lives in `specs/text-window-display-test-plan.md` (TUNOCENT initial text).
+Note the pre-existing `e2e/pages/tunocent/index.test.ts` "should show initial windows" only checks
+the window **title** (`div` filter `.nth(1)`) — it does not verify content or loading state.
 
 ## Selector Patterns
 
@@ -193,3 +285,12 @@ otherwise).
 E2E in CI runs per backend variant (vicav, shawi, tunocent, wibarab) via the reusable
 `acdh-oeaw/gl-autodevops-minimal-port` workflow `herokuish-tests-db-url.yaml`, against the built
 Herokuish image. The local `starter.yaml` only contains env-setup jobs.
+
+### API path prefix is hardcoded `/vicav/`
+
+The generated client (`app/lib/api-client/index.ts`) uses fixed paths — `GET /vicav/project`
+(line 2129) and `GET /vicav/text` (line 2173) — for **every** backend. TUNOCENT, SHAWI, and WIBARAB
+all serve their API under the same `/vicav/` prefix; the backend is selected purely by the base URL
+(`NUXT_PUBLIC_API_BASE_URL`), and the path segment never changes. So when fetching live examples
+(see "Prefer Live API Examples over `openapi.json`"), use `<backend-url>/vicav/...` regardless of
+which backend you are on.
