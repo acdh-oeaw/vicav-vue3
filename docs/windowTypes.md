@@ -60,6 +60,12 @@ Rendered as [text-window-content.vue](../app/components/text-window-content.vue)
 }
 ```
 
+- Rendering: fetches via `useTextById()` (`GET /vicav/text?id=<textId>`, `Accept: application/xml`,
+  `retry: false`) and renders the returned HTML into `<div class="prose" v-if="data">`, showing a
+  `LoadingIndicator` (and `opacity-50 grayscale`) while pending. For Playwright selectors and how to
+  assert the window loaded the _correct_ text, see [tests.md](tests.md) → "Verifying a Text window
+  loaded (and the correct text)".
+
 ### `SampleText`
 
 Rendered as [sample-text-window-content.vue](../app/components/sample-text-window-content.vue).
