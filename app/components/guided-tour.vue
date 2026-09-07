@@ -2,7 +2,9 @@
 import type { AttachableElement, StepEntity } from "v-onboarding";
 import { ref } from "vue";
 
-import stepDefinitionData from "@/assets/guidedTourSteps.json";
+const { data: projectData } = useProjectInfo();
+let stepDefinitionData = projectData.value?.projectConfig?.staticData?.table?.slice(-1)[0] ?? [];
+if (!Array.isArray(stepDefinitionData) || !stepDefinitionData[0]?.attachTo) stepDefinitionData = [];
 
 interface TourStep extends StepEntity {
 	/**
