@@ -1,7 +1,11 @@
 // @vitest-environment happy-dom
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { describeApiError, RFC7807ProblemError, withProblemError } from "./api-error.ts";
+
+const traceText = `/app/vicav.xqm, 492/29
+- /app/vicav.xqm, 472/38
+- /app/api-problem.xqm, 41/26`;
 
 const problemBody = (title?: string) =>
 	`<?xml version="1.0" encoding="utf-8"?>
@@ -18,9 +22,7 @@ ${
   <detail>Something went wrong</detail>
   <instance>https://tools.ietf.org/html/rfc7231#section-6.5.4</instance>
   <status>404</status>
-  <trace>/app/vicav.xqm, 492/29
-- /app/vicav.xqm, 472/38
-- /app/api-problem.xqm, 41/26</trace>
+  <trace>${traceText}</trace>
 </problem>`;
 
 function problemResponse(title?: string): Response {
@@ -30,6 +32,34 @@ function problemResponse(title?: string): Response {
 		headers: { "content-type": "application/xml" },
 	});
 }
+
+// A problem document with optional parts, for testing the describeApiError fallbacks.
+function partialProblemBody(
+	parts: { title?: string; detail?: boolean; trace?: boolean } = {},
+): string {
+	const elements: Array<string> = [];
+	if (parts.title !== undefined) {
+		elements.push(`<title>${parts.title}</title>`);
+	}
+	if (parts.detail ?? true) {
+		elements.push("<detail>Something went wrong</detail>");
+	}
+	if (parts.trace ?? true) {
+		elements.push(`<trace>${traceText}</trace>`);
+	}
+	return `<?xml version="1.0" encoding="utf-8"?>
+<problem xmlns="urn:ietf:rfc:7807">
+${elements.join("\n")}
+</problem>`;
+}
+
+function makeProblemError(body: string, message?: string): RFC7807ProblemError {
+	return new RFC7807ProblemError(new DOMParser().parseFromString(body, "application/xml"), message);
+}
+
+afterEach(() => {
+	vi.restoreAllMocks();
+});
 
 describe("withProblemError", () => {
 	it("converts a rejected Response with a problem <title> into an RFC7807ProblemError", async () => {
@@ -89,5 +119,73 @@ describe("describeApiError", () => {
 	it("stringifies other values", () => {
 		expect(describeApiError("oops")).toBe("oops");
 		expect(describeApiError(42)).toBe("42");
+	});
+
+	it("returns title and detail of an RFC7807ProblemError and logs the trace to console.error", () => {
+		const mainMessage = `Api Problem: Text not found:
+Something went wrong`;
+		const error = makeProblemError(problemBody("Text not found"), "Text not found");
+		const logSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+		expect(describeApiError(error)).toBe(mainMessage);
+		expect(logSpy).toHaveBeenCalledTimes(1);
+		expect(logSpy).toHaveBeenCalledWith(
+			`${mainMessage}
+${traceText}`,
+		);
+	});
+
+	it("uses the NO TITLE placeholder when the problem document has no <title>", () => {
+		const error = makeProblemError(partialProblemBody());
+		const logSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+		expect(describeApiError(error)).toBe(`Api Problem: NO TITLE:
+Something went wrong`);
+		expect(logSpy).toHaveBeenCalledWith(
+			`Api Problem: NO TITLE:
+Something went wrong
+${traceText}`,
+		);
+	});
+
+	it("uses the NO DETAILS placeholder when the problem document has no <detail>", () => {
+		const error = makeProblemError(partialProblemBody({ title: "Text not found", detail: false }));
+		const logSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+		expect(describeApiError(error)).toBe(`Api Problem: Text not found:
+NO DETAILS`);
+		expect(logSpy).toHaveBeenCalledWith(
+			`Api Problem: Text not found:
+NO DETAILS
+${traceText}`,
+		);
+	});
+
+	it("uses the NO TRACE placeholder in the console log when the problem document has no <trace>", () => {
+		const error = makeProblemError(partialProblemBody({ title: "Text not found", trace: false }));
+		const logSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+		expect(describeApiError(error)).toBe(`Api Problem: Text not found:
+Something went wrong`);
+		expect(logSpy).toHaveBeenCalledWith(
+			`Api Problem: Text not found:
+Something went wrong
+NO TRACE`,
+		);
+	});
+
+	it("describes a Response converted by withProblemError with the problem's title, detail and trace", async () => {
+		const logSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+		let caught: unknown = null;
+		try {
+			// eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors -- rejecting with a Response is the point
+			await withProblemError(Promise.reject(problemResponse("Text not found")));
+		} catch (error) {
+			caught = error;
+		}
+		expect(caught).toBeInstanceOf(RFC7807ProblemError);
+		expect(describeApiError(caught)).toBe(`Api Problem: Text not found:
+Something went wrong`);
+		expect(logSpy).toHaveBeenCalledWith(
+			`Api Problem: Text not found:
+Something went wrong
+${traceText}`,
+		);
 	});
 });
