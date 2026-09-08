@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/vue-query";
 import type Zod from "zod";
 
 import type { TextId } from "@/types/global.ts";
+import { withProblemError } from "@/utils/api-error.ts";
 
 export function useProfileById(
 	params: MaybeRef<Zod.infer<typeof TextId>>,
@@ -14,13 +15,8 @@ export function useProfileById(
 		retry: false,
 		queryKey: ["get-profile-by-id", params] as const,
 		async queryFn({ queryKey: [, params] }) {
-			const response = await api.vicav.getProfile(
-				{
-					id: params.textId,
-				},
-				{
-					headers: { accept: "application/xml" },
-				},
+			const response = await withProblemError(
+				api.vicav.getProfile({ id: params.textId }, { headers: { accept: "application/xml" } }),
 			);
 			return response.text();
 		},

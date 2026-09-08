@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/vue-query";
 import type Zod from "zod";
 
 import type { TextId } from "@/types/global.ts";
+import { withProblemError } from "@/utils/api-error.ts";
 
 export function useFeatureById(
 	params: MaybeRef<Zod.infer<typeof TextId>>,
@@ -11,15 +12,11 @@ export function useFeatureById(
 
 	return useQuery({
 		enabled: options?.enabled,
+		retry: false,
 		queryKey: ["get-feature-by-id", params] as const,
 		async queryFn({ queryKey: [, params] }) {
-			const response = await api.vicav.getLingFeature(
-				{
-					id: params.textId,
-				},
-				{
-					headers: { accept: "application/xml" },
-				},
+			const response = await withProblemError(
+				api.vicav.getLingFeature({ id: params.textId }, { headers: { accept: "application/xml" } }),
 			);
 			return response.text();
 		},

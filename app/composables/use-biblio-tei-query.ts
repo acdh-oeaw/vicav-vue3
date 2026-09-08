@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/vue-query";
 import type Zod from "zod";
 
 import type { BibliographyEntriesSchema } from "@/types/global.ts";
+import { withProblemError } from "@/utils/api-error.ts";
 
 const biblioEntrySelector = [
 	".dvBiblBlock",
@@ -49,6 +50,7 @@ export function useBiblioTeiQuery(
 	const api = useApiClient();
 	return useQuery({
 		enabled: options?.enabled,
+		retry: false,
 		queryKey: ["get-biblio-tei", params] as const,
 		async queryFn({ queryKey: [, params] }) {
 			if (params.queryString === "") return null;
@@ -56,9 +58,11 @@ export function useBiblioTeiQuery(
 				query: params.queryString,
 			};
 			if (typeof params.xslt !== "undefined") apiParams.xslt = params.xslt;
-			const response = await api.vicav.getBiblioTei(apiParams, {
-				headers: { accept: "application/xml" },
-			});
+			const response = await withProblemError(
+				api.vicav.getBiblioTei(apiParams, {
+					headers: { accept: "application/xml" },
+				}),
+			);
 			const text = await response.text();
 			return parseBiblioTeiResponse(text);
 		},
