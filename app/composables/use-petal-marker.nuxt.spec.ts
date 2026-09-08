@@ -79,7 +79,10 @@ describe("petal markers reflect custom feature value groups", () => {
 			COLUMN,
 		]);
 
-		const group = markerStore.createFeatureValueGroup(COLUMN, ["alpha", "beta"])!;
+		const group = markerStore.createFeatureValueGroup([
+			{ columnId: COLUMN, value: "alpha" },
+			{ columnId: COLUMN, value: "beta" },
+		])!;
 		await nextTick();
 
 		// the change has to reach the map, and the map has to draw one petal for the group
@@ -110,7 +113,10 @@ describe("petal markers reflect custom feature value groups", () => {
 		markerStore.addDefaultMarker(COLUMN, "alpha");
 		markerStore.addDefaultMarker(COLUMN, "beta");
 
-		const group = markerStore.createFeatureValueGroup(COLUMN, ["alpha", "beta"])!;
+		const group = markerStore.createFeatureValueGroup([
+			{ columnId: COLUMN, value: "alpha" },
+			{ columnId: COLUMN, value: "beta" },
+		])!;
 		const properties = { [COLUMN]: { alpha: [{}], beta: [{}] } };
 		expect(petalIds(renderMarker(properties))).toEqual([group.id, COLUMN]);
 
@@ -124,6 +130,9 @@ describe("petal markers reflect custom feature value groups", () => {
 		// the value that dropped out rejoins the group once it is selected again
 		table.setFilter(["alpha", "beta"]);
 		expect(petalIds(renderMarker(properties))).toEqual([group.id, COLUMN]);
-		expect(markerStore.featureValueGroups.get(group.id)?.values).toEqual(["alpha", "beta"]);
+		expect(markerStore.featureValueGroups.get(group.id)?.values).toEqual([
+			{ columnId: COLUMN, value: "alpha" },
+			{ columnId: COLUMN, value: "beta" },
+		]);
 	});
 });

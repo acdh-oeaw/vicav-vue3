@@ -140,7 +140,12 @@ const { featureValueGroups, markers, markerSettings } = storeToRefs(useMarkerSto
  * only worth sharing if it carries both.
  */
 function groupsFingerprint(groups: Array<FeatureValueGroup>) {
-	return JSON.stringify(groups.map(({ columnId, label, values }) => [columnId, label, values]));
+	return JSON.stringify(
+		groups.map(({ label, values }) => [
+			label,
+			values.map(({ columnId, value }) => [columnId, value]),
+		]),
+	);
 }
 function persistFeatureValueGroups() {
 	const groups = serializeFeatureValueGroups();
