@@ -1,6 +1,7 @@
 import type { Feature as GeoJsonFeature, Point } from "geojson";
 import { divIcon, type LatLng, marker } from "leaflet";
 
+import { isCharacterIcon } from "@/components/ui/icon-picker/character-icons.ts";
 import type { MarkerProperties } from "@/lib/api-client";
 import { useGeojsonStore } from "@/stores/use-geojson-store.ts";
 import { useMarkerStore } from "@/stores/use-marker-store.ts";
@@ -80,6 +81,15 @@ function getMarkerSVG(petalValue: PetalEntry) {
 	return getIconSVG(petalValue);
 }
 
+/** the length the `size-3` class gives every marker icon */
+const ICON_LENGTH = 12;
+
+function getUprightTransform(angle: number) {
+	const x = (ICON_LENGTH - markerSettings.value.size) / 2;
+	const y = ICON_LENGTH / 2 - markerSettings.value.size;
+	return `translate(${String(x)}px, ${String(y)}px) rotate(${String(-angle)}deg) translate(${String(-x)}px, ${String(-y)}px)`;
+}
+
 function getFlowerSVG(entries: Array<PetalEntry>, center?: PetalEntry) {
 	const div = document.createElement("div");
 	div.className = "hover:scale-150 transition origin-center relative -translate-y-1/2";
@@ -92,11 +102,17 @@ function getFlowerSVG(entries: Array<PetalEntry>, center?: PetalEntry) {
 	svg.classList.add("overflow-visible");
 
 	for (const [i, value] of visibleEntries.entries()) {
-		const useLucideIcon =
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-			markers.value.has(value.id) && !markers.value.get(value.id)?.icon?.custom;
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+		const icon = markers.value.get(value.id)?.icon;
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+		const isCharacter = isCharacterIcon(icon);
+		// unlike the petal, lucide icons and characters are drawn around their own
+		// center, so they have to be pushed outwards to not overlap each other
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+		const isCenteredIcon = markers.value.has(value.id) && (!icon?.custom || isCharacter);
+		const angle = (i * 360) / NUM_PETALS;
 		const petal = getMarkerSVG(value);
-		petal.style.transform = `rotate(${String((i * 360) / NUM_PETALS)}deg) ${useLucideIcon && (visibleEntries.length > 1 || visibleCenter) ? "translateY(-3px)" : ""}`;
+		petal.style.transform = `rotate(${String(angle)}deg) ${isCenteredIcon && (visibleEntries.length > 1 || visibleCenter) ? "translateY(-3px)" : ""} ${isCharacter ? getUprightTransform(angle) : ""}`;
 		svg.appendChild(petal);
 	}
 
