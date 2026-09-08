@@ -30,6 +30,12 @@ export async function withProblemError(promise: Promise<Response>): Promise<Resp
 export function describeApiError(error: unknown): string {
 	if (error instanceof Response) {
 		return `HTTP ${String(error.status)}${error.statusText ? ` ${error.statusText}` : ""}`;
+	} else if (error instanceof RFC7807ProblemError) {
+		const mainMessage = `Api Problem: ${error.RFC7807Problem.querySelector("title")?.textContent ?? "NO TITLE"}:
+${error.RFC7807Problem.querySelector("detail")?.textContent ?? "NO DETAILS"}`;
+		console.error(`${mainMessage}
+${error.RFC7807Problem.querySelector("trace")?.textContent ?? "NO TRACE"}`)
+		return mainMessage
 	}
 	return error instanceof Error ? error.message : String(error);
 }

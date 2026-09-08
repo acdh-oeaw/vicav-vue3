@@ -5,8 +5,22 @@ import { describeApiError, RFC7807ProblemError, withProblemError } from "./api-e
 
 const problemBody = (title?: string) =>
 	`<?xml version="1.0" encoding="utf-8"?>
-<problem>
-${title ? `\t<title>${title}</title>\n` : ""}\t<detail>Something went wrong</detail>
+<?xml-stylesheet type="text/css" href="problem.css"?>
+<problem xmlns="urn:ietf:rfc:7807">
+  <type>https://tools.ietf.org/html/rfc7231#section-6</type>
+${
+	title
+		? `
+	<title>${title}</title>
+`
+		: ""
+}
+  <detail>Something went wrong</detail>
+  <instance>https://tools.ietf.org/html/rfc7231#section-6.5.4</instance>
+  <status>404</status>
+  <trace>/app/vicav.xqm, 492/29
+- /app/vicav.xqm, 472/38
+- /app/api-problem.xqm, 41/26</trace>
 </problem>`;
 
 function problemResponse(title?: string): Response {
