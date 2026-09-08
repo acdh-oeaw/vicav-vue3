@@ -34,8 +34,8 @@ export function describeApiError(error: unknown): string {
 		const mainMessage = `Api Problem: ${error.RFC7807Problem.querySelector("title")?.textContent ?? "NO TITLE"}:
 ${error.RFC7807Problem.querySelector("detail")?.textContent ?? "NO DETAILS"}`;
 		console.error(`${mainMessage}
-${error.RFC7807Problem.querySelector("trace")?.textContent ?? "NO TRACE"}`)
-		return mainMessage
+${error.RFC7807Problem.querySelector("trace")?.textContent ?? "NO TRACE"}`);
+		return mainMessage;
 	}
 	return error instanceof Error ? error.message : String(error);
 }
