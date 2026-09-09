@@ -144,7 +144,16 @@ export const useWindowsStore = defineStore("windows", () => {
 		if (ci.success) {
 			let w: WindowItem | null;
 			if (targetType === "DictQuery") {
-				w = findWindowByTypeAndTitle(targetType, title);
+				const isDictEntryRequest = params.queryParams?.id != null;
+				w = isDictEntryRequest
+					? findWindowByTypeAndParam(targetType, "textId", params.textId)
+					: findWindowByTypeAndTitle(targetType, title);
+
+				if (w !== null && params.queryParams != null) {
+					w.params = params;
+					w.winbox.setTitle(title);
+					updateUrl();
+				}
 			} else {
 				w = findWindowByTypeAndParam(targetType, "textId", ci.data.textId);
 			}
