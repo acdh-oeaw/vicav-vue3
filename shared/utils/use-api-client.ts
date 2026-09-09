@@ -139,7 +139,7 @@ export async function fetchWithETag(
 		// Return a fresh Response per awaiter. Under single-flight, multiple
 		// callers receive the same `Response` object, and sharing the body
 		// stream across them causes "Body has already been consumed" errors
-		// downstream (e.g. Orval's generated `response.json()`).
+		// downstream (e.g. the generated API client's `response.json()`).
 		return response.clone();
 	} else {
 		return response.clone();

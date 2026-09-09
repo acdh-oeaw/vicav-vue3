@@ -36,7 +36,7 @@ pnpm install
 
 # The install process also:
 #   1. Downloads openapi.json from acdh-oeaw/vicav-app-api@master
-#   2. Generates a TypeScript API client in app/lib/api-client/ (gitignored)
+#   2. Generates the TypeScript API client in app/lib/api-client/ via swagger-typescript-api (gitignored)
 #   3. Bundles app/assets/openapi.json for runtime schema validation (gitignored)
 
 # Start the development server
@@ -174,10 +174,10 @@ vicav-vue3/
 - **Zod schemas**: Window types are defined in `app/types/global.ts` as discriminated unions.
 - **API contract**: The backend API contract lives in the
   [`vicav-app-api`](https://github.com/acdh-oeaw/vicav-app-api) repository. On install,
-  `openapi.json` is downloaded and the TypeScript client is generated. The same OpenAPI document is
-  converted to Zod schemas (`useOpenapiSchema()` + `z.fromJSONSchema()`) to validate backend
-  responses at runtime (e.g., TEI metadata, dictionary entries), keeping runtime validation in
-  lockstep with the contract.
+  `openapi.json` is downloaded and the TypeScript client is generated with `swagger-typescript-api`.
+  The same OpenAPI document is converted to Zod schemas (`useOpenapiSchema()` +
+  `z.fromJSONSchema()`) to validate backend responses at runtime (e.g., TEI metadata, dictionary
+  entries), keeping runtime validation in lockstep with the contract.
 
 ### Documentation
 
