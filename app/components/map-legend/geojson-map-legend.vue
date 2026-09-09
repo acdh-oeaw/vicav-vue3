@@ -155,7 +155,8 @@ const legend = computed<{
 		// members whose value is not selected right now have nothing to show in the legend
 		const entries = group.values
 			.map((member) => entryByMember.get(legendMemberKey(member.columnId, member.value)))
-			.filter((entry) => entry !== undefined);
+			.filter((entry) => entry !== undefined)
+			.sort((a, b) => (b.count ?? 0) - (a.count ?? 0));
 		if (entries.length === 0) continue;
 		entries.forEach((entry) => groupedMembers.add(legendMemberKey(entry.columnId, entry.key)));
 
@@ -206,9 +207,9 @@ const legend = computed<{
 			feature,
 			matchingRowCount: matchingRowCounts.get(feature.id) ?? 0,
 			groups: groupsByColumn.get(feature.id) ?? [],
-			ungrouped: (entriesByColumn.get(feature.id) ?? []).filter(
-				(entry) => !groupedMembers.has(legendMemberKey(entry.columnId, entry.key)),
-			),
+			ungrouped: (entriesByColumn.get(feature.id) ?? [])
+				.filter((entry) => !groupedMembers.has(legendMemberKey(entry.columnId, entry.key)))
+				.sort((a, b) => (b.count ?? 0) - (a.count ?? 0)),
 			showOtherFeatureValues: shouldShowOtherFeatureValues(feature),
 		})),
 		crossFeatureGroups,
