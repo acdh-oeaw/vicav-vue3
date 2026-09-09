@@ -203,15 +203,17 @@ const legend = computed<{
 	}
 
 	return {
-		features: features.map((feature) => ({
-			feature,
-			matchingRowCount: matchingRowCounts.get(feature.id) ?? 0,
-			groups: groupsByColumn.get(feature.id) ?? [],
-			ungrouped: (entriesByColumn.get(feature.id) ?? [])
-				.filter((entry) => !groupedMembers.has(legendMemberKey(entry.columnId, entry.key)))
-				.sort((a, b) => (b.count ?? 0) - (a.count ?? 0)),
-			showOtherFeatureValues: shouldShowOtherFeatureValues(feature),
-		})),
+		features: features
+			.map((feature) => ({
+				feature,
+				matchingRowCount: matchingRowCounts.get(feature.id) ?? 0,
+				groups: groupsByColumn.get(feature.id) ?? [],
+				ungrouped: (entriesByColumn.get(feature.id) ?? [])
+					.filter((entry) => !groupedMembers.has(legendMemberKey(entry.columnId, entry.key)))
+					.sort((a, b) => (b.count ?? 0) - (a.count ?? 0)),
+				showOtherFeatureValues: shouldShowOtherFeatureValues(feature),
+			}))
+			.filter((f) => f.groups.length > 0 || f.ungrouped.length > 0),
 		crossFeatureGroups,
 	};
 });
