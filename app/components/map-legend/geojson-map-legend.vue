@@ -387,7 +387,7 @@ function onValueChange(entry: LegendEntry, event: DragChangeEvent<LegendEntry>) 
 				:class="{ 'mt-2 border-t pt-2': legend.features.length }"
 				data-legend-cross-feature-groups
 			>
-				<span class="font-medium">Groups across features</span>
+				<span class="font-normal">Groups across features</span>
 				<GeojsonMapLegendGroup
 					v-for="legendGroup in legend.crossFeatureGroups"
 					:key="legendGroup.group.id"
