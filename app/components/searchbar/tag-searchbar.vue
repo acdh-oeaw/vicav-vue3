@@ -329,8 +329,25 @@ function handleInput() {
 	open.value = filteredList.value.length > 0;
 }
 
+/**
+ * reka-ui handles Enter on the same keydown event we do: it clicks the highlighted item
+ * (→ `handleSelect`) before `handleEnter` runs, and the selection clears `highlighted`.
+ * Without this flag `handleEnter` would turn the text the selection just wrote (e.g.
+ * `[word=""]`) into a finished tag and the window listener would fire a search.
+ * The reset runs as a task, not `nextTick`, so the flag survives the whole keydown
+ * dispatch — a microtask checkpoint runs between the input handler and the window listener.
+ */
+let enterConsumedBySelect = false;
+function consumeEnterForSelect() {
+	enterConsumedBySelect = true;
+	setTimeout(() => {
+		enterConsumedBySelect = false;
+	}, 0);
+}
+
 function handleSelect(ev: CustomEvent) {
 	ev.preventDefault();
+	consumeEnterForSelect();
 	highlighted.value = null;
 	const selectedValue = String(ev.detail.value);
 	const featureTriggerValue = props.featureTrigger ?? "";
@@ -424,7 +441,7 @@ function handleBackspace() {
 
 function handleEnter(e: KeyboardEvent) {
 	e.preventDefault();
-	if (highlighted.value) return; // let combobox handle selection
+	if (enterConsumedBySelect || highlighted.value) return; // let combobox handle selection
 	if (inputValue.value.trim()) {
 		let tagValue = inputValue.value.trim();
 		if (isCqlMode.value) {
@@ -520,7 +537,12 @@ watch(
 );
 
 const keyListener = (e: KeyboardEvent) => {
-	if (e.key === "Enter" && !highlighted.value && queryWarnings.value.isValid) {
+	if (
+		e.key === "Enter" &&
+		!enterConsumedBySelect &&
+		!highlighted.value &&
+		queryWarnings.value.isValid
+	) {
 		submitSearch();
 	}
 };
