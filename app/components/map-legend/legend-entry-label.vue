@@ -9,7 +9,8 @@ defineProps<{
 
 <template>
 	<span
-		><span v-if="featureLabel" class="text-on-muted">{{ featureLabel }}:&nbsp;</span
+		><span v-if="featureLabel" class="text-on-muted"
+			><Ellipsis :text="featureLabel"></Ellipsis>:&nbsp;</span
 		><span v-for="(part, idx) in parts" :key="part"
 			>{{ part
 			}}<span v-if="idx < parts.length - 1" class="font-mono font-semibold"
