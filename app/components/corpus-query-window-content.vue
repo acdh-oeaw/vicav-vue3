@@ -124,15 +124,7 @@ const openNewWindowFromAnchor = useAnchorClickHandler();
 const { data: config } = useProjectInfo();
 const specialCharacters = config.value?.projectConfig?.specialCharacters;
 const wordSearch = ref("");
-const dataWordsQuery = useDataWords(
-	{ dataType: "CorpusText", query: wordSearch },
-	{ enabled: false },
-);
-
-watch(wordSearch, async (value) => {
-	if (!value || value.length < 2) return;
-	await dataWordsQuery.refetch();
-});
+const dataWordsQuery = useDataWords({ dataType: "CorpusText", query: wordSearch });
 
 const wordOptions = computed(() => {
 	return ((dataWordsQuery.data.value as unknown as Array<string>) ?? []).map((item: string) => {

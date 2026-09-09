@@ -94,15 +94,7 @@ const wordSearch = ref("");
 
 const featureLabelsQuery = useFeatureLabels();
 
-watch(wordSearch, async (value) => {
-	if (!value || value.length < 2) return;
-	await dataWordsQuery.refetch();
-});
-
-const dataWordsQuery = useDataWords(
-	{ dataType: props.params.dataTypes[0]!, query: wordSearch },
-	{ enabled: false },
-);
+const dataWordsQuery = useDataWords({ dataType: props.params.dataTypes[0]!, query: wordSearch });
 
 const wordOptions = computed(() => {
 	return ((dataWordsQuery.data.value as unknown as Array<string>) ?? []).map((item) => {
