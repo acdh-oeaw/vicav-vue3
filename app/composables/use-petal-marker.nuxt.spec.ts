@@ -3,6 +3,7 @@ import { latLng } from "leaflet";
 import { describe, expect, it } from "vitest";
 import { nextTick, watch } from "vue";
 
+import { characterIcons } from "@/components/ui/icon-picker/character-icons.ts";
 import { useGeojsonStore } from "@/stores/use-geojson-store.ts";
 import { useMarkerStore } from "@/stores/use-marker-store.ts";
 import { FilterValueMap } from "@/utils/filter-value-map.ts";
@@ -98,6 +99,32 @@ describe("petal markers reflect custom feature value groups", () => {
 			`${COLUMN}-beta`,
 			COLUMN,
 		]);
+	});
+
+	it("draws letter markers upright, whatever their place in the flower is", () => {
+		const geojsonStore = useGeojsonStore();
+		const markerStore = useMarkerStore();
+		geojsonStore.table = stubTable(["alpha", "beta"]) as unknown as typeof geojsonStore.table;
+
+		markerStore.addDefaultMarker(COLUMN);
+		markerStore.addDefaultMarker(COLUMN, "alpha");
+		markerStore.addDefaultMarker(COLUMN, "beta");
+
+		const letter = characterIcons.find((icon) => icon.character === "A")!;
+		const betaId = `${COLUMN}-beta`;
+		markerStore.setMarker({
+			...markerStore.markers.get(betaId)!,
+			icon: { ...letter, custom: true },
+		});
+
+		const html = renderMarker({ [COLUMN]: { alpha: [{}], beta: [{}] } });
+
+		// beta is the second of the two petals, so it is rotated by 180 degrees
+		expect(petalIds(html)).toEqual([`${COLUMN}-alpha`, betaId, COLUMN]);
+		expect(html).toContain("#character-a");
+		expect(html).toMatch(/rotate\(180deg\)[^"]*rotate\(-180deg\)/);
+		// the shape markers keep turning with the flower
+		expect(html).not.toMatch(/rotate\(0deg\)[^"]*rotate\(-0deg\)/);
 	});
 
 	it("survives the filter selection changing under it", () => {
