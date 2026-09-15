@@ -72,7 +72,13 @@ describe("geojson table property cell", () => {
 	it("collapses a group into a single line with the tribe badge shown once", async () => {
 		const markerStore = setupMarkers();
 		useGeojsonStore().showAllDetails = false;
-		markerStore.createFeatureValueGroup(COLUMN, ["alpha", "beta"], "Group 1");
+		markerStore.createFeatureValueGroup(
+			[
+				{ columnId: COLUMN, value: "alpha" },
+				{ columnId: COLUMN, value: "beta" },
+			],
+			"Group 1",
+		);
 
 		const wrapper = await mountCell();
 		const labels = rowLabels(wrapper);
@@ -92,7 +98,13 @@ describe("geojson table property cell", () => {
 	it("picks up a renamed group on the collapsed line", async () => {
 		const markerStore = setupMarkers();
 		useGeojsonStore().showAllDetails = false;
-		const group = markerStore.createFeatureValueGroup(COLUMN, ["alpha", "beta"], "Group 1")!;
+		const group = markerStore.createFeatureValueGroup(
+			[
+				{ columnId: COLUMN, value: "alpha" },
+				{ columnId: COLUMN, value: "beta" },
+			],
+			"Group 1",
+		)!;
 
 		const wrapper = await mountCell();
 		markerStore.renameFeatureValueGroup(group.id, "Bedouin dialects");
@@ -106,7 +118,13 @@ describe("geojson table property cell", () => {
 	it("picks up a renamed group on the expanded badges", async () => {
 		const markerStore = setupMarkers();
 		useGeojsonStore().showAllDetails = true;
-		const group = markerStore.createFeatureValueGroup(COLUMN, ["alpha", "beta"], "Group 1")!;
+		const group = markerStore.createFeatureValueGroup(
+			[
+				{ columnId: COLUMN, value: "alpha" },
+				{ columnId: COLUMN, value: "beta" },
+			],
+			"Group 1",
+		)!;
 
 		const wrapper = await mountCell();
 		markerStore.renameFeatureValueGroup(group.id, "Bedouin dialects");
@@ -120,7 +138,13 @@ describe("geojson table property cell", () => {
 	it("expands a group into its values, each badged with the group", async () => {
 		const markerStore = setupMarkers();
 		useGeojsonStore().showAllDetails = true;
-		markerStore.createFeatureValueGroup(COLUMN, ["alpha", "beta"], "Group 1");
+		markerStore.createFeatureValueGroup(
+			[
+				{ columnId: COLUMN, value: "alpha" },
+				{ columnId: COLUMN, value: "beta" },
+			],
+			"Group 1",
+		);
 
 		const wrapper = await mountCell();
 		const labels = rowLabels(wrapper);

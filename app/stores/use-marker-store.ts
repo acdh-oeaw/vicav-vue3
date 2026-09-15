@@ -3,7 +3,7 @@ import Color from "colorjs.io";
 import { defineStore } from "pinia";
 
 import type { IconType } from "@/components/ui/icon-picker/IconPicker.vue";
-import type { FeatureValueGroup } from "@/types/global.ts";
+import type { FeatureValueGroup, FeatureValueGroupMember } from "@/types/global.ts";
 
 interface ColorInterface {
 	id: string;
@@ -68,9 +68,12 @@ export const useMarkerStore = defineStore("markers", () => {
 	) {
 		const featureValuePrefix = buildFeatureValueId(featureId, "");
 		markers.value.forEach((entry, id) => {
-			if (id !== featureId && id.startsWith(featureValuePrefix)) {
-				updateEntry(entry, id);
-			}
+			if (id === featureId || !id.startsWith(featureValuePrefix)) return;
+			// a group spanning several features belongs to none of them, so styling or hiding a
+			// single feature must leave it alone - it is only reachable through its own legend entry
+			const group = featureValueGroups.value.get(id);
+			if (group?.values.some((member) => member.columnId !== featureId)) return;
+			updateEntry(entry, id);
 		});
 	}
 
@@ -125,19 +128,23 @@ export const useMarkerStore = defineStore("markers", () => {
 	const groupsByColumn = computed(() => {
 		const index = new Map<string, Array<FeatureValueGroupInterface>>();
 		featureValueGroups.value.forEach((group) => {
-			const groups = index.get(group.columnId);
-			if (groups) groups.push(group);
-			else index.set(group.columnId, [group]);
+			new Set(group.values.map((member) => member.columnId)).forEach((columnId) => {
+				const groups = index.get(columnId);
+				if (groups) groups.push(group);
+				else index.set(columnId, [group]);
+			});
 		});
 		return index;
 	});
 
 	const valueGroupKey = (columnId: string, value: string) => JSON.stringify([columnId, value]);
+	const memberKey = (member: FeatureValueGroupMember) =>
+		valueGroupKey(member.columnId, member.value);
 
 	const groupByValue = computed(() => {
 		const index = new Map<string, FeatureValueGroupInterface>();
 		featureValueGroups.value.forEach((group) => {
-			group.values.forEach((value) => index.set(valueGroupKey(group.columnId, value), group));
+			group.values.forEach((member) => index.set(memberKey(member), group));
 		});
 		return index;
 	});
@@ -164,7 +171,10 @@ export const useMarkerStore = defineStore("markers", () => {
 		markerSettings.value.triggerRepaint = true;
 	}
 
-	function updateFeatureValueGroupValues(group: FeatureValueGroupInterface, values: Array<string>) {
+	function updateFeatureValueGroupValues(
+		group: FeatureValueGroupInterface,
+		values: Array<FeatureValueGroupMember>,
+	) {
 		if (values.length < 2) {
 			dissolveFeatureValueGroup(group.id);
 			return;
@@ -173,28 +183,31 @@ export const useMarkerStore = defineStore("markers", () => {
 		markerSettings.value.triggerRepaint = true;
 	}
 
-	function detachValueFromFeatureValueGroups(columnId: string, value: string) {
-		const group = getFeatureValueGroup(columnId, value);
+	function detachValueFromFeatureValueGroups(member: FeatureValueGroupMember) {
+		const group = getFeatureValueGroup(member.columnId, member.value);
 		if (!group) return;
 		updateFeatureValueGroupValues(
 			group,
-			group.values.filter((entry) => entry !== value),
+			group.values.filter((entry) => memberKey(entry) !== memberKey(member)),
 		);
 	}
 
-	function createFeatureValueGroup(columnId: string, values: Array<string>, label?: string) {
-		const uniqueValues = [...new Set(values)];
+	function createFeatureValueGroup(values: Array<FeatureValueGroupMember>, label?: string) {
+		const uniqueValues = [...new Map(values.map((member) => [memberKey(member), member])).values()];
 		if (uniqueValues.length < 2) return undefined;
-		uniqueValues.forEach((value) => {
-			detachValueFromFeatureValueGroups(columnId, value);
+		uniqueValues.forEach((member) => {
+			detachValueFromFeatureValueGroups(member);
 		});
 
 		featureValueGroupCounter += 1;
 		const groupKey = `group${String(featureValueGroupCounter)}`;
-		const id = buildFeatureValueId(columnId, groupKey);
-		addDefaultMarker(columnId, groupKey);
+		const [firstMember] = uniqueValues as [FeatureValueGroupMember, ...Array<never>];
+		const id = buildFeatureValueId(firstMember.columnId, groupKey);
+		addDefaultMarker(firstMember.columnId, groupKey);
 
-		const templateMarker = markers.value.get(buildFeatureValueId(columnId, uniqueValues[0]));
+		const templateMarker = markers.value.get(
+			buildFeatureValueId(firstMember.columnId, firstMember.value),
+		);
 		if (templateMarker) {
 			markers.value.set(id, { ...templateMarker, id });
 			updateCssVariable({ id, colorCode: templateMarker.colorCode });
@@ -202,7 +215,6 @@ export const useMarkerStore = defineStore("markers", () => {
 
 		const group: FeatureValueGroupInterface = {
 			id,
-			columnId,
 			label: label ?? `Group ${String(featureValueGroupCounter)}`,
 			values: uniqueValues,
 		};
@@ -211,20 +223,20 @@ export const useMarkerStore = defineStore("markers", () => {
 		return group;
 	}
 
-	function addValueToFeatureValueGroup(groupId: string, value: string) {
+	function addValueToFeatureValueGroup(groupId: string, member: FeatureValueGroupMember) {
 		const group = featureValueGroups.value.get(groupId);
-		if (!group || group.values.includes(value)) return;
-		detachValueFromFeatureValueGroups(group.columnId, value);
-		featureValueGroups.value.set(groupId, { ...group, values: [...group.values, value] });
+		if (!group || group.values.some((entry) => memberKey(entry) === memberKey(member))) return;
+		detachValueFromFeatureValueGroups(member);
+		featureValueGroups.value.set(groupId, { ...group, values: [...group.values, member] });
 		markerSettings.value.triggerRepaint = true;
 	}
 
-	function removeValueFromFeatureValueGroup(groupId: string, value: string) {
+	function removeValueFromFeatureValueGroup(groupId: string, member: FeatureValueGroupMember) {
 		const group = featureValueGroups.value.get(groupId);
 		if (!group) return;
 		updateFeatureValueGroupValues(
 			group,
-			group.values.filter((entry) => entry !== value),
+			group.values.filter((entry) => memberKey(entry) !== memberKey(member)),
 		);
 	}
 
@@ -235,10 +247,9 @@ export const useMarkerStore = defineStore("markers", () => {
 	}
 
 	function serializeFeatureValueGroups(): Array<SerializedFeatureValueGroup> {
-		return [...featureValueGroups.value.values()].map(({ columnId, label, values }) => ({
-			columnId,
+		return [...featureValueGroups.value.values()].map(({ label, values }) => ({
 			label,
-			values,
+			values: values.map(({ columnId, value }) => ({ columnId, value })),
 		}));
 	}
 
@@ -247,7 +258,7 @@ export const useMarkerStore = defineStore("markers", () => {
 			dissolveFeatureValueGroup(id);
 		});
 		groups.forEach((group) => {
-			createFeatureValueGroup(group.columnId, group.values, group.label);
+			createFeatureValueGroup(group.values, group.label);
 		});
 	}
 
