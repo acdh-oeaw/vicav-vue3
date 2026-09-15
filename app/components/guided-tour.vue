@@ -178,3 +178,9 @@ onMounted(() => {
 			:steps="steps"
 	/></Teleport>
 </template>
+
+<style scoped>
+* {
+	--v-onboarding-step-z: 110;
+}
+</style>
