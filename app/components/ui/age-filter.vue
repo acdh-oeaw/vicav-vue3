@@ -3,7 +3,7 @@ import { SliderRange, SliderRoot, SliderThumb, SliderTrack } from "radix-vue";
 
 const age: Ref<Array<number>> = defineModel("modelValue", {
 	type: Array,
-	default: [0, 100],
+	default: () => [0, 100],
 });
 </script>
 

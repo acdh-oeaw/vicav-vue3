@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Primitive, type PrimitiveProps } from "radix-vue";
 import { twMerge } from "tailwind-merge";
-import type { HTMLAttributes } from "vue";
+import { type HTMLAttributes, normalizeClass } from "vue";
 
 import { type ButtonVariants, buttonVariants } from "./index.ts";
 
@@ -21,7 +21,7 @@ const props = withDefaults(defineProps<Props>(), {
 	<Primitive
 		:as="as"
 		:as-child="asChild"
-		:class="twMerge(buttonVariants({ variant, size }), props.class)"
+		:class="twMerge(buttonVariants({ variant, size }), normalizeClass(props.class))"
 	>
 		<slot />
 	</Primitive>

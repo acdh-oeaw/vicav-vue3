@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ListboxGroup, ListboxGroupLabel, type ListboxGroupProps, useId } from "reka-ui";
 import { twMerge } from "tailwind-merge";
-import { computed, type HTMLAttributes, onMounted, onUnmounted } from "vue";
+import { computed, type HTMLAttributes, normalizeClass, onMounted, onUnmounted } from "vue";
 
 import { provideCommandGroupContext, useCommand } from "./index.ts";
 
@@ -39,7 +39,7 @@ onUnmounted(() => {
 		:class="
 			twMerge(
 				'overflow-hidden p-1 text-foreground **:[[cmdk-group-heading]]:px-2 **:[[cmdk-group-heading]]:py-1.5 **:[[cmdk-group-heading]]:text-xs **:[[cmdk-group-heading]]:font-medium **:[[cmdk-group-heading]]:text-muted-foreground',
-				props.class,
+				normalizeClass(props.class),
 			)
 		"
 		:hidden="isRender ? undefined : true"

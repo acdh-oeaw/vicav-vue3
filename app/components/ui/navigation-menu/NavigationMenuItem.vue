@@ -2,7 +2,7 @@
 import { reactiveOmit } from "@vueuse/core";
 import { NavigationMenuItem, type NavigationMenuItemProps } from "reka-ui";
 import { twMerge } from "tailwind-merge";
-import type { HTMLAttributes } from "vue";
+import { type HTMLAttributes, normalizeClass } from "vue";
 
 const props = defineProps<NavigationMenuItemProps & { class?: HTMLAttributes["class"] }>();
 
@@ -12,7 +12,7 @@ const delegatedProps = reactiveOmit(props, "class");
 <template>
 	<NavigationMenuItem
 		v-bind="delegatedProps"
-		:class="twMerge('relative', props.class)"
+		:class="twMerge('relative', normalizeClass(props.class))"
 		data-slot="navigation-menu-item"
 	>
 		<slot />

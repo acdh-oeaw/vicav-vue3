@@ -8,7 +8,7 @@ import {
 	useForwardPropsEmits,
 } from "radix-vue";
 import { twMerge } from "tailwind-merge";
-import { computed, type HTMLAttributes } from "vue";
+import { computed, type HTMLAttributes, normalizeClass } from "vue";
 
 const props = defineProps<DropdownMenuCheckboxItemProps & { class?: HTMLAttributes["class"] }>();
 const emits = defineEmits<DropdownMenuCheckboxItemEmits>();
@@ -28,7 +28,7 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits);
 		:class="
 			twMerge(
 				'relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-hidden transition-colors focus:bg-accent data-disabled:pointer-events-none data-disabled:opacity-50',
-				props.class,
+				normalizeClass(props.class),
 			)
 		"
 	>

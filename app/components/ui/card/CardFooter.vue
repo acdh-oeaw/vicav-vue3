@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Primitive, type PrimitiveProps } from "radix-vue";
 import { twMerge } from "tailwind-merge";
-import type { HTMLAttributes } from "vue";
+import { type HTMLAttributes, normalizeClass } from "vue";
 
 interface Props extends PrimitiveProps {
 	class?: HTMLAttributes["class"];
@@ -16,7 +16,7 @@ const props = withDefaults(defineProps<Props>(), {
 	<Primitive
 		:as="as"
 		:as-child="asChild"
-		:class="twMerge('flex items-center p-6 pt-0', props.class)"
+		:class="twMerge('flex items-center p-6 pt-0', normalizeClass(props.class))"
 	>
 		<slot />
 	</Primitive>
