@@ -32,7 +32,7 @@ const props = defineProps<{
 	triggers: TriggerMap;
 	operators?: ReadonlyArray<string>;
 	featureTrigger?: string;
-	onSubmit?: (value: string) => void;
+	onSubmit?: (value: string) => Promise<{ isValid: boolean; warnings: Array<string> }> | undefined;
 	freeTriggerKey?: string;
 	dynamicTriggers?: ReadonlyArray<string>;
 	isLoading?: boolean;
@@ -515,8 +515,7 @@ watch(open, () => {
 
 function submitSearch() {
 	if (props.onSubmit) {
-		props.onSubmit(value.value);
-		return;
+		return props.onSubmit(value.value);
 	}
 	if (!props.table) return;
 	parseSearchString(value.value, props.table);

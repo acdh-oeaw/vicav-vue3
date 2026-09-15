@@ -4,7 +4,7 @@ import InfiniteLoading from "v3-infinite-loading";
 import type { StateHandler } from "v3-infinite-loading/lib/types";
 import type Zod from "zod";
 
-import type { Div, MixedUtteranceContent } from "@/lib/api-client";
+import type { Div, HttpResponse, MixedUtteranceContent, RFC7807Problem } from "@/lib/api-client";
 import { useTeiHeadersStore } from "@/stores/use-tei-headers-store.ts";
 import type { CorpusQuerySchema } from "@/types/global.ts";
 
@@ -64,6 +64,7 @@ async function searchCorpus(options: { updateRoute?: boolean } = {}) {
 	currentPage.value = 0;
 	hits.value = [];
 	displayHits.value = [];
+	let status = { isValid: true, warnings: [] as Array<string> };
 	try {
 		if (words.value.length > 0) queryString.value = `[word="${words.value.join("|")}"]`;
 		if (updateRoute) emit("updateQueryParam", queryString.value);
@@ -78,7 +79,6 @@ async function searchCorpus(options: { updateRoute?: boolean } = {}) {
 
 		if (result.error) {
 			console.error(result.error);
-			return;
 		}
 		if (result.data.hits !== undefined && !Array.isArray(result.data.hits)) {
 			if (Array.isArray(result.data.hits.divs)) hits.value = result.data.hits.divs;
@@ -90,9 +90,16 @@ async function searchCorpus(options: { updateRoute?: boolean } = {}) {
 			displayHits.value = hits.value.slice(currentPage.value * 10, (currentPage.value + 1) * 10);
 			scrollComplete.value = false;
 		}
+	} catch (e) {
+		status = {
+			isValid: false,
+			warnings: [(e as HttpResponse<never, RFC7807Problem>).error.detail],
+		};
+		return status;
 	} finally {
 		isSearching.value = false;
 	}
+	return status;
 }
 
 // API currently doesn't support pagination for corpus search results, so we're faking it
@@ -234,7 +241,7 @@ const { cqlTriggers } = useCqlTriggers(cqlConfig);
 					(v) => {
 						if (!isSearching) {
 							queryString = v;
-							searchCorpus();
+							return searchCorpus();
 						}
 					}
 				"

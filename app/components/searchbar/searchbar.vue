@@ -19,7 +19,7 @@ const _props = defineProps<{
 	 */
 	featureTrigger?: string;
 	queryMode?: "lucene" | "cql";
-	onSubmit?: (value: string) => void;
+	onSubmit?: (value: string) => Promise<{ isValid: boolean; warnings: Array<string> }> | undefined;
 	/** CQL mode: attribute key used when wrapping free-text input (e.g. "word"). */
 	freeTriggerKey?: string;
 	specialCharacters?: SpecialCharacters;
@@ -64,14 +64,17 @@ watch(model, (value) => {
 onMounted(() => {
 	if (model.value && model.value !== currentValue.value) currentValue.value = model.value;
 });
+
+const postSubmitWarnings = ref<Array<string>>([]);
 const queryWarnings = computed(() => {
-	if (_props.onSubmit) return { isValid: true, warnings: [] as Array<string> };
-	return validateQuery(currentValue.value);
+	if (_props.onSubmit) return { isValid: true, warnings: postSubmitWarnings.value };
+	const res = validateQuery(currentValue.value);
+	return { isValid: res.isValid, warnings: [...res.warnings, ...postSubmitWarnings.value] };
 });
 const hasValue = computed(() => Boolean(currentValue.value.trim()));
 
 function submitSearch() {
-	active.value?.submitSearch();
+	active.value?.submitSearch()?.then((res) => (postSubmitWarnings.value = res.warnings));
 }
 
 function clearAll() {
