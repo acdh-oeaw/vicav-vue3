@@ -28,6 +28,7 @@ export function useDictsEntries(
 ) {
 	return useQuery({
 		enabled: options?.enabled,
+		retry: false,
 		queryKey: ["get-dicts-entries", params] as const,
 		async queryFn({ queryKey: [, params] }) {
 			if (!params.queryParams?.q && !params.queryParams?.id && !params.queryParams?.ids)
@@ -93,9 +94,9 @@ export function useDictsEntries(
 					return null;
 				}
 				 TODO this won't work like this, because the return type RestVLEEntries
-				   implies a different shape
-				   either complete the shape here or move error handling to the component
-				   using the "isError" return value
+					 implies a different shape
+					 either complete the shape here or move error handling to the component
+					 using the "isError" return value
 				switch (e.status) {
 					case 404: {
 						return {

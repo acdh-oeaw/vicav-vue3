@@ -27,9 +27,12 @@ const cache = new Map<string, { ETag: string; body: Uint8Array<ArrayBuffer>; exp
 // so URL + query params is sufficient to uniquely identify requests.
 // Multiple almost simultaneous requests are common with healthy-checks
 // when the backend is not responding fast enough.
+// `currentRequestRefs` is the refcount of awaiters for the in-flight promise;
+// the entry is removed only when the last awaiter resumes.
 const currentRequests = new Map<string, Promise<Response>>();
+const currentRequestRefs = new Map<string, number>();
 
-async function fetchWithETag(
+export async function fetchWithETag(
 	input: globalThis.Request | URL | string,
 	init?: RequestInit,
 ): Promise<Response> {
@@ -60,16 +63,29 @@ async function fetchWithETag(
 					{ ...init.headers, ...ifNoneMatchHeader }
 				: ifNoneMatchHeader) as HeadersInit,
 		};
-		// Request mit ETag im If-None-Match Header
+		// Request mit ETag im If-None-Match Header.
+		// Refcounted single-flight: every concurrent caller increments the count
+		// (synchronously, before awaiting), so any caller arriving during the
+		// in-flight window sees the existing entry and joins. The entry is
+		// removed in the `finally` below once the last awaiter releases it.
 		if (!currentRequests.has(url)) {
 			// console.log(`New request for "${url}" initiated...`);
 			currentRequests.set(url, fetch(input, requestParams));
 		}
-		response = await currentRequests.get(url)!;
-		currentRequests.delete(url);
-		// console.log(`Response for "${url}" received...`);
+		currentRequestRefs.set(url, (currentRequestRefs.get(url) ?? 0) + 1);
+		try {
+			response = await currentRequests.get(url)!;
+			// console.log(`Response for "${url}" received...`);
+		} finally {
+			const remaining = (currentRequestRefs.get(url) ?? 1) - 1;
+			if (remaining <= 0) {
+				currentRequestRefs.delete(url);
+				currentRequests.delete(url);
+			} else {
+				currentRequestRefs.set(url, remaining);
+			}
+		}
 	} catch (error) {
-		currentRequests.delete(url);
 		if (cachedEntry) {
 			console.warn("Fetch with ETag failed, returning cached version...", error);
 			return new Response(cachedEntry.body, { status: 200 });
@@ -120,9 +136,13 @@ async function fetchWithETag(
 			// );
 			cache.set(url, cacheEntry);
 		}
-		return response;
+		// Return a fresh Response per awaiter. Under single-flight, multiple
+		// callers receive the same `Response` object, and sharing the body
+		// stream across them causes "Body has already been consumed" errors
+		// downstream (e.g. Orval's generated `response.json()`).
+		return response.clone();
 	} else {
-		return response;
+		return response.clone();
 	}
 }
 

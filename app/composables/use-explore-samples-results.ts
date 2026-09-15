@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/vue-query";
 import type Zod from "zod";
 
 import type { ExploreSamplesQueryParams } from "@/types/global.ts";
+import { withProblemError } from "@/utils/api-error.ts";
 
 import dataTypes from "../config/dataTypes.ts";
 
@@ -13,19 +14,22 @@ export function useExploreSamplesResult(
 
 	return useQuery({
 		enabled: options?.enabled,
+		retry: false,
 		queryKey: ["get-compare", params] as const,
 		async queryFn({ queryKey: [, params] }) {
-			const response = await api.vicav.getCompare(
-				{
-					type: dataTypes[params.dataType].collection.replace("vicav_", ""),
-					word: params.word,
-					features: params.features,
-					comment: params.comment,
-					translation: params.translation,
-					ids: params.ids!,
-					page: params.page!.toString(),
-				},
-				{ headers: { accept: "application/xml" } },
+			const response = await withProblemError(
+				api.vicav.getCompare(
+					{
+						type: dataTypes[params.dataType].collection.replace("vicav_", ""),
+						word: params.word,
+						features: params.features,
+						comment: params.comment,
+						translation: params.translation,
+						ids: params.ids!,
+						page: params.page!.toString(),
+					},
+					{ headers: { accept: "application/xml" } },
+				),
 			);
 			return response.text();
 		},

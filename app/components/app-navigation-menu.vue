@@ -40,8 +40,9 @@ onScopeDispose(() => {
 						<NavigationMenuLink
 							v-if="item.type === 'item'"
 							:key="item.id"
-							as="div"
-							class="cursor-pointer"
+							as="button"
+							class="w-full cursor-pointer text-left"
+							type="button"
 							@select="
 								() => {
 									emit('select-menu-item', item);
