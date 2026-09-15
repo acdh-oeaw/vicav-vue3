@@ -128,9 +128,9 @@ function getDisplayValue(clause: string): string {
 		props.triggers.get("")?.find((f) => f.value === featureKey)?.displayValue ??
 		featureKey.replace(":", "");
 
-	const featureDisplay = featureDisplayRaw
-		? featureDisplayRaw.charAt(0).toUpperCase() + featureDisplayRaw.slice(1)
-		: featureDisplayRaw;
+	const featureDisplay = featureDisplayRaw;
+	// ? featureDisplayRaw.charAt(0).toUpperCase() + featureDisplayRaw.slice(1)
+	// : featureDisplayRaw;
 
 	const valueDisplay =
 		props.triggers.get(featureKey)?.find((v) => v.value === rawVal)?.displayValue ??
@@ -615,7 +615,7 @@ watch(
 					@keydown.enter.prevent="(e) => handleTagClick(token.tag, e.target as ReferenceElement)"
 					@keydown.space.prevent="(e) => handleTagClick(token.tag, e.target as ReferenceElement)"
 				>
-					<span class="max-w-48 truncate capitalize" :title="getDisplayValue(token.tag.rawValue)">
+					<span class="max-w-48 truncate" :title="getDisplayValue(token.tag.rawValue)">
 						{{ getDisplayValue(token.tag.rawValue) }}
 					</span>
 					<Button

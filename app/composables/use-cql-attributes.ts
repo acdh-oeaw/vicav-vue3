@@ -20,7 +20,7 @@ function toDisplayValue(attr: NoskeAttribute): string {
 	const label = attr.label?.trim();
 	if (label) return label;
 	// corp_info labels are often empty; fall back to a capitalized attribute name.
-	return attr.name.charAt(0).toUpperCase() + attr.name.slice(1);
+	return attr.name;
 }
 
 /**
