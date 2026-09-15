@@ -520,6 +520,7 @@ function submitSearch() {
 	if (!props.table) return;
 	parseSearchString(value.value, props.table);
 	props.table.setGlobalFilter(normalizeParens(normalizeOperators(value.value)));
+	return;
 }
 
 const queryWarnings = computed(() => {

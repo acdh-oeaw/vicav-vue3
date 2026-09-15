@@ -243,6 +243,7 @@ const { cqlTriggers } = useCqlTriggers(cqlConfig);
 							queryString = v;
 							return searchCorpus();
 						}
+						return;
 					}
 				"
 				query-mode="cql"
