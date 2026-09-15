@@ -56,6 +56,7 @@ export default defineNuxtConfig({
 		"@nuxt/test-utils/module",
 		"nuxt-svgo",
 		"nitro-opentelemetry",
+		"v-onboarding/nuxt",
 	],
 	nitro: {
 		compressPublicAssets: true,
@@ -169,6 +170,15 @@ export default defineNuxtConfig({
 				"@unovis/ts",
 			],
 		},
+	},
+
+	vOnboarding: {
+		// Auto-import VOnboardingWrapper and VOnboardingStep
+		components: true,
+		// Auto-import useVOnboarding composable
+		composables: true,
+		// Include v-onboarding styles
+		css: true,
 	},
 
 	typescript: {

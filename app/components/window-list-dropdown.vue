@@ -16,7 +16,7 @@ const { arrangement: currentArrangement, registry } = storeToRefs(windowsStore);
 <template>
 	<Menubar class="border-none">
 		<MenubarMenu>
-			<MenubarTrigger aria-label="Windows" class="ml-auto">
+			<MenubarTrigger aria-label="Windows" class="ml-auto" data-onboarding="windows-menu">
 				<AppWindowIcon class="size-6" />
 			</MenubarTrigger>
 			<MenubarContent align="end">
