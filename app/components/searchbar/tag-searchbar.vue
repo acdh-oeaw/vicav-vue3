@@ -35,6 +35,7 @@ const props = defineProps<{
 	onSubmit?: (value: string) => void;
 	freeTriggerKey?: string;
 	dynamicTriggers?: ReadonlyArray<string>;
+	isLoading?: boolean;
 }>();
 
 const emit = defineEmits<{ "update:searchTerm": [value: string] }>();
@@ -558,6 +559,12 @@ onMounted(() => {
 		reference.value = inputRef.value.$el;
 	}
 });
+watch(
+	() => props.isLoading,
+	() => {
+		if (props.isLoading) open.value = true;
+	},
+);
 </script>
 
 <template>
@@ -651,13 +658,21 @@ onMounted(() => {
 		</div>
 		<ComboboxPortal>
 			<ComboboxContent
-				v-if="filteredList.length"
+				v-if="filteredList.length || isLoading"
 				align="start"
 				class="max-h-48 max-w-80 overflow-x-hidden overflow-y-auto rounded-md border border-neutral-500/30 bg-white p-1.5"
 				position="popper"
 				side="bottom"
 			>
-				<template v-for="(item, idx) in filteredList" :key="String(item.value)">
+				<ComboboxItem
+					v-if="isLoading"
+					class="flex cursor-default rounded-sm px-2 py-1 data-highlighted:bg-muted"
+					disabled
+					:value="null"
+				>
+					<LoadingIndicator class="size-3" />
+				</ComboboxItem>
+				<template v-for="(item, idx) in filteredList" v-else :key="String(item.value)">
 					<ComboboxItem
 						class="flex cursor-default rounded-sm px-2 py-1 data-highlighted:bg-muted"
 						:value="item.value"

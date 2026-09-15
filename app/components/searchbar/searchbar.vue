@@ -24,6 +24,7 @@ const _props = defineProps<{
 	freeTriggerKey?: string;
 	specialCharacters?: SpecialCharacters;
 	dynamicKeys?: ReadonlyArray<string>;
+	isLoading?: boolean;
 }>();
 
 const model = defineModel<string>({ default: "" });
@@ -117,6 +118,7 @@ defineExpose({ submitSearch, value: currentValue });
 				:dynamic-triggers="dynamicTriggers"
 				:feature-trigger="featureTrigger"
 				:free-trigger-key="freeTriggerKey"
+				:is-loading="isLoading"
 				:on-submit="onSubmit"
 				:operators="operators"
 				:table="table"

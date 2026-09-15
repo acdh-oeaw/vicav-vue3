@@ -132,6 +132,8 @@ const wordOptions = computed(() => {
 	});
 });
 
+const autocompleteFetching = computed(() => dataWordsQuery.isFetching.value);
+
 function utteranceContentContainsHit(
 	utterance: MixedUtteranceContent[number],
 	hitId?: string,
@@ -227,6 +229,7 @@ const { cqlTriggers } = useCqlTriggers(cqlConfig);
 				:dynamic-keys="['word']"
 				feature-trigger="["
 				free-trigger-key="word"
+				:is-loading="autocompleteFetching"
 				:on-submit="
 					(v) => {
 						if (!isSearching) {
