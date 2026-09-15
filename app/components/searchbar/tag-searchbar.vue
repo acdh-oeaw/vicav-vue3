@@ -67,7 +67,11 @@ function getCqlDisplayValue(clause: string): string {
 			: trimmed.slice(1)
 		: trimmed;
 
-	if (/ [&|] /.test(inner)) return inner;
+	if (/ [&|] /.test(inner))
+		return inner
+			.split(/ ([&|]) /)
+			.map((part) => getCqlDisplayValue(part))
+			.join(" ");
 	if (props.freeTriggerKey) {
 		const m = new RegExp(`^${props.freeTriggerKey}="(.+)"$`).exec(inner);
 		if (m) return (m[1] ?? "").split("|").join(" | ");
