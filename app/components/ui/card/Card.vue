@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Primitive, type PrimitiveProps } from "radix-vue";
 import { twMerge } from "tailwind-merge";
-import type { HTMLAttributes } from "vue";
+import { type HTMLAttributes, normalizeClass } from "vue";
 
 interface Props extends PrimitiveProps {
 	class?: HTMLAttributes["class"];
@@ -16,7 +16,12 @@ const props = withDefaults(defineProps<Props>(), {
 	<Primitive
 		:as="as"
 		:as-child="asChild"
-		:class="twMerge('text-card-foreground rounded-xl border bg-card shadow-sm', props.class)"
+		:class="
+			twMerge(
+				'text-card-foreground rounded-xl border bg-card shadow-sm',
+				normalizeClass(props.class),
+			)
+		"
 	>
 		<slot />
 	</Primitive>

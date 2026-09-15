@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ComboboxAnchor, type ComboboxAnchorProps, useForwardProps } from "reka-ui";
 import { twMerge } from "tailwind-merge";
-import { computed, type HTMLAttributes } from "vue";
+import { computed, type HTMLAttributes, normalizeClass } from "vue";
 
 const props = defineProps<ComboboxAnchorProps & { class?: HTMLAttributes["class"] }>();
 
@@ -15,7 +15,7 @@ const forwarded = useForwardProps(delegatedProps);
 </script>
 
 <template>
-	<ComboboxAnchor v-bind="forwarded" :class="twMerge('w-[200px]', props.class)">
+	<ComboboxAnchor v-bind="forwarded" :class="twMerge('w-[200px]', normalizeClass(props.class))">
 		<slot />
 	</ComboboxAnchor>
 </template>

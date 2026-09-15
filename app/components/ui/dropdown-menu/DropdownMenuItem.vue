@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { DropdownMenuItem, type DropdownMenuItemProps, useForwardProps } from "radix-vue";
 import { twMerge } from "tailwind-merge";
-import { computed, type HTMLAttributes } from "vue";
+import { computed, type HTMLAttributes, normalizeClass } from "vue";
 
 const props = defineProps<DropdownMenuItemProps & { class?: HTMLAttributes["class"] }>();
 
@@ -20,7 +20,7 @@ const forwardedProps = useForwardProps(delegatedProps);
 		:class="
 			twMerge(
 				'relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-hidden transition-colors focus:bg-accent data-disabled:pointer-events-none data-disabled:opacity-50',
-				props.class,
+				normalizeClass(props.class),
 			)
 		"
 	>

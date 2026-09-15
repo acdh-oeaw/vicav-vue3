@@ -9,6 +9,8 @@ import {
 	type VueQueryPluginOptions,
 } from "@tanstack/vue-query";
 
+import { describeApiError } from "@/utils/api-error.ts";
+
 export default defineNuxtPlugin((nuxt) => {
 	const state = useState<DehydratedState | null>("vue-query");
 	const toastsStore = useToastsStore();
@@ -26,18 +28,10 @@ export default defineNuxtPlugin((nuxt) => {
 		},
 		queryCache: new QueryCache({
 			onError(error) {
-				// FIXME:
-				const message =
-					error instanceof Response
-						? // @ts-expect-error Set by api client.
-							// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-							((error.error?.title as string | undefined) ?? error.statusText)
-						: error.message;
-
 				if (import.meta.client) {
 					addToast({
 						title: "Error",
-						description: message,
+						description: describeApiError(error),
 						type: "foreground",
 						variant: "negative",
 					});

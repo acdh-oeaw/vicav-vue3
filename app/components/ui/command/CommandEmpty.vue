@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Primitive, type PrimitiveProps } from "reka-ui";
 import { twMerge } from "tailwind-merge";
-import { computed, type HTMLAttributes } from "vue";
+import { computed, type HTMLAttributes, normalizeClass } from "vue";
 
 import { useCommand } from "./index.ts";
 
@@ -21,7 +21,7 @@ const isRender = computed(() => Boolean(filterState.search) && filterState.filte
 	<Primitive
 		v-if="isRender"
 		v-bind="delegatedProps"
-		:class="twMerge('py-6 text-center text-sm', props.class)"
+		:class="twMerge('py-6 text-center text-sm', normalizeClass(props.class))"
 	>
 		<slot />
 	</Primitive>

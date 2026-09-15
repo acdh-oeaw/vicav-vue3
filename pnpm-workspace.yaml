@@ -1,0 +1,19 @@
+shellEmulator: true
+
+overrides:
+  vue: "$vue"
+
+allowBuilds:
+  "@parcel/watcher": true
+  "@tailwindcss/oxide": true
+  esbuild: true
+  maplibre-gl: true
+  protobufjs: true
+  simple-git-hooks: true
+  unrs-resolver: true
+  vue-demi: true
+
+patchedDependencies:
+  winbox@0.2.82: patches/winbox@0.2.82.patch
+  "@types/winbox@0.2.3": patches/@types__winbox@0.2.3.patch
+  liqe: patches/liqe.patch

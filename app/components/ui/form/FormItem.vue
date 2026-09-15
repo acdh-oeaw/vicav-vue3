@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { useId } from "radix-vue";
 import { twMerge } from "tailwind-merge";
-import { type HTMLAttributes, provide } from "vue";
+import { type HTMLAttributes, normalizeClass, provide } from "vue";
 
 import { FORM_ITEM_INJECTION_KEY } from "./injectionKeys.ts";
 
@@ -14,7 +14,7 @@ provide(FORM_ITEM_INJECTION_KEY, id);
 </script>
 
 <template>
-	<div :class="twMerge('space-y-2', props.class)">
+	<div :class="twMerge('space-y-2', normalizeClass(props.class))">
 		<slot />
 	</div>
 </template>

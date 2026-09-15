@@ -226,12 +226,29 @@ export const SampleTextSchema = z.object({
 });
 export type SampleTextWindowItem = WindowItemBase & z.infer<typeof SampleTextSchema>;
 
-export const FeatureValueGroup = z.object({
+export const FeatureValueGroupMember = z.object({
 	columnId: z.string(),
-	label: z.string(),
-	values: z.array(z.string()),
+	value: z.string(),
 });
-export type FeatureValueGroup = z.infer<typeof FeatureValueGroup>;
+export type FeatureValueGroupMember = z.infer<typeof FeatureValueGroupMember>;
+
+const LegacyFeatureValueGroup = z
+	.object({
+		columnId: z.string(),
+		label: z.string(),
+		values: z.array(z.string()),
+	})
+	.transform(({ columnId, label, values }) => ({
+		label,
+		values: values.map((value) => ({ columnId, value })),
+	}));
+
+const FeatureValueGroupObject = z.object({
+	label: z.string(),
+	values: z.array(FeatureValueGroupMember),
+});
+export const FeatureValueGroup = z.union([FeatureValueGroupObject, LegacyFeatureValueGroup]);
+export type FeatureValueGroup = z.infer<typeof FeatureValueGroupObject>;
 
 export const ListMapSchema = z.object({
 	targetType: z.literal("ListMap"),

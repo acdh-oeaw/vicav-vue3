@@ -95,10 +95,6 @@ async function searchCorpus(options: { updateRoute?: boolean } = {}) {
 	}
 }
 
-function submitSearchCorpus() {
-	void searchCorpus();
-}
-
 // API currently doesn't support pagination for corpus search results, so we're faking it
 const handleInfiniteScroll = async function ($state: StateHandler) {
 	currentPage.value += 1;
@@ -118,7 +114,7 @@ watch(
 		if (value === "" || value === lastRestoredQueryString.value) return;
 		queryString.value = value;
 		lastRestoredQueryString.value = value;
-		void searchCorpus({ updateRoute: false });
+		if (!isSearching.value) void searchCorpus({ updateRoute: false });
 	},
 	{ flush: "post", immediate: true },
 );
@@ -181,6 +177,21 @@ function splitUtterancesAroundHit(utterances: MixedUtteranceContent, hitId?: str
 		after: utterances.slice(matchIndex + 1),
 	};
 }
+
+const { cqlConfig: attributeConfig } = useCqlAttributes();
+
+const cqlConfig = computed<CqlConfig>(() =>
+	attributeConfig.value.map((attr) =>
+		// `word` suggestions are fetched dynamically (driven by `wordSearch` below).
+		attr.key === "word"
+			? {
+					...attr,
+					values: wordOptions.value.map((o) => ({ value: o.value, displayValue: o.label })),
+				}
+			: attr,
+	),
+);
+const { cqlTriggers } = useCqlTriggers(cqlConfig);
 </script>
 
 <template>
@@ -189,14 +200,14 @@ function splitUtterancesAroundHit(utterances: MixedUtteranceContent, hitId?: str
 		<form
 			class="block w-full rounded-sm border border-gray-300 bg-gray-50 p-2.5 px-4 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
 		>
-			<label class="mb-2 flex w-48! p-0 font-bold" for="word_tags">
-				<span class="grow">Search for exact words</span>
-				<a href="#" title="More information" @click="showHelp = true"
+			<label class="mb-2 flex p-0 font-bold" for="word_tags">
+				<span class="mr-2">Search for words or enter a CQL query</span>
+				<a href="#" title="More information" @click="showHelp = !showHelp"
 					><span class="hidden">More information</span>
 					<Info class="size-4" />
 				</a>
 			</label>
-			<div v-if="showHelp" class="flex items-center gap-2">
+			<div v-if="showHelp" class="mb-2 flex flex-col gap-2">
 				<span class="text-gray-500"
 					>Enter beginning of the word to trigger autocomplete suggestions from the words occurring
 					in the corpus. Autocomplete is accent-insensitive, allowing for a simplified word form
@@ -208,49 +219,34 @@ function splitUtterancesAroundHit(utterances: MixedUtteranceContent, hitId?: str
 					Example: w.?n would yield results like "wen", "win", "w.*n" would yield results for "wen,
 					win or weyn" as well.
 				</span>
-			</div>
-			<TagsSelect
-				v-if="wordOptions"
-				id="word_tags"
-				v-model="words"
-				v-model:search-term="wordSearch"
-				:filter-function="(i) => i"
-				:options="wordOptions"
-				placeholder="Search for words..."
-				:special-characters="specialCharacters"
-			/>
-
-			<label class="mb-2 flex w-40! p-0 font-bold" for="word_tags">
-				<span class="grow">Advanced search</span>
-			</label>
-			<div class="mb-2 flex items-center gap-2">
-				<Info class="size-4" />
 				<span class="text-gray-500"
-					>Enter a proper CQL query with exact transliateration characters. (<a
+					>Alternatively, enter a proper CQL query with exact transliateration characters. (<a
 						class="content-center"
-						href="https://howto.acdh.oeaw.ac.at/de/resources/corpus-query-language-im-austrian-media-corpus"
+						href="https://campus.dariah.eu/resources/hosted/corpus-query-language-im-austrian-media-corpus"
 						target="_blank"
 						title="More information about CQL syntax"
 						><span>More info</span></a
 					>)
 				</span>
 			</div>
-			<InputExtended
-				v-if="specialCharacters"
-				id="query"
+			<Searchbar
 				v-model="queryString"
-				aria-label="Search"
-				placeholder="Search in corpus ..."
+				v-model:search-term="wordSearch"
+				:dynamic-keys="['word']"
+				feature-trigger="["
+				free-trigger-key="word"
+				:on-submit="
+					(v) => {
+						if (!isSearching) {
+							queryString = v;
+							searchCorpus();
+						}
+					}
+				"
+				query-mode="cql"
 				:special-characters="specialCharacters"
-				@submit="submitSearchCorpus"
+				:triggers="cqlTriggers"
 			/>
-			<button
-				class="inline-block h-10 w-full rounded-sm border-2 border-solid border-primary bg-on-primary text-center align-middle font-bold whitespace-nowrap text-primary hover:bg-primary hover:text-on-primary hover:disabled:bg-on-primary hover:disabled:text-gray-400 disabled:border-gray-400 disabled:text-gray-400"
-				:disabled="isSearching || (queryString === '' && words.length == 0)"
-				@click.prevent.stop="submitSearchCorpus"
-			>
-				Query
-			</button>
 			<br />
 		</form>
 		<div
