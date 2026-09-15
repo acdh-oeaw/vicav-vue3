@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ToggleGroupItem as ToggleGroupItemPrimitive, type ToggleGroupItemProps } from "reka-ui";
 import { twMerge } from "tailwind-merge";
-import { computed, type HTMLAttributes } from "vue";
+import { computed, type HTMLAttributes, normalizeClass } from "vue";
 
 import { type ToggleVariants, toggleVariants } from "../toggle/index.ts";
 
@@ -29,7 +29,7 @@ const delegatedProps = computed(() => {
 <template>
 	<ToggleGroupItemPrimitive
 		v-bind="delegatedProps"
-		:class="twMerge(toggleVariants({ variant, size }), props.class)"
+		:class="twMerge(toggleVariants({ variant, size }), normalizeClass(props.class))"
 	>
 		<slot />
 	</ToggleGroupItemPrimitive>

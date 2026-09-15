@@ -8,7 +8,7 @@ import {
 	useForwardPropsEmits,
 } from "reka-ui";
 import { twMerge } from "tailwind-merge";
-import type { HTMLAttributes } from "vue";
+import { type HTMLAttributes, normalizeClass } from "vue";
 
 import NavigationMenuViewport from "./NavigationMenuViewport.vue";
 
@@ -38,7 +38,7 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits);
 		:class="
 			twMerge(
 				'group/navigation-menu relative flex max-w-max flex-1 items-center justify-center',
-				props.class,
+				normalizeClass(props.class),
 			)
 		"
 		data-slot="navigation-menu"
