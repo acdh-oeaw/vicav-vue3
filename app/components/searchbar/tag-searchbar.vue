@@ -474,7 +474,7 @@ function handlePaste(e: ClipboardEvent) {
 
 	if (isCqlMode.value) {
 		const tokens = splitCqlQuery(combined);
-		if (tokens.length > 1) {
+		if (tokens.length > 0) {
 			tokens.forEach((token) => addTag(token.clause));
 			inputValue.value = "";
 			open.value = false;
