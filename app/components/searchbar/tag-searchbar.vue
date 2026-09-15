@@ -67,12 +67,11 @@ function getCqlDisplayValue(clause: string): string {
 			: trimmed.slice(1)
 		: trimmed;
 
+	if (/ [&|] /.test(inner)) return inner;
 	if (props.freeTriggerKey) {
 		const m = new RegExp(`^${props.freeTriggerKey}="(.+)"$`).exec(inner);
 		if (m) return (m[1] ?? "").split("|").join(" | ");
 	}
-
-	if (/[&|]/.test(inner)) return inner;
 
 	const eqIdx = inner.indexOf("=");
 	if (eqIdx === -1) return inner;
@@ -96,7 +95,7 @@ function tryMergeFreeWord(word: string): boolean {
 	if (!props.freeTriggerKey) return false;
 	const last = tags.value.at(-1);
 	if (!last || last.children) return false;
-	const m = new RegExp(`^\\[${props.freeTriggerKey}="(.+)"\\]$`).exec(last.rawValue);
+	const m = new RegExp(`^\\[${props.freeTriggerKey}="([^ ]+)"\\]$`).exec(last.rawValue);
 	if (!m) return false;
 	last.rawValue = `[${props.freeTriggerKey}="${m[1] ?? ""}|${word}"]`;
 	return true;
