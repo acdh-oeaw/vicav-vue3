@@ -252,12 +252,27 @@ function splitTableAndMapWindows() {
 	const windows = Array.from(windowsStore.registry.values());
 	const table = windows.find((w) => w.targetType === "ListMap");
 	const map = windows.find((w) => w.targetType === "GeojsonMap");
-	if (!table || !map) return;
+	if (!table || !map || windows.length > 3) return;
+
+	const additionalWindow = windows.find((w) => w !== table && w !== map);
 
 	const tableWidth = Math.floor(viewport.width * 0.25);
+	const additionalWidth = additionalWindow ? Math.floor(viewport.width * 0.25) : 0;
 	table.winbox.resize(tableWidth, viewport.height).move(0, 0);
-	map.winbox.resize(viewport.width - tableWidth, viewport.height).move(tableWidth, 0);
+	map.winbox
+		.resize(viewport.width - tableWidth - additionalWidth, viewport.height)
+		.move(tableWidth, 0);
+	if (additionalWindow)
+		additionalWindow.winbox
+			.resize(additionalWidth, viewport.height)
+			.move(viewport.width - additionalWidth, 0);
 }
+
+windowsStore.$onAction(({ name, after }) => {
+	if (["arrangeWindows", "addWindow", "removeWindow"].includes(name)) {
+		after(() => void nextTick(splitTableAndMapWindows));
+	}
+});
 
 function onRowClick(row: Row<FeatureType>) {
 	row.toggleSelected();
