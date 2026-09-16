@@ -20,7 +20,36 @@ Menu items are rendered differently depending on viewport size.
 2. Config is passed to `AppNavigationMenu` as `menus` prop
 3. User clicks trigger `onSelectMenuItem()` which creates a window via `addWindow()`
 
+## Schemas (OpenAPI)
+
+The menu and the initial windows (`panel`) are described by the OpenAPI spec
+(`app/assets/openapi.json`, upstream `acdh-oeaw/vicav-app-api`):
+
+- `GET /vicav/project` → **`ProjectConfig`** (`projectConfig` + `ETag` + `took`) →
+  **`projectConfig_type`**
+- `projectConfig_type.menu` → **`menu_type`**: `main: main_item_type[]`, `subnav: item_type[]`
+- `projectConfig_type.panel` → **`item_type`**[] — the windows restored on first load use the **same
+  item schema** as the menu items
+- **`main_item_type`** — a top-level dropdown: `id`, `target`, `title`, `item: item_type[]`,
+  `type: "dropdown"` (all required, `additionalProperties: false`)
+- **`item_type`** — one shared item shape for `menu.main[].item[]`, `menu.subnav[]` and `panel[]`:
+  `type: "panel" | "item" | "separator" | "dropdown"` (the only required key) plus `id` / `target` /
+  `title` / `targetType` / `label` / `class` / `params` linked by `dependentRequired`; `params` is
+  `oneOf [geo_target_type_parameters, text_target_type_parameters]`
+
+The generated TypeScript equivalents are `MenuType`, `MainItemType`, `ItemType`, `ProjectConfigType`
+in `app/lib/api-client/index.ts` (regenerated from the spec on install/build).
+
+> [!NOTE] `item_type.params`' `oneOf` has known gaps against live data (a `BiblioEntries` item with
+> only `queryString` matches no branch; a tunocent `WMap` item carrying both geo and text params
+> matches both branches — both fail the exclusive `oneOf`). See
+> [docs/openapi-spec-change-requests.md](./openapi-spec-change-requests.md) (CR-1).
+
 ## Menu Item Types
+
+The hand-written shape below summarizes what the components consume. The authoritative definitions
+are the OpenAPI schemas `main_item_type` / `item_type` (see "Schemas (OpenAPI)"), which carry
+additionally `target`, `label`, `class` and a typed `params`.
 
 ```ts
 type MainItemType = {
