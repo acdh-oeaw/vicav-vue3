@@ -178,7 +178,9 @@ function splitUtterancesAroundHit(utterances: MixedUtteranceContent, hitId?: str
 	};
 }
 
-const { cqlConfig: attributeConfig } = useCqlAttributes({corpname: config.value?.projectConfig?.noskeHost ?? ""});
+const { cqlConfig: attributeConfig } = useCqlAttributes({
+	corpname: config.value?.projectConfig?.noskeHost ?? "",
+});
 
 const cqlConfig = computed<CqlConfig>(() =>
 	attributeConfig.value.map((attr) =>
