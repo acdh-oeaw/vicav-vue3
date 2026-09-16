@@ -255,9 +255,15 @@ function splitTableAndMapWindows() {
 	if (!table || !map) return;
 
 	const tableWidth = Math.floor(viewport.width * 0.25);
-	table.winbox.resize(tableWidth, viewport.height).move(0, 0);
-	map.winbox.resize(viewport.width - tableWidth, viewport.height).move(tableWidth, 0);
+	table.winbox.resize(tableWidth).move(0, 0);
+	map.winbox.resize(viewport.width - tableWidth).move(tableWidth, 0);
 }
+
+windowsStore.$onAction(({ name, after }) => {
+	if (["arrangeWindows", "addWindow", "removeWindow"].includes(name)) {
+		after(() => void nextTick(splitTableAndMapWindows));
+	}
+});
 
 function onRowClick(row: Row<FeatureType>) {
 	row.toggleSelected();
