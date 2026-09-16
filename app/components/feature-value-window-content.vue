@@ -135,7 +135,11 @@ function onFeatureClick(val: Record<string, unknown>) {
 			</div>
 			<Table>
 				<TableBody>
-					<TableRow v-for="entry in tableData" :key="entry.key">
+					<TableRow
+						v-for="entry in tableData"
+						:key="entry.key"
+						:data-onboarding="entry.key === 'source' ? 'feature-value-source' : undefined"
+					>
 						<TableCell class="capitalize">{{ entry.displayHeader ?? entry.key }}</TableCell>
 						<TableCell v-for="(value, valueIdx) in entry.values" :key="`${entry.key}-${value}`">
 							<template v-if="entry.key == 'source' && isLinkType(value)">
@@ -158,6 +162,7 @@ function onFeatureClick(val: Record<string, unknown>) {
 								<TooltipTrigger>
 									<Button
 										class="ml-1 h-fit px-2"
+										data-onboarding="show-on-map"
 										variant="ghost"
 										@click="updateMap(entry.updateQueryTo, params.values[valueIdx])"
 									>

@@ -51,7 +51,7 @@ function onMarkerClick(feature: Feature) {
 </script>
 
 <template>
-	<div class="relative isolate grid size-full grid-rows-[auto_1fr]">
+	<div class="relative isolate grid size-full grid-rows-[auto_1fr]" data-onboarding="map-container">
 		<GeojsonMapToolbar v-if="filteredMarkers" :params="params"></GeojsonMapToolbar>
 		<VisualisationContainer
 			v-slot="{ width, height }"
