@@ -1,6 +1,8 @@
+import { defineStore } from "pinia";
 import type { ReadonlyDeep } from "type-fest";
 import * as z from "zod";
 
+import { useOpenapiSchema } from "@/composables/use-openapi-schema.ts";
 import dataTypes from "@/config/dataTypes.ts";
 import {
 	type Author,
@@ -19,9 +21,10 @@ import {
 import type { DataTypesEnum } from "@/types/global.ts";
 import { type simpleTEIMetadata, SimpleTEIMetadataSchema } from "@/types/teiCorpus.ts";
 
-const TeiCorpusSchema = z.fromJSONSchema(useOpenapiSchema("TeiCorpus")) as z.ZodType<TeiCorpus>;
-const TeiSchema = z.fromJSONSchema(useOpenapiSchema("TEI")) as z.ZodType<TEI>;
-const GeoPlaceSchema = z.fromJSONSchema(useOpenapiSchema("GeoPlace")) as z.ZodType<GeoPlace>;
+export const TeiCorpusSchema = z.fromJSONSchema(
+	useOpenapiSchema("TeiCorpus"),
+) as z.ZodType<TeiCorpus>;
+export const GeoPlaceSchema = z.fromJSONSchema(useOpenapiSchema("GeoPlace")) as z.ZodType<GeoPlace>;
 
 const supportedResponsibilities = [
 	Responsibility.Author,
@@ -186,12 +189,36 @@ function isTeiCorpus(item: unknown): item is TeiCorpus {
 	return Object.prototype.hasOwnProperty.call(item, "TEIs");
 }
 
-function isAuthor(item: Author | AuthorRef | undefined): item is Author {
-	return Object.prototype.hasOwnProperty.call(item, "@id");
+function isAuthorRef(item: unknown): item is AuthorRef {
+	return (
+		typeof item === "object" && item !== null && "@ref" in item && typeof item["@ref"] === "string"
+	);
 }
 
-function isAuthorRef(item: Author | AuthorRef | string | undefined): item is AuthorRef {
-	return Object.prototype.hasOwnProperty.call(item, "@ref");
+interface MetadataIndexes {
+	responsibilitiesByReference: Map<string, Author | AuthorRef>;
+	personsById: Map<string, Person>;
+}
+
+function buildMetadataIndexes(corpusMetadata: TeiHeader | undefined): MetadataIndexes {
+	const responsibilitiesByReference = new Map<string, Author | AuthorRef>();
+	for (const { persName } of corpusMetadata?.fileDesc.titleStmt.respStmts ?? []) {
+		if (!persName) continue;
+		const reference = isAuthorRef(persName)
+			? persName["@ref"]
+			: persName["@id"]
+				? `corpus:${persName["@id"]}`
+				: undefined;
+		if (reference && !responsibilitiesByReference.has(reference)) {
+			responsibilitiesByReference.set(reference, persName);
+		}
+	}
+	const personsById = new Map<string, Person>();
+	for (const person of extractPersonList(corpusMetadata)) {
+		const id = person["@id"];
+		if (id && !personsById.has(id)) personsById.set(id, person);
+	}
+	return { responsibilitiesByReference, personsById };
 }
 
 function logInvalidCorpusItem(item: unknown, itemIndex: number, error: z.ZodError): void {
@@ -204,63 +231,14 @@ function logInvalidCorpusItem(item: unknown, itemIndex: number, error: z.ZodErro
 	console.error(error);
 }
 
-function logInvalidTeiItem(
-	parsedCorpus: TeiCorpus,
-	tei: unknown,
-	itemIndex: number,
-	teiIndex: number,
-	error: z.ZodError,
-): void {
-	if (hasIDAttribute(parsedCorpus)) {
-		console.error(`Error parsing item ${itemIndex.toString()} with @id: ${parsedCorpus["@id"]}`);
-	}
-
-	if (hasIDAttribute(tei)) {
-		console.error(`Error parsing TEIs[${teiIndex.toString()}] with @id: ${tei["@id"]}`);
-	} else {
-		console.error(`Error parsing TEIs[${teiIndex.toString()}] without @id attribute`);
-	}
-
-	console.error(error);
-}
-
-function parseTeisForCorpusItem(item: TeiCorpus, itemIndex: number): Array<Promise<Array<TEI>>> {
-	return (item.TEIs ?? []).map(async (tei, teiIndex) => {
-		const parsedTei = await TeiSchema.safeParseAsync(tei);
-
-		if (parsedTei.success) {
-			return [parsedTei.data];
-		}
-
-		logInvalidTeiItem(item, tei, itemIndex, teiIndex, parsedTei.error);
-
-		return [];
-	});
-}
-
-async function parseCorpusItem(item: TeiCorpus, itemIndex: number): Promise<Array<TeiCorpus>> {
-	const parsedCorpus = await TeiCorpusSchema.safeParseAsync(item);
-
-	if (!parsedCorpus.success) {
+function parseRawItems(table: Array<unknown>): Array<TeiCorpus> {
+	return table.flatMap((item, itemIndex) => {
+		if (!item || typeof item !== "object" || !isTeiCorpus(item)) return [];
+		// TeiCorpusSchema recursively validates all TEIs; do not parse them a second time.
+		const parsedCorpus = TeiCorpusSchema.safeParse(toRaw(item));
+		if (parsedCorpus.success) return [parsedCorpus.data];
 		logInvalidCorpusItem(item, itemIndex, parsedCorpus.error);
 		return [];
-	}
-
-	return [
-		{
-			...parsedCorpus.data,
-			TEIs: (await Promise.all(parseTeisForCorpusItem(parsedCorpus.data, itemIndex))).flat(),
-		},
-	];
-}
-
-function parseRawItems(table: Array<unknown>): Array<Promise<Array<TeiCorpus>>> {
-	return table.map((item, itemIndex) => {
-		if (!isTeiCorpus(item)) return Promise.resolve([]);
-
-		const parsedCorpus = parseCorpusItem(item, itemIndex);
-
-		return parsedCorpus;
 	});
 }
 
@@ -324,41 +302,21 @@ function formatDuration(durationInSeconds: number | undefined): string | undefin
 	)}:${String(seconds).padStart(2, "0")}`;
 }
 
-function resolveAuthorFromRespStmt(respStmt: RespStmt | undefined) {
-	return respStmt && isAuthor(respStmt.persName) ? respStmt.persName : undefined;
-}
-
-function resolveAuthorDisplayName(author: Author | undefined): string | undefined {
+function resolveAuthorDisplayName(author: Author | AuthorRef | undefined): string | undefined {
 	if (author?.forename && author.surname) {
 		return `${author.forename.$} ${author.surname.$}`;
 	}
-
-	return author?.name?.$;
+	return author && "name" in author ? author.name?.$ : undefined;
 }
 
-function resolveRecordingResponsibilityName(
-	item: TEI,
-	corpusMetadata: TeiHeader | undefined,
-): string {
+function resolveRecordingResponsibilityName(item: TEI, indexes: MetadataIndexes): string {
 	const recording = item.teiHeader?.fileDesc.sourceDesc.recordingStmt?.recording;
-	const persName = recording?.respStmt?.persName ?? recording?.p?.$ ?? "Recording record malformed";
-
-	if (!corpusMetadata) {
-		return isAuthorRef(persName) ? persName["@ref"].replace("corpus:", "") : "";
+	const persName = recording?.respStmt?.persName;
+	if (isAuthorRef(persName)) {
+		const author = indexes.responsibilitiesByReference.get(persName["@ref"]) ?? persName;
+		return resolveAuthorDisplayName(author) ?? persName["@ref"].replace("corpus:", "");
 	}
-
-	const matchingRespStmt = corpusMetadata.fileDesc.titleStmt.respStmts?.find((respStmt) => {
-		return (
-			isAuthorRef(respStmt.persName) &&
-			isAuthorRef(persName) &&
-			respStmt.persName["@ref"] === persName["@ref"]
-		);
-	});
-	const matchingAuthor = resolveAuthorFromRespStmt(matchingRespStmt);
-
-	return isAuthorRef(persName)
-		? (resolveAuthorDisplayName(matchingAuthor) ?? persName["@ref"].replace("corpus:", ""))
-		: "";
+	return resolveAuthorDisplayName(persName) ?? "";
 }
 
 function resolvePlaceSettlement(item: TEI): string | undefined {
@@ -466,19 +424,18 @@ function buildSimplePerson(person: Person) {
 
 function extractPersons(
 	item: TEI,
-	corpusMetadata: TeiHeader | undefined,
+	indexes: MetadataIndexes,
 ): Array<simpleTEIMetadata["person"][number]> {
-	const corpusPersons = corpusMetadata?.profileDesc?.particDesc?.listPerson;
 	const teiPersons = item.teiHeader?.profileDesc?.particDesc?.listPerson;
 
-	if (!corpusPersons || !teiPersons) return [];
+	if (!teiPersons) return [];
 
 	const referencedPersonIds = teiPersons
 		.map((person) => (person["@sameAs"] ?? person.$ ?? "").replace("corpus:", ""))
 		.filter(Boolean);
 
 	return referencedPersonIds.flatMap((personId) => {
-		const matchingPerson = corpusPersons.find((person) => person["@id"] === personId);
+		const matchingPerson = indexes.personsById.get(personId);
 
 		return matchingPerson ? [buildSimplePerson(matchingPerson)] : [];
 	});
@@ -490,35 +447,22 @@ function extractPersonList(corpusMetadata: TeiHeader | undefined): Array<Person>
 
 function resolveResponsiblePeople(
 	itemRespStmt: RespStmt,
-	corpusMetadata: TeiHeader,
+	indexes: MetadataIndexes,
 ): { given: string; family: string } {
-	const matchingRespStmt = corpusMetadata.fileDesc.titleStmt.respStmts?.find((corpusRespStmt) => {
-		return (
-			isAuthorRef(itemRespStmt.persName) &&
-			isAuthorRef(corpusRespStmt.persName) &&
-			itemRespStmt.persName["@ref"] === corpusRespStmt.persName["@ref"]
-		);
-	});
-	const author = resolveAuthorFromRespStmt(matchingRespStmt);
-
+	const persName = itemRespStmt.persName;
+	const author = isAuthorRef(persName)
+		? (indexes.responsibilitiesByReference.get(persName["@ref"]) ?? persName)
+		: persName;
 	if (author?.forename && author.surname) {
 		return { given: author.forename.$, family: author.surname.$ };
 	}
-
-	if (author?.name?.$) {
-		return { given: author.name.$, family: "" };
-	}
-
-	return { family: "", given: "" };
+	return { given: resolveAuthorDisplayName(author) ?? "", family: "" };
 }
 
-function buildResponsibilityData(
-	item: TEI,
-	corpusMetadata: TeiHeader | undefined,
-): ResponsibilityPeople {
+function buildResponsibilityData(item: TEI, indexes: MetadataIndexes): ResponsibilityPeople {
 	const respStmts = item.teiHeader?.fileDesc.titleStmt.respStmts;
 
-	if (!respStmts || !corpusMetadata) return {};
+	if (!respStmts) return {};
 
 	return supportedResponsibilities.reduce<ResponsibilityPeople>(
 		(responsibilityData, responsibility) => {
@@ -531,7 +475,7 @@ function buildResponsibilityData(
 			return {
 				...responsibilityData,
 				[responsibility]: matchingRespStmts.map((respStmt) =>
-					resolveResponsiblePeople(respStmt, corpusMetadata),
+					resolveResponsiblePeople(respStmt, indexes),
 				),
 			};
 		},
@@ -727,15 +671,16 @@ function extractMetadata(
 	dataTypeCollection: string,
 	corpusMetadata: TeiHeader | undefined,
 	geoPlaceIndex: Map<string, PlaceMetadata>,
+	indexes: MetadataIndexes,
 ): simpleTEIMetadata | null {
 	const teiHeader = item.teiHeader;
 	const resolvedDataType = resolveDataType(dataTypeCollection);
 	const durationInSeconds = parseDurationInSeconds(item);
 	const placeSettlement = resolvePlaceSettlement(item);
-	const persons = extractPersons(item, corpusMetadata);
+	const persons = extractPersons(item, indexes);
 	const label = resolveLabel(item, resolvedDataType, persons, placeSettlement);
 	const title = resolveTitle(item, label, persons);
-	const responsibilityData = buildResponsibilityData(item, corpusMetadata);
+	const responsibilityData = buildResponsibilityData(item, indexes);
 	const parsedItem = SimpleTEIMetadataSchema.safeParse({
 		// Note that there could be several idnos here. The one we need has a type ending in "CorpusID".
 		// At the moment we only need to care about one idno.
@@ -756,12 +701,11 @@ function extractMetadata(
 			resolvedDataType === "CorpusText" &&
 			!teiHeader?.fileDesc.sourceDesc.recordingStmt?.recording.respStmt
 				? "Unknown"
-				: resolveRecordingResponsibilityName(item, corpusMetadata),
+				: resolveRecordingResponsibilityName(item, indexes),
 		category: resolveCategory(item, resolvedDataType, corpusMetadata),
 		duration: formatDuration(durationInSeconds),
 		audioAvailability: resolveAudioAvailability(item, resolvedDataType, durationInSeconds),
 		"@hasTEIw": item["@hasTEIw"] === "true" ? "true" : "false",
-		teiHeader,
 		publication: buildPublication(item),
 	});
 
@@ -782,10 +726,17 @@ function buildSimpleItems(
 ): Array<simpleTEIMetadata> {
 	const corpusMetadata = findCorpusMetadata(items);
 	const geoPlaceIndex = buildGeoPlaceIndex(geoItems);
+	const indexes = buildMetadataIndexes(corpusMetadata);
 
 	return items.flatMap((teiCorpus) => {
 		return (teiCorpus.TEIs ?? []).flatMap((tei) => {
-			const metadata = extractMetadata(tei, teiCorpus["@id"] ?? "", corpusMetadata, geoPlaceIndex);
+			const metadata = extractMetadata(
+				tei,
+				teiCorpus["@id"] ?? "",
+				corpusMetadata,
+				geoPlaceIndex,
+				indexes,
+			);
 
 			return metadata ? [metadata] : [];
 		});
@@ -870,7 +821,6 @@ export function groupSimpleItems(
 }
 
 interface CacheEntry {
-	rawItems: Array<TeiCorpus>;
 	simpleItems: Array<simpleTEIMetadata>;
 	persons: Array<Person>;
 }
@@ -885,7 +835,7 @@ type FrozenCacheEntry = ReadonlyDeep<CacheEntry>;
 const PARSED_CORPUS_CACHE_CAP = 4;
 
 /**
- * Memo of fully parsed corpora keyed on the body-level `ETag` of the `/vicav/project` response,
+ * Memo of fully parsed corpora keyed on backend identity and the body-level `ETag` of the `/vicav/project` response,
  * which changes only when the upstream body changes. Module scope on purpose: Pinia stores are
  * recreated per SSR request, so only module state survives across requests in the same Node
  * process. Entries are shared by reference across concurrent requests; they are `markRaw`'d and
@@ -905,8 +855,7 @@ let hasWarnedMissingEtag = false;
 
 /**
  * Recursively freezes every nested object and array. Skips already frozen subtrees (cache entries
- * share references — `persons` points into the `rawItems` corpus tree and every
- * `simpleTEIMetadata.teiHeader` is embedded by reference) and guards against circular references.
+ * may share references) and guards against circular references.
  */
 function deepFreeze(value: unknown, seen = new WeakSet<object>()): void {
 	if (typeof value !== "object" || value === null || seen.has(value) || Object.isFrozen(value)) {
@@ -941,15 +890,17 @@ function getCachedParsedCorpus(etag: string): FrozenCacheEntry | undefined {
  * convention into a language-enforced invariant, which is required now that entries are shared by
  * reference across unrelated concurrent SSR requests.
  */
-function setCachedParsedCorpus(etag: string, entry: CacheEntry): FrozenCacheEntry {
-	markRaw(entry.rawItems);
+function freezeCacheEntry(entry: CacheEntry): FrozenCacheEntry {
 	markRaw(entry.simpleItems);
 	markRaw(entry.persons);
-	deepFreeze(entry.rawItems);
 	deepFreeze(entry.simpleItems);
 	deepFreeze(entry.persons);
 
-	const frozenEntry: FrozenCacheEntry = entry;
+	return entry;
+}
+
+function setCachedParsedCorpus(etag: string, entry: CacheEntry): FrozenCacheEntry {
+	const frozenEntry = freezeCacheEntry(entry);
 	parsedCorpusByEtag.delete(etag);
 	parsedCorpusByEtag.set(etag, frozenEntry);
 
@@ -964,110 +915,119 @@ function setCachedParsedCorpus(etag: string, entry: CacheEntry): FrozenCacheEntr
 /**
  * Runs the full validation and metadata build pipeline for a project static-data table.
  */
-async function buildCacheEntry(staticDataTable: Array<unknown>): Promise<CacheEntry> {
-	const parsedRawItems = (await Promise.all(parseRawItems(staticDataTable))).flat();
+function buildCacheEntry(staticDataTable: Array<unknown>): CacheEntry {
+	const parsedRawItems = parseRawItems(toRaw(staticDataTable));
 
 	return {
-		rawItems: parsedRawItems,
-		simpleItems: buildSimpleItems(parsedRawItems, parseGeoItems(staticDataTable)),
+		simpleItems: buildSimpleItems(parsedRawItems, parseGeoItems(toRaw(staticDataTable))),
 		persons: extractPersonList(findCorpusMetadata(parsedRawItems)),
 	};
 }
 
+const METADATA_PIPELINE_VERSION = 1;
+
+interface InitializationSnapshot {
+	ready: true;
+	pipelineVersion: number;
+	projectIdentity: string;
+	etag: string | null;
+}
+
 export const useTeiHeadersStore = defineStore("use-tei-headers-store", () => {
 	const { data: projectData, suspense } = useProjectInfo();
-	const rawItems = ref<Array<TeiCorpus>>([]);
-	const simpleItems = ref<Array<simpleTEIMetadata>>([]);
-	const persons = ref<Array<Person>>([]);
+	const config = useRuntimeConfig();
+	const projectIdentity = config.public.apiBaseUrl.replace(/\/$/, "");
+	const backendIdentity = (
+		import.meta.server && config.apiBaseUrl ? config.apiBaseUrl : config.public.apiBaseUrl
+	).replace(/\/$/, "");
+	const simpleItems = shallowRef<Array<simpleTEIMetadata>>([]);
+	const persons = shallowRef<Array<Person>>([]);
+	const initialization = ref<InitializationSnapshot | null>(null);
 	let inFlight: Promise<void> | null = null;
 
-	/**
-	 * Assigns a (frozen) memo entry to the reactive refs. The assertions back to the mutable types
-	 * are intentional: the public ref types stay unchanged, while the immutability guarantee holds
-	 * at runtime via the deep freeze applied at cache write time.
-	 */
 	function assignCacheEntry(entry: FrozenCacheEntry): void {
-		rawItems.value = entry.rawItems as Array<TeiCorpus>;
 		simpleItems.value = entry.simpleItems as Array<simpleTEIMetadata>;
 		persons.value = entry.persons as Array<Person>;
 	}
 
-	/**
-	 * Initializes the TEI header cache once from project static data.
-	 */
-	const initialize = async function () {
-		if (inFlight) {
-			await inFlight;
-			return;
-		}
+	function markInitialized(etag: string | null): void {
+		initialization.value = {
+			ready: true,
+			pipelineVersion: METADATA_PIPELINE_VERSION,
+			projectIdentity,
+			etag,
+		};
+	}
+
+	async function initialize(options: { reuseHydratedState?: boolean } = {}): Promise<void> {
+		if (inFlight) return inFlight;
 
 		inFlight = (async () => {
 			await suspense();
-
-			const envelope = projectData.value;
-			const etag = envelope?.ETag;
-
-			if (etag) {
-				const cached = getCachedParsedCorpus(etag);
-				if (cached) {
-					assignCacheEntry(cached);
-					return;
-				}
-
-				const pendingParse = inFlightParses.get(etag);
-				if (pendingParse) {
-					assignCacheEntry(await pendingParse);
-					return;
-				}
-
-				// Registered before awaiting, so concurrent SSR requests for the same new ETag
-				// await this promise instead of each running the full parse pipeline.
-				const parsePromise = (async () => {
-					const staticDataTable = envelope.projectConfig?.staticData?.table ?? [];
-					return setCachedParsedCorpus(etag, await buildCacheEntry(staticDataTable));
-				})();
-				inFlightParses.set(etag, parsePromise);
-
-				try {
-					assignCacheEntry(await parsePromise);
-				} finally {
-					inFlightParses.delete(etag);
-				}
-
+			const envelope = toRaw(projectData.value);
+			const etag = envelope?.ETag ?? null;
+			const snapshot = initialization.value;
+			if (
+				options.reuseHydratedState &&
+				snapshot?.ready &&
+				snapshot.pipelineVersion === METADATA_PIPELINE_VERSION &&
+				snapshot.projectIdentity === projectIdentity &&
+				snapshot.etag === etag
+			) {
+				assignCacheEntry(
+					freezeCacheEntry({
+						simpleItems: toRaw(simpleItems.value),
+						persons: toRaw(persons.value),
+					}),
+				);
 				return;
 			}
 
-			if (envelope && !hasWarnedMissingEtag) {
-				hasWarnedMissingEtag = true;
-				console.warn(
-					"[use-tei-headers-store] Project response carries no ETag;" +
-						" the parsed corpus is not memoized across requests.",
-				);
+			let entry: FrozenCacheEntry;
+			if (etag) {
+				const cacheKey = JSON.stringify([backendIdentity, etag]);
+				const cached = getCachedParsedCorpus(cacheKey);
+				if (cached) {
+					entry = cached;
+				} else {
+					let pending = inFlightParses.get(cacheKey);
+					if (!pending) {
+						pending = Promise.resolve()
+							.then(() => buildCacheEntry(envelope?.projectConfig?.staticData?.table ?? []))
+							.then((result) => setCachedParsedCorpus(cacheKey, result));
+						inFlightParses.set(cacheKey, pending);
+					}
+					try {
+						entry = await pending;
+					} finally {
+						if (inFlightParses.get(cacheKey) === pending) inFlightParses.delete(cacheKey);
+					}
+				}
+			} else {
+				if (envelope && !hasWarnedMissingEtag) {
+					hasWarnedMissingEtag = true;
+					console.warn(
+						"[use-tei-headers-store] Project response carries no ETag; the parsed corpus is not memoized across requests.",
+					);
+				}
+				entry = freezeCacheEntry(buildCacheEntry(envelope?.projectConfig?.staticData?.table ?? []));
 			}
 
-			const entry = await buildCacheEntry(envelope?.projectConfig?.staticData?.table ?? []);
-			rawItems.value = entry.rawItems;
-			simpleItems.value = entry.simpleItems;
-			persons.value = entry.persons;
+			assignCacheEntry(entry);
+			markInitialized(etag);
 		})();
 
 		try {
 			await inFlight;
 		} finally {
-			// eslint-disable-next-line require-atomic-updates -- only writer; concurrent callers merely read and await `inFlight`
+			// eslint-disable-next-line require-atomic-updates -- concurrent callers only await the shared promise
 			inFlight = null;
 		}
-	};
+	}
 
 	function getGroupedSimpleItems(options: GroupSimpleItemsOptions): GroupedSimpleItemsByCountry {
 		return groupSimpleItems(simpleItems.value, options);
 	}
 
-	return {
-		initialize,
-		rawItems,
-		simpleItems,
-		persons,
-		getGroupedSimpleItems,
-	};
+	return { initialize, simpleItems, persons, initialization, getGroupedSimpleItems };
 });

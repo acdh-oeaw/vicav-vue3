@@ -1,6 +1,5 @@
 import { z } from "zod";
 
-import type { TeiHeader } from "@/lib/api-client/index.ts";
 import { DataTypesEnum } from "@/types/global";
 
 const SimplePersonSchema = z.object({
@@ -20,7 +19,6 @@ export type Author = z.infer<typeof AuthorSchema>;
 const XmlTextNodeSchema = z.object({
 	$: z.string(),
 });
-export const TeiHeaderSchema = z.custom<TeiHeader>();
 
 export const TeiDateSchema = z.object({
 	$: z.string().optional(),
@@ -58,7 +56,6 @@ export const SimpleTEIMetadataSchema = z.object({
 	place: placeSchema,
 	person: z.array(SimplePersonSchema),
 	"@hasTEIw": z.string(),
-	teiHeader: TeiHeaderSchema,
 	publication: z.object({
 		refType: z.enum(["external", "internal"]),
 		type: z.string(),
