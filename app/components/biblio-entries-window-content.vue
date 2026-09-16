@@ -70,36 +70,14 @@ function submitNewQueryKeyup(event: KeyboardEvent): void {
 				<span v-if="queryString !== ''" class="spQueryText">&nbsp;&nbsp;{{ queryString }}</span>
 				<div class="relative top-1 mr-4 ml-auto">
 					<div v-if="!params.isQueryVisible">
-						<svg
-							class="svg-icon"
-							style="
-								vertical-align: middle;
-								overflow: hidden;
-								width: 1em;
-								height: 1em;
-								fill: currentColor;
-							"
-							viewBox="0 0 1024 1024"
-							xmlns="http://www.w3.org/2000/svg"
-						>
+						<svg class="svg-icon" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
 							<path
 								d="M511.5 789.9 80.6 359c-22.8-22.8-22.8-59.8 0-82.6 22.8-22.8 59.8-22.8 82.6 0l348.3 348.3 348.3-348.3c22.8-22.8 59.8-22.8 82.6 0 22.8 22.8 22.8 59.8 0 82.6L511.5 789.9 511.5 789.9zM511.5 789.9"
 							/>
 						</svg>
 					</div>
 					<div v-if="params.isQueryVisible">
-						<svg
-							class="svg-icon"
-							style="
-								vertical-align: middle;
-								overflow: hidden;
-								width: 1em;
-								height: 1em;
-								fill: currentColor;
-							"
-							viewBox="0 0 1024 1024"
-							xmlns="http://www.w3.org/2000/svg"
-						>
+						<svg class="svg-icon" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
 							<path
 								d="M511.5 259.3 942.4 690.1c22.8 22.8 22.8 59.8 0 82.6-22.8 22.8-59.8 22.8-82.6 0L511.5 424.5 163.2 772.8c-22.8 22.8-59.8 22.8-82.6 0-22.8-22.8-22.8-59.8 0-82.6L511.5 259.3 511.5 259.3zM511.5 259.3"
 							/>
@@ -156,18 +134,7 @@ function submitNewQueryKeyup(event: KeyboardEvent): void {
 
 				<div class="relative top-1 mr-4 ml-auto">
 					<div v-if="data && !isListOpen">
-						<svg
-							class="svg-icon"
-							style="
-								vertical-align: middle;
-								overflow: hidden;
-								width: 1em;
-								height: 1em;
-								fill: currentColor;
-							"
-							viewBox="0 0 1024 1024"
-							xmlns="http://www.w3.org/2000/svg"
-						>
+						<svg class="svg-icon" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
 							<path
 								d="M511.5 789.9 80.6 359c-22.8-22.8-22.8-59.8 0-82.6 22.8-22.8 59.8-22.8 82.6 0l348.3 348.3 348.3-348.3c22.8-22.8 59.8-22.8 82.6 0 22.8 22.8 22.8 59.8 0 82.6L511.5 789.9 511.5 789.9zM511.5 789.9"
 							/>
@@ -176,13 +143,6 @@ function submitNewQueryKeyup(event: KeyboardEvent): void {
 					<div v-if="data && isListOpen">
 						<svg
 							class="svg-icon"
-							style="
-								vertical-align: middle;
-								overflow: hidden;
-								width: 1em;
-								height: 1em;
-								fill: currentColor;
-							"
 							version="1.1"
 							viewBox="0 0 1024 1024"
 							xmlns="http://www.w3.org/2000/svg"
@@ -209,6 +169,15 @@ function submitNewQueryKeyup(event: KeyboardEvent): void {
 
 <style>
 @reference "@/styles/index.css";
+
+svg.svg-icon {
+	vertical-align: middle;
+	overflow: hidden;
+	width: 1em;
+	height: 1em;
+	fill: currentColor;
+}
+
 /* stylelint-disable selector-class-pattern, block-no-empty */
 .dvStats {
 	@apply mb-1.25 pb-1.25 pl-1.25 border border-solid border-primary bg-primary text-on-primary font-bold;
@@ -227,7 +196,7 @@ function submitNewQueryKeyup(event: KeyboardEvent): void {
 }
 
 .imgBiblItem {
-	@apply inline max-w-full m-0 border-none pr-1.5 align-middle box-border;
+	@apply inline size-8 m-0 border-none pr-1.5 align-middle box-border;
 }
 
 .dvBibBook,
