@@ -112,7 +112,8 @@
 		"vue-router": "^5.1.0",
 		"winbox": "^0.2.82",
 		"xlsx": "^0.18.5",
-		"zod": "^4.4.3"
+		"zod": "^4.5.4",
+		"zod-compiler": "2.0.5"
 	},
 	"devDependencies": {
 		"@acdh-oeaw/eslint-config": "^2.0.13",

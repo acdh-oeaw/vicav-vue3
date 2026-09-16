@@ -2,6 +2,7 @@ import { fileURLToPath } from "node:url";
 
 import tailwindcss from "@tailwindcss/vite";
 import { defineNuxtConfig } from "nuxt/config";
+import zodCompiler from "zod-compiler/vite";
 
 export default defineNuxtConfig({
 	alias: {
@@ -132,7 +133,17 @@ export default defineNuxtConfig({
 		build: {
 			cssMinify: "lightningcss",
 		},
-		plugins: [tailwindcss()],
+		plugins: [
+			tailwindcss(),
+			zodCompiler({
+				include: [
+					"app/types/**/*.ts",
+					"app/stores/use-tei-headers-store.ts",
+					"app/composables/use-dicts-entries.ts",
+				],
+				schemas: "auto",
+			}),
+		],
 		optimizeDeps: {
 			include: [
 				"pinia",

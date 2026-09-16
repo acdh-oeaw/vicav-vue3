@@ -1,6 +1,8 @@
+import { defineStore } from "pinia";
 import type { ReadonlyDeep } from "type-fest";
 import * as z from "zod";
 
+import { useOpenapiSchema } from "@/composables/use-openapi-schema.ts";
 import dataTypes from "@/config/dataTypes.ts";
 import {
 	type Author,
@@ -19,8 +21,10 @@ import {
 import type { DataTypesEnum } from "@/types/global.ts";
 import { type simpleTEIMetadata, SimpleTEIMetadataSchema } from "@/types/teiCorpus.ts";
 
-const TeiCorpusSchema = z.fromJSONSchema(useOpenapiSchema("TeiCorpus")) as z.ZodType<TeiCorpus>;
-const GeoPlaceSchema = z.fromJSONSchema(useOpenapiSchema("GeoPlace")) as z.ZodType<GeoPlace>;
+export const TeiCorpusSchema = z.fromJSONSchema(
+	useOpenapiSchema("TeiCorpus"),
+) as z.ZodType<TeiCorpus>;
+export const GeoPlaceSchema = z.fromJSONSchema(useOpenapiSchema("GeoPlace")) as z.ZodType<GeoPlace>;
 
 const supportedResponsibilities = [
 	Responsibility.Author,
