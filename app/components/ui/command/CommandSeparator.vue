@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Separator, type SeparatorProps } from "reka-ui";
 import { twMerge } from "tailwind-merge";
-import { computed, type HTMLAttributes } from "vue";
+import { computed, type HTMLAttributes, normalizeClass } from "vue";
 
 const props = defineProps<SeparatorProps & { class?: HTMLAttributes["class"] }>();
 
@@ -13,7 +13,10 @@ const delegatedProps = computed(() => {
 </script>
 
 <template>
-	<Separator v-bind="delegatedProps" :class="twMerge('-mx-1 h-px bg-border', props.class)">
+	<Separator
+		v-bind="delegatedProps"
+		:class="twMerge('-mx-1 h-px bg-border', normalizeClass(props.class))"
+	>
 		<slot />
 	</Separator>
 </template>

@@ -7,7 +7,7 @@ import {
 	useForwardPropsEmits,
 } from "reka-ui";
 import { twMerge } from "tailwind-merge";
-import { computed, type HTMLAttributes, reactive, ref, watch } from "vue";
+import { computed, type HTMLAttributes, normalizeClass, reactive, ref, watch } from "vue";
 
 import { provideCommandContext } from "./index.ts";
 
@@ -96,7 +96,7 @@ provideCommandContext({
 		:class="
 			twMerge(
 				'bg-popover text-popover-foreground flex size-full flex-col overflow-hidden rounded-md',
-				props.class,
+				normalizeClass(props.class),
 			)
 		"
 	>

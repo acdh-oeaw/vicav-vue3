@@ -29,13 +29,13 @@ function toDisplayValue(attr: NoskeAttribute): string {
  * goes through the same-origin `/api/cql-attributes` proxy, since the NoSketch instance itself
  * does not send CORS headers. The corpus defaults to the server runtime config.
  */
-export function useCqlAttributes(options?: { corpname?: string; enabled?: boolean }) {
+export function useCqlAttributes(options?: { corpname: string; enabled?: boolean }) {
 	const query = useQuery({
 		enabled: options?.enabled,
 		queryKey: ["cql-attributes", options?.corpname ?? null] as const,
 		async queryFn() {
 			const data = await $fetch<NoskeCorpInfo>("/api/cql-attributes", {
-				query: options?.corpname ? { corpname: options.corpname } : undefined,
+				query: { corpname: options?.corpname },
 			});
 			if (data.error) throw new Error(`NoSketch Engine corp_info error: ${data.error}`);
 			return data;

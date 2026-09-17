@@ -5,7 +5,7 @@ import { CheckboxIndicator, CheckboxRoot } from "radix-vue";
 const male = ref(true);
 const female = ref(true);
 
-const model = defineModel("modelValue", { type: Array, default: [] });
+const model = defineModel("modelValue", { type: Array, default: () => [] });
 
 watch(model.value, (value) => {
 	if ("m" in value) {

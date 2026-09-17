@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useMarkerStore } from "@/stores/use-marker-store";
 
+import { CHARACTER_ICON_CATEGORY, characterIcons } from "./ui/icon-picker/character-icons.ts";
 import type { IconType } from "./ui/icon-picker/IconPicker.vue";
 
 type SelectorType = "color" | "icon";
@@ -96,7 +97,14 @@ const customIcons = [
 				categories: ["shapes"],
 			}) as IconType,
 	),
+	...characterIcons,
 ];
+
+// letters and digits are a marker style of their own, so they stay available
+// no matter which icon categories a caller asks for
+const limitToCategories = computed(() =>
+	props.iconCategories ? [...props.iconCategories, CHARACTER_ICON_CATEGORY] : undefined,
+);
 </script>
 
 <template>
@@ -110,7 +118,7 @@ const customIcons = [
 			:enable-hide-toggle="enableHideToggle"
 			:hidden="modelValue.hidden"
 			:icon="modelValue.icon"
-			:limit-to-categories="iconCategories"
+			:limit-to-categories="limitToCategories"
 			search-placeholder="Search for an alternative icon..."
 			:use-popover-modal="usePopoverModal"
 			:use-popover-portal="usePopoverPortal"

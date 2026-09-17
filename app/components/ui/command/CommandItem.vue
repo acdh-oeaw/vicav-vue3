@@ -8,7 +8,7 @@ import {
 	useId,
 } from "reka-ui";
 import { twMerge } from "tailwind-merge";
-import { computed, type HTMLAttributes, onMounted, onUnmounted, ref } from "vue";
+import { computed, type HTMLAttributes, normalizeClass, onMounted, onUnmounted, ref } from "vue";
 
 import { useCommand, useCommandGroup } from "./index.ts";
 
@@ -74,7 +74,7 @@ onUnmounted(() => {
 		:class="
 			twMerge(
 				'relative flex cursor-default gap-2 select-none items-center rounded-sm px-2 py-1.5 text-sm outline-hidden data-highlighted:bg-accent data-highlighted:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0',
-				props.class,
+				normalizeClass(props.class),
 			)
 		"
 		@select="

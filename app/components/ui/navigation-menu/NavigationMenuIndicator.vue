@@ -6,7 +6,7 @@ import {
 	useForwardProps,
 } from "reka-ui";
 import { twMerge } from "tailwind-merge";
-import type { HTMLAttributes } from "vue";
+import { type HTMLAttributes, normalizeClass } from "vue";
 
 const props = defineProps<NavigationMenuIndicatorProps & { class?: HTMLAttributes["class"] }>();
 
@@ -21,7 +21,7 @@ const forwardedProps = useForwardProps(delegatedProps);
 		:class="
 			twMerge(
 				'top-full z-1 flex h-1.5 items-end justify-center overflow-hidden data-[state=visible]:animate-in data-[state=visible]:fade-in data-[state=hidden]:animate-out data-[state=hidden]:fade-out',
-				props.class,
+				normalizeClass(props.class),
 			)
 		"
 		data-slot="navigation-menu-indicator"

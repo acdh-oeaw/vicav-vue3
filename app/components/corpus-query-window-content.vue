@@ -4,9 +4,10 @@ import InfiniteLoading from "v3-infinite-loading";
 import type { StateHandler } from "v3-infinite-loading/lib/types";
 import type Zod from "zod";
 
-import type { Div, MixedUtteranceContent } from "@/lib/api-client";
+import type { Div } from "@/lib/api-client";
 import { useTeiHeadersStore } from "@/stores/use-tei-headers-store.ts";
 import type { CorpusQuerySchema } from "@/types/global.ts";
+import { getCorpusHitContext } from "@/utils/corpus-hit-context.ts";
 
 const api = useApiClient();
 const { simpleItems } = useTeiHeadersStore();
@@ -140,45 +141,17 @@ const wordOptions = computed(() => {
 	});
 });
 
-function utteranceContentContainsHit(
-	utterance: MixedUtteranceContent[number],
-	hitId?: string,
-): boolean {
-	if (hitId == null) return false;
-	return (
-		utterance.w?.["@id"] === hitId ||
-		utterance.seg?.["@id"] === hitId ||
-		utterance.seg?.["$$"].some((segUtterance) =>
-			utteranceContentContainsHit(segUtterance, hitId),
-		) === true
-	);
-}
-
 function getHitKey(hit: Div, index: number) {
 	return [hit["@docRef"], hit["@id"], hit.hits?.join(","), index].filter(Boolean).join("-");
 }
 
-function splitUtterancesAroundHit(utterances: MixedUtteranceContent, hitId?: string) {
-	const matchIndex = utterances.findIndex((utterance) =>
-		utteranceContentContainsHit(utterance, hitId),
-	);
+const displayHitContexts = computed(() =>
+	displayHits.value.map((hit) => ({ hit, context: getCorpusHitContext(hit) })),
+);
 
-	if (matchIndex === -1) {
-		return {
-			before: utterances,
-			match: undefined,
-			after: [],
-		};
-	}
-
-	return {
-		before: utterances.slice(0, matchIndex),
-		match: utterances[matchIndex],
-		after: utterances.slice(matchIndex + 1),
-	};
-}
-
-const { cqlConfig: attributeConfig } = useCqlAttributes();
+const { cqlConfig: attributeConfig } = useCqlAttributes({
+	corpname: config.value?.projectConfig?.noskeHost ?? "",
+});
 
 const cqlConfig = computed<CqlConfig>(() =>
 	attributeConfig.value.map((attr) =>
@@ -284,13 +257,16 @@ const { cqlTriggers } = useCqlTriggers(cqlConfig);
 		<div v-if="hits && displayHits.length > 0">
 			<div class="my-2">Query: "{{ queryString }}"</div>
 			<table>
-				<tr v-for="(hit, hitIndex) in displayHits" :key="getHitKey(hit, hitIndex)">
+				<tr
+					v-for="({ hit, context }, hitIndex) in displayHitContexts"
+					:key="getHitKey(hit, hitIndex)"
+				>
 					<td class="p-0">
 						<a
 							:data-hits="hit.hits![0]"
 							data-target-type="CorpusText"
 							:data-text-id="hit['@docRef']"
-							:data-u="hit.u"
+							:data-u="context.utteranceId"
 							href="#"
 							@click="openNewWindowFromAnchor"
 						>
@@ -298,14 +274,16 @@ const { cqlTriggers } = useCqlTriggers(cqlConfig);
 						</a>
 					</td>
 					<td>
-						<div v-if="hit.u" class="overflow-x-auto px-6 py-3">
+						<div
+							v-if="context.before.length || context.match || context.after.length"
+							class="overflow-x-auto px-6 py-3"
+						>
 							<div
 								class="inline-grid min-w-full grid-cols-[minmax(max-content,1fr)_auto_minmax(max-content,1fr)] items-start gap-x-3"
 							>
 								<div class="flex flex-nowrap justify-end justify-self-end">
 									<CorpusTextJsonUtterance
-										v-for="(uContent, index) in splitUtterancesAroundHit(hit.u['$$'], hit.hits?.[0])
-											.before"
+										v-for="(uContent, index) in context.before"
 										:key="`before-${index}`"
 										:hits="hit.hits?.[0]"
 										:inline-lemma-annotation="showLemmaAnnotations"
@@ -315,18 +293,17 @@ const { cqlTriggers } = useCqlTriggers(cqlConfig);
 								</div>
 								<div class="min-w-fit justify-self-center">
 									<CorpusTextJsonUtterance
-										v-if="splitUtterancesAroundHit(hit.u['$$'], hit.hits?.[0]).match"
+										v-if="context.match"
 										:highlight="true"
 										:hits="hit.hits?.[0]"
 										:inline-lemma-annotation="showLemmaAnnotations"
 										:inline-linguistic-annotation="showLinguisticAnnotations"
-										:utterance="splitUtterancesAroundHit(hit.u['$$'], hit.hits?.[0]).match!"
+										:utterance="context.match!"
 									></CorpusTextJsonUtterance>
 								</div>
 								<div class="flex flex-nowrap justify-self-start">
 									<CorpusTextJsonUtterance
-										v-for="(uContent, index) in splitUtterancesAroundHit(hit.u['$$'], hit.hits?.[0])
-											.after"
+										v-for="(uContent, index) in context.after"
 										:key="`after-${index}`"
 										:hits="hit.hits?.[0]"
 										:inline-lemma-annotation="showLemmaAnnotations"

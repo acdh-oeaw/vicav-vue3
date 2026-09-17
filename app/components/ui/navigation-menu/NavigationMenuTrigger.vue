@@ -3,7 +3,7 @@ import { ChevronDown } from "@lucide/vue";
 import { reactiveOmit } from "@vueuse/core";
 import { NavigationMenuTrigger, type NavigationMenuTriggerProps, useForwardProps } from "reka-ui";
 import { twMerge } from "tailwind-merge";
-import type { HTMLAttributes } from "vue";
+import { type HTMLAttributes, normalizeClass } from "vue";
 
 import { navigationMenuTriggerStyle } from ".";
 
@@ -17,7 +17,7 @@ const forwardedProps = useForwardProps(delegatedProps);
 <template>
 	<NavigationMenuTrigger
 		v-bind="forwardedProps"
-		:class="twMerge(navigationMenuTriggerStyle(), 'group', props.class)"
+		:class="twMerge(navigationMenuTriggerStyle(), 'group', normalizeClass(props.class))"
 		data-slot="navigation-menu-trigger"
 	>
 		<slot />

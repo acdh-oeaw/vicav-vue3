@@ -1,9 +1,10 @@
 <script lang="ts" setup>
-import { Download, Info, type Map } from "@lucide/vue";
+import { Download, Info } from "@lucide/vue";
 import type { ColumnDef, Header, Row, Table } from "@tanstack/vue-table";
 import { test } from "liqe";
 
 import { useGeojsonStore } from "@/stores/use-geojson-store.ts";
+import { narrowScreenBreakpoint } from "@/stores/use-windows-store.ts";
 import {
 	type FeatureType,
 	type FeatureValueGroup,
@@ -26,6 +27,7 @@ const emit = defineEmits<{
 }>();
 
 const GeojsonStore = useGeojsonStore();
+const windowsStore = useWindowsStore();
 const openOrUpdateWindow = useOpenOrUpdateWindow();
 
 const { isPending } = GeojsonStore.loadGeojson();
@@ -140,7 +142,12 @@ const { featureValueGroups, markers, markerSettings } = storeToRefs(useMarkerSto
  * only worth sharing if it carries both.
  */
 function groupsFingerprint(groups: Array<FeatureValueGroup>) {
-	return JSON.stringify(groups.map(({ columnId, label, values }) => [columnId, label, values]));
+	return JSON.stringify(
+		groups.map(({ label, values }) => [
+			label,
+			values.map(({ columnId, value }) => [columnId, value]),
+		]),
+	);
 }
 function persistFeatureValueGroups() {
 	const groups = serializeFeatureValueGroups();
@@ -235,7 +242,37 @@ function openGeoJsonMap() {
 		"markerType",
 		false,
 	);
+	void nextTick(splitTableAndMapWindows);
 }
+
+function splitTableAndMapWindows() {
+	const viewport = document.getElementById(windowRootId)?.getBoundingClientRect();
+	if (!viewport || viewport.width < narrowScreenBreakpoint) return;
+
+	const windows = Array.from(windowsStore.registry.values());
+	const table = windows.find((w) => w.targetType === "ListMap");
+	const map = windows.find((w) => w.targetType === "GeojsonMap");
+	if (!table || !map || windows.length > 3) return;
+
+	const additionalWindow = windows.find((w) => w !== table && w !== map);
+
+	const tableWidth = Math.floor(viewport.width * 0.25);
+	const additionalWidth = additionalWindow ? Math.floor(viewport.width * 0.25) : 0;
+	table.winbox.resize(tableWidth, viewport.height).move(0, 0);
+	map.winbox
+		.resize(viewport.width - tableWidth - additionalWidth, viewport.height)
+		.move(tableWidth, 0);
+	if (additionalWindow)
+		additionalWindow.winbox
+			.resize(additionalWidth, viewport.height)
+			.move(viewport.width - additionalWidth, 0);
+}
+
+windowsStore.$onAction(({ name, after }) => {
+	if (["arrangeWindows", "addWindow", "removeWindow"].includes(name)) {
+		after(() => void nextTick(splitTableAndMapWindows));
+	}
+});
 
 function onRowClick(row: Row<FeatureType>) {
 	row.toggleSelected();
@@ -320,7 +357,7 @@ function onFeatureClick(val: Header<unknown, unknown>) {
 		</Centered>
 		<div class="flex justify-between justify-items-end border-b bg-white py-2">
 			<!-- <DataTablePagination v-if="tableRef" :table="tableRef as unknown as Table<never>" /> -->
-			<div class="flex px-2 text-neutral-700">
+			<div class="flex px-2 text-neutral-700" data-onboarding="jump-to-location">
 				<SearchableCombobox
 					nothing-found="No matching location found."
 					:options="searchableLocationNames"
@@ -329,14 +366,21 @@ function onFeatureClick(val: Header<unknown, unknown>) {
 					@select="jumpToRow"
 				/>
 			</div>
-			<div class="flex gap-2">
-				<Toggle v-model:model-value="showAllDetails" class="h-8 text-neutral-700"
+			<div class="flex gap-2" data-onboarding="table-actions">
+				<Toggle
+					v-model:model-value="showAllDetails"
+					class="h-8 text-neutral-700"
+					data-onboarding="show-details"
 					><Info class="size-4 stroke-neutral-800 transition-colors" />
 					<span class="line-clamp-1 text-ellipsis">Show details</span></Toggle
 				>
 				<DropdownMenu>
 					<DropdownMenuTrigger as-child>
-						<Button class="inline-flex h-8 gap-2 border-0 text-neutral-700" variant="outline">
+						<Button
+							class="inline-flex h-8 gap-2 border-0 text-neutral-700"
+							data-onboarding="export-data"
+							variant="outline"
+						>
 							<Download class="size-4 stroke-neutral-800 transition-colors" />
 							<span class="line-clamp-1 text-ellipsis">Export data</span>
 						</Button>
@@ -378,10 +422,10 @@ function onFeatureClick(val: Header<unknown, unknown>) {
 				@table-ready="registerTable"
 			></DataTable>
 		</div>
-		<div class="flex items-center justify-between py-2">
-			<div class="text-sm">
-				<span class="mx-2 font-medium">Total:</span
-				><span> {{ tableRef?.getFilteredRowModel().flatRows.length }} rows</span>
+		<div class="flex flex-wrap items-center justify-between gap-y-1 py-2">
+			<div class="px-2 text-sm whitespace-nowrap">
+				<span class="font-medium">{{ tableRef?.getFilteredRowModel().flatRows.length }}</span>
+				rows
 			</div>
 			<DataTablePagination
 				v-if="tableRef"
@@ -390,6 +434,8 @@ function onFeatureClick(val: Header<unknown, unknown>) {
 				:table="tableRef as unknown as Table<never>"
 			/>
 		</div>
+
+		<GuidedTour class="text-foreground" />
 	</div>
 </template>
 
