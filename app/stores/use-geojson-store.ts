@@ -1,7 +1,7 @@
 import type { Table } from "@tanstack/vue-table";
 import { defineStore } from "pinia";
 
-import { type FeatureCollectionType, type FeatureType, GeoFeatureSchema } from "@/types/global.ts";
+import type { FeatureCollectionType, FeatureType } from "@/types/global.ts";
 
 export interface TaxonomyTreeEntry {
 	label: string | undefined;
@@ -121,19 +121,7 @@ export const useGeojsonStore = defineStore("geojson", () => {
 			(data) => {
 				const projectData = data?.projectConfig?.staticData?.geo?.[0];
 				if (!projectData) return;
-				const features = projectData.features.map((feature) => {
-					const result = GeoFeatureSchema.loose().safeParse(feature);
-					if (result.success) {
-						return result.data;
-					} else {
-						console.error(result.error);
-						return null;
-					}
-				});
-				geojsonData.value = {
-					...projectData,
-					features,
-				} as FeatureCollectionType;
+				geojsonData.value = structuredClone(toRaw(projectData)) as FeatureCollectionType;
 			},
 			{ immediate: true },
 		);
