@@ -248,6 +248,7 @@ function onValueChange(entry: LegendEntry, event: DragChangeEvent<LegendEntry>) 
 		v-model:open="collapsibleOpen"
 		class="flex h-fit w-56 flex-col bg-white p-4 text-xs"
 		data-geo-map-legend
+		data-onboarding="map-legend"
 	>
 		<CollapsibleTrigger class="flex w-full justify-between"
 			><span class="font-medium">{{ activeRows?.length }} total markers</span
@@ -303,6 +304,7 @@ function onValueChange(entry: LegendEntry, event: DragChangeEvent<LegendEntry>) 
 								dropTargetId === legendMemberKey(entry.columnId, entry.key),
 						}"
 						:data-legend-drop-target="legendMemberKey(entry.columnId, entry.key)"
+						data-onboarding="legend-value"
 						:group="LEGEND_SORTABLE_GROUP"
 						:list="[entry]"
 						:move="onDragMove"

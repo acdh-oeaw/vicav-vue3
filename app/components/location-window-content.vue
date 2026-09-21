@@ -75,6 +75,7 @@ function onFeatureClick(col: Column<PatchedFeatureType, unknown>) {
 						><Button
 							v-if="col.column.id.startsWith('ft_')"
 							class="h-auto shrink-0 p-0 font-normal text-black!"
+							data-onboarding="feature-link"
 							variant="link"
 							@click="onFeatureClick(col.column)"
 							>{{ col.column.columnDef.header }}</Button

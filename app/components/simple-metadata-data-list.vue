@@ -446,7 +446,7 @@ function isEmptyPlaceHierarchyGroup(row: Row<simpleTEIMetadata>): boolean {
 }
 
 function countLeafRows(row: Row<simpleTEIMetadata>): number {
-	return row.getLeafRows().length;
+	return row.getLeafRows().filter((row) => !row.getIsGrouped()).length;
 }
 
 function canOpenItem(item: simpleTEIMetadata): boolean {
