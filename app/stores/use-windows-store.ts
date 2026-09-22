@@ -457,6 +457,14 @@ export const useWindowsStore = defineStore("windows", () => {
 		updateUrl();
 	});
 
+	function getPersistedWindowParams(windowItem: WindowItem): WindowItem["params"] {
+		if (windowItem.targetType !== "WMap" || windowItem.params.endpoint !== "data_markers")
+			return windowItem.params;
+
+		const { dataListLayers: _, ...params } = windowItem.params;
+		return params;
+	}
+
 	function serializeWindowStates() {
 		const windowStates: Array<WindowState> = [];
 
@@ -481,7 +489,7 @@ export const useWindowsStore = defineStore("windows", () => {
 				height: viewportPercentageWith2DigitPrecision(w.winbox.height as number, "height"),
 				targetType: w.targetType,
 				title: w.winbox.title,
-				params: w.params,
+				params: getPersistedWindowParams(w),
 			} as WindowState);
 		});
 		return windowStates;
