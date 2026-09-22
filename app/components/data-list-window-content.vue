@@ -7,15 +7,22 @@ import FeatureDataList from "@/components/feature-data-list.vue";
 import ProfileDataList from "@/components/profile-data-list.vue";
 import SampleTextDataList from "@/components/sample-text-data-list.vue";
 import dataTypes from "@/config/dataTypes.ts";
+import { useDataListMapStore } from "@/stores/use-data-list-map-store.ts";
 import {
+	getSimpleMetadataValue,
 	type SimpleMetadataAccessorKey,
 	simpleMetadataAccessors,
 	useTeiHeadersStore,
 } from "@/stores/use-tei-headers-store.ts";
+import { narrowScreenBreakpoint, type WindowState } from "@/stores/use-windows-store.ts";
 import type { DataListWindowItem, DataTypesEnum } from "@/types/global.ts";
+import type { simpleTEIMetadata } from "@/types/teiCorpus.ts";
+import { windowRootId } from "@/utils/constants.ts";
 
 interface Props {
 	params: DataListWindowItem["params"];
+	windowId: string;
+	title: string;
 }
 
 const debug = false;
@@ -27,6 +34,9 @@ const emit = defineEmits<{
 
 const teiHeadersStore = useTeiHeadersStore();
 const { simpleItems } = storeToRefs(teiHeadersStore);
+const dataListMapStore = useDataListMapStore();
+const windowsStore = useWindowsStore();
+const visibleSpecializedItems = ref<Array<simpleTEIMetadata>>([]);
 const specializedListType = computed(() => {
 	if (props.params.dataTypes.length !== 1) return undefined;
 
@@ -55,7 +65,79 @@ const groupedItems = computed(() => {
 		filterListBy: normalizeFilterListBy(),
 	});
 });
+const filteredItems = computed(() => {
+	const filter = normalizeFilterListBy();
+	if (!filter) return simpleItems.value;
+	return simpleItems.value.filter(
+		(item) => getSimpleMetadataValue(item, filter.key) === filter.value,
+	);
+});
 const openNewWindowFromAnchor = useAnchorClickHandler();
+
+function flattenGroupedItems(): Array<simpleTEIMetadata> {
+	return Object.values(groupedItems.value).flatMap((countries) =>
+		Object.values(countries).flatMap((regions) =>
+			Object.values(regions).flatMap((places) => Object.values(places).flat()),
+		),
+	);
+}
+
+const currentItems = computed(() =>
+	specializedListType.value ? visibleSpecializedItems.value : flattenGroupedItems(),
+);
+const listMapId = computed(() => props.params.mapSyncId ?? props.windowId);
+
+function syncMapWindow(): void {
+	const layers = Object.values(dataListMapStore.layers);
+	const mapWindow = windowsStore.findWindowByTypeAndTitle("WMap", "Data lists map");
+	if (!mapWindow) {
+		if (layers.length === 0) return;
+		windowsStore.addWindow({
+			targetType: "WMap",
+			title: "Data lists map",
+			params: { endpoint: "data_markers", queryString: "", dataListLayers: layers },
+		} as WindowState);
+		return;
+	}
+	windowsStore.updateWindowParams(mapWindow.id, { ...mapWindow.params, dataListLayers: layers });
+}
+
+function syncListMap(): void {
+	if (props.params.mapEnabled)
+		dataListMapStore.setLayer(listMapId.value, props.title, currentItems.value);
+	else dataListMapStore.removeLayer(listMapId.value);
+	syncMapWindow();
+	if (props.params.mapEnabled) void nextTick(splitDataListAndMapWindows);
+}
+
+function splitDataListAndMapWindows(): void {
+	const viewport = document.getElementById(windowRootId)?.getBoundingClientRect();
+	if (!viewport || viewport.width < narrowScreenBreakpoint) return;
+
+	const windows = Array.from(windowsStore.registry.values());
+	const map = windows.find(
+		(window) => window.targetType === "WMap" && window.params.endpoint === "data_markers",
+	);
+	const lists = windows.filter((window) => window.targetType === "DataList");
+	if (!map || lists.length === 0) return;
+
+	const mapWidth = Math.floor(viewport.width / 2);
+	const listWidth = viewport.width - mapWidth;
+	map.winbox.resize(mapWidth, viewport.height).move(listWidth, 0);
+
+	lists.forEach((list, index) => {
+		const top = Math.floor((index * viewport.height) / lists.length);
+		const bottom = Math.floor(((index + 1) * viewport.height) / lists.length);
+		list.winbox.resize(listWidth, bottom - top).move(0, top);
+	});
+}
+
+watch([currentItems, () => props.params.mapEnabled], syncListMap, { deep: true });
+onMounted(syncListMap);
+onUnmounted(() => {
+	dataListMapStore.removeLayer(listMapId.value);
+	syncMapWindow();
+});
 
 const debugString = computed(() => (debug ? JSON.stringify(groupedItems.value, null, 2) : ""));
 
@@ -86,27 +168,31 @@ function hierarchyLevelClass(level: string | number): string {
 <template>
 	<CorpusTextDataList
 		v-if="specializedListType === 'CorpusText'"
-		:items="simpleItems"
+		:items="filteredItems"
 		:list-state="params.listState"
 		@update:list-state="updateListState"
+		@update:visible-items="visibleSpecializedItems = $event"
 	/>
 	<SampleTextDataList
 		v-else-if="specializedListType === 'SampleText'"
-		:items="simpleItems"
+		:items="filteredItems"
 		:list-state="params.listState"
 		@update:list-state="updateListState"
+		@update:visible-items="visibleSpecializedItems = $event"
 	/>
 	<FeatureDataList
 		v-else-if="specializedListType === 'Feature'"
-		:items="simpleItems"
+		:items="filteredItems"
 		:list-state="params.listState"
 		@update:list-state="updateListState"
+		@update:visible-items="visibleSpecializedItems = $event"
 	/>
 	<ProfileDataList
 		v-else-if="specializedListType === 'Profile'"
-		:items="simpleItems"
+		:items="filteredItems"
 		:list-state="params.listState"
 		@update:list-state="updateListState"
+		@update:visible-items="visibleSpecializedItems = $event"
 	/>
 	<div v-else-if="groupedItems" class="relative isolate grid size-full overflow-auto">
 		<div v-if="debug">
@@ -114,9 +200,9 @@ function hierarchyLevelClass(level: string | number): string {
 			<br />
 			<textarea
 				id="debug"
+				class="h-[100px] w-[1024px]"
 				cols="25"
 				rows="80"
-				style="width: 1024px; height: 100px"
 				:value="debugString"
 			></textarea>
 		</div>
