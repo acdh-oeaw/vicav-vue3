@@ -119,6 +119,18 @@ export const useWindowsStore = defineStore("windows", () => {
 			},
 		}),
 		defineWindowControl({
+			targetTypes: ["DataList"],
+			className: "wb-map",
+			title: "Show or remove from map",
+			click(windowItem) {
+				updateWindowParams(windowItem.id, {
+					...windowItem.params,
+					mapEnabled: !windowItem.params.mapEnabled,
+					mapSyncId: windowItem.params.mapSyncId ?? windowItem.id,
+				});
+			},
+		}),
+		defineWindowControl({
 			targetTypes: ["GeojsonMap"],
 			className: "wb-table",
 			title: "Open table",
@@ -321,6 +333,21 @@ export const useWindowsStore = defineStore("windows", () => {
 				el.title = config.title;
 			}
 		});
+		updateDataListMapControlState(windowItem);
+	}
+
+	function updateDataListMapControlState(windowItem: WindowItem) {
+		if (windowItem.targetType !== "DataList") return;
+
+		const control = (windowItem.winbox.dom as HTMLElement).querySelector<HTMLSpanElement>(
+			".wb-map",
+		);
+		if (control == null) return;
+
+		const isMapEnabled = windowItem.params.mapEnabled === true;
+		control.classList.toggle("wb-map-active", isMapEnabled);
+		control.setAttribute("aria-pressed", String(isMapEnabled));
+		control.title = isMapEnabled ? "Remove from map" : "Show on map";
 	}
 
 	function findWindowByTypeAndParam(
@@ -518,6 +545,7 @@ export const useWindowsStore = defineStore("windows", () => {
 		}
 
 		w.params = parsedWindow.data.params;
+		updateDataListMapControlState(w);
 		updateUrl();
 	}
 
