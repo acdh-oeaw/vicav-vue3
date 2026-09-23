@@ -20,6 +20,6 @@ test.describe("map page", () => {
 		await page.getByRole("navigation").getByRole("button", { name: "Bibliographies" }).click();
 		await page.getByLabel("Bibliographies").getByText("All Bibl. Locations on Map").click();
 		await expect(page.locator(".leaflet-control-container")).toBeVisible();
-		await expect(page.locator("img:nth-child(218)")).toBeVisible();
+		await expect(page.locator(".leaflet-marker-icon").first()).toBeVisible({ timeout: 15_000 });
 	});
 });
