@@ -29,7 +29,9 @@ function toDisplayValue(attr: NoskeAttribute): string {
  * goes through the same-origin `/api/cql-attributes` proxy, since the NoSketch instance itself
  * does not send CORS headers. The corpus defaults to the server runtime config.
  */
-export function useCqlAttributes(options?: { corpname?: string; enabled?: boolean }) {
+export function useCqlAttributes(options?: { corpname: string; enabled?: boolean }) {
+	const projectInfo = useProjectInfo();
+	const noskeAttributeBlacklist = projectInfo.data.value?.projectConfig?.cqlIgnoreAttributes ?? [];
 	const query = useQuery({
 		enabled: options?.enabled,
 		queryKey: ["cql-attributes", options?.corpname ?? null] as const,
@@ -43,10 +45,12 @@ export function useCqlAttributes(options?: { corpname?: string; enabled?: boolea
 	});
 
 	const cqlConfig = computed<CqlConfig>(() =>
-		(query.data.value?.attributes ?? []).map((attr) => ({
-			key: attr.name,
-			displayValue: toDisplayValue(attr),
-		})),
+		(query.data.value?.attributes ?? [])
+			.filter((attr) => !noskeAttributeBlacklist.includes(attr.name))
+			.map((attr) => ({
+				key: attr.name,
+				displayValue: toDisplayValue(attr),
+			})),
 	);
 
 	return { ...query, cqlConfig };
