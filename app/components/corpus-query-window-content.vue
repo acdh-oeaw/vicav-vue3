@@ -285,7 +285,13 @@ const { cqlTriggers } = useCqlTriggers(cqlConfig);
 			<LoadingIndicator>Loading corpus results...</LoadingIndicator>
 		</div>
 		<div v-if="hits && displayHits.length > 0">
-			<div class="my-2">Query: "{{ queryString }}"</div>
+			<div class="my-2 flex gap-2">
+				<div>
+					Query: <span class="font-mono text-header">{{ queryString }}</span>
+				</div>
+				<div>•</div>
+				<div>{{ hits.length }} {{ hits.length > 1 ? "results" : "result" }}</div>
+			</div>
 			<table>
 				<tr v-for="(hit, hitIndex) in displayHits" :key="getHitKey(hit, hitIndex)">
 					<td class="p-0">
