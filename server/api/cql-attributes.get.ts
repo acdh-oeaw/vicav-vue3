@@ -11,12 +11,12 @@ interface NoskeCorpInfo {
 // send CORS headers, so the browser cannot call it directly — we fetch it here (server-to-server)
 // and return the JSON to the client.
 export default defineEventHandler(async (event): Promise<NoskeCorpInfo> => {
-	const env = useRuntimeConfig();
 	const { corpname } = getQuery(event);
+	// eslint-disable-next-line @typescript-eslint/no-base-to-string
+	const noske: string = typeof corpname === "string" ? corpname : String(corpname);
 
-	return $fetch<NoskeCorpInfo>(`${env.noskeBaseUrl}/run.cgi/corp_info`, {
+	return $fetch<NoskeCorpInfo>(`${noske}/run.cgi/corp_info`, {
 		query: {
-			corpname: typeof corpname === "string" && corpname ? corpname : env.noskeCorpus,
 			format: "json",
 		},
 	});

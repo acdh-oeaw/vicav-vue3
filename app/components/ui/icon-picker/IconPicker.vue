@@ -10,6 +10,8 @@ export interface IconType {
 	categories?: Array<string>;
 	tags?: Array<string>;
 	custom?: boolean;
+	/** Set on icons that draw a single letter or digit, see `character-icons.ts`. */
+	character?: string;
 	additionalAttributes?: SVGAttributes;
 }
 

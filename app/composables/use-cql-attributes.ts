@@ -37,7 +37,7 @@ export function useCqlAttributes(options?: { corpname: string; enabled?: boolean
 		queryKey: ["cql-attributes", options?.corpname ?? null] as const,
 		async queryFn() {
 			const data = await $fetch<NoskeCorpInfo>("/api/cql-attributes", {
-				query: options?.corpname ? { corpname: options.corpname } : undefined,
+				query: { corpname: options?.corpname },
 			});
 			if (data.error) throw new Error(`NoSketch Engine corp_info error: ${data.error}`);
 			return data;

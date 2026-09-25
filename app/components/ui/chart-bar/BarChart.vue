@@ -2,7 +2,7 @@
 import { Axis, StackedBar } from "@unovis/ts";
 import { VisAxis, VisBulletLegend, VisStackedBar, VisTooltip, VisXYContainer } from "@unovis/vue";
 import { twMerge } from "tailwind-merge";
-import { computed, type HTMLAttributes } from "vue";
+import { computed, type HTMLAttributes, normalizeClass } from "vue";
 
 type Datum = Record<string, unknown>;
 
@@ -172,7 +172,7 @@ const categoryAxisAttributes = computed(() =>
 </script>
 
 <template>
-	<div :class="twMerge('w-full', props.class)">
+	<div :class="twMerge('w-full', normalizeClass(props.class))">
 		<VisBulletLegend
 			v-if="showLegend"
 			class="mx-auto mb-2 w-fit max-w-[1200px] text-center"

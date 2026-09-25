@@ -589,6 +589,7 @@ watch(
 				>
 					<SelectTrigger
 						class="h-5 w-auto gap-0.5 rounded-sm border-none px-1.5 text-xs font-semibold text-on-muted shadow-none focus:ring-0"
+						data-onboarding="query-operator"
 					>
 						<SelectValue />
 					</SelectTrigger>

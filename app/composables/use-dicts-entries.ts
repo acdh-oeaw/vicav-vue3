@@ -2,13 +2,25 @@ import { useQuery } from "@tanstack/vue-query";
 import type Zod from "zod";
 import { z } from "zod";
 
+import { useOpenapiSchema } from "@/composables/use-openapi-schema.ts";
 import type { RestVLEEntry } from "@/lib/api-client";
 import type { Dict } from "@/types/global.ts";
+import { useApiClient } from "~/shared/utils/use-api-client.ts";
 
-const api = useApiClient();
-const RestVLEEntrySchema = z.fromJSONSchema(
+export const RestVLEEntrySchema = z.fromJSONSchema(
 	useOpenapiSchema("RestVLEEntry"),
 ) as z.ZodType<RestVLEEntry>;
+
+interface DictEntriesQueryParams {
+	page?: number | null;
+	pageSize?: number | null;
+	id?: string | null;
+	ids?: string | null;
+	q?: string | null;
+	sort?: "asc" | "desc" | "none" | null;
+	altLemma?: string | null;
+	format?: string | null;
+}
 
 function getEntryId(entry: unknown, fallback: number): string {
 	if (typeof entry !== "object" || entry === null) return `entry #${String(fallback + 1)}`;
@@ -22,24 +34,23 @@ function getEntryId(entry: unknown, fallback: number): string {
 export function useDictsEntries(
 	params: {
 		dictId: Zod.infer<typeof Dict>["id"];
-		queryParams: Parameters<typeof api.restvle.getDictDictNameEntries>[1];
+		queryParams: DictEntriesQueryParams;
 	},
 	options?: { enabled?: boolean },
 ) {
+	const api = useApiClient();
+
 	return useQuery({
 		enabled: options?.enabled,
+		retry: false,
 		queryKey: ["get-dicts-entries", params] as const,
 		async queryFn({ queryKey: [, params] }) {
-			if (!params.queryParams?.q && !params.queryParams?.id && !params.queryParams?.ids)
-				return null;
+			const { queryParams } = params;
+			if (!queryParams.q && !queryParams.id && !queryParams.ids) return null;
 			try {
-				const response = await api.restvle.getDictDictNameEntries(
-					params.dictId,
-					params.queryParams,
-					{
-						headers: { accept: "application/json" },
-					},
-				);
+				const response = await api.restvle.getDictDictNameEntries(params.dictId, queryParams, {
+					headers: { accept: "application/json" },
+				});
 				const entries = response.data._embedded.entries;
 				if (!Array.isArray(entries)) return response.data;
 
@@ -93,9 +104,9 @@ export function useDictsEntries(
 					return null;
 				}
 				 TODO this won't work like this, because the return type RestVLEEntries
-				   implies a different shape
-				   either complete the shape here or move error handling to the component
-				   using the "isError" return value
+					 implies a different shape
+					 either complete the shape here or move error handling to the component
+					 using the "isError" return value
 				switch (e.status) {
 					case 404: {
 						return {

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ListboxContent, type ListboxContentProps, useForwardProps } from "reka-ui";
 import { twMerge } from "tailwind-merge";
-import { computed, type HTMLAttributes } from "vue";
+import { computed, type HTMLAttributes, normalizeClass } from "vue";
 
 const props = defineProps<ListboxContentProps & { class?: HTMLAttributes["class"] }>();
 
@@ -17,7 +17,7 @@ const forwarded = useForwardProps(delegatedProps);
 <template>
 	<ListboxContent
 		v-bind="forwarded"
-		:class="twMerge('max-h-[300px] overflow-y-auto overflow-x-hidden', props.class)"
+		:class="twMerge('max-h-[300px] overflow-y-auto overflow-x-hidden', normalizeClass(props.class))"
 	>
 		<div role="presentation">
 			<slot />

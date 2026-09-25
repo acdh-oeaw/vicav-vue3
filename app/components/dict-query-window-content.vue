@@ -116,6 +116,17 @@ const updateQueryParams = () => {
 	emit("updateQueryParam", params.value.queryString);
 };
 updateQueryParams();
+watch(params, (newParams) => {
+	q.value = newParams.queryParams?.q ?? "";
+	page.value = newParams.queryParams?.page ?? 1;
+	pageSize.value = newParams.queryParams?.pageSize;
+	id.value = newParams.queryParams?.id;
+	ids.value = newParams.queryParams?.ids;
+	sort.value = newParams.queryParams?.sort;
+	altLemma.value = newParams.queryParams?.altLemma;
+	updateFilterCriteria();
+	updateQueryParams();
+});
 watch(params, updateQueryParams, { deep: true });
 const { data, isPending, isPlaceholderData } = useDictsEntries({
 	dictId: String(myDict?.id),
@@ -188,14 +199,7 @@ const api = useApiClient(); */
 				<div class="relative top-1 mr-4 ml-auto">
 					<div v-if="!params.isQueryVisible">
 						<svg
-							class="svg-icon"
-							style="
-								vertical-align: middle;
-								overflow: hidden;
-								width: 1em;
-								height: 1em;
-								fill: currentColor;
-							"
+							class="svg-icon size-[1em] overflow-hidden fill-current align-middle"
 							version="1.1"
 							viewBox="0 0 1024 1024"
 							xmlns="http://www.w3.org/2000/svg"
@@ -207,14 +211,7 @@ const api = useApiClient(); */
 					</div>
 					<div v-if="params.isQueryVisible">
 						<svg
-							class="svg-icon"
-							style="
-								vertical-align: middle;
-								overflow: hidden;
-								width: 1em;
-								height: 1em;
-								fill: currentColor;
-							"
+							class="svg-icon size-[1em] overflow-hidden fill-current align-middle"
 							version="1.1"
 							viewBox="0 0 1024 1024"
 							xmlns="http://www.w3.org/2000/svg"
@@ -263,8 +260,7 @@ const api = useApiClient(); */
 						<button
 							v-for="([k, v], i) in filterCriteria"
 							:key="i"
-							class="my-0.5 flex flex-col items-center rounded-md border-2 border-primary p-0.5 hover:bg-gray-50"
-							style="overflow-wrap: anywhere"
+							class="my-0.5 flex flex-col items-center rounded-md border-2 border-primary p-0.5 wrap-anywhere hover:bg-gray-50"
 							@click="editFilter(k, v)"
 						>
 							<span class="flex grow flex-row flex-nowrap">
@@ -292,14 +288,7 @@ const api = useApiClient(); */
 							<div class="relative top-1 mr-4 ml-auto">
 								<div v-if="!isExtendedFormOpen">
 									<svg
-										class="svg-icon"
-										style="
-											vertical-align: middle;
-											overflow: hidden;
-											width: 1em;
-											height: 1em;
-											fill: currentColor;
-										"
+										class="svg-icon size-[1em] overflow-hidden fill-current align-middle"
 										viewBox="0 0 1024 1024"
 										xmlns="http://www.w3.org/2000/svg"
 									>
@@ -310,14 +299,7 @@ const api = useApiClient(); */
 								</div>
 								<div v-if="isExtendedFormOpen">
 									<svg
-										class="svg-icon"
-										style="
-											vertical-align: middle;
-											overflow: hidden;
-											width: 1em;
-											height: 1em;
-											fill: currentColor;
-										"
+										class="svg-icon size-[1em] overflow-hidden fill-current align-middle"
 										viewBox="0 0 1024 1024"
 										xmlns="http://www.w3.org/2000/svg"
 									>

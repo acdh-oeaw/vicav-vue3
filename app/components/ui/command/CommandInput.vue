@@ -2,7 +2,7 @@
 import { Search } from "@lucide/vue";
 import { ListboxFilter, type ListboxFilterProps, useForwardProps } from "reka-ui";
 import { twMerge } from "tailwind-merge";
-import { computed, type HTMLAttributes } from "vue";
+import { computed, type HTMLAttributes, normalizeClass } from "vue";
 
 import { useCommand } from "./index.ts";
 
@@ -37,7 +37,7 @@ const { filterState } = useCommand();
 			:class="
 				twMerge(
 					'flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-hidden placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50',
-					props.class,
+					normalizeClass(props.class),
 				)
 			"
 		/>

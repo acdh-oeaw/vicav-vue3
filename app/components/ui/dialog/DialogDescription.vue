@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { DialogDescription, type DialogDescriptionProps, useForwardProps } from "radix-vue";
 import { twMerge } from "tailwind-merge";
-import { computed, type HTMLAttributes } from "vue";
+import { computed, type HTMLAttributes, normalizeClass } from "vue";
 
 const props = defineProps<DialogDescriptionProps & { class?: HTMLAttributes["class"] }>();
 
@@ -17,7 +17,7 @@ const forwardedProps = useForwardProps(delegatedProps);
 <template>
 	<DialogDescription
 		v-bind="forwardedProps"
-		:class="twMerge('text-sm text-muted-foreground', props.class)"
+		:class="twMerge('text-sm text-muted-foreground', normalizeClass(props.class))"
 	>
 		<slot />
 	</DialogDescription>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChevronDown, Layers, Ungroup, X } from "@lucide/vue";
+import { ChevronDown, Layers } from "@lucide/vue";
 import type { Column } from "@tanstack/vue-table";
 import {
 	type DragChangeEvent,
@@ -8,11 +8,17 @@ import {
 } from "vue-draggable-next";
 import type Zod from "zod";
 
-import type { FeatureValueGroupInterface } from "@/stores/use-marker-store";
+import type { SelectionEntry } from "@/components/marker-selector.vue";
 import type { GeojsonMapSchema } from "@/types/global.ts";
 import { ensureFilterValueMap } from "@/utils/filter-value-map";
 
-import type { SelectionEntry } from "./marker-selector.vue";
+import {
+	LEGEND_SORTABLE_GROUP,
+	type LegendEntry,
+	type LegendGroup,
+	legendMemberKey,
+	toGroupMember,
+} from "./geojson-map-legend.context.ts";
 
 const { getMarkerSVG } = usePetalMarker();
 
@@ -30,17 +36,9 @@ const activeFeatures = computed(() =>
 const activeRows = computed(() => table.value?.getFilteredRowModel().rows);
 const collapsibleOpen = ref(true);
 
-const {
-	addValueToFeatureValueGroup,
-	buildFeatureValueId,
-	createFeatureValueGroup,
-	dissolveFeatureValueGroup,
-	getFeatureValueGroups,
-	removeValueFromFeatureValueGroup,
-	renameFeatureValueGroup,
-	setMarker,
-} = useMarkerStore();
-const { markerSettings, markers } = storeToRefs(useMarkerStore());
+const { addValueToFeatureValueGroup, buildFeatureValueId, createFeatureValueGroup, setMarker } =
+	useMarkerStore();
+const { featureValueGroups, markerSettings, markers } = storeToRefs(useMarkerStore());
 
 type ColumnType = Column<
 	{
@@ -95,19 +93,6 @@ function shouldShowOtherFeatureValues(feature: ColumnType) {
 	);
 }
 
-interface LegendEntry {
-	key: string;
-	parts: Array<string>;
-	count?: number;
-	markerId: string;
-}
-
-interface LegendGroup {
-	group: FeatureValueGroupInterface;
-	entries: Array<LegendEntry>;
-	rowCount: number;
-}
-
 interface FeatureLegend {
 	feature: ColumnType;
 	matchingRowCount: number;
@@ -116,10 +101,23 @@ interface FeatureLegend {
 	showOtherFeatureValues: boolean;
 }
 
+function featureLabel(feature: ColumnType) {
+	const header = feature.columnDef.header;
+	return typeof header === "string" ? header : feature.id;
+}
+
 function getLegendEntries(feature: ColumnType): Array<LegendEntry> {
+	const label = featureLabel(feature);
 	const toEntry = (parts: Array<string>, count?: number): LegendEntry => {
 		const key = parts.join(AND_OPERATOR);
-		return { key, parts, count, markerId: buildFeatureValueId(feature.id, key) };
+		return {
+			columnId: feature.id,
+			featureLabel: label,
+			key,
+			parts,
+			count,
+			markerId: buildFeatureValueId(feature.id, key),
+		};
 	};
 	const combined = getCombinedFilters(feature).map((parts) => toEntry(parts));
 	const values =
@@ -129,54 +127,105 @@ function getLegendEntries(feature: ColumnType): Array<LegendEntry> {
 	return [...combined, ...values];
 }
 
-const featureLegends = computed<Array<FeatureLegend>>(() => {
+/*
+ * A group collects values the user wants drawn as one petal. Its members may come from different
+ * features, in which case no single feature can host it and it is listed on its own instead.
+ */
+const legend = computed<{
+	features: Array<FeatureLegend>;
+	crossFeatureGroups: Array<LegendGroup>;
+}>(() => {
 	const rows = activeRows.value ?? [];
+	const features = activeFeatures.value ?? [];
 
-	return (activeFeatures.value ?? []).map((feature) => {
+	const entriesByColumn = new Map<string, Array<LegendEntry>>();
+	const entryByMember = new Map<string, LegendEntry>();
+	for (const feature of features) {
 		const entries = getLegendEntries(feature);
-		const entryByKey = new Map(entries.map((entry) => [entry.key, entry]));
+		entriesByColumn.set(feature.id, entries);
+		entries.forEach((entry) => {
+			entryByMember.set(legendMemberKey(entry.columnId, entry.key), entry);
+		});
+	}
 
-		const groups: Array<LegendGroup> = [];
-		const groupedKeys = new Set<string>();
-		for (const group of getFeatureValueGroups(feature.id)) {
-			const groupEntries = group.values
-				.map((value) => entryByKey.get(value))
-				.filter((entry) => entry !== undefined);
+	const groupedMembers = new Set<string>();
+	const groupsByColumn = new Map<string, Array<LegendGroup>>();
+	const crossFeatureGroups: Array<LegendGroup> = [];
+	for (const group of featureValueGroups.value.values()) {
+		// members whose value is not selected right now have nothing to show in the legend
+		const entries = group.values
+			.map((member) => entryByMember.get(legendMemberKey(member.columnId, member.value)))
+			.filter((entry) => entry !== undefined)
+			.sort((a, b) => (b.count ?? 0) - (a.count ?? 0));
+		if (entries.length === 0) continue;
+		entries.forEach((entry) => groupedMembers.add(legendMemberKey(entry.columnId, entry.key)));
 
-			if (groupEntries.length === 0) continue;
-			groupEntries.forEach((entry) => groupedKeys.add(entry.key));
-			groups.push({ group, entries: groupEntries, rowCount: 0 });
-		}
-		let matchingRowCount = 0;
-		for (const row of rows) {
-			const values = new Set(row.getValue(feature.id) as Array<string>);
-			if (values.size > 0) matchingRowCount += 1;
-			for (const legendGroup of groups) {
-				if (legendGroup.entries.some((entry) => entry.parts.every((part) => values.has(part)))) {
-					legendGroup.rowCount += 1;
-				}
-			}
-		}
-
-		return {
-			feature,
-			matchingRowCount,
-			groups,
-			ungrouped: entries.filter((entry) => !groupedKeys.has(entry.key)),
-			showOtherFeatureValues: shouldShowOtherFeatureValues(feature),
+		const columnIds = new Set(entries.map((entry) => entry.columnId));
+		const legendGroup: LegendGroup = {
+			group,
+			entries,
+			rowCount: 0,
+			crossFeature: columnIds.size > 1,
 		};
-	});
+		if (legendGroup.crossFeature) crossFeatureGroups.push(legendGroup);
+		else {
+			const columnId = entries[0]!.columnId;
+			const columnGroups = groupsByColumn.get(columnId);
+			if (columnGroups) columnGroups.push(legendGroup);
+			else groupsByColumn.set(columnId, [legendGroup]);
+		}
+	}
+
+	const countedGroups = [...crossFeatureGroups, ...[...groupsByColumn.values()].flat()];
+	const matchingRowCounts = new Map<string, number>();
+	for (const row of rows) {
+		const rowValues = new Map<string, Set<string>>();
+		const valuesOf = (columnId: string) => {
+			let values = rowValues.get(columnId);
+			if (!values) {
+				values = new Set(row.getValue(columnId) as Array<string>);
+				rowValues.set(columnId, values);
+			}
+			return values;
+		};
+		for (const feature of features) {
+			if (valuesOf(feature.id).size > 0)
+				matchingRowCounts.set(feature.id, (matchingRowCounts.get(feature.id) ?? 0) + 1);
+		}
+		for (const legendGroup of countedGroups) {
+			if (
+				legendGroup.entries.some((entry) =>
+					entry.parts.every((part) => valuesOf(entry.columnId).has(part)),
+				)
+			)
+				legendGroup.rowCount += 1;
+		}
+	}
+
+	return {
+		features: features
+			.map((feature) => ({
+				feature,
+				matchingRowCount: matchingRowCounts.get(feature.id) ?? 0,
+				groups: groupsByColumn.get(feature.id) ?? [],
+				ungrouped: (entriesByColumn.get(feature.id) ?? [])
+					.filter((entry) => !groupedMembers.has(legendMemberKey(entry.columnId, entry.key)))
+					.sort((a, b) => (b.count ?? 0) - (a.count ?? 0)),
+				showOtherFeatureValues: shouldShowOtherFeatureValues(feature),
+			}))
+			.filter((f) => f.groups.length > 0 || f.ungrouped.length > 0),
+		crossFeatureGroups,
+	};
 });
 
+/* Every group and every lone value in the legend is a target the value at hand can join. */
+const allGroups = computed(() => [
+	...legend.value.crossFeatureGroups,
+	...legend.value.features.flatMap(({ groups }) => groups),
+]);
+const allUngrouped = computed(() => legend.value.features.flatMap(({ ungrouped }) => ungrouped));
+
 const dropTargetId = ref<string | null>(null);
-
-function sortableGroupName(columnId: string) {
-	return `legend-${columnId}`;
-}
-
-function dropTargetIdFor(columnId: string, key: string) {
-	return `${columnId}::${key}`;
-}
 
 function onDragEnd() {
 	dropTargetId.value = null;
@@ -187,20 +236,10 @@ function onDragMove(event: MoveEvent<LegendEntry>) {
 		event.to === event.from ? null : (event.to.dataset["legendDropTarget"] ?? null);
 	return true;
 }
-function onGroupChange(group: FeatureValueGroupInterface, event: DragChangeEvent<LegendEntry>) {
-	if (event.added) addValueToFeatureValueGroup(group.id, event.added.element.key);
-}
 
-function onValueChange(
-	feature: ColumnType,
-	entry: LegendEntry,
-	event: DragChangeEvent<LegendEntry>,
-) {
-	if (event.added) createFeatureValueGroup(feature.id, [entry.key, event.added.element.key]);
-}
-
-function onRenameGroup(groupId: string, event: Event) {
-	renameFeatureValueGroup(groupId, (event.target as HTMLInputElement).value);
+function onValueChange(entry: LegendEntry, event: DragChangeEvent<LegendEntry>) {
+	if (event.added)
+		createFeatureValueGroup([toGroupMember(entry), toGroupMember(event.added.element)]);
 }
 </script>
 
@@ -209,6 +248,7 @@ function onRenameGroup(groupId: string, event: Event) {
 		v-model:open="collapsibleOpen"
 		class="flex h-fit w-56 flex-col bg-white p-4 text-xs"
 		data-geo-map-legend
+		data-onboarding="map-legend"
 	>
 		<CollapsibleTrigger class="flex w-full justify-between"
 			><span class="font-medium">{{ activeRows?.length }} total markers</span
@@ -228,7 +268,7 @@ function onRenameGroup(groupId: string, event: Event) {
 					groups,
 					ungrouped,
 					showOtherFeatureValues,
-				} in featureLegends"
+				} in legend.features"
 				:key="feature.id"
 				class="my-1"
 			>
@@ -247,85 +287,29 @@ function onRenameGroup(groupId: string, event: Event) {
 					></MarkerSelector>
 				</div>
 				<div class="ml-5">
-					<div
-						v-for="{ group, entries, rowCount } in groups"
-						:key="group.id"
-						class="my-1 rounded-sm border border-dashed border-muted p-1"
-						:class="{
-							'opacity-45': isMarkerHidden(group.id),
-							'border-primary bg-primary/5': dropTargetId === dropTargetIdFor(feature.id, group.id),
-						}"
-					>
-						<div class="flex items-center gap-1.5">
-							<MarkerSelector
-								:icon-categories="['shapes']"
-								:model-value="markers.get(group.id)!"
-								:use-popover-portal="true"
-								@update:model-value="(props) => updateMarker(props)"
-							></MarkerSelector>
-							<input
-								aria-label="Group name"
-								class="w-full min-w-0 grow border-0 bg-transparent p-0 font-medium focus:outline-hidden"
-								:value="group.label"
-								@change="onRenameGroup(group.id, $event)"
-								@keydown.enter.prevent="($event.target as HTMLElement).blur()"
-							/>
-							<span class="shrink-0 text-on-muted">({{ rowCount }})</span>
-							<button
-								class="shrink-0 text-on-muted hover:text-black"
-								data-legend-controls
-								title="Ungroup"
-								type="button"
-								@click="dissolveFeatureValueGroup(group.id)"
-							>
-								<span class="sr-only">Ungroup {{ group.label }}</span>
-								<Ungroup class="size-3.5"></Ungroup>
-							</button>
-						</div>
-						<Draggable
-							class="min-h-3"
-							:data-legend-drop-target="dropTargetIdFor(feature.id, group.id)"
-							:group="sortableGroupName(feature.id)"
-							:list="[...entries]"
-							:move="onDragMove"
-							:sort="false"
-							@change="onGroupChange(group, $event)"
-							@end="onDragEnd"
-						>
-							<div
-								v-for="entry in entries"
-								:key="entry.key"
-								class="ml-1 flex cursor-grab items-center gap-1"
-								title="Drag out of the group to ungroup this value"
-							>
-								<LegendEntryLabel class="grow" :count="entry.count" :parts="entry.parts" />
-								<button
-									class="shrink-0 text-on-muted hover:text-black"
-									data-legend-controls
-									title="Remove from group"
-									type="button"
-									@click="removeValueFromFeatureValueGroup(group.id, entry.key)"
-								>
-									<span class="sr-only">Remove {{ entry.key }} from {{ group.label }}</span>
-									<X class="size-3"></X>
-								</button>
-							</div>
-						</Draggable>
-					</div>
+					<GeojsonMapLegendGroup
+						v-for="legendGroup in groups"
+						:key="legendGroup.group.id"
+						:drop-target-id="dropTargetId"
+						:legend-group="legendGroup"
+						@drag-end="onDragEnd"
+						@drag-move="(target) => (dropTargetId = target)"
+					></GeojsonMapLegendGroup>
 					<Draggable
 						v-for="entry in ungrouped"
-						:key="entry.key"
+						:key="legendMemberKey(entry.columnId, entry.key)"
 						class="rounded-sm border border-dashed border-transparent"
 						:class="{
 							'border-primary bg-primary/5':
-								dropTargetId === dropTargetIdFor(feature.id, entry.key),
+								dropTargetId === legendMemberKey(entry.columnId, entry.key),
 						}"
-						:data-legend-drop-target="dropTargetIdFor(feature.id, entry.key)"
-						:group="sortableGroupName(feature.id)"
+						:data-legend-drop-target="legendMemberKey(entry.columnId, entry.key)"
+						data-onboarding="legend-value"
+						:group="LEGEND_SORTABLE_GROUP"
 						:list="[entry]"
 						:move="onDragMove"
 						:sort="false"
-						@change="onValueChange(feature, entry, $event)"
+						@change="onValueChange(entry, $event)"
 						@end="onDragEnd"
 					>
 						<div
@@ -340,7 +324,7 @@ function onRenameGroup(groupId: string, event: Event) {
 								@update:model-value="(props) => updateMarker(props)"
 							></MarkerSelector>
 							<LegendEntryLabel class="grow" :count="entry.count" :parts="entry.parts" />
-							<DropdownMenu v-if="groups.length || ungrouped.length > 1">
+							<DropdownMenu v-if="allGroups.length || allUngrouped.length > 1">
 								<DropdownMenuTrigger
 									class="shrink-0 text-on-muted sr-only hover:text-black"
 									data-legend-controls
@@ -351,25 +335,35 @@ function onRenameGroup(groupId: string, event: Event) {
 									<Layers class="size-3.5"></Layers>
 								</DropdownMenuTrigger>
 								<DropdownMenuContent align="end">
-									<template v-if="groups.length">
+									<template v-if="allGroups.length">
 										<DropdownMenuLabel class="text-xs">Add to group</DropdownMenuLabel>
 										<DropdownMenuItem
-											v-for="{ group } in groups"
+											v-for="{ group } in allGroups"
 											:key="group.id"
 											class="text-xs"
-											@select="addValueToFeatureValueGroup(group.id, entry.key)"
+											@select="addValueToFeatureValueGroup(group.id, toGroupMember(entry))"
 											>{{ group.label }}</DropdownMenuItem
 										>
 									</template>
-									<template v-if="ungrouped.length > 1">
+									<template v-if="allUngrouped.length > 1">
 										<DropdownMenuLabel class="text-xs">New group with</DropdownMenuLabel>
-										<template v-for="other in ungrouped" :key="other.key">
+										<template v-for="other in allUngrouped" :key="other.markerId">
 											<DropdownMenuItem
-												v-if="other.key !== entry.key"
+												v-if="
+													legendMemberKey(other.columnId, other.key) !==
+													legendMemberKey(entry.columnId, entry.key)
+												"
 												class="text-xs"
-												@select="createFeatureValueGroup(feature.id, [entry.key, other.key])"
+												@select="
+													createFeatureValueGroup([toGroupMember(entry), toGroupMember(other)])
+												"
 											>
-												<LegendEntryLabel :parts="other.parts" />
+												<LegendEntryLabel
+													:feature-label="
+														other.columnId === entry.columnId ? undefined : other.featureLabel
+													"
+													:parts="other.parts"
+												/>
 											</DropdownMenuItem>
 										</template>
 									</template>
@@ -390,6 +384,22 @@ function onRenameGroup(groupId: string, event: Event) {
 						<span>Other feature values</span>
 					</div>
 				</div>
+			</div>
+			<div
+				v-if="legend.crossFeatureGroups.length"
+				class="my-1 border-muted"
+				:class="{ 'mt-2 border-t pt-2': legend.features.length }"
+				data-legend-cross-feature-groups
+			>
+				<span class="font-normal">Groups across features</span>
+				<GeojsonMapLegendGroup
+					v-for="legendGroup in legend.crossFeatureGroups"
+					:key="legendGroup.group.id"
+					:drop-target-id="dropTargetId"
+					:legend-group="legendGroup"
+					@drag-end="onDragEnd"
+					@drag-move="(target) => (dropTargetId = target)"
+				></GeojsonMapLegendGroup>
 			</div>
 		</CollapsibleContent>
 	</Collapsible>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { DialogTitle, type DialogTitleProps, useForwardProps } from "radix-vue";
 import { twMerge } from "tailwind-merge";
-import { computed, type HTMLAttributes } from "vue";
+import { computed, type HTMLAttributes, normalizeClass } from "vue";
 
 const props = defineProps<DialogTitleProps & { class?: HTMLAttributes["class"] }>();
 
@@ -17,7 +17,9 @@ const forwardedProps = useForwardProps(delegatedProps);
 <template>
 	<DialogTitle
 		v-bind="forwardedProps"
-		:class="twMerge('text-lg font-semibold leading-none tracking-tight', props.class)"
+		:class="
+			twMerge('text-lg font-semibold leading-none tracking-tight', normalizeClass(props.class))
+		"
 	>
 		<slot />
 	</DialogTitle>

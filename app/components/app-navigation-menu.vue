@@ -27,7 +27,11 @@ onScopeDispose(() => {
 </script>
 
 <template>
-	<NavigationMenu v-model="currentMenu" class="w-full max-w-full justify-between border-none">
+	<NavigationMenu
+		v-model="currentMenu"
+		class="w-full max-w-full justify-between border-none"
+		data-onboarding="main-navigation"
+	>
 		<NavigationMenuList>
 			<NavigationMenuItem v-for="menu of menus" :key="menu.id">
 				<NavigationMenuTrigger
@@ -40,8 +44,9 @@ onScopeDispose(() => {
 						<NavigationMenuLink
 							v-if="item.type === 'item'"
 							:key="item.id"
-							as="div"
-							class="cursor-pointer"
+							as="button"
+							class="w-full cursor-pointer text-left"
+							type="button"
 							@select="
 								() => {
 									emit('select-menu-item', item);

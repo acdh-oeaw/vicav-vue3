@@ -6,7 +6,7 @@ import {
 	useForwardPropsEmits,
 } from "reka-ui";
 import { twMerge } from "tailwind-merge";
-import { computed, type HTMLAttributes } from "vue";
+import { computed, type HTMLAttributes, normalizeClass } from "vue";
 
 import { type ToggleGroupVariants, toggleGroupVariants } from "./index.ts";
 
@@ -36,7 +36,7 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits);
 <template>
 	<ToggleGroupRoot
 		v-bind="forwarded"
-		:class="twMerge(toggleGroupVariants({ variant }), props.class)"
+		:class="twMerge(toggleGroupVariants({ variant }), normalizeClass(props.class))"
 	>
 		<slot />
 	</ToggleGroupRoot>

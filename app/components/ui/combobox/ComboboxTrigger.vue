@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ComboboxTrigger, type ComboboxTriggerProps, useForwardProps } from "reka-ui";
 import { twMerge } from "tailwind-merge";
-import { computed, type HTMLAttributes } from "vue";
+import { computed, type HTMLAttributes, normalizeClass } from "vue";
 
 const props = defineProps<ComboboxTriggerProps & { class?: HTMLAttributes["class"] }>();
 
@@ -15,7 +15,11 @@ const forwarded = useForwardProps(delegatedProps);
 </script>
 
 <template>
-	<ComboboxTrigger v-bind="forwarded" :class="twMerge('', props.class)" tabindex="0">
+	<ComboboxTrigger
+		v-bind="forwarded"
+		:class="twMerge('', normalizeClass(props.class))"
+		tabindex="0"
+	>
 		<slot />
 	</ComboboxTrigger>
 </template>
