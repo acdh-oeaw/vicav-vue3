@@ -20,7 +20,7 @@ function toDisplayValue(attr: NoskeAttribute): string {
 	const label = attr.label?.trim();
 	if (label) return label;
 	// corp_info labels are often empty; fall back to a capitalized attribute name.
-	return attr.name.charAt(0).toUpperCase() + attr.name.slice(1);
+	return attr.name;
 }
 
 /**
@@ -30,6 +30,8 @@ function toDisplayValue(attr: NoskeAttribute): string {
  * does not send CORS headers. The corpus defaults to the server runtime config.
  */
 export function useCqlAttributes(options?: { corpname: string; enabled?: boolean }) {
+	const projectInfo = useProjectInfo();
+	const noskeAttributeBlacklist = projectInfo.data.value?.projectConfig?.cqlIgnoreAttributes ?? [];
 	const query = useQuery({
 		enabled: options?.enabled,
 		queryKey: ["cql-attributes", options?.corpname ?? null] as const,
@@ -43,10 +45,12 @@ export function useCqlAttributes(options?: { corpname: string; enabled?: boolean
 	});
 
 	const cqlConfig = computed<CqlConfig>(() =>
-		(query.data.value?.attributes ?? []).map((attr) => ({
-			key: attr.name,
-			displayValue: toDisplayValue(attr),
-		})),
+		(query.data.value?.attributes ?? [])
+			.filter((attr) => !noskeAttributeBlacklist.includes(attr.name))
+			.map((attr) => ({
+				key: attr.name,
+				displayValue: toDisplayValue(attr),
+			})),
 	);
 
 	return { ...query, cqlConfig };

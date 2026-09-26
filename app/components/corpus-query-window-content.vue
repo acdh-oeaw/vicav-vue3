@@ -4,7 +4,7 @@ import InfiniteLoading from "v3-infinite-loading";
 import type { StateHandler } from "v3-infinite-loading/lib/types";
 import type Zod from "zod";
 
-import type { Div } from "@/lib/api-client";
+import type { Div, HttpResponse, RFC7807Problem } from "@/lib/api-client";
 import { useTeiHeadersStore } from "@/stores/use-tei-headers-store.ts";
 import type { CorpusQuerySchema } from "@/types/global.ts";
 import { getCorpusHitContext } from "@/utils/corpus-hit-context.ts";
@@ -65,6 +65,7 @@ async function searchCorpus(options: { updateRoute?: boolean } = {}) {
 	currentPage.value = 0;
 	hits.value = [];
 	displayHits.value = [];
+	let status = { isValid: true, warnings: [] as Array<string> };
 	try {
 		if (words.value.length > 0) queryString.value = `[word="${words.value.join("|")}"]`;
 		if (updateRoute) emit("updateQueryParam", queryString.value);
@@ -79,7 +80,6 @@ async function searchCorpus(options: { updateRoute?: boolean } = {}) {
 
 		if (result.error) {
 			console.error(result.error);
-			return;
 		}
 		if (result.data.hits !== undefined && !Array.isArray(result.data.hits)) {
 			if (Array.isArray(result.data.hits.divs)) hits.value = result.data.hits.divs;
@@ -91,9 +91,16 @@ async function searchCorpus(options: { updateRoute?: boolean } = {}) {
 			displayHits.value = hits.value.slice(currentPage.value * 10, (currentPage.value + 1) * 10);
 			scrollComplete.value = false;
 		}
+	} catch (e) {
+		status = {
+			isValid: false,
+			warnings: [(e as HttpResponse<never, RFC7807Problem>).error.detail],
+		};
+		return status;
 	} finally {
 		isSearching.value = false;
 	}
+	return status;
 }
 
 // API currently doesn't support pagination for corpus search results, so we're faking it
@@ -125,21 +132,15 @@ const openNewWindowFromAnchor = useAnchorClickHandler();
 const { data: config } = useProjectInfo();
 const specialCharacters = config.value?.projectConfig?.specialCharacters;
 const wordSearch = ref("");
-const dataWordsQuery = useDataWords(
-	{ dataType: "CorpusText", query: wordSearch },
-	{ enabled: false },
-);
-
-watch(wordSearch, async (value) => {
-	if (!value || value.length < 2) return;
-	await dataWordsQuery.refetch();
-});
+const dataWordsQuery = useDataWords({ dataType: "CorpusText", query: wordSearch });
 
 const wordOptions = computed(() => {
 	return ((dataWordsQuery.data.value as unknown as Array<string>) ?? []).map((item: string) => {
 		return { label: item, value: item };
 	});
 });
+
+const autocompleteFetching = computed(() => dataWordsQuery.isFetching.value);
 
 function getHitKey(hit: Div, index: number) {
 	return [hit["@docRef"], hit["@id"], hit.hits?.join(","), index].filter(Boolean).join("-");
@@ -208,12 +209,14 @@ const { cqlTriggers } = useCqlTriggers(cqlConfig);
 				:dynamic-keys="['word']"
 				feature-trigger="["
 				free-trigger-key="word"
+				:is-loading="autocompleteFetching"
 				:on-submit="
 					(v) => {
 						if (!isSearching) {
 							queryString = v;
-							searchCorpus();
+							return searchCorpus();
 						}
+						return;
 					}
 				"
 				query-mode="cql"
@@ -255,7 +258,13 @@ const { cqlTriggers } = useCqlTriggers(cqlConfig);
 			<LoadingIndicator>Loading corpus results...</LoadingIndicator>
 		</div>
 		<div v-if="hits && displayHits.length > 0">
-			<div class="my-2">Query: "{{ queryString }}"</div>
+			<div class="my-2 flex gap-2">
+				<div>
+					Query: <span class="font-mono text-header">{{ queryString }}</span>
+				</div>
+				<div>•</div>
+				<div>{{ hits.length }} {{ hits.length > 1 ? "results" : "result" }}</div>
+			</div>
 			<table>
 				<tr
 					v-for="({ hit, context }, hitIndex) in displayHitContexts"
