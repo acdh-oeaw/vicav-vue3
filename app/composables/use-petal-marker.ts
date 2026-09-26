@@ -13,6 +13,7 @@ const GeojsonStore = useGeojsonStore();
 const { defaultMarkers, isFeatureValueGroup, resolveMarkerId } = useMarkerStore();
 const { markers, markerSettings } = storeToRefs(useMarkerStore());
 interface PetalEntry {
+	color?: string;
 	id: string;
 	strokeOnly?: boolean;
 	type?: "feature" | "featureValue";
@@ -63,6 +64,10 @@ function getIconSVG(petalValue: PetalEntry) {
 	// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 	if (iconEntry?.custom) {
 		petal.style.fill = `var(--${petalValue.id}, #cccccc)`;
+	} else if (petalValue.color) {
+		petal.style.fill = petalValue.color;
+		petal.style.stroke = "white";
+		petal.style.strokeWidth = "var(--strokeWidth, 4px)";
 	} else {
 		petal.style.stroke = `var(--${petalValue.id}, #cccccc)`;
 		petal.style.strokeWidth = `var(--strokeWidth, 4px)`;
@@ -127,6 +132,12 @@ function getFlowerSVG(entries: Array<PetalEntry>, center?: PetalEntry) {
 	div.appendChild(svg);
 
 	return div;
+}
+
+function getDataListMarkerSVG(colors: Array<string>) {
+	return getFlowerSVG(
+		colors.map((color, index) => ({ color, id: `data-list-petal-${String(index)}` })),
+	);
 }
 
 function getPetalMarker(feature: GeoJsonFeature<Point, MarkerProperties>, latlng: LatLng) {
@@ -237,6 +248,7 @@ function getPetalMarker(feature: GeoJsonFeature<Point, MarkerProperties>, latlng
 
 export function usePetalMarker() {
 	return {
+		getDataListMarkerSVG,
 		getPetalMarker,
 		getMarkerSVG,
 		getCircleSVG,

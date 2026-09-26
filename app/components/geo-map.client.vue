@@ -5,6 +5,7 @@ import { debounce } from "@acdh-oeaw/lib";
 import type { Feature, Point } from "geojson";
 import {
 	circleMarker,
+	divIcon,
 	geoJSON,
 	latLng,
 	type Layer,
@@ -23,7 +24,7 @@ import GeoMapPopupContent from "@/components/geo-map-popup-content.vue";
 import type { MarkerType } from "@/types/global.ts";
 
 const { markerSettings } = useMarkerStore();
-const { getPetalMarker } = usePetalMarker();
+const { getDataListMarkerSVG, getPetalMarker } = usePetalMarker();
 
 interface Props {
 	height: number;
@@ -31,14 +32,10 @@ interface Props {
 	width: number;
 	markerType?: MarkerType;
 	selection?: [number, number];
-	displayLabels?: "on" | "off" | "default";
-	defaultDisplayLabelsZoom?: number;
 	useCustomClickHandler?: boolean;
 }
 
 const props = defineProps<Props>();
-const labelDisplayMode = computed(() => props.displayLabels ?? "default");
-const defaultDisplayLabelsZoom = computed(() => props.defaultDisplayLabelsZoom ?? 10);
 
 const emit = defineEmits<{
 	(event: "ready", map: LeafletMap): void;
@@ -54,6 +51,11 @@ interface ComponentPopupInfo {
 		groupMarkers: boolean;
 	};
 }
+
+type DataListMapMarkerProperties = MarkerProperties & {
+	dataListMapColors?: Array<string>;
+	dataListMapMarkers?: Array<Feature<Point, MarkerProperties>>;
+};
 
 const componentPopups = ref<Array<ComponentPopupInfo>>([]);
 const openedPopupId = ref<number | null>(null);
@@ -178,6 +180,8 @@ function getNearbyMarkersBasedOnDynamicGrid(
 const addNearbyDataPopup = function (marker: LeafletMarker) {
 	const featureGroup = context.featureGroups.markers;
 	const map = context.map;
+	const dataListMapMarkers = (marker.feature!.properties as DataListMapMarkerProperties)
+		.dataListMapMarkers;
 	if (
 		featureGroup === null ||
 		map === null ||
@@ -189,7 +193,8 @@ const addNearbyDataPopup = function (marker: LeafletMarker) {
 
 	const distance = Math.floor(2 * map.getZoom());
 	const id = featureGroup.getLayerId(marker);
-	const nearbyMarkerData = getNearbyMarkersBasedOnDynamicGrid(marker, distance);
+	const nearbyMarkerData =
+		dataListMapMarkers ?? getNearbyMarkersBasedOnDynamicGrid(marker, distance);
 
 	if (nearbyMarkerData.length > 1) {
 		const markers = nearbyMarkerData.sort((a, b) => {
@@ -228,22 +233,10 @@ function updateMarkers(updateViewport = true) {
 
 	featureGroup.eachLayer((layer) => {
 		layer.on("mouseover", () => {
-			if (shouldShowLabels()) {
-				context.map?.eachLayer((l) => {
-					if (l !== layer) l.closeTooltip();
-				});
-			} else {
-				showHoverTooltip(layer);
-			}
+			showHoverTooltip(layer);
 		});
 		layer.on("mouseout", () => {
-			if (shouldShowLabels()) {
-				context.map?.eachLayer((l) => {
-					l.openTooltip();
-				});
-			} else {
-				syncLayerTooltip(layer);
-			}
+			syncLayerTooltip(layer);
 		});
 	});
 
@@ -283,24 +276,8 @@ function getLayerFeature(layer: Layer) {
 		: undefined;
 }
 
-function shouldShowLabels() {
-	if (labelDisplayMode.value === "on") return true;
-	if (labelDisplayMode.value === "off" || !context.map) return false;
-	return context.map.getZoom() >= defaultDisplayLabelsZoom.value;
-}
-
 function syncLayerTooltip(layer: Layer) {
-	const feature = getLayerFeature(layer);
-	if (feature == null) return;
-
 	layer.unbindTooltip();
-	if (!shouldShowLabels()) return;
-
-	layer.bindTooltip(getTooltipContent(feature), {
-		permanent: true,
-		sticky: false,
-		offset: [12, 0],
-	});
 }
 
 function showHoverTooltip(layer: Layer) {
@@ -313,6 +290,17 @@ function showHoverTooltip(layer: Layer) {
 		sticky: true,
 	});
 	layer.openTooltip();
+}
+
+function sanitizeColor(color: string): string {
+	return /^#[\da-f]{6}$/i.test(color) ? color : "#64748b";
+}
+
+function getDataListMarkerIcon(colors: Array<string>) {
+	return divIcon({
+		className: "custom-marker-icon",
+		html: getDataListMarkerSVG(colors.map(sanitizeColor)).outerHTML,
+	});
 }
 
 function updateTooltips() {
@@ -343,10 +331,6 @@ onMounted(async () => {
 
 	context.featureGroups.markers = geoJSON<MarkerProperties, Point>(undefined, {
 		onEachFeature(feature, layer) {
-			if (shouldShowLabels()) {
-				syncLayerTooltip(layer);
-			}
-
 			layer.on({
 				async click() {
 					layer.unbindPopup();
@@ -363,6 +347,13 @@ onMounted(async () => {
 			});
 		},
 		pointToLayer(feature, latlng) {
+			const colors = (feature.properties as DataListMapMarkerProperties).dataListMapColors;
+			if (colors?.length) {
+				return marker(latlng, {
+					icon: getDataListMarkerIcon(colors),
+					riseOnHover: true,
+				});
+			}
 			if (props.markerType === "petal") return getPetalMarker(feature, latlng);
 			if (feature.properties.type === "reg") {
 				return circleMarker(latlng, config.marker.region);
@@ -384,11 +375,6 @@ onMounted(async () => {
 watch(
 	() => props.markers,
 	() => updateMarkers(),
-);
-
-watch(
-	() => [props.displayLabels, props.defaultDisplayLabelsZoom],
-	() => updateMarkers(false),
 );
 
 watch(

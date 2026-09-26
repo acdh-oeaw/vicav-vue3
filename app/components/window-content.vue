@@ -81,6 +81,8 @@ function updateWindowParams(params: WindowItem["params"]) {
 	<DataListWindowContent
 		v-else-if="props.item.targetType === 'DataList'"
 		:params="props.item.params"
+		:title="props.item.winbox.title"
+		:window-id="props.item.id"
 		@update:params="updateWindowParams"
 	/>
 
