@@ -73,6 +73,22 @@ const columnVisibility = computed(() => {
 	};
 });
 
+const nameCollator = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });
+
+function nameSortKey(feature: FeatureType) {
+	return String((feature.properties as Record<string, unknown>).name ?? "")
+		.normalize("NFD")
+		.replace(/\p{Mn}/gu, "")
+		.replace(/[ʿʾʼ‘’'`]/g, "")
+		.trim();
+}
+
+const sortedFeatures = computed(() =>
+	[...(geojsonData.value?.features ?? [])].sort((a, b) =>
+		nameCollator.compare(nameSortKey(a), nameSortKey(b)),
+	),
+);
+
 function applyGlobalFilter(row: Row<FeatureType>, _colId: string, queryString: string) {
 	const hidableVisibleCells = row.getVisibleCells().filter((cell) => cell.column.getCanHide());
 	if (hidableVisibleCells.length === 0) return true;
@@ -222,7 +238,6 @@ function registerTable(table: Table<FeatureType>) {
 		table.setGlobalFilter(normalizeOperators(queryString.value));
 	}
 	if (params.value.featureValueGroups) restoreFeatureValueGroups(params.value.featureValueGroups);
-
 	GeojsonStore.table = table;
 	tableRef.value = table;
 
@@ -412,7 +427,7 @@ function onFeatureClick(val: Header<unknown, unknown>) {
 				:enable-filter-on-columns="false"
 				:global-filter-fn="applyGlobalFilter"
 				:initial-column-visibility="columnVisibility"
-				:items="geojsonData?.features as Array<never>"
+				:items="sortedFeatures as Array<never>"
 				:min-header-depth="2"
 				:sticky-header="true"
 				:visibility-change-fn="onVisibilityChange"

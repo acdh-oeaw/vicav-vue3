@@ -32,9 +32,10 @@ const props = defineProps<{
 	triggers: TriggerMap;
 	operators?: ReadonlyArray<string>;
 	featureTrigger?: string;
-	onSubmit?: (value: string) => void;
+	onSubmit?: (value: string) => Promise<{ isValid: boolean; warnings: Array<string> }> | undefined;
 	freeTriggerKey?: string;
 	dynamicTriggers?: ReadonlyArray<string>;
+	isLoading?: boolean;
 }>();
 
 const emit = defineEmits<{ "update:searchTerm": [value: string] }>();
@@ -66,12 +67,15 @@ function getCqlDisplayValue(clause: string): string {
 			: trimmed.slice(1)
 		: trimmed;
 
+	if (/ [&|] /.test(inner))
+		return inner
+			.split(/ ([&|]) /)
+			.map((part) => getCqlDisplayValue(part))
+			.join(" ");
 	if (props.freeTriggerKey) {
 		const m = new RegExp(`^${props.freeTriggerKey}="(.+)"$`).exec(inner);
 		if (m) return (m[1] ?? "").split("|").join(" | ");
 	}
-
-	if (/[&|]/.test(inner)) return inner;
 
 	const eqIdx = inner.indexOf("=");
 	if (eqIdx === -1) return inner;
@@ -95,7 +99,7 @@ function tryMergeFreeWord(word: string): boolean {
 	if (!props.freeTriggerKey) return false;
 	const last = tags.value.at(-1);
 	if (!last || last.children) return false;
-	const m = new RegExp(`^\\[${props.freeTriggerKey}="(.+)"\\]$`).exec(last.rawValue);
+	const m = new RegExp(`^\\[${props.freeTriggerKey}="([^ ]+)"\\]$`).exec(last.rawValue);
 	if (!m) return false;
 	last.rawValue = `[${props.freeTriggerKey}="${m[1] ?? ""}|${word}"]`;
 	return true;
@@ -127,9 +131,9 @@ function getDisplayValue(clause: string): string {
 		props.triggers.get("")?.find((f) => f.value === featureKey)?.displayValue ??
 		featureKey.replace(":", "");
 
-	const featureDisplay = featureDisplayRaw
-		? featureDisplayRaw.charAt(0).toUpperCase() + featureDisplayRaw.slice(1)
-		: featureDisplayRaw;
+	const featureDisplay = featureDisplayRaw;
+	// ? featureDisplayRaw.charAt(0).toUpperCase() + featureDisplayRaw.slice(1)
+	// : featureDisplayRaw;
 
 	const valueDisplay =
 		props.triggers.get(featureKey)?.find((v) => v.value === rawVal)?.displayValue ??
@@ -329,8 +333,25 @@ function handleInput() {
 	open.value = filteredList.value.length > 0;
 }
 
+/**
+ * reka-ui handles Enter on the same keydown event we do: it clicks the highlighted item
+ * (→ `handleSelect`) before `handleEnter` runs, and the selection clears `highlighted`.
+ * Without this flag `handleEnter` would turn the text the selection just wrote (e.g.
+ * `[word=""]`) into a finished tag and the window listener would fire a search.
+ * The reset runs as a task, not `nextTick`, so the flag survives the whole keydown
+ * dispatch — a microtask checkpoint runs between the input handler and the window listener.
+ */
+let enterConsumedBySelect = false;
+function consumeEnterForSelect() {
+	enterConsumedBySelect = true;
+	setTimeout(() => {
+		enterConsumedBySelect = false;
+	}, 0);
+}
+
 function handleSelect(ev: CustomEvent) {
 	ev.preventDefault();
+	consumeEnterForSelect();
 	highlighted.value = null;
 	const selectedValue = String(ev.detail.value);
 	const featureTriggerValue = props.featureTrigger ?? "";
@@ -424,7 +445,7 @@ function handleBackspace() {
 
 function handleEnter(e: KeyboardEvent) {
 	e.preventDefault();
-	if (highlighted.value) return; // let combobox handle selection
+	if (enterConsumedBySelect || highlighted.value) return; // let combobox handle selection
 	if (inputValue.value.trim()) {
 		let tagValue = inputValue.value.trim();
 		if (isCqlMode.value) {
@@ -456,7 +477,7 @@ function handlePaste(e: ClipboardEvent) {
 
 	if (isCqlMode.value) {
 		const tokens = splitCqlQuery(combined);
-		if (tokens.length > 1) {
+		if (tokens.length > 0) {
 			tokens.forEach((token) => addTag(token.clause));
 			inputValue.value = "";
 			open.value = false;
@@ -494,12 +515,12 @@ watch(open, () => {
 
 function submitSearch() {
 	if (props.onSubmit) {
-		props.onSubmit(value.value);
-		return;
+		return props.onSubmit(value.value);
 	}
 	if (!props.table) return;
 	parseSearchString(value.value, props.table);
 	props.table.setGlobalFilter(normalizeParens(normalizeOperators(value.value)));
+	return;
 }
 
 const queryWarnings = computed(() => {
@@ -520,7 +541,12 @@ watch(
 );
 
 const keyListener = (e: KeyboardEvent) => {
-	if (e.key === "Enter" && !highlighted.value && queryWarnings.value.isValid) {
+	if (
+		e.key === "Enter" &&
+		!enterConsumedBySelect &&
+		!highlighted.value &&
+		queryWarnings.value.isValid
+	) {
 		submitSearch();
 	}
 };
@@ -536,6 +562,12 @@ onMounted(() => {
 		reference.value = inputRef.value.$el;
 	}
 });
+watch(
+	() => props.isLoading,
+	() => {
+		if (props.isLoading) open.value = true;
+	},
+);
 </script>
 
 <template>
@@ -587,7 +619,7 @@ onMounted(() => {
 					@keydown.enter.prevent="(e) => handleTagClick(token.tag, e.target as ReferenceElement)"
 					@keydown.space.prevent="(e) => handleTagClick(token.tag, e.target as ReferenceElement)"
 				>
-					<span class="max-w-48 truncate capitalize" :title="getDisplayValue(token.tag.rawValue)">
+					<span class="max-w-48 truncate" :title="getDisplayValue(token.tag.rawValue)">
 						{{ getDisplayValue(token.tag.rawValue) }}
 					</span>
 					<Button
@@ -630,13 +662,21 @@ onMounted(() => {
 		</div>
 		<ComboboxPortal>
 			<ComboboxContent
-				v-if="filteredList.length"
+				v-if="filteredList.length || isLoading"
 				align="start"
 				class="max-h-48 max-w-80 overflow-x-hidden overflow-y-auto rounded-md border border-neutral-500/30 bg-white p-1.5"
 				position="popper"
 				side="bottom"
 			>
-				<template v-for="(item, idx) in filteredList" :key="String(item.value)">
+				<ComboboxItem
+					v-if="isLoading"
+					class="flex cursor-default rounded-sm px-2 py-1 data-highlighted:bg-muted"
+					disabled
+					:value="null"
+				>
+					<LoadingIndicator class="size-3" />
+				</ComboboxItem>
+				<template v-for="(item, idx) in filteredList" v-else :key="String(item.value)">
 					<ComboboxItem
 						class="flex cursor-default rounded-sm px-2 py-1 data-highlighted:bg-muted"
 						:value="item.value"

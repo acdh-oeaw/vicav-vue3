@@ -7,16 +7,27 @@ interface DataWordParams {
 	query: Ref<string>;
 }
 
-export function useDataWords(params: DataWordParams, options?: { enabled?: boolean }) {
+interface DataWordOptions {
+	/** Milliseconds to wait after the last keystroke before requesting suggestions. */
+	debounce?: number;
+	/** Minimum number of entered characters before suggestions are requested. */
+	minLength?: number;
+	enabled?: MaybeRefOrGetter<boolean>;
+}
+
+export function useDataWords(params: DataWordParams, options: DataWordOptions = {}) {
+	const { debounce = 300, minLength = 2, enabled = true } = options;
 	const api = useApiClient();
+	const debouncedQuery = refDebounced(params.query, debounce);
+
 	return useQuery({
-		enabled: options?.enabled,
-		queryKey: ["get-data-words", params] as const,
+		enabled: computed(() => toValue(enabled) && debouncedQuery.value.length >= minLength),
+		queryKey: ["get-data-words", params.dataType, debouncedQuery] as const,
 		async queryFn() {
 			const response = await api.vicav.getDataWords(
 				{
 					type: dataTypes[params.dataType as DataTypesEnum].collection.replace("vicav_", ""),
-					query: params.query.value,
+					query: debouncedQuery.value,
 				},
 				{
 					headers: { accept: "application/json" },
