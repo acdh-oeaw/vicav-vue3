@@ -100,7 +100,7 @@ onMounted(() => {
 }
 
 .winbox .wb-map.wb-map-active {
-	background-color: hsl(var(--color-negative));
+	background-color: color-mix(in sRGB, hsl(var(--color-on-primary)) 70%, hsl(var(--color-primary)));
 	mask-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Im0xMSAxOS0xLjEwNi0uNTUyYTIgMiAwIDAgMC0xLjc4OCAwbC0zLjY1OSAxLjgzQTEgMSAwIDAgMSAzIDE5LjM4MVY2LjYxOGExIDEgMCAwIDEgLjU1My0uODk0bDQuNTUzLTIuMjc3YTIgMiAwIDAgMCAxLjc4OCAwbDQuMjEyIDIuMTA2YTIgMiAwIDAgMCAxLjc4OCAwbDMuNjU5LTEuODNBMSAxIDAgMCAxIDIxIDQuNjE5VjE0Ii8+PHBhdGggZD0iTTE1IDUuNzY0VjE0Ii8+PHBhdGggZD0iTTIxIDE4aC02Ii8+PHBhdGggZD0iTTkgMy4yMzZ2MTUiLz48L3N2Zz4=");
 }
 
