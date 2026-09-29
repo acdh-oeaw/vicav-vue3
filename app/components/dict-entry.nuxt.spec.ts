@@ -33,7 +33,10 @@ describe("dictionary entry corpus search", () => {
 
 		expect(openOrUpdateWindow).toHaveBeenCalledWith(
 			expect.objectContaining({
-				params: { queryString: '[dict=="dict:DShaAr.wakt_001"]' },
+				params: {
+					queryString:
+						'[dict="dict:DShaAr.wakt_001"] | [] within <seg lemmaRef="DShaAr.wakt_001"/>',
+				},
 			}),
 			expect.any(String),
 			expect.anything(),
