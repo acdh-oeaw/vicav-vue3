@@ -135,7 +135,7 @@ function createDataListMarkerFeature(
 		type: "Feature",
 		geometry: { type: "Point", coordinates: marker.coordinates },
 		properties: {
-			alt: marker.label,
+			alt: marker.alt ?? marker.label,
 			dataListMapColors: [layer.color],
 			hitCount: 1,
 			label: marker.label,

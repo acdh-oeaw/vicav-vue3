@@ -33,6 +33,7 @@ interface Props {
 	markerType?: MarkerType;
 	selection?: [number, number];
 	useCustomClickHandler?: boolean;
+	showSingleMarkerPopup?: boolean;
 }
 
 const props = defineProps<Props>();
@@ -196,7 +197,7 @@ const addNearbyDataPopup = function (marker: LeafletMarker) {
 	const nearbyMarkerData =
 		dataListMapMarkers ?? getNearbyMarkersBasedOnDynamicGrid(marker, distance);
 
-	if (nearbyMarkerData.length > 1) {
+	if (nearbyMarkerData.length > 1 || props.showSingleMarkerPopup) {
 		const markers = nearbyMarkerData.sort((a, b) => {
 			return a.properties!.label?.localeCompare(b.properties!.label);
 		});

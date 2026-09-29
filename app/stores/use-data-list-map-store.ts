@@ -22,6 +22,15 @@ function normalizeReference(reference: string): string {
 	return reference.replace(/^geo:/i, "").trim();
 }
 
+function popupLabelFor(item: simpleTEIMetadata): string | undefined {
+	if (!["Feature", "SampleText"].includes(item.dataType) || item.person.length === 0)
+		return undefined;
+
+	return item.person
+		.map((person) => `${person.name} (age: ${person.age}, sex: ${person.sex})`)
+		.join(", ");
+}
+
 export const useDataListMapStore = defineStore("data-list-map", () => {
 	const layers = ref<Record<string, DataListMapLayer>>({});
 	const colorsById = ref<Record<string, string>>({});
@@ -72,7 +81,15 @@ export const useDataListMapStore = defineStore("data-list-map", () => {
 			const key = `${item.geoSource}:${item.id}:${coordinates.join(",")}`;
 			if (seen.has(key)) return [];
 			seen.add(key);
-			return [{ id: item.id, label: item.label, dataType: item.dataType, coordinates }];
+			return [
+				{
+					id: item.id,
+					label: item.label,
+					alt: popupLabelFor(item),
+					dataType: item.dataType,
+					coordinates,
+				},
+			];
 		});
 	}
 

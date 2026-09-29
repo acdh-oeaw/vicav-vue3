@@ -195,6 +195,7 @@ export const GeoMapScope = z.enum(["reg", "geo", "diaGroup"]);
 export const DataListMapMarkerSchema = z.object({
 	id: z.string(),
 	label: z.string(),
+	alt: z.string().optional(),
 	dataType: DataTypesEnum,
 	coordinates: z.tuple([z.number(), z.number()]),
 });
