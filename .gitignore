@@ -42,3 +42,5 @@ dist
 
 # heroku buildpack specific directory
 /.heroku/**
+/.agents/
+/.codex/
