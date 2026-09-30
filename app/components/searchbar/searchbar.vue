@@ -19,6 +19,7 @@ const _props = defineProps<{
 	 */
 	featureTrigger?: string;
 	queryMode?: "lucene" | "cql";
+	mode?: "tag" | "text";
 	onSubmit?: (value: string) => Promise<{ isValid: boolean; warnings: Array<string> }> | undefined;
 	/** CQL mode: attribute key used when wrapping free-text input (e.g. "word"). */
 	freeTriggerKey?: string;
@@ -38,7 +39,7 @@ const dynamicTriggers = computed(() =>
 );
 
 type SearchMode = "tag" | "text";
-const mode = ref<SearchMode>("tag");
+const mode = ref<SearchMode>(_props.mode ?? "tag");
 
 const tagRef = useTemplateRef<InstanceType<typeof TagSearchbar>>("tagRef");
 const multiRef = useTemplateRef<InstanceType<typeof MultiValueSearchbar>>("multiRef");
@@ -85,14 +86,26 @@ function insertSnippet(snippet: string) {
 	void active.value?.insertSnippet(snippet);
 }
 
-async function toggleMode() {
+async function setMode(nextMode: SearchMode) {
+	if (mode.value === nextMode) return;
 	syncing = true;
-	const saved = currentValue.value;
+	const saved = currentValue.value || model.value;
 	model.value = saved;
-	mode.value = mode.value === "tag" ? "text" : "tag";
+	mode.value = nextMode;
 	await nextTick();
 	if (active.value) active.value.value = saved;
 	syncing = false;
+}
+
+watch(
+	() => _props.mode,
+	(value) => {
+		void setMode(value ?? "tag");
+	},
+);
+
+function toggleMode() {
+	void setMode(mode.value === "tag" ? "text" : "tag");
 }
 
 defineExpose({ submitSearch, value: currentValue });
