@@ -35,20 +35,16 @@ const emit = defineEmits<{
 }>();
 const queryString = ref(props.params.queryString);
 const hits = ref<Array<Div & { label?: string }>>([]);
-const count = ref(0);
-const page = ref(1);
-const pageSize = ref(100);
-const displayHits = ref<Array<Div & { label?: string }>>([]);
+const scrollCursor = ref({ count: 0, page: 1, pageSize: 30, complete: false });
 const showHelp = ref<boolean>(false);
 const isSearching = ref(false);
+const isLoadingMore = ref(false);
 
 const inlineLemmaAnnotations = ref<false | true | "indeterminate">(true);
 const inlineLinguisticAnnotations = ref<false | true | "indeterminate">(true);
 const inlineTranslations = ref<false | true | "indeterminate">(true);
 const words: Ref<Array<string>> = ref([]);
 
-const currentPage = ref(0);
-const scrollComplete = ref<boolean>(false);
 const lastRestoredQueryString = ref<string>();
 const {
 	hasInlineTranslations: blockHasInlineTranslations,
@@ -80,12 +76,18 @@ const showInlineTranslations = computed(() => {
 	return hasInlineTranslations.value && inlineTranslations.value === true;
 });
 
+function enrichHitsWithLabels(items: Array<Div & { label?: string }>) {
+	items.forEach((hit) => {
+		const teiHeader = simpleItems.find((header) => header.id === hit["@docRef"]);
+		hit.label = teiHeader?.label;
+	});
+}
+
 async function searchCorpus(options: { updateRoute?: boolean } = {}) {
 	const { updateRoute = true } = options;
 	isSearching.value = true;
-	currentPage.value = 0;
 	hits.value = [];
-	displayHits.value = [];
+	scrollCursor.value.page = 1;
 	let status = { isValid: true, warnings: [] as Array<string> };
 	try {
 		if (words.value.length > 0) queryString.value = `[word="${words.value.join("|")}"]`;
@@ -95,6 +97,8 @@ async function searchCorpus(options: { updateRoute?: boolean } = {}) {
 			{
 				query: queryString.value.toString(),
 				render: "json",
+				page: scrollCursor.value.page,
+				pageSize: scrollCursor.value.pageSize,
 			},
 			{ headers: { Accept: "application/json" } },
 		);
@@ -102,18 +106,18 @@ async function searchCorpus(options: { updateRoute?: boolean } = {}) {
 		if (result.error) {
 			console.error(result.error);
 		}
+
+		const newScrollCursor = scrollCursor.value;
+
 		if (isCorpusSearch(result.data) && result.data.hits && !Array.isArray(result.data.hits)) {
 			if (Array.isArray(result.data.hits?.divs)) hits.value = result.data.hits.divs;
 			else if (result.data.hits?.div) hits.value.push(result.data.hits?.div);
-			hits.value?.forEach((hit) => {
-				const teiHeader = simpleItems.find((header) => header.id === hit["@docRef"]);
-				hit.label = teiHeader?.label;
-			});
-			count.value = result.data.hits["@count"];
-			page.value = result.data.hits["@page"];
-			pageSize.value = result.data.hits["@pageSize"];
-			displayHits.value = hits.value.slice(currentPage.value * 10, (currentPage.value + 1) * 10);
-			scrollComplete.value = false;
+			enrichHitsWithLabels(hits.value);
+			newScrollCursor.count = result.data.hits["@count"];
+			newScrollCursor.page = result.data.hits["@page"];
+			newScrollCursor.pageSize = result.data.hits["@pageSize"];
+			newScrollCursor.complete =
+				result.data.hits["@page"] * result.data.hits["@pageSize"] >= result.data.hits["@count"];
 		}
 	} catch (e) {
 		status = {
@@ -127,16 +131,54 @@ async function searchCorpus(options: { updateRoute?: boolean } = {}) {
 	return status;
 }
 
-// API currently doesn't support pagination for corpus search results, so we're faking it
+async function loadMoreHits() {
+	isLoadingMore.value = true;
+	try {
+		const nextPage = scrollCursor.value.page + 1;
+		const result = await api.vicav.searchCorpus(
+			{
+				query: queryString.value.toString(),
+				render: "json",
+				page: nextPage,
+				pageSize: scrollCursor.value.pageSize,
+			},
+			{ headers: { Accept: "application/json" } },
+		);
+
+		if (result.error) {
+			console.error(result.error);
+			throw new Error(result.error.detail ?? "Failed to load more results");
+		}
+
+		const newScrollCursor = scrollCursor.value;
+
+		if (isCorpusSearch(result.data) && result.data.hits && !Array.isArray(result.data.hits)) {
+			const newHits: Array<Div & { label?: string }> = [];
+			if (Array.isArray(result.data.hits?.divs)) newHits.push(...result.data.hits.divs);
+			else if (result.data.hits?.div) newHits.push(result.data.hits.div);
+			enrichHitsWithLabels(newHits);
+			newScrollCursor.count = result.data.hits["@count"];
+			newScrollCursor.page = result.data.hits["@page"];
+			newScrollCursor.pageSize = result.data.hits["@pageSize"];
+			newScrollCursor.complete =
+				result.data.hits["@page"] * result.data.hits["@pageSize"] >= result.data.hits["@count"];
+			hits.value = hits.value.concat(newHits);
+		} else {
+			newScrollCursor.complete = true;
+		}
+	} finally {
+		isLoadingMore.value = false;
+	}
+}
+
 const handleInfiniteScroll = async function ($state: StateHandler) {
-	currentPage.value += 1;
-	const nextHits = hits.value.slice(currentPage.value * 10, (currentPage.value + 1) * 10);
-	if (nextHits.length > 0) {
-		displayHits.value = displayHits.value.concat(nextHits);
-		$state.loaded();
-	} else {
-		scrollComplete.value = true;
-		$state.complete();
+	try {
+		await loadMoreHits();
+		if (scrollCursor.value.complete) $state.complete();
+		else $state.loaded();
+	} catch (e) {
+		console.error(e);
+		$state.error();
 	}
 };
 
@@ -171,7 +213,7 @@ function getHitKey(hit: Div, index: number) {
 }
 
 const displayHitContexts = computed(() =>
-	displayHits.value.map((hit) => ({ hit, context: getCorpusHitContext(hit) })),
+	hits.value.map((hit) => ({ hit, context: getCorpusHitContext(hit) })),
 );
 
 const { cqlConfig: attributeConfig } = useCqlAttributes({
@@ -281,14 +323,17 @@ const { cqlTriggers } = useCqlTriggers(cqlConfig);
 		<div v-if="isSearching" class="flex justify-center py-4 text-primary">
 			<LoadingIndicator>Loading corpus results...</LoadingIndicator>
 		</div>
-		<div v-if="hits && displayHits.length > 0">
+		<div v-if="hits && hits.length > 0">
 			<div class="my-2 flex gap-2">
 				<div>
 					Query: <span class="font-mono text-header">{{ queryString }}</span>
 				</div>
 				<div>•</div>
 				<div>
-					{{ count }} {{ count > 1 ? "results" : "result" }} ({{ displayHits.length }} shown)
+					{{ scrollCursor.count }} {{ scrollCursor.count > 1 ? "results" : "result" }} ({{
+						hits.length
+					}}
+					shown)
 				</div>
 			</div>
 			<table>
@@ -357,7 +402,7 @@ const { cqlTriggers } = useCqlTriggers(cqlConfig);
 					</td>
 				</tr>
 			</table>
-			<InfiniteLoading v-if="!scrollComplete" ref="infinite" @infinite="handleInfiniteScroll" />
+			<InfiniteLoading v-if="!scrollCursor.complete" @infinite="handleInfiniteScroll" />
 		</div>
 	</div>
 </template>
