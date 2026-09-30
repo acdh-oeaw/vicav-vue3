@@ -4,10 +4,28 @@ import InfiniteLoading from "v3-infinite-loading";
 import type { StateHandler } from "v3-infinite-loading/lib/types";
 import type Zod from "zod";
 
-import type { Div, HttpResponse, RFC7807Problem } from "@/lib/api-client";
+import type {
+	CorpusSearch,
+	CorpusSearchHTML,
+	Div,
+	HttpResponse,
+	RFC7807Problem,
+} from "@/lib/api-client";
 import { useTeiHeadersStore } from "@/stores/use-tei-headers-store.ts";
 import type { CorpusQuerySchema } from "@/types/global.ts";
 import { getCorpusHitContext } from "@/utils/corpus-hit-context.ts";
+
+function isCorpusSearchOrHtml(item: unknown): item is CorpusSearch | CorpusSearchHTML {
+	return Object.prototype.hasOwnProperty.call(item, "hits");
+}
+
+function isCorpusSearch(item: unknown): item is CorpusSearch {
+	return (
+		isCorpusSearchOrHtml(item) &&
+		(Object.prototype.hasOwnProperty.call(item.hits, "divs") ||
+			Object.prototype.hasOwnProperty.call(item.hits, "div"))
+	);
+}
 
 const api = useApiClient();
 const { simpleItems } = useTeiHeadersStore();
@@ -17,6 +35,9 @@ const emit = defineEmits<{
 }>();
 const queryString = ref(props.params.queryString);
 const hits = ref<Array<Div & { label?: string }>>([]);
+const count = ref(0);
+const page = ref(1);
+const pageSize = ref(100);
 const displayHits = ref<Array<Div & { label?: string }>>([]);
 const showHelp = ref<boolean>(false);
 const isSearching = ref(false);
@@ -81,13 +102,16 @@ async function searchCorpus(options: { updateRoute?: boolean } = {}) {
 		if (result.error) {
 			console.error(result.error);
 		}
-		if (result.data.hits !== undefined && !Array.isArray(result.data.hits)) {
-			if (Array.isArray(result.data.hits.divs)) hits.value = result.data.hits.divs;
-			else if (result.data.hits.div) hits.value.push(result.data.hits.div);
+		if (isCorpusSearch(result.data) && result.data.hits && !Array.isArray(result.data.hits)) {
+			if (Array.isArray(result.data.hits?.divs)) hits.value = result.data.hits.divs;
+			else if (result.data.hits?.div) hits.value.push(result.data.hits?.div);
 			hits.value?.forEach((hit) => {
 				const teiHeader = simpleItems.find((header) => header.id === hit["@docRef"]);
 				hit.label = teiHeader?.label;
 			});
+			count.value = result.data.hits["@count"];
+			page.value = result.data.hits["@page"];
+			pageSize.value = result.data.hits["@pageSize"];
 			displayHits.value = hits.value.slice(currentPage.value * 10, (currentPage.value + 1) * 10);
 			scrollComplete.value = false;
 		}
@@ -263,7 +287,9 @@ const { cqlTriggers } = useCqlTriggers(cqlConfig);
 					Query: <span class="font-mono text-header">{{ queryString }}</span>
 				</div>
 				<div>•</div>
-				<div>{{ hits.length }} {{ hits.length > 1 ? "results" : "result" }}</div>
+				<div>
+					{{ count }} {{ count > 1 ? "results" : "result" }} ({{ displayHits.length }} shown)
+				</div>
 			</div>
 			<table>
 				<tr
