@@ -36,6 +36,7 @@ describe("dictionary entry corpus search", () => {
 				params: {
 					queryString:
 						'[dict="dict:DShaAr.wakt_001"] | [] within <seg lemmaRef="DShaAr.wakt_001"/>',
+					mode: "text",
 				},
 			}),
 			expect.any(String),

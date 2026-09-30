@@ -210,6 +210,7 @@ const { cqlTriggers } = useCqlTriggers(cqlConfig);
 				feature-trigger="["
 				free-trigger-key="word"
 				:is-loading="autocompleteFetching"
+				:mode="props.params.mode"
 				:on-submit="
 					(v) => {
 						if (!isSearching) {

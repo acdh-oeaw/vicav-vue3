@@ -125,6 +125,7 @@ const openCorpusSearchWindow = () => {
 			targetType: "CorpusQuery",
 			params: {
 				queryString,
+				mode: "text",
 			},
 		} as unknown as WindowItem,
 		`Corpus search: ${e.value.title ?? e.value.lemma}`,
