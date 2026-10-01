@@ -10,6 +10,7 @@ defineProps<{
 
 defineEmits<{
 	"update:listState": [listState: SimpleMetadataListState | undefined];
+	"update:visibleItems": [items: Array<simpleTEIMetadata>];
 }>();
 </script>
 
@@ -24,5 +25,6 @@ defineEmits<{
 		:show-audio-availability="true"
 		target-type="CorpusText"
 		@update:list-state="$emit('update:listState', $event)"
+		@update:visible-items="$emit('update:visibleItems', $event)"
 	/>
 </template>

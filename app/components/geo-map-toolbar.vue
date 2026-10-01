@@ -1,12 +1,12 @@
 <script lang="ts" setup>
-import type Zod from "zod";
-
-import type { GeoMapSubnavItemSchema } from "@/types/global.ts";
-
 type ItemId = string;
+export interface GeoMapToolbarOption {
+	title?: string;
+	color?: string;
+}
 
 const props = defineProps<{
-	options: Map<ItemId, Zod.infer<typeof GeoMapSubnavItemSchema>>;
+	options: Map<ItemId, GeoMapToolbarOption>;
 	selected: Set<ItemId>;
 }>();
 
@@ -34,6 +34,12 @@ function onClickItem(id: ItemId) {
 					}
 				"
 			>
+				<span
+					v-if="item.color"
+					aria-hidden="true"
+					class="mr-2 inline-block size-2.5 rounded-full"
+					:style="{ backgroundColor: item.color }"
+				></span>
 				{{ item.title }}
 			</button>
 		</div>

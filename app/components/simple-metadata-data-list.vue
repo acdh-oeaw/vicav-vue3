@@ -54,6 +54,7 @@ const props = defineProps<{
 }>();
 const emit = defineEmits<{
 	"update:listState": [listState: SimpleMetadataListState | undefined];
+	"update:visibleItems": [items: Array<simpleTEIMetadata>];
 }>();
 
 const openNewWindowFromAnchor = useAnchorClickHandler();
@@ -304,6 +305,12 @@ const table = useVueTable<simpleTEIMetadata>({
 	enableSorting: true,
 	enableMultiRowSelection: false,
 });
+
+watch(
+	() => table.getFilteredRowModel().flatRows.map((row) => row.original),
+	(items) => emit("update:visibleItems", items),
+	{ deep: true, immediate: true },
+);
 const facetColumnIds = [
 	"country",
 	"region",
