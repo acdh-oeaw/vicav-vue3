@@ -127,6 +127,7 @@ function onSelectMenuItem(item: ItemType) {
 				params: item.params as DataListWindowItem["params"],
 			};
 			break;
+		// @ts-expect-error FeatureDescriptionList is not in openapi definition yet
 		case "FeatureDescriptionList":
 			newWindowState = {
 				targetType: "FeatureDescriptionList",
