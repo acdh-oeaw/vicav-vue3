@@ -129,7 +129,9 @@ export type DictQueryWindowItem = WindowItemBase & z.infer<typeof DictQuerySchem
 
 export const CorpusQuerySchema = z.object({
 	targetType: z.literal("CorpusQuery"),
-	params: QueryString,
+	params: QueryString.extend({
+		mode: z.enum(["tag", "text"]).optional(),
+	}),
 });
 export type CorpusQueryWindowItem = WindowItemBase & z.infer<typeof CorpusQuerySchema>;
 

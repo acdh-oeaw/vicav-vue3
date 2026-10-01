@@ -101,7 +101,7 @@ const getEntryLink = (entry: RenderedDictEntry, responseFormat?: "json") => {
 const entryXmlLink = computed(() => getEntryLink(e.value));
 const entryJsonLink = computed(() => getEntryLink(e.value, "json"));
 const corpusDictIDQuery = computed(() => {
-	return `[dict=="dict:${escapeCorpusQueryValue(e.value.id)}"]`;
+	return `[dict="dict:${escapeCorpusQueryValue(e.value.id)}"] | [] within <seg lemmaRef="${escapeCorpusQueryValue(e.value.id)}"/>`;
 });
 
 const findGrammarValue = (items: Array<RenderedGrammarItem>, label: string) => {
@@ -125,6 +125,7 @@ const openCorpusSearchWindow = () => {
 			targetType: "CorpusQuery",
 			params: {
 				queryString,
+				mode: "text",
 			},
 		} as unknown as WindowItem,
 		`Corpus search: ${e.value.title ?? e.value.lemma}`,
