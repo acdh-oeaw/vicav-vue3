@@ -84,6 +84,12 @@ function updateWindowParams(params: WindowItem["params"]) {
 		@update:params="updateWindowParams"
 	/>
 
+	<FeatureDescriptionListWindowContent
+		v-else-if="props.item.targetType === 'FeatureDescriptionList'"
+		:params="props.item.params"
+		@update:params="updateWindowParams"
+	/>
+
 	<DataTableWindowContent
 		v-else-if="props.item.targetType === 'DataTable'"
 		:params="props.item.params"
