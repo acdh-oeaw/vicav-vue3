@@ -11,6 +11,7 @@ import type {
 	DictQueryWindowItem,
 	ExploreSamplesFormWindowItem,
 	ExploreSamplesWindowItem,
+	FeatureDescriptionListWindowItem,
 	FeatureWindowItem,
 	GeoMapWindowItem,
 	ListMapWindowItem,
@@ -124,6 +125,13 @@ function onSelectMenuItem(item: ItemType) {
 				targetType: "DataList",
 				title: item.label ?? "",
 				params: item.params as DataListWindowItem["params"],
+			};
+			break;
+		case "FeatureDescriptionList":
+			newWindowState = {
+				targetType: "FeatureDescriptionList",
+				title: item.label ?? "",
+				params: item.params as FeatureDescriptionListWindowItem["params"],
 			};
 			break;
 		case "ExploreSamplesForm":

@@ -295,6 +295,20 @@ export const DataListSchema = z.object({
 
 export type DataListWindowItem = WindowItemBase & z.infer<typeof DataListSchema>;
 
+export const FeatureDescriptionListSchema = z.object({
+	targetType: z.literal("FeatureDescriptionList"),
+	params: z
+		.object({
+			/** Dot separated category path the list is scoped to, e.g. `personal_pronouns`. */
+			taxonomyPath: z.string().optional(),
+			globalFilter: z.string().optional(),
+		})
+		.extend(TextId.partial().shape),
+});
+
+export type FeatureDescriptionListWindowItem = WindowItemBase &
+	z.infer<typeof FeatureDescriptionListSchema>;
+
 export const DataTableSchema = z.object({
 	targetType: z.literal("DataTable"),
 	params: z
@@ -330,6 +344,7 @@ export const Schema = z.discriminatedUnion("targetType", [
 	ListMapSchema,
 	GeojsonMapSchema,
 	DataListSchema,
+	FeatureDescriptionListSchema,
 	DataTableSchema,
 	ExploreSamplesSchema,
 	ExploreSamplesFormSchema,
