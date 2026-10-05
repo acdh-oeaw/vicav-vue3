@@ -210,7 +210,7 @@ const openSearchResultsWindow = function () {
 			params: resultWindowParams.value,
 			title: `Search results for ${[words.value.join(","), places.value.join(",")].join(", ")}`,
 		} as WindowState)!;
-	else {
+	else if (resultsWindow.value.winbox) {
 		resultsWindow.value.params = resultWindowParams.value as WindowItem["params"];
 		resultsWindow.value.winbox.setTitle(
 			`Search results for ${[words.value.join(","), places.value.join(",")].join(", ")}`,
@@ -218,7 +218,7 @@ const openSearchResultsWindow = function () {
 		resultsWindow.value.winbox.focus();
 		resultsWindow.value.winbox.addClass("highlighted");
 		setTimeout(() => {
-			resultsWindow.value!.winbox.removeClass("highlighted");
+			resultsWindow.value?.winbox?.removeClass("highlighted");
 		}, 1000);
 	}
 
@@ -233,7 +233,7 @@ const openSearchResultsWindow = function () {
 			},
 			title: `${params.value.dataTypes[0]}s for ${[words.value.join(","), places.value.join(",")].join(", ")}`,
 		} as WindowState)!;
-	else {
+	else if (mapWindow.value.winbox) {
 		(mapWindow.value as GeoMapWindowItem).params.queryParams = queryParams.value;
 		mapWindow.value.winbox.setTitle(
 			`Search results for ${[words.value.join(","), places.value.join(",")].join(", ")}`,
@@ -241,7 +241,7 @@ const openSearchResultsWindow = function () {
 		mapWindow.value.winbox.focus();
 		mapWindow.value.winbox.addClass("highlighted");
 		setTimeout(() => {
-			mapWindow.value!.winbox.removeClass("highlighted");
+			mapWindow.value?.winbox?.removeClass("highlighted");
 		}, 1000);
 	}
 };

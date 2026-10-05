@@ -151,6 +151,25 @@ export const useWindowsStore = defineStore("windows", () => {
 				);
 			},
 		}),
+		defineWindowControl({
+			targetTypes: ["ListMap"],
+			className: "wb-map",
+			title: "Open table",
+			click() {
+				openOrUpdateWindow(
+					{
+						targetType: "GeojsonMap",
+						params: {
+							markerType: "petal",
+						},
+					} as unknown as WindowItem,
+					"Variety Data - Map View",
+					GeojsonMapSchema.shape.params,
+					"markerType",
+					true,
+				);
+			},
+		}),
 	];
 
 	async function initializeScreen() {
@@ -237,7 +256,7 @@ export const useWindowsStore = defineStore("windows", () => {
 					? findWindowByTypeAndParam(targetType, "textId", params.textId)
 					: findWindowByTypeAndTitle(targetType, title);
 
-				if (w !== null && params.queryParams != null) {
+				if (w?.winbox && params.queryParams != null) {
 					w.params = params;
 					w.winbox.setTitle(title);
 					updateUrl();
@@ -245,11 +264,11 @@ export const useWindowsStore = defineStore("windows", () => {
 			} else {
 				w = findWindowByTypeAndParam(targetType, "textId", ci.data.textId);
 			}
-			if (w !== null) {
+			if (w?.winbox) {
 				w.winbox.focus();
 				w.winbox.addClass("highlighted");
 				setTimeout(() => {
-					w.winbox.removeClass("highlighted");
+					w.winbox?.removeClass("highlighted");
 				}, 1000);
 				return;
 			}
@@ -318,7 +337,7 @@ export const useWindowsStore = defineStore("windows", () => {
 			const targetTypes: ReadonlyArray<WindowItemTargetType> = config.targetTypes;
 			if (!targetTypes.includes(windowItem.targetType)) return;
 
-			windowItem.winbox.addControl({
+			windowItem.winbox?.addControl({
 				index: 0,
 				class: config.className,
 				click: function () {
@@ -326,7 +345,7 @@ export const useWindowsStore = defineStore("windows", () => {
 				},
 			});
 
-			const winboxElement = windowItem.winbox.dom as HTMLElement;
+			const winboxElement = windowItem.winbox?.dom as HTMLElement;
 			const controls = winboxElement.querySelectorAll(`.${config.className}`);
 			if (controls.length > 0) {
 				const el = controls[0] as HTMLSpanElement;
@@ -339,7 +358,7 @@ export const useWindowsStore = defineStore("windows", () => {
 	function updateDataListMapControlState(windowItem: WindowItem) {
 		if (windowItem.targetType !== "DataList") return;
 
-		const control = (windowItem.winbox.dom as HTMLElement).querySelector<HTMLSpanElement>(
+		const control = (windowItem.winbox?.dom as HTMLElement).querySelector<HTMLSpanElement>(
 			".wb-map",
 		);
 		if (control == null) return;
@@ -395,7 +414,7 @@ export const useWindowsStore = defineStore("windows", () => {
 			const ci = Schema.safeParse(w);
 			if (!ci.success || foundWindow !== null || w.targetType !== targetType) return;
 
-			if (w.winbox.title === title) {
+			if (w.winbox?.title === title) {
 				foundWindow = w;
 			}
 		});
@@ -403,7 +422,7 @@ export const useWindowsStore = defineStore("windows", () => {
 	}
 
 	function removeWindow(id: WindowItem["id"]) {
-		registry.value.get(id)?.winbox.close();
+		registry.value.get(id)?.winbox?.close();
 	}
 
 	function setWindowArrangement(id: WindowArrangement) {
@@ -482,13 +501,13 @@ export const useWindowsStore = defineStore("windows", () => {
 				x: viewportPercentageWith2DigitPrecision(w.winbox.x as number, "width"),
 				// @ts-expect-error Property missing in upstream types.
 				y: viewportPercentageWith2DigitPrecision(w.winbox.y as number, "height"),
-				z: w.winbox.index,
+				z: w.winbox?.index,
 				// @ts-expect-error Property missing in upstream types.
 				width: viewportPercentageWith2DigitPrecision(w.winbox.width as number, "width"),
 				// @ts-expect-error Property missing in upstream types.
 				height: viewportPercentageWith2DigitPrecision(w.winbox.height as number, "height"),
 				targetType: w.targetType,
-				title: w.winbox.title,
+				title: w.winbox?.title,
 				params: getPersistedWindowParams(w),
 			} as WindowState);
 		});
@@ -524,7 +543,7 @@ export const useWindowsStore = defineStore("windows", () => {
 
 	function updateQueryParam(id: WindowItem["id"], query: string) {
 		const w = registry.value.get(id);
-		if (w) {
+		if (w?.winbox) {
 			const wi = QueryString.safeParse(w.params);
 			if (wi.success && "queryString" in w.params) {
 				w.params.queryString = query;

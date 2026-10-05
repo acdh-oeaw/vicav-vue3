@@ -7,6 +7,12 @@ import {
 
 import geojsonTablePropertyCell from "@/components/geojson-table-property-cell.vue";
 import GeojsonTableSimpleCell from "@/components/geojson-table-simple-cell.vue";
+import {
+	buildFeatureTaxonomyTree,
+	type FeatureHeading,
+	type FeatureTaxonomyCategory,
+	type FeatureTaxonomyFeature,
+} from "@/composables/use-feature-taxonomy.ts";
 import type { FeatureType } from "@/types/global.ts";
 
 export interface PatchedFeatureType extends FeatureType {
@@ -22,145 +28,114 @@ interface SimpleColumnInterface {
 	enableHiding?: boolean;
 }
 
-function buildColumnDefRecursive(
-	col: SimpleColumnInterface,
-	featureCategories: Record<string, string>,
-	allFeatureNames: Array<Record<string, string>>,
-): SimpleColumnInterface {
-	const subCategories = Object.entries(featureCategories).filter(
-		([categoryName, _]) =>
-			categoryName.startsWith(col.id) && categoryName.lastIndexOf(".") === col.id.length,
-	);
-	let columns: Array<AccessorColumnDef<PatchedFeatureType> | GroupColumnDef<PatchedFeatureType>> =
-		[];
-	columns = columns.concat(
-		allFeatureNames
-			.filter((heading) => heading.category === col.id)
-			.map((heading) => {
-				const accessorFn = (cell: PatchedFeatureType) => {
-					const value =
-						cell.properties[Object.keys(heading).find((key) => /ft_*/.test(key)) ?? col.id] ?? {};
-					if (typeof value === "string") {
-						return [value];
-					}
-					return Object.keys(value);
-				};
-				return columnHelper.accessor(accessorFn, {
-					id: Object.keys(heading).find((key) => /ft_*/.test(key)) ?? col.id,
-					header: heading[Object.keys(heading).find((key) => /ft_*/.test(key)) ?? col.id],
-					cell: (cell: CellContext<PatchedFeatureType, unknown>) => {
-						const highlightedValues = [
-							...(cell.column.getFilterValue() as Map<string, unknown>).keys(),
-						];
-						let value = cell.row.original.properties[cell.column.columnDef.id!];
-						if (typeof value === "string") value = { [value]: [{}] };
-						return h(geojsonTablePropertyCell, {
-							value,
-							highlightedValues: highlightedValues,
-							column: cell.column,
-							fullEntry: cell.row.original.properties,
-						});
-					},
-					filterFn: (row, columnId, _filterValue: Map<string, unknown>) => {
-						if (!row.getVisibleCells().find((cell) => cell.column.id === columnId)) {
-							return true;
-						}
-						return true;
-					},
-					enableGlobalFilter: true,
-				}) as AccessorColumnDef<PatchedFeatureType>;
-			}),
-	);
+function buildFeatureColumnDef(
+	feature: FeatureTaxonomyFeature,
+): AccessorColumnDef<PatchedFeatureType> {
+	const accessorFn = (cell: PatchedFeatureType) => {
+		const value = cell.properties[feature.id] ?? {};
+		if (typeof value === "string") {
+			return [value];
+		}
+		return Object.keys(value);
+	};
+	return columnHelper.accessor(accessorFn, {
+		id: feature.id,
+		header: feature.label,
+		cell: (cell: CellContext<PatchedFeatureType, unknown>) => {
+			const highlightedValues = [...(cell.column.getFilterValue() as Map<string, unknown>).keys()];
+			let value = cell.row.original.properties[cell.column.columnDef.id!];
+			if (typeof value === "string") value = { [value]: [{}] };
+			return h(geojsonTablePropertyCell, {
+				value,
+				highlightedValues: highlightedValues,
+				column: cell.column,
+				fullEntry: cell.row.original.properties,
+			});
+		},
+		filterFn: (row, columnId, _filterValue: Map<string, unknown>) => {
+			if (!row.getVisibleCells().find((cell) => cell.column.id === columnId)) {
+				return true;
+			}
+			return true;
+		},
+		enableGlobalFilter: true,
+	}) as AccessorColumnDef<PatchedFeatureType>;
+}
 
-	columns = columns.concat(
-		subCategories
-			.map(([categoryName, categoryLabel]) => {
-				return columnHelper.group(
-					buildColumnDefRecursive(
-						{
-							header: featureCategories[categoryName] ?? categoryLabel,
-							id: categoryName,
-							columns: [],
-						},
-						featureCategories,
-						allFeatureNames,
-					),
-				) as GroupColumnDef<PatchedFeatureType>;
-			})
-			.filter((col) => (col.columns?.length ?? 0) > 0),
-	);
-
-	return { ...col, columns: columns };
+function buildCategoryColumns(
+	category: FeatureTaxonomyCategory,
+): Array<AccessorColumnDef<PatchedFeatureType> | GroupColumnDef<PatchedFeatureType>> {
+	return [
+		...category.features.map(buildFeatureColumnDef),
+		...category.children.map(
+			(child) =>
+				columnHelper.group({
+					header: child.label,
+					id: child.path,
+					columns: buildCategoryColumns(child),
+				}) as GroupColumnDef<PatchedFeatureType>,
+		),
+	];
 }
 
 function createColumnDefs(
 	featureCategories: Record<string, string>,
-	allFeatureNames: Array<Record<string, string>>,
+	allFeatureNames: Array<FeatureHeading>,
 ) {
+	const taxonomy = buildFeatureTaxonomyTree(featureCategories, allFeatureNames);
+	/** Headings that are not features, e.g. the name of a variety. */
+	const uncategorizedColumns = columnHelper.group({
+		header: "-",
+		id: "-",
+		enableHiding: false,
+		//@ts-expect-error type mismatch in accessorFn
+		columns: allFeatureNames
+			.filter((heading) => !heading.category)
+			.map((heading) => {
+				return {
+					id: Object.keys(heading)[0],
+					header: Object.values(heading)[0],
+					enableHiding: false,
+					cell: ({ cell }: CellContext<PatchedFeatureType, never>) => {
+						return h(GeojsonTableSimpleCell, {
+							cell: cell,
+							valuePrimary: cell.row.original.properties[cell.column.columnDef.id!] ?? "",
+							valueSecondary:
+								cell.column.id === "name"
+									? (
+											cell.row.original.properties.alternateNames as unknown as
+												| Array<Record<string, string>>
+												| undefined
+										)
+											?.map((nameEntry) => nameEntry.name!)
+											.join(" / ")
+									: undefined,
+						});
+					},
+					accessorFn: (cell: PatchedFeatureType) => {
+						return cell.properties[String(Object.keys(heading)[0])];
+					},
+					enableColumnFilter: false,
+					enableGlobalFilter: true,
+				};
+			}),
+	});
 	const topLevelColumns: Array<SimpleColumnInterface> = [
 		{
 			id: "-",
 			header: "-",
 			enableHiding: false,
-			columns: [],
+			columns: [uncategorizedColumns],
 		},
-		...[
-			...new Set(Object.keys(featureCategories).map((categoryName) => categoryName.split(".")[0]!)),
-		].map((categoryName) => {
+		...taxonomy.map((category) => {
 			return {
-				header: featureCategories[categoryName] ?? categoryName,
-				id: categoryName,
-				columns: [],
+				header: category.label,
+				id: category.path,
+				columns: buildCategoryColumns(category),
 			};
 		}),
 	];
 
-	topLevelColumns.forEach((col) => {
-		let subcategoryColumns;
-		if (col.header !== "-") {
-			subcategoryColumns = buildColumnDefRecursive(col, featureCategories, allFeatureNames).columns;
-		} else {
-			subcategoryColumns = [
-				columnHelper.group({
-					header: "-",
-					id: "-",
-					enableHiding: false,
-					//@ts-expect-error type mismatch in accessorFn
-					columns: allFeatureNames
-						.filter((heading) => !heading.category)
-						.map((heading) => {
-							return {
-								id: Object.keys(heading)[0],
-								header: Object.values(heading)[0],
-								enableHiding: false,
-								cell: ({ cell }: CellContext<PatchedFeatureType, never>) => {
-									return h(GeojsonTableSimpleCell, {
-										cell: cell,
-										valuePrimary: cell.row.original.properties[cell.column.columnDef.id!] ?? "",
-										valueSecondary:
-											cell.column.id === "name"
-												? (
-														cell.row.original.properties.alternateNames as unknown as
-															| Array<Record<string, string>>
-															| undefined
-													)
-														?.map((nameEntry) => nameEntry.name!)
-														.join(" / ")
-												: undefined,
-									});
-								},
-								accessorFn: (cell: PatchedFeatureType) => {
-									return cell.properties[String(Object.keys(heading)[0])];
-								},
-								enableColumnFilter: false,
-								enableGlobalFilter: true,
-							};
-						}),
-				}),
-			];
-		}
-		col.columns = subcategoryColumns;
-	});
 	const groupedColumns = topLevelColumns
 		// .filter((col) => col.columns.some((col) => (col.columns?.length ?? -1) > 0))
 		.map((col) => columnHelper.group(col));

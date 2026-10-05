@@ -1,3 +1,5 @@
+import { isCI } from "ci-info";
+
 import { Api, type RequestParams } from "@/lib/api-client";
 
 interface userPass {
@@ -181,7 +183,7 @@ export function useApiClient() {
 		});
 	}
 
-	if (import.meta.server && env.apiBaseUrl) {
+	if (import.meta.server && !isCI && env.apiBaseUrl) {
 		api.baseUrl = env.apiBaseUrl;
 	} else if (env.public.apiBaseUrl) {
 		api.baseUrl = env.public.apiBaseUrl;
