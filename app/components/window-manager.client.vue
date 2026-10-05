@@ -1,9 +1,12 @@
 <script lang="ts" setup>
 import { debounce } from "@acdh-oeaw/lib";
 
+import { useDataListMapWindowSync } from "@/composables/use-data-list-map-window-sync.ts";
+
 const windowsStore = useWindowsStore();
 const { arrangeWindows } = windowsStore;
 const { registry } = storeToRefs(windowsStore);
+useDataListMapWindowSync();
 
 const route = useRoute();
 
