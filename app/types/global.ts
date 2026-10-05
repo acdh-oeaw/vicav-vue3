@@ -23,7 +23,7 @@ export type DataTypes = Record<DataTypesEnum, DataType>;
 
 interface WindowItemBase {
 	id: string;
-	winbox: WinBox;
+	winbox?: WinBox;
 	label: string;
 }
 

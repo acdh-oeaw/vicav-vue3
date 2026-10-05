@@ -27,18 +27,17 @@ export function useOpenOrUpdateWindow() {
 				paramName,
 				String(ci.data[paramName]),
 			);
-			if (window) {
-				const windowItem = window;
+			if (window?.winbox) {
 				const originalParams: object = window.params;
-				windowItem.params = {
+				window.params = {
 					...originalParams,
 					...(item.params as object),
 				};
-				windowItem.winbox.focus();
+				window.winbox.focus();
 				if (highlight) {
-					windowItem.winbox.addClass("highlighted");
+					window.winbox.addClass("highlighted");
 					setTimeout(() => {
-						windowItem.winbox.removeClass("highlighted");
+						window.winbox?.removeClass("highlighted");
 					}, 1000);
 				}
 				return;
