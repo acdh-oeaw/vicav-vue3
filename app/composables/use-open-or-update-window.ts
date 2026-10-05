@@ -37,7 +37,7 @@ export function useOpenOrUpdateWindow() {
 				if (highlight) {
 					window.winbox.addClass("highlighted");
 					setTimeout(() => {
-						window.winbox?.removeClass("highlighted");
+						window.winbox.removeClass("highlighted");
 					}, 1000);
 				}
 				return;
