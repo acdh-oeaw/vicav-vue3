@@ -14,9 +14,8 @@ import {
 	simpleMetadataAccessors,
 	useTeiHeadersStore,
 } from "@/stores/use-tei-headers-store.ts";
-import { narrowScreenBreakpoint, type WindowState } from "@/stores/use-windows-store.ts";
+import { narrowScreenBreakpoint } from "@/stores/use-windows-store.ts";
 import type { DataListWindowItem, DataTypesEnum } from "@/types/global.ts";
-import type { simpleTEIMetadata } from "@/types/teiCorpus.ts";
 import { windowRootId } from "@/utils/constants.ts";
 
 interface Props {
@@ -36,7 +35,6 @@ const teiHeadersStore = useTeiHeadersStore();
 const { simpleItems } = storeToRefs(teiHeadersStore);
 const dataListMapStore = useDataListMapStore();
 const windowsStore = useWindowsStore();
-const visibleSpecializedItems = ref<Array<simpleTEIMetadata>>([]);
 const specializedListType = computed(() => {
 	if (props.params.dataTypes.length !== 1) return undefined;
 
@@ -74,41 +72,38 @@ const filteredItems = computed(() => {
 });
 const openNewWindowFromAnchor = useAnchorClickHandler();
 
-function flattenGroupedItems(): Array<simpleTEIMetadata> {
-	return Object.values(groupedItems.value).flatMap((countries) =>
-		Object.values(countries).flatMap((regions) =>
-			Object.values(regions).flatMap((places) => Object.values(places).flat()),
-		),
-	);
-}
-
-const currentItems = computed(() =>
-	specializedListType.value ? visibleSpecializedItems.value : flattenGroupedItems(),
+const listMapId = props.params.mapSyncId ?? props.windowId;
+const dataset = dataListMapStore.ensureDataset(listMapId, props.title, props.params);
+watch(
+	() => [props.params.dataTypes, props.params.filterListBy],
+	() => {
+		dataListMapStore.ensureDataset(listMapId, props.title, props.params);
+	},
+	{ deep: true },
 );
-const listMapId = computed(() => props.params.mapSyncId ?? props.windowId);
 
-function syncMapWindow(): void {
-	const layers = Object.values(dataListMapStore.layers);
-	const mapWindow = windowsStore.findWindowByTypeAndTitle("WMap", "Data lists map");
-	if (!mapWindow) {
-		if (layers.length === 0) return;
-		windowsStore.addWindow({
-			targetType: "WMap",
-			title: "Data lists map",
-			params: { endpoint: "data_markers", queryString: "", dataListLayers: layers },
-		} as WindowState);
-		return;
-	}
-	windowsStore.updateWindowParams(mapWindow.id, { ...mapWindow.params, dataListLayers: layers });
-}
-
-function syncListMap(): void {
-	if (props.params.mapEnabled)
-		dataListMapStore.setLayer(listMapId.value, props.title, currentItems.value);
-	else dataListMapStore.removeLayer(listMapId.value);
-	syncMapWindow();
-	if (props.params.mapEnabled) void nextTick(splitDataListAndMapWindows);
-}
+watch(
+	() => props.params.mapEnabled,
+	(enabled) => {
+		dataListMapStore.setEnabled(listMapId, enabled === true);
+	},
+);
+watch(
+	() => props.title,
+	(title) => {
+		dataset.title.value = title;
+	},
+);
+watch(
+	() => dataset.enabled.value,
+	(enabled) => {
+		if (props.params.mapEnabled !== enabled || props.params.mapSyncId !== listMapId) {
+			emit("update:params", { ...props.params, mapSyncId: listMapId, mapEnabled: enabled });
+		}
+		if (enabled) void nextTick(splitDataListAndMapWindows);
+	},
+	{ immediate: true },
+);
 
 function splitDataListAndMapWindows(): void {
 	const viewport = document.getElementById(windowRootId)?.getBoundingClientRect();
@@ -131,13 +126,6 @@ function splitDataListAndMapWindows(): void {
 		list.winbox.resize(listWidth, bottom - top).move(0, top);
 	});
 }
-
-watch([currentItems, () => props.params.mapEnabled], syncListMap, { deep: true });
-onMounted(syncListMap);
-onUnmounted(() => {
-	dataListMapStore.removeLayer(listMapId.value);
-	syncMapWindow();
-});
 
 const debugString = computed(() => (debug ? JSON.stringify(groupedItems.value, null, 2) : ""));
 
@@ -168,31 +156,31 @@ function hierarchyLevelClass(level: string | number): string {
 <template>
 	<CorpusTextDataList
 		v-if="specializedListType === 'CorpusText'"
+		:dataset-id="listMapId"
 		:items="filteredItems"
 		:list-state="params.listState"
 		@update:list-state="updateListState"
-		@update:visible-items="visibleSpecializedItems = $event"
 	/>
 	<SampleTextDataList
 		v-else-if="specializedListType === 'SampleText'"
+		:dataset-id="listMapId"
 		:items="filteredItems"
 		:list-state="params.listState"
 		@update:list-state="updateListState"
-		@update:visible-items="visibleSpecializedItems = $event"
 	/>
 	<FeatureDataList
 		v-else-if="specializedListType === 'Feature'"
+		:dataset-id="listMapId"
 		:items="filteredItems"
 		:list-state="params.listState"
 		@update:list-state="updateListState"
-		@update:visible-items="visibleSpecializedItems = $event"
 	/>
 	<ProfileDataList
 		v-else-if="specializedListType === 'Profile'"
+		:dataset-id="listMapId"
 		:items="filteredItems"
 		:list-state="params.listState"
 		@update:list-state="updateListState"
-		@update:visible-items="visibleSpecializedItems = $event"
 	/>
 	<div v-else-if="groupedItems" class="relative isolate grid size-full overflow-auto">
 		<div v-if="debug">
