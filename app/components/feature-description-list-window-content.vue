@@ -7,11 +7,7 @@ import {
 	type FeatureTaxonomyCategory,
 	type FeatureTaxonomyFeature,
 } from "@/composables/use-feature-taxonomy.ts";
-import {
-	type FeatureDescriptionListWindowItem,
-	ListMapSchema,
-	type WindowItem,
-} from "@/types/global.ts";
+import { type FeatureDescriptionListWindowItem, ListMapSchema } from "@/types/global.ts";
 
 interface Props {
 	params: FeatureDescriptionListWindowItem["params"];
@@ -190,9 +186,11 @@ function openAllCategories() {
 function openFeature(feature: FeatureTaxonomyFeature) {
 	openOrUpdateWindow(
 		{
-			targetType: "ListMap",
-			params: { queryString: `${feature.id}:ANY` },
-		} as unknown as WindowItem,
+			id: `${feature.id}`,
+			label: `${feature.label}`,
+			targetType: "Text",
+			params: { textId: `${feature.id}` },
+		},
 		feature.label,
 		ListMapSchema.shape.params,
 		"queryString",
