@@ -60,8 +60,9 @@ Rendered as [geo-map-window-content.vue](../app/components/geo-map-window-conten
 ```
 
 - Additional prop passed by `window-content.vue`: `title: props.item.winbox.title`
-- For `endpoint: "data_markers"`, the store supplies retained list layers. Hidden layers stay in the
-  toolbar and can be toggled without an open list. An omitted `enabled` means visible.
+- For `endpoint: "data_markers"`, `useDataListMapWindowSync`, initialized by the window manager,
+  supplies retained layers from the data-list map store. Hidden layers stay in the toolbar and can
+  be toggled without an open list. An omitted `enabled` means visible.
 
 ### `Text`
 
