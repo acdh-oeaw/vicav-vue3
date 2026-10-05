@@ -8,7 +8,7 @@ overrides:
   vue: 3.5.42
 
 patchedDependencies:
-  '@types/winbox@0.2.3': 0a7da929b24380ff52f1be0f874a423703170bc1cfafdda98ac4b170c7162400
+  '@types/winbox@0.2.6': bbf4c7b1a4771a4e01fd1f9be3a82a34523bdd05832f70fc9c27c18dc7941579
   liqe: d3f086f22272da5815a7a74853a588b1d0973b8c7228c961b68c2f94fe3963c9
   winbox@0.2.82: 9015e2ca1188f354473407d58d454ecb0da80bd9f2ffe28591615c32d9a95249
 
@@ -300,8 +300,8 @@ importers:
         specifier: ^1.15.9
         version: 1.15.9
       '@types/winbox':
-        specifier: 0.2.3
-        version: 0.2.3(patch_hash=0a7da929b24380ff52f1be0f874a423703170bc1cfafdda98ac4b170c7162400)
+        specifier: 0.2.6
+        version: 0.2.6(patch_hash=bbf4c7b1a4771a4e01fd1f9be3a82a34523bdd05832f70fc9c27c18dc7941579)
       '@vitest/coverage-v8':
         specifier: ^4.1.9
         version: 4.1.9(vitest@4.1.9)
@@ -3760,8 +3760,8 @@ packages:
   '@types/whatwg-mimetype@3.0.2':
     resolution: {integrity: sha512-c2AKvDT8ToxLIOUlN51gTiHXflsfIFisS4pO7pDPoKouJCESkhZnEy623gwP9laCy5lnLDAw1vAzu2vM2YLOrA==}
 
-  '@types/winbox@0.2.3':
-    resolution: {integrity: sha512-Dc1+DOlCs1kQpNE94sMGZQxgqpaq9Z2u0l5dqd7019nQLY90AMGS/mKVAI3kT3TPBvpD2qfI76deTIzs+GquQA==}
+  '@types/winbox@0.2.6':
+    resolution: {integrity: sha512-Yh/QEnum+vOK41SU19eWjAz5yUJx0E3t7zDwyXu5ARqmryhFPmSN4+fJHXPSQSU653MoEep0d+NwaxbzeFDYaA==}
 
   '@types/ws@8.18.1':
     resolution: {integrity: sha512-ThVF6DCVhA8kUGy+aazFQ4kXQ7E1Ty7A3ypFOe0IcJV8O/M511G99AW24irKrW56Wt44yG9+ij8FaqoBGkuBXg==}
@@ -12460,7 +12460,7 @@ snapshots:
 
   '@types/whatwg-mimetype@3.0.2': {}
 
-  '@types/winbox@0.2.3(patch_hash=0a7da929b24380ff52f1be0f874a423703170bc1cfafdda98ac4b170c7162400)': {}
+  '@types/winbox@0.2.6(patch_hash=bbf4c7b1a4771a4e01fd1f9be3a82a34523bdd05832f70fc9c27c18dc7941579)': {}
 
   '@types/ws@8.18.1':
     dependencies:

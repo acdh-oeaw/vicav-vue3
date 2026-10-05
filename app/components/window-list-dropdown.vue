@@ -35,9 +35,8 @@ const { arrangement: currentArrangement, registry } = storeToRefs(windowsStore);
 								if (!item.winbox) {
 									return;
 								}
-								// @ts-expect-error Property missing in upstream types.
+
 								if (item.winbox.min) {
-									// @ts-expect-error Method missing in upstream types.
 									item.winbox.restore();
 								}
 
