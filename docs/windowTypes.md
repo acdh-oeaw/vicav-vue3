@@ -10,11 +10,12 @@ taken from [app/types/global.ts](../app/types/global.ts).
 - `TeiSource`: `{ teiSource: string }`
 - `ShowCitation`: `{ showCitation: boolean }`
 - `QueryString`: `{ queryString: string }`
-- `FeatureValueGroup`: `{ columnId: string; label: string; values: string[] }` — a set of feature
-  values the user merged into one legend entry and one map marker. Used by `ListMap`.
+- `FeatureValueGroup`: `{ label: string; values: Array<{ columnId: string; value: string }> }` — a
+  set of feature values the user merged into one legend entry and one map marker. Used by `ListMap`.
+  The schema also accepts the legacy `{ columnId, label, values: string[] }` form and normalizes it.
 
-Schemas commonly include `TeiSource` and `ShowCitation` through `.partial()`, which makes those
-fields optional in the window params documented below.
+`TextId`, `TeiSource`, `ShowCitation`, and `QueryString` are shared schema fields. Schemas commonly
+include `TeiSource` and `ShowCitation` through `.partial()`, which makes those fields optional.
 
 ## Implemented window types
 
@@ -233,10 +234,11 @@ Rendered as [geojson-map-window-content.vue](../app/components/geojson-map-windo
 
 ```ts
 {
-  url: string;
   markerType?: "petal" | "default";
 }
 ```
+
+The schema does not require a URL; the map content derives its data from the shared geojson store.
 
 ### `CorpusQuery`
 
@@ -297,6 +299,24 @@ grouped list rendering in `data-list-window-content.vue`.
 
 - Event wired by `window-content.vue`: `update:params` replaces the window params through the
   generic validated `updateWindowParams()` store path, which updates the encoded URL state.
+
+### `FeatureDescriptionList`
+
+Rendered as
+[feature-description-list-window-content.vue](../app/components/feature-description-list-window-content.vue).
+
+- `params`:
+
+```ts
+{
+  taxonomyPath?: string;
+  globalFilter?: string;
+  textId?: string;
+}
+```
+
+- Event wired by `window-content.vue`: `update:params` replaces the window params through
+  `updateWindowParams()`, updating the encoded URL state.
 
 ### `DataTable`
 
@@ -364,6 +384,16 @@ Rendered as
 Every `targetType` in the `Schema` discriminated union is currently rendered by
 [window-content.vue](../app/components/window-content.vue), and every concrete render branch in
 `window-content.vue` has schema coverage in [app/types/global.ts](../app/types/global.ts).
+
+## URL State And Updates
+
+The `w` query parameter stores the base64 encoded JSON array of open window states, including each
+window's `targetType`, title, position, size, and complete `params` object. The `a` parameter stores
+the window arrangement. `update-query-param` updates `params.queryString` and writes the state back
+to the URL. `update:params` is wired for `ListMap`, `DataList`, and `FeatureDescriptionList`; the
+store validates the replacement params against that target type's schema before updating the URL.
+Query visibility and other UI state carried in params (including `ListMap.featureValueGroups` and
+`DataList.listState`) is therefore restored with a shared URL.
 
 ## Maintenance Prompt
 
