@@ -267,7 +267,7 @@ function splitTableAndMapWindows() {
 	const windows = Array.from(windowsStore.registry.values());
 	const table = windows.find((w) => w.targetType === "ListMap");
 	const map = windows.find((w) => w.targetType === "GeojsonMap");
-	if (!table || !map || windows.length > 3) return;
+	if (!table?.winbox || !map?.winbox || windows.length > 3) return;
 
 	const additionalWindow = windows.find((w) => w !== table && w !== map);
 
@@ -277,7 +277,7 @@ function splitTableAndMapWindows() {
 	map.winbox
 		.resize(viewport.width - tableWidth - additionalWidth, viewport.height)
 		.move(tableWidth, 0);
-	if (additionalWindow)
+	if (additionalWindow?.winbox)
 		additionalWindow.winbox
 			.resize(additionalWidth, viewport.height)
 			.move(viewport.width - additionalWidth, 0);

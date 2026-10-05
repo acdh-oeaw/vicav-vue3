@@ -20,7 +20,7 @@ function updateWindowParams(params: WindowItem["params"]) {
 
 <template>
 	<GeoMapWindowContent
-		v-if="props.item.targetType === 'WMap'"
+		v-if="props.item.targetType === 'WMap' && props.item.winbox"
 		:params="props.item.params"
 		:title="props.item.winbox.title"
 	/>
