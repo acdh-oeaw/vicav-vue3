@@ -4,6 +4,7 @@ import type { SimpleMetadataListState } from "@/types/global.ts";
 import type { simpleTEIMetadata } from "@/types/teiCorpus.ts";
 
 defineProps<{
+	datasetId?: string;
 	items: Array<simpleTEIMetadata>;
 	listState?: SimpleMetadataListState;
 }>();
@@ -17,6 +18,7 @@ defineEmits<{
 <template>
 	<SimpleMetadataDataList
 		data-type="Feature"
+		:dataset-id="datasetId"
 		:items="items"
 		:list-state="listState"
 		:require-tei-availability-for-link="false"

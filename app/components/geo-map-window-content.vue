@@ -6,6 +6,7 @@ import type Zod from "zod";
 import type { MarkerProperties } from "@/components/geo-map.context.ts";
 import type { GeoMapToolbarOption } from "@/components/geo-map-toolbar.vue";
 import type { GeoTargetTypeParameters } from "@/lib/api-client";
+import { useDataListMapStore } from "@/stores/use-data-list-map-store.ts";
 import { type GeoMapSchema, GeoMapSubnavItemSchema } from "@/types/global";
 
 type ItemId = string;
@@ -27,7 +28,7 @@ interface Props {
 const props = defineProps<Props>();
 const { title, params } = toRefs(props);
 const { data: projectData } = useProjectInfo();
-const windowsStore = useWindowsStore();
+const dataListMapStore = useDataListMapStore();
 
 const createId = function (params: Zod.infer<typeof GeoMapSchema>["params"]): ItemId {
 	const endpoint = params.endpoint,
@@ -78,7 +79,9 @@ if (!params.value.dataListLayers && !itemsById.value.has(id)) {
 const selected = ref<Set<ItemId>>(
 	new Set(
 		params.value.dataListLayers
-			? params.value.dataListLayers.map((layer) => `data-list:${layer.id}`)
+			? params.value.dataListLayers
+					.filter((layer) => layer.enabled !== false)
+					.map((layer) => `data-list:${layer.id}`)
 			: [id],
 	),
 );
@@ -86,14 +89,8 @@ const selected = ref<Set<ItemId>>(
 function onSelect(id: ItemId) {
 	if (id.startsWith("data-list:")) {
 		const mapSyncId = id.slice("data-list:".length);
-		const listWindow = [...windowsStore.registry.values()].find(
-			(window) => window.targetType === "DataList" && window.params.mapSyncId === mapSyncId,
-		);
-		if (listWindow?.targetType === "DataList") {
-			windowsStore.updateWindowParams(listWindow.id, {
-				...listWindow.params,
-				mapEnabled: !listWindow.params.mapEnabled,
-			});
+		if (dataListMapStore.datasets.has(mapSyncId)) {
+			dataListMapStore.toggleLayer(mapSyncId);
 			return;
 		}
 	}
@@ -105,9 +102,16 @@ function onSelect(id: ItemId) {
 }
 
 watch(
-	() => params.value.dataListLayers?.map((layer) => `data-list:${layer.id}`),
-	(ids) => {
-		if (ids) selected.value = new Set(ids);
+	() =>
+		params.value.dataListLayers?.map((layer) => ({
+			id: layer.id,
+			enabled: layer.enabled !== false,
+		})),
+	(layers) => {
+		if (layers)
+			selected.value = new Set(
+				layers.filter((layer) => layer.enabled).map((layer) => `data-list:${layer.id}`),
+			);
 	},
 	{ deep: true },
 );
