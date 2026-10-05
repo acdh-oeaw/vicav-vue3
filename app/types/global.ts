@@ -371,6 +371,7 @@ export const Schema = z.discriminatedUnion("targetType", [
 	LocationSchema,
 ]);
 export type WindowItem = WindowItemBase & z.infer<typeof Schema>;
+export type OpenWindowItem = WindowItem & { winbox: NonNullable<WindowItem["winbox"]> };
 
 export type WindowItemTargetType = WindowItem["targetType"];
 
