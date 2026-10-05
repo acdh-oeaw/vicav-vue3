@@ -1,4 +1,5 @@
 import type { Row } from "@tanstack/vue-table";
+import type WinBox from "winbox";
 import { z } from "zod";
 
 export const DataTypesEnum = z.enum([
