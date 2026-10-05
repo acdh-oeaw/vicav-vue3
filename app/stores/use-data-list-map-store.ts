@@ -44,7 +44,7 @@ export const useDataListMapStore = defineStore("data-list-map", () => {
 		return color;
 	}
 
-	function fallbackCoordinates(item: simpleTEIMetadata): [number, number] | undefined {
+	function fallbackLocation(item: simpleTEIMetadata) {
 		const geoFeatures =
 			projectData.value?.projectConfig?.staticData?.geo?.flatMap(
 				(collection) => collection.features,
@@ -52,6 +52,7 @@ export const useDataListMapStore = defineStore("data-list-map", () => {
 		for (const feature of geoFeatures) {
 			const properties = feature.properties as {
 				"@id"?: string;
+				name?: string;
 				referencedBy?: Array<{ source?: string; ids?: Array<{ id?: string; reference?: string }> }>;
 			};
 			for (const reference of properties.referencedBy ?? []) {
@@ -65,9 +66,13 @@ export const useDataListMapStore = defineStore("data-list-map", () => {
 									normalizeReference(item.geoReference)),
 					)
 				)
-					return feature.geometry && isCoordinates(feature.geometry.coordinates)
-						? feature.geometry.coordinates
-						: undefined;
+					return {
+						coordinates:
+							feature.geometry && isCoordinates(feature.geometry.coordinates)
+								? feature.geometry.coordinates
+								: undefined,
+						placeName: properties.name,
+					};
 			}
 		}
 		return undefined;
@@ -76,7 +81,11 @@ export const useDataListMapStore = defineStore("data-list-map", () => {
 	function resolveMarkers(items: Array<simpleTEIMetadata>) {
 		const seen = new Set<string>();
 		return items.flatMap((item) => {
-			const coordinates = item.coordinates ?? fallbackCoordinates(item);
+			const placeName = [item.place.settlement, item.place.region, item.place.country]
+				.map((name) => name?.trim())
+				.find((name) => name != null && name.length > 0);
+			const fallback = item.coordinates && placeName ? undefined : fallbackLocation(item);
+			const coordinates = item.coordinates ?? fallback?.coordinates;
 			if (!coordinates) return [];
 			const key = `${item.geoSource}:${item.id}:${coordinates.join(",")}`;
 			if (seen.has(key)) return [];
@@ -85,6 +94,7 @@ export const useDataListMapStore = defineStore("data-list-map", () => {
 				{
 					id: item.id,
 					label: item.label,
+					placeName: placeName ?? fallback?.placeName ?? "Unknown place",
 					alt: popupLabelFor(item),
 					dataType: item.dataType,
 					coordinates,

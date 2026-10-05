@@ -12,6 +12,7 @@ type ItemId = string;
 type DataListMarkerFeature = Feature<
 	Point,
 	Omit<MarkerProperties, "params"> & {
+		name: string;
 		dataListMapColors?: Array<string>;
 		dataListMapMarkers?: Array<DataListMarkerFeature>;
 		params: { textId: string };
@@ -139,7 +140,7 @@ function createDataListMarkerFeature(
 			dataListMapColors: [layer.color],
 			hitCount: 1,
 			label: marker.label,
-			name: marker.label,
+			name: marker.placeName ?? "Unknown place",
 			params: { textId: marker.id },
 			targetType: marker.dataType,
 			textId: marker.id,
@@ -162,9 +163,16 @@ const markers = computed<Array<Feature<Point, MarkerProperties>>>(() => {
 			}
 		}
 		const dataListMarkers = [...locations.values()].map((location): DataListMarkerFeature => {
-			if (location.length === 1) return location[0]!;
 			const first = location[0]!;
-			const label = `${String(location.length)} items`;
+			const linkedMarkers = [
+				...new Map(
+					location.map((marker) => [
+						JSON.stringify([marker.properties.targetType, marker.properties.textId]),
+						marker,
+					]),
+				).values(),
+			];
+			const label = first.properties.name;
 			return {
 				type: "Feature",
 				geometry: first.geometry,
@@ -173,8 +181,8 @@ const markers = computed<Array<Feature<Point, MarkerProperties>>>(() => {
 					dataListMapColors: location.flatMap(
 						(marker) => marker.properties.dataListMapColors ?? [],
 					),
-					dataListMapMarkers: location,
-					hitCount: location.length,
+					dataListMapMarkers: linkedMarkers,
+					hitCount: linkedMarkers.length,
 					label,
 					name: label,
 					params: first.properties.params,

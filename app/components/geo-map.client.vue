@@ -197,7 +197,7 @@ const addNearbyDataPopup = function (marker: LeafletMarker) {
 	const nearbyMarkerData =
 		dataListMapMarkers ?? getNearbyMarkersBasedOnDynamicGrid(marker, distance);
 
-	if (nearbyMarkerData.length > 1 || props.showSingleMarkerPopup) {
+	if (dataListMapMarkers || nearbyMarkerData.length > 1 || props.showSingleMarkerPopup) {
 		const markers = nearbyMarkerData.sort((a, b) => {
 			return a.properties!.label?.localeCompare(b.properties!.label);
 		});
@@ -215,7 +215,7 @@ const addNearbyDataPopup = function (marker: LeafletMarker) {
 			id: id.toString(),
 			props: {
 				markers: markers as Array<Feature<Point, MarkerProperties>>,
-				groupMarkers: contentTypes.length > 1,
+				groupMarkers: dataListMapMarkers != null || contentTypes.length > 1,
 			},
 		});
 	}
