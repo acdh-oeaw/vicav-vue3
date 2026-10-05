@@ -207,6 +207,7 @@ export const DataListMapLayerSchema = z.object({
 	id: z.string(),
 	title: z.string(),
 	color: z.string(),
+	enabled: z.boolean().optional(),
 	markers: z.array(DataListMapMarkerSchema),
 });
 export type DataListMapLayer = z.infer<typeof DataListMapLayerSchema>;
