@@ -519,9 +519,9 @@ export const useWindowsStore = defineStore("windows", () => {
 				/^[\x20-\x7f]$/.test(c)
 					? c
 					: c
-						.split("")
-						.map((a) => `\\u${a.charCodeAt(0).toString(16).padStart(4, "0")}`)
-						.join(""),
+							.split("")
+							.map((a) => `\\u${a.charCodeAt(0).toString(16).padStart(4, "0")}`)
+							.join(""),
 			)
 			.join("");
 	}
