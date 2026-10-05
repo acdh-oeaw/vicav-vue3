@@ -238,7 +238,6 @@ export const useWindowsStore = defineStore("windows", () => {
 				index: 0,
 				class: "wb-cite",
 				click: function () {
-					//@ts-expect-error TODO distill a proper type for paramName
 					w.params.showCitation = !w.params.showCitation;
 				},
 			});
