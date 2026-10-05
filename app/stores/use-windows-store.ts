@@ -21,6 +21,7 @@ import {
 	focusWindowBodyKeyboardScrollTarget,
 } from "@/utils/window-body-focus.ts";
 
+import { useDataListMapStore } from "./use-data-list-map-store.ts";
 import { useToastsStore } from "./use-toasts-store.ts";
 
 export const narrowScreenBreakpoint = 1024;
@@ -81,6 +82,31 @@ export const useWindowsStore = defineStore("windows", () => {
 	const openOrUpdateWindow = useOpenOrUpdateWindow();
 
 	const geojsonStore = useGeojsonStore();
+	const dataListMapStore = useDataListMapStore();
+
+	watch(
+		() => dataListMapStore.layers,
+		(layerRecord, previousLayers) => {
+			const layers = Object.values(layerRecord);
+			const mapWindow = [...registry.value.values()].find(
+				(window) => window.targetType === "WMap" && window.params.endpoint === "data_markers",
+			);
+			if (mapWindow?.targetType === "WMap") {
+				updateWindowParams(mapWindow.id, { ...mapWindow.params, dataListLayers: layers });
+			} else if (
+				layers.some(
+					(layer) => layer.enabled !== false && previousLayers[layer.id]?.enabled !== true,
+				)
+			) {
+				addWindow({
+					targetType: "WMap",
+					title: "Data lists map",
+					params: { endpoint: "data_markers", queryString: "", dataListLayers: layers },
+				});
+			}
+		},
+		{ deep: true },
+	);
 
 	const windowControlConfigs = [
 		defineWindowControl({
@@ -246,6 +272,9 @@ export const useWindowsStore = defineStore("windows", () => {
 		}
 
 		const id = `window-${nanoid()}`;
+		if (windowState.targetType === "WMap" && windowState.params.endpoint === "data_markers") {
+			windowState.params.dataListLayers = Object.values(dataListMapStore.layers);
+		}
 		const { title, targetType, params } = windowState;
 
 		const ci = TextId.safeParse(params);

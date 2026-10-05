@@ -1,7 +1,14 @@
 import { defineStore } from "pinia";
+import { computed, effectScope, markRaw, onScopeDispose, ref, shallowReactive } from "vue";
 
-import type { DataListMapLayer } from "@/types/global.ts";
+import {
+	getSimpleMetadataValue,
+	simpleMetadataAccessors,
+	useTeiHeadersStore,
+} from "@/stores/use-tei-headers-store.ts";
+import type { DataListMapLayer, DataListWindowItem } from "@/types/global.ts";
 import type { simpleTEIMetadata } from "@/types/teiCorpus.ts";
+import { createSimpleMetadataTable } from "@/utils/simple-metadata-table.ts";
 
 const colors = ["#b91c1c", "#0369a1", "#15803d", "#7e22ce", "#b45309", "#0f766e"];
 
@@ -32,7 +39,28 @@ function popupLabelFor(item: simpleTEIMetadata): string | undefined {
 }
 
 export const useDataListMapStore = defineStore("data-list-map", () => {
-	const layers = ref<Record<string, DataListMapLayer>>({});
+	const datasets = shallowReactive(new Map<string, ReturnType<typeof createDataset>>());
+	const metadataStore = useTeiHeadersStore();
+	const layers = computed<Record<string, DataListMapLayer>>(() =>
+		Object.fromEntries(
+			[...datasets]
+				.filter(([, dataset]) => dataset.mapped.value)
+				.map(([id, dataset]) => [
+					id,
+					{
+						id,
+						title: dataset.title.value,
+						color: dataset.color,
+						enabled: dataset.enabled.value,
+						markers: resolveMarkers(
+							dataset.model
+								? dataset.model.table.getFilteredRowModel().flatRows.map((row) => row.original)
+								: dataset.items.value,
+						),
+					},
+				]),
+		),
+	);
 	const colorsById = ref<Record<string, string>>({});
 	const { data: projectData } = useProjectInfo();
 
@@ -103,16 +131,99 @@ export const useDataListMapStore = defineStore("data-list-map", () => {
 		});
 	}
 
-	function setLayer(id: string, title: string, items: Array<simpleTEIMetadata>): DataListMapLayer {
-		const layer = { id, title, color: colorFor(id), markers: resolveMarkers(items) };
-		layers.value = { ...layers.value, [id]: layer };
-		return layer;
+	function createDataset(id: string, title: string, params: DataListWindowItem["params"]) {
+		const scope = effectScope(true);
+		const dataset = scope.run(() => {
+			const definition = ref({
+				dataTypes: [...params.dataTypes],
+				filterListBy: params.filterListBy,
+			});
+			const items = computed(() =>
+				metadataStore.simpleItems.filter((item) => {
+					if (!definition.value.dataTypes.includes(item.dataType)) return false;
+					const filter = definition.value.filterListBy;
+					if (!filter || !Object.hasOwn(simpleMetadataAccessors, filter.key)) return true;
+					return (
+						getSimpleMetadataValue(item, filter.key as keyof typeof simpleMetadataAccessors) ===
+						filter.value
+					);
+				}),
+			);
+			const dataType = params.dataTypes.length === 1 ? params.dataTypes[0] : undefined;
+			const model =
+				dataType && ["CorpusText", "SampleText", "Feature", "Profile"].includes(dataType)
+					? createSimpleMetadataTable({
+							getItems: () => items.value,
+							dataType,
+							listState: params.listState,
+							defaultFacets: dataType === "CorpusText" ? { "@hasTEIw": ["true"] } : {},
+						})
+					: undefined;
+			return {
+				title: ref(title),
+				definition,
+				items,
+				model,
+				enabled: ref(params.mapEnabled === true),
+				mapped: ref(params.mapEnabled === true),
+			};
+		})!;
+		return markRaw({
+			...dataset,
+			color: colorFor(id),
+			dispose: () => {
+				scope.stop();
+			},
+		});
 	}
 
-	function removeLayer(id: string): void {
-		if (!(id in layers.value)) return;
-		layers.value = Object.fromEntries(Object.entries(layers.value).filter(([key]) => key !== id));
+	function ensureDataset(id: string, title: string, params: DataListWindowItem["params"]) {
+		const existing = datasets.get(id);
+		if (existing) {
+			existing.title.value = title;
+			existing.definition.value = {
+				dataTypes: [...params.dataTypes],
+				filterListBy: params.filterListBy,
+			};
+			return existing;
+		}
+		const dataset = createDataset(id, title, params);
+		datasets.set(id, dataset);
+		return dataset;
 	}
 
-	return { layers, colorFor, resolveMarkers, setLayer, removeLayer };
+	function setEnabled(id: string, enabled: boolean) {
+		const dataset = datasets.get(id);
+		if (!dataset) return;
+		if (enabled) dataset.mapped.value = true;
+		dataset.enabled.value = enabled;
+	}
+
+	function toggleLayer(id: string) {
+		const dataset = datasets.get(id);
+		if (dataset) setEnabled(id, !dataset.enabled.value);
+	}
+
+	function removeDataset(id: string) {
+		datasets.get(id)?.dispose();
+		datasets.delete(id);
+	}
+
+	onScopeDispose(() => {
+		datasets.forEach((dataset) => {
+			dataset.dispose();
+		});
+		datasets.clear();
+	});
+
+	return {
+		datasets,
+		layers,
+		colorFor,
+		resolveMarkers,
+		ensureDataset,
+		setEnabled,
+		toggleLayer,
+		removeDataset,
+	};
 });
