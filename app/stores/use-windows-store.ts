@@ -6,6 +6,7 @@ import type { QueryParamsType } from "@/lib/api-client";
 import {
 	GeojsonMapSchema,
 	ListMapSchema,
+	type OpenWindowItem,
 	QueryString,
 	Schema,
 	TeiSource,
@@ -25,7 +26,7 @@ import { useToastsStore } from "./use-toasts-store.ts";
 export const narrowScreenBreakpoint = 1024;
 const listMapDefaultTitle = "Variety data";
 
-export type WindowRegistry = Map<WindowItem["id"], WindowItem>;
+export type WindowRegistry = Map<WindowItem["id"], OpenWindowItem>;
 
 export const arrangements = {
 	none: { id: "none", label: "None" },
@@ -65,7 +66,7 @@ function defineWindowControl<TTargetType extends WindowItemTargetType>(
 }
 
 export const useWindowsStore = defineStore("windows", () => {
-	const registry = ref(new Map<WindowItem["id"], WindowItem>());
+	const registry = ref<WindowRegistry>(new Map());
 	const arrangement = ref<WindowArrangement>("smart-tile");
 
 	const router = useRouter();
@@ -320,10 +321,11 @@ export const useWindowsStore = defineStore("windows", () => {
 
 		registry.value.set(id, {
 			id,
+			label: title,
 			winbox,
 			targetType,
 			params,
-		} as WindowItem);
+		} as OpenWindowItem);
 
 		const w = registry.value.get(id);
 		if (w == null) return;
@@ -332,12 +334,12 @@ export const useWindowsStore = defineStore("windows", () => {
 		return w;
 	}
 
-	function addConfiguredWindowControls(windowItem: WindowItem) {
+	function addConfiguredWindowControls(windowItem: OpenWindowItem) {
 		windowControlConfigs.forEach((config) => {
 			const targetTypes: ReadonlyArray<WindowItemTargetType> = config.targetTypes;
 			if (!targetTypes.includes(windowItem.targetType)) return;
 
-			windowItem.winbox?.addControl({
+			windowItem.winbox.addControl({
 				index: 0,
 				class: config.className,
 				click: function () {
@@ -345,7 +347,7 @@ export const useWindowsStore = defineStore("windows", () => {
 				},
 			});
 
-			const winboxElement = windowItem.winbox?.dom as HTMLElement;
+			const winboxElement = windowItem.winbox.dom as HTMLElement;
 			const controls = winboxElement.querySelectorAll(`.${config.className}`);
 			if (controls.length > 0) {
 				const el = controls[0] as HTMLSpanElement;
@@ -355,10 +357,10 @@ export const useWindowsStore = defineStore("windows", () => {
 		updateDataListMapControlState(windowItem);
 	}
 
-	function updateDataListMapControlState(windowItem: WindowItem) {
+	function updateDataListMapControlState(windowItem: OpenWindowItem) {
 		if (windowItem.targetType !== "DataList") return;
 
-		const control = (windowItem.winbox?.dom as HTMLElement).querySelector<HTMLSpanElement>(
+		const control = (windowItem.winbox.dom as HTMLElement).querySelector<HTMLSpanElement>(
 			".wb-map",
 		);
 		if (control == null) return;
@@ -373,8 +375,8 @@ export const useWindowsStore = defineStore("windows", () => {
 		targetType: WindowItemTargetType,
 		paramName: string,
 		value: string,
-	): WindowItem | null {
-		let foundWindow: WindowItem | null = null;
+	): OpenWindowItem | null {
+		let foundWindow: OpenWindowItem | null = null;
 		const dot = paramName.indexOf(".");
 		let paramName1: string | undefined, paramName2: string | undefined;
 
@@ -408,13 +410,13 @@ export const useWindowsStore = defineStore("windows", () => {
 	function findWindowByTypeAndTitle(
 		targetType: WindowItemTargetType,
 		title: string,
-	): WindowItem | null {
-		let foundWindow: WindowItem | null = null;
+	): OpenWindowItem | null {
+		let foundWindow: OpenWindowItem | null = null;
 		registry.value.forEach((w) => {
 			const ci = Schema.safeParse(w);
 			if (!ci.success || foundWindow !== null || w.targetType !== targetType) return;
 
-			if (w.winbox?.title === title) {
+			if (w.winbox.title === title) {
 				foundWindow = w;
 			}
 		});
@@ -422,7 +424,7 @@ export const useWindowsStore = defineStore("windows", () => {
 	}
 
 	function removeWindow(id: WindowItem["id"]) {
-		registry.value.get(id)?.winbox?.close();
+		registry.value.get(id)?.winbox.close();
 	}
 
 	function setWindowArrangement(id: WindowArrangement) {
@@ -497,17 +499,13 @@ export const useWindowsStore = defineStore("windows", () => {
 
 		registry.value.forEach((w) => {
 			windowStates.push({
-				// @ts-expect-error Property missing in upstream types.
 				x: viewportPercentageWith2DigitPrecision(w.winbox.x as number, "width"),
-				// @ts-expect-error Property missing in upstream types.
 				y: viewportPercentageWith2DigitPrecision(w.winbox.y as number, "height"),
-				z: w.winbox?.index,
-				// @ts-expect-error Property missing in upstream types.
+				z: w.winbox.index,
 				width: viewportPercentageWith2DigitPrecision(w.winbox.width as number, "width"),
-				// @ts-expect-error Property missing in upstream types.
 				height: viewportPercentageWith2DigitPrecision(w.winbox.height as number, "height"),
 				targetType: w.targetType,
-				title: w.winbox?.title,
+				title: w.winbox.title,
 				params: getPersistedWindowParams(w),
 			} as WindowState);
 		});
