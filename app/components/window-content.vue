@@ -20,7 +20,7 @@ function updateWindowParams(params: WindowItem["params"]) {
 
 <template>
 	<GeoMapWindowContent
-		v-if="props.item.targetType === 'WMap'"
+		v-if="props.item.targetType === 'WMap' && props.item.winbox"
 		:params="props.item.params"
 		:title="props.item.winbox.title"
 	/>
@@ -80,6 +80,12 @@ function updateWindowParams(params: WindowItem["params"]) {
 	/>
 	<DataListWindowContent
 		v-else-if="props.item.targetType === 'DataList'"
+		:params="props.item.params"
+		@update:params="updateWindowParams"
+	/>
+
+	<FeatureDescriptionListWindowContent
+		v-else-if="props.item.targetType === 'FeatureDescriptionList'"
 		:params="props.item.params"
 		@update:params="updateWindowParams"
 	/>

@@ -6,28 +6,37 @@ export function cascade(viewport: DOMRect, windows: Array<WindowItem>): void {
 	const windowWidth = Math.floor(viewport.width / 2);
 	const windowHeight = Math.floor(viewport.height / 2);
 
-	const sorted = windows.slice().sort((a, z) => a.winbox.index - z.winbox.index);
+	const sorted = windows
+		.slice()
+		.sort((a, z) => (a.winbox?.index && z.winbox?.index ? a.winbox.index - z.winbox.index : 0));
 
 	sorted.forEach((item, index) => {
-		const x = index * 40 > viewport.width - windowWidth ? viewport.width - windowWidth : index * 40;
-		const y =
-			index * 40 > viewport.height - windowHeight ? viewport.height - windowHeight : index * 40;
+		if (item.winbox) {
+			const x =
+				index * 40 > viewport.width - windowWidth ? viewport.width - windowWidth : index * 40;
+			const y =
+				index * 40 > viewport.height - windowHeight ? viewport.height - windowHeight : index * 40;
 
-		item.winbox.resize(windowWidth, windowHeight).move(x, y);
-		removeWindowControls(item.winbox);
+			item.winbox.resize(windowWidth, windowHeight).move(x, y);
+			removeWindowControls(item.winbox);
+		}
 	});
 }
 
 export function maximize(viewport: DOMRect, windows: Array<WindowItem>): void {
 	windows.forEach((item) => {
-		item.winbox.resize(viewport.width, viewport.height).move(0, 0);
-		removeWindowControls(item.winbox);
+		if (item.winbox) {
+			item.winbox.resize(viewport.width, viewport.height).move(0, 0);
+			removeWindowControls(item.winbox);
+		}
 	});
 }
 
 export function none(viewport: DOMRect, windows: Array<WindowItem>): void {
 	windows.forEach((item) => {
-		addWindowControls(item.winbox);
+		if (item.winbox) {
+			addWindowControls(item.winbox);
+		}
 	});
 }
 
@@ -40,21 +49,25 @@ export function smartTile(viewport: DOMRect, windows: Array<WindowItem>): void {
 	const upperBlockSize = (floorSqrtN + 1) * extraColumnHeight;
 
 	windows.forEach((item, index) => {
-		const columnNumber =
-			index > upperBlockSize - 1 ? (index - upperBlockSize) % floorSqrtN : index % (floorSqrtN + 1);
-		const rowNumber =
-			index > upperBlockSize - 1
-				? extraColumnHeight + Math.floor((index - upperBlockSize) / floorSqrtN)
-				: Math.floor(index / (floorSqrtN + 1));
-		const windowWidth = Math.floor(
-			viewport.width / (index > upperBlockSize - 1 ? floorSqrtN : floorSqrtN + 1),
-		);
-		const windowHeight = Math.floor(viewport.height / (isExtraRow ? floorSqrtN + 1 : floorSqrtN));
+		if (item.winbox) {
+			const columnNumber =
+				index > upperBlockSize - 1
+					? (index - upperBlockSize) % floorSqrtN
+					: index % (floorSqrtN + 1);
+			const rowNumber =
+				index > upperBlockSize - 1
+					? extraColumnHeight + Math.floor((index - upperBlockSize) / floorSqrtN)
+					: Math.floor(index / (floorSqrtN + 1));
+			const windowWidth = Math.floor(
+				viewport.width / (index > upperBlockSize - 1 ? floorSqrtN : floorSqrtN + 1),
+			);
+			const windowHeight = Math.floor(viewport.height / (isExtraRow ? floorSqrtN + 1 : floorSqrtN));
 
-		item.winbox
-			.resize(windowWidth, windowHeight)
-			.move(windowWidth * columnNumber, windowHeight * rowNumber);
-		removeWindowControls(item.winbox);
+			item.winbox
+				.resize(windowWidth, windowHeight)
+				.move(windowWidth * columnNumber, windowHeight * rowNumber);
+			removeWindowControls(item.winbox);
+		}
 	});
 }
 
@@ -66,11 +79,13 @@ export function tile(viewport: DOMRect, windows: Array<WindowItem>): void {
 	const windowHeight = Math.floor(viewport.height / rows);
 
 	windows.forEach((item, index) => {
-		const x = windowWidth * (index % cols);
-		const y = windowHeight * Math.floor(index / cols);
+		if (item.winbox) {
+			const x = windowWidth * (index % cols);
+			const y = windowHeight * Math.floor(index / cols);
 
-		item.winbox.resize(windowWidth, windowHeight).move(x, y);
-		removeWindowControls(item.winbox);
+			item.winbox.resize(windowWidth, windowHeight).move(x, y);
+			removeWindowControls(item.winbox);
+		}
 	});
 }
 
@@ -81,13 +96,15 @@ export function columnFiveFlex(viewport: DOMRect, windows: Array<WindowItem>): v
 	const windowHeight = Math.floor(viewport.height / rows);
 
 	windows.forEach((item, index) => {
-		const isLastRow = index >= N - (N % cols);
-		const windowWidth = Math.floor(viewport.width / (isLastRow ? N % cols : cols));
-		const x = windowWidth * (index % cols);
-		const y = windowHeight * Math.floor(index / cols);
+		if (item.winbox) {
+			const isLastRow = index >= N - (N % cols);
+			const windowWidth = Math.floor(viewport.width / (isLastRow ? N % cols : cols));
+			const x = windowWidth * (index % cols);
+			const y = windowHeight * Math.floor(index / cols);
 
-		item.winbox.resize(windowWidth, windowHeight).move(x, y);
-		removeWindowControls(item.winbox);
+			item.winbox.resize(windowWidth, windowHeight).move(x, y);
+			removeWindowControls(item.winbox);
+		}
 	});
 }
 
