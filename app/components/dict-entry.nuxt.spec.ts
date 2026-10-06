@@ -35,7 +35,7 @@ describe("dictionary entry corpus search", () => {
 			expect.objectContaining({
 				params: {
 					queryString:
-						'[dict="dict:DShaAr.wakt_001"] | <seg lemmaRef="DShaAr.wakt_001"/> containing []',
+						'[dict="dict:DShaAr.wakt_001"] | <seg lemmaRef="dict:DShaAr.wakt_001"/> containing []',
 					mode: "text",
 				},
 			}),
