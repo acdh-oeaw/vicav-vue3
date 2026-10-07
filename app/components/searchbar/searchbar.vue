@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { SquareMousePointer, TextCursorInput, X } from "@lucide/vue";
 import type { Table } from "@tanstack/vue-table";
+import type { ReadonlyDeep } from "type-fest";
 import { computed, nextTick, ref, watch } from "vue";
 
 import type { SpecialCharacters } from "@/lib/api-client";
@@ -23,7 +24,7 @@ const _props = defineProps<{
 	onSubmit?: (value: string) => Promise<{ isValid: boolean; warnings: Array<string> }> | undefined;
 	/** CQL mode: attribute key used when wrapping free-text input (e.g. "word"). */
 	freeTriggerKey?: string;
-	specialCharacters?: SpecialCharacters;
+	specialCharacters?: ReadonlyDeep<SpecialCharacters>;
 	dynamicKeys?: ReadonlyArray<string>;
 	isLoading?: boolean;
 }>();

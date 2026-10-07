@@ -19,7 +19,11 @@ import {
 	Unit,
 } from "@/lib/api-client";
 import { type DataTypesEnum, GeoFeatureSchema } from "@/types/global.ts";
-import type { ProjectResponse, ValidationDiagnostic } from "@/types/project.ts";
+import type {
+	ProjectResponse,
+	ReadonlyProjectResponse,
+	ValidationDiagnostic,
+} from "@/types/project.ts";
 import { type simpleTEIMetadata, SimpleTEIMetadataSchema } from "@/types/teiCorpus.ts";
 
 export const TeiCorpusSchema = z.fromJSONSchema(
@@ -946,8 +950,8 @@ function diagnostic(
 		issues,
 	};
 }
-function buildCacheEntry(input: ProjectResponse): CacheEntry {
-	const response = structuredClone(toRaw(input));
+function buildCacheEntry(input: ReadonlyProjectResponse): CacheEntry {
+	const response = structuredClone(toRaw(input)) as ProjectResponse;
 	const diagnostics: Array<ValidationDiagnostic> =
 		response.projectConfig?._validationErrors?.filter((item) => item.source === "geojson") ?? [];
 	const table = response.projectConfig?.staticData?.table ?? [];
@@ -974,7 +978,7 @@ function buildCacheEntry(input: ProjectResponse): CacheEntry {
 	return { response, simpleItems, persons: extractPersonList(findCorpusMetadata(parsed)) };
 }
 export async function prepareProject(
-	input: ProjectResponse,
+	input: ReadonlyProjectResponse,
 	backendIdentity: string,
 	options: { authenticated?: boolean } = {},
 ): Promise<FrozenCacheEntry> {

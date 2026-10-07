@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { noop } from "@acdh-oeaw/lib";
+import type { ReadonlyDeep } from "type-fest";
 
 import type { ItemType } from "@/lib/api-client";
 import type {
@@ -44,7 +45,7 @@ const titlestring = computed(() => {
 	return data.value?.projectConfig?.logo?.string;
 });
 
-function onSelectMenuItem(item: ItemType) {
+function onSelectMenuItem(item: ReadonlyDeep<ItemType>) {
 	let newWindowState: WindowState;
 	// TODO: move zod-based typing to the api definition, so this switch can be deleted
 	switch (item.targetType) {
