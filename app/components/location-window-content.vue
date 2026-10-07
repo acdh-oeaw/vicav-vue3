@@ -1,7 +1,8 @@
 <script lang="ts" setup>
 import type { Cell, Column, Row } from "@tanstack/vue-table";
 
-import type { LocationWindowItem, WindowItem } from "@/types/global.ts";
+import type { TEI } from "@/lib/api-client";
+import { type LocationWindowItem, ProfileSchema, type WindowItem } from "@/types/global.ts";
 import type { simpleTEIMetadata } from "@/types/teiCorpus";
 
 interface Props {
@@ -61,6 +62,20 @@ function onFeatureClick(col: Column<PatchedFeatureType, unknown>) {
 		`Feature: ${col.columnDef.header}`,
 	);
 }
+function openProfile(profile: TEI) {
+	openOrUpdateWindow(
+		{
+			targetType: "Profile",
+			params: {
+				textId: profile["@id"],
+			},
+		} as unknown as WindowItem,
+		profile.teiHeader?.fileDesc.titleStmt.titles?.[0]?.$ ?? "",
+		ProfileSchema.shape.params,
+		"textId",
+		true,
+	);
+}
 </script>
 
 <template>
@@ -70,6 +85,20 @@ function onFeatureClick(col: Column<PatchedFeatureType, unknown>) {
 		</div>
 		<Table>
 			<TableBody>
+				<TableRow v-if="rowOriginal.profiles && rowOriginal.profiles.length > 0">
+					<TableCell class="capitalize">Profile</TableCell>
+					<TableCell class="capitalize">
+						<Button
+							v-for="p in rowOriginal.profiles"
+							:key="p['@id']"
+							class="p-0"
+							variant="link"
+							@click="openProfile(p)"
+						>
+							{{ p.teiHeader?.fileDesc.titleStmt.titles?.map((t) => t.$).join(", ") }}
+						</Button>
+					</TableCell>
+				</TableRow>
 				<TableRow v-for="col in columns" :key="col.column.id">
 					<TableCell class="capitalize"
 						><Button

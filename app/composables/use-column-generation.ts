@@ -13,10 +13,12 @@ import {
 	type FeatureTaxonomyCategory,
 	type FeatureTaxonomyFeature,
 } from "@/composables/use-feature-taxonomy.ts";
+import type { TEI } from "@/lib/api-client";
 import type { FeatureType } from "@/types/global.ts";
 
 export interface PatchedFeatureType extends FeatureType {
 	properties: Record<string, Record<string, unknown>>;
+	profiles?: Array<TEI>;
 }
 
 const columnHelper = createColumnHelper<PatchedFeatureType>();
