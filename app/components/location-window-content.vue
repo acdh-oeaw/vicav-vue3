@@ -117,7 +117,7 @@ const showDetails = ref(true);
 					<TableCell class="capitalize"
 						><Button
 							v-if="col.column.id.startsWith('ft_')"
-							class="h-auto shrink-0 p-0 font-normal text-black!"
+							class="h-auto shrink-0 p-0 font-normal text-black! text-left whitespace-normal"
 							data-onboarding="feature-link"
 							variant="link"
 							@click="onFeatureClick(col.column)"
