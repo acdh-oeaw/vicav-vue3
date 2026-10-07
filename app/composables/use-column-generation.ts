@@ -94,7 +94,7 @@ function createColumnDefs(
 			.map((heading) => {
 				return {
 					id: Object.keys(heading)[0],
-					header: Object.values(heading)[0],
+					header: Object.values(heading)[0] === "Name" ? "Location" : Object.values(heading)[0],
 					enableHiding: false,
 					cell: ({ cell }: CellContext<PatchedFeatureType, never>) => {
 						return h(GeojsonTableSimpleCell, {
