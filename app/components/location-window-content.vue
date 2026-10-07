@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { Info } from "@lucide/vue";
 import type { Cell, Column, Row } from "@tanstack/vue-table";
 
 import type { TEI } from "@/lib/api-client";
@@ -76,12 +77,25 @@ function openProfile(profile: TEI) {
 		true,
 	);
 }
+
+const showDetails = ref(true);
 </script>
 
 <template>
 	<div class="relative isolate grid size-full overflow-auto">
 		<div v-if="params.showCitation">
 			<Citation :header="citation" type="entry" />
+		</div>
+		<div class="flex justify-end justify-items-end border-b bg-white p-2">
+			<div class="flex gap-2">
+				<Toggle
+					v-model:model-value="showDetails"
+					class="h-8 text-neutral-700"
+					data-onboarding="show-details"
+					><Info class="size-4 stroke-neutral-800 transition-colors" />
+					<span class="line-clamp-1 text-ellipsis">Show details</span></Toggle
+				>
+			</div>
 		</div>
 		<Table>
 			<TableBody>
@@ -117,6 +131,7 @@ function openProfile(profile: TEI) {
 							:column="col.column"
 							:full-entry="rowOriginal.properties"
 							:highlighted-values="getHighlightedValues(col.column)"
+							:show-all-details="showDetails"
 							:value="rowOriginal.properties[col.column.columnDef.id!]"
 						></GeojsonTablePropertyCell>
 						<span v-else class="font-normal">{{ getNonFeatureValue(col) }}</span>

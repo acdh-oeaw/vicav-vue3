@@ -52,6 +52,7 @@ function buildFeatureColumnDef(
 				highlightedValues: highlightedValues,
 				column: cell.column,
 				fullEntry: cell.row.original.properties,
+				showAllDetails: useGeojsonStore().showAllDetails,
 			});
 		},
 		filterFn: (row, columnId, _filterValue: Map<string, unknown>) => {

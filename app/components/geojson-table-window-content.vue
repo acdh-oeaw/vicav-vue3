@@ -370,7 +370,7 @@ function onFeatureClick(val: Header<unknown, unknown>) {
 		<Centered v-if="isPending">
 			<LoadingIndicator />
 		</Centered>
-		<div class="flex justify-between justify-items-end border-b bg-white py-2">
+		<div class="flex justify-between justify-items-end border-b bg-white p-2">
 			<!-- <DataTablePagination v-if="tableRef" :table="tableRef as unknown as Table<never>" /> -->
 			<div class="flex px-2 text-neutral-700" data-onboarding="jump-to-location">
 				<SearchableCombobox
