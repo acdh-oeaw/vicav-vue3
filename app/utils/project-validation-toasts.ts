@@ -1,4 +1,6 @@
-import type { ProjectResponse, ValidationDiagnostic } from "@/types/project.ts";
+import type { ReadonlyDeep } from "type-fest";
+
+import type { ReadonlyProjectResponse, ValidationDiagnostic } from "@/types/project.ts";
 
 /** Browser-session reporting state; never changes the cached diagnostics. */
 export function createProjectValidationReporter(
@@ -13,7 +15,7 @@ export function createProjectValidationReporter(
 	const displayed = new Set<string>();
 	const active = new Set<string>();
 	let version: string | undefined;
-	return (response: ProjectResponse | undefined) => {
+	return (response: ReadonlyProjectResponse | undefined) => {
 		if (!response) return;
 		const nextVersion = response.ETag ?? "unversioned";
 		if (version !== nextVersion) {
@@ -21,7 +23,10 @@ export function createProjectValidationReporter(
 			active.clear();
 			version = nextVersion;
 		}
-		const groups = new Map<ValidationDiagnostic["source"], Array<ValidationDiagnostic>>();
+		const groups = new Map<
+			ValidationDiagnostic["source"],
+			Array<ReadonlyDeep<ValidationDiagnostic>>
+		>();
 		for (const diagnostic of response.projectConfig?._validationErrors ?? []) {
 			const key = JSON.stringify([nextVersion, diagnostic.id]);
 			if (displayed.has(key)) continue;

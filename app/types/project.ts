@@ -1,3 +1,5 @@
+import type { ReadonlyDeep } from "type-fest";
+
 import type { ProjectConfig, ProjectConfigType } from "@/lib/api-client";
 
 export interface ValidationDiagnostic {
@@ -10,3 +12,5 @@ export interface ValidationDiagnostic {
 export interface ProjectResponse extends ProjectConfig {
 	projectConfig?: ProjectConfigType & { _validationErrors?: Array<ValidationDiagnostic> };
 }
+
+export type ReadonlyProjectResponse = ReadonlyDeep<ProjectResponse>;

@@ -38,7 +38,10 @@ request stores, reactive proxies, or toast queues enter the cache.
 ## SSR and hydration
 
 Vue Query and Pinia are created independently for each SSR request. The project query retains its
-existing 15-minute stale time, refetch behavior, and disabled structural sharing. The
+existing 15-minute stale time, refetch behavior, and disabled structural sharing. It uses shallow
+reactivity for immutable snapshots and exposes deeply readonly response types. Consumers accept
+readonly data; code that needs to modify it must first create an owned copy. Stale time makes the
+query eligible for refetching (for example, on window focus); it is not a polling interval. The
 `project-query-client` plugin dehydrates query data, including diagnostics, and normalizes volatile
 timestamps into three-minute buckets before serializing it.
 
