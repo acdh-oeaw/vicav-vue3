@@ -5,6 +5,7 @@ import type Zod from "zod";
 
 import type { MarkerProperties } from "@/components/geo-map.context.ts";
 import type { GeoMapToolbarOption } from "@/components/geo-map-toolbar.vue";
+import { useDataListWindowToggle } from "@/composables/use-data-list-window-toggle.ts";
 import type { GeoTargetTypeParameters } from "@/lib/api-client";
 import { useDataListMapStore } from "@/stores/use-data-list-map-store.ts";
 import { type GeoMapSchema, GeoMapSubnavItemSchema } from "@/types/global";
@@ -29,6 +30,7 @@ const props = defineProps<Props>();
 const { title, params } = toRefs(props);
 const { data: projectData } = useProjectInfo();
 const dataListMapStore = useDataListMapStore();
+const { isListOpen, toggleList } = useDataListWindowToggle();
 
 const createId = function (params: Zod.infer<typeof GeoMapSchema>["params"]): ItemId {
 	const endpoint = params.endpoint,
@@ -55,7 +57,11 @@ const itemsById = computed(() => {
 		return new Map<ItemId, GeoMapToolbarOption>(
 			dataListLayers.value.map((layer) => [
 				`data-list:${layer.id}`,
-				{ title: getDataListToolbarTitle(layer.title), color: layer.color },
+				{
+					title: getDataListToolbarTitle(layer.title),
+					color: layer.color,
+					listOpen: dataListMapStore.records[layer.id] ? isListOpen(layer.id) : undefined,
+				},
 			]),
 		);
 	}
@@ -229,6 +235,7 @@ const hasSpatialData = computed(() =>
 			:options="itemsById"
 			:selected="selected"
 			@select="onSelect"
+			@toggle-list="(id) => toggleList(id.slice('data-list:'.length))"
 		/>
 
 		<VisualisationContainer
