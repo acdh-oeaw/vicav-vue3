@@ -9,9 +9,7 @@ import SampleTextDataList from "@/components/sample-text-data-list.vue";
 import dataTypes from "@/config/dataTypes.ts";
 import { useDataListMapStore } from "@/stores/use-data-list-map-store.ts";
 import { groupSimpleItems } from "@/stores/use-tei-headers-store.ts";
-import { narrowScreenBreakpoint } from "@/stores/use-windows-store.ts";
 import type { DataListWindowItem, DataTypesEnum } from "@/types/global.ts";
-import { windowRootId } from "@/utils/constants.ts";
 
 interface Props {
 	params: DataListWindowItem["params"];
@@ -85,7 +83,7 @@ watch(
 	],
 	() => {
 		syncSharedListParams();
-		if (dataset.value.enabled.value) void nextTick(splitDataListAndMapWindows);
+		void nextTick(windowsStore.arrangeWindows);
 	},
 	{ deep: true, immediate: true },
 );
@@ -99,28 +97,6 @@ function syncSharedListParams(): void {
 		listState: dataListMapStore.records[listMapId.value]?.listState,
 	};
 	if (JSON.stringify(props.params) !== JSON.stringify(params)) emit("update:params", params);
-}
-
-function splitDataListAndMapWindows(): void {
-	const viewport = document.getElementById(windowRootId)?.getBoundingClientRect();
-	if (!viewport || viewport.width < narrowScreenBreakpoint) return;
-
-	const windows = Array.from(windowsStore.registry.values());
-	const map = windows.find(
-		(window) => window.targetType === "WMap" && window.params.endpoint === "data_markers",
-	);
-	const lists = windows.filter((window) => window.targetType === "DataList");
-	if (!map || lists.length === 0) return;
-
-	const mapWidth = Math.floor(viewport.width / 2);
-	const listWidth = viewport.width - mapWidth;
-	map.winbox.resize(mapWidth, viewport.height).move(listWidth, 0);
-
-	lists.forEach((list, index) => {
-		const top = Math.floor((index * viewport.height) / lists.length);
-		const bottom = Math.floor(((index + 1) * viewport.height) / lists.length);
-		list.winbox.resize(listWidth, bottom - top).move(0, top);
-	});
 }
 
 const debugString = computed(() => (debug ? JSON.stringify(groupedItems.value, null, 2) : ""));
