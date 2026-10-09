@@ -365,7 +365,7 @@ describe("configured dataset bootstrap and hydration", () => {
 			props: { params: { endpoint: "data_markers", queryString: "" } },
 			global: { plugins: [getActivePinia()!] },
 		});
-		expect(wrapper.get("button").text()).toBe("Sample texts");
+		expect(wrapper.get("button").attributes("aria-label")).toBe("Toggle Sample texts map layer");
 		expect(wrapper.get("button").attributes("aria-pressed")).toBe("false");
 		await wrapper.get("button").trigger("click");
 		expect(wrapper.get("button").attributes("aria-pressed")).toBe("true");
