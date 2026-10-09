@@ -82,10 +82,14 @@ export const useWindowsStore = defineStore("windows", () => {
 
 	const geojsonStore = useGeojsonStore();
 
-	watch([() => registry.value.size, arrangement], () => {
-		arrangeWindows();
-		updateUrl();
-	});
+	watch(
+		[() => [...registry.value.keys()], arrangement],
+		() => {
+			arrangeWindows();
+			updateUrl();
+		},
+		{ flush: "post" },
+	);
 
 	const windowControlConfigs = [
 		defineWindowControl({
@@ -280,29 +284,31 @@ export const useWindowsStore = defineStore("windows", () => {
 			}
 		}
 
-		const winbox = new WinBox({
-			id,
-			title,
-			index: windowState.zIndex ?? undefined,
-			x: windowState.x ?? "center",
-			y: windowState.y ?? "center",
-			width: windowState.width,
-			height: windowState.height,
-			onfocus() {
-				updateUrl();
-			},
-			onresize() {
-				updateUrl();
-			},
-			onmove() {
-				updateUrl();
-			},
-			onclose() {
-				registry.value.delete(id);
-				return false;
-			},
-			root: rootElement,
-		});
+		const winbox = markRaw(
+			new WinBox({
+				id,
+				title,
+				index: windowState.zIndex ?? undefined,
+				x: windowState.x ?? "center",
+				y: windowState.y ?? "center",
+				width: windowState.width,
+				height: windowState.height,
+				onfocus() {
+					updateUrl();
+				},
+				onresize() {
+					updateUrl();
+				},
+				onmove() {
+					updateUrl();
+				},
+				onclose() {
+					registry.value.delete(id);
+					return false;
+				},
+				root: rootElement,
+			}),
+		);
 		// window ids are random, so the kind of content is the only stable way to address a window
 		// from the outside (the guided tour attaches its steps to elements inside specific windows)
 		(winbox.dom as HTMLElement).dataset.windowType = targetType;
@@ -476,6 +482,7 @@ export const useWindowsStore = defineStore("windows", () => {
 				break;
 			}
 		}
+		arrange.splitDataListsAndMap(viewport, windows);
 	}
 
 	function getPersistedWindowParams(windowItem: WindowItem): WindowItem["params"] {
@@ -529,6 +536,7 @@ export const useWindowsStore = defineStore("windows", () => {
 	function updateUrl() {
 		if (route.path === "/imprint") return;
 		const windowStates = serializeWindowStates();
+		if (windowStates == null) return;
 		// TODO: check url length, it may be too long. Note: shortest limit is 2047 (MS Edge) https://serpstat.com/blog/how-long-should-be-the-page-url-length-for-seo/
 		void navigateTo({
 			path: "/",
