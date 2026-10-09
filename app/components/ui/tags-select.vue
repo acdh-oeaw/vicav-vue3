@@ -16,6 +16,7 @@ import {
 	TagsInputItemText,
 	TagsInputRoot,
 } from "radix-vue";
+import type { ReadonlyDeep } from "type-fest";
 
 import type { SpecialCharacters } from "@/lib/api-client";
 
@@ -29,7 +30,7 @@ interface Props {
 	options: Array<Tag>;
 	placeholder: string;
 	filterFunction: (list: Array<string>, searchTerm: string) => Array<string>;
-	specialCharacters?: SpecialCharacters;
+	specialCharacters?: ReadonlyDeep<SpecialCharacters>;
 	immediateOpen?: boolean;
 }
 

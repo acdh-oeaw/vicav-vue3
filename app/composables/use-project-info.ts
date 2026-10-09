@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/vue-query";
 
 import { prepareProject } from "@/lib/project/prepare-project.ts";
-import type { ProjectResponse } from "@/types/project.ts";
 
 export function useProjectInfo(options?: { enabled?: boolean }) {
 	const api = useApiClient();
@@ -10,6 +9,8 @@ export function useProjectInfo(options?: { enabled?: boolean }) {
 	return useQuery({
 		enabled: options?.enabled,
 		retry: false,
+		// Prepared responses are immutable snapshots; only replacement needs to be reactive.
+		shallow: true,
 		structuralSharing: false,
 		queryKey: ["get-project-info"] as const,
 		async queryFn() {
@@ -18,7 +19,7 @@ export function useProjectInfo(options?: { enabled?: boolean }) {
 				await prepareProject(response.data, api.baseUrl, {
 					authenticated: Boolean(config.public.apiUser),
 				})
-			).response as ProjectResponse;
+			).response;
 		},
 	});
 }
