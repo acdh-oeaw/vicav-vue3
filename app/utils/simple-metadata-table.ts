@@ -52,6 +52,12 @@ export function createSimpleMetadataTable(options: SimpleMetadataTableOptions) {
 	const labelCollator = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });
 	type SimpleMetadataSortMode = "hit-count" | "alphabetical";
 	const sortMode = ref<SimpleMetadataSortMode>(options.listState?.sortMode ?? "alphabetical");
+	function applyListState(listState: SimpleMetadataListState | undefined): void {
+		globalFilter.value = listState?.globalFilter ?? "";
+		sortMode.value = listState?.sortMode ?? "alphabetical";
+		columnFilters.value = deserializeSimpleMetadataFacetFilters(listState, defaultFacets.value);
+	}
+
 	function serializeListState(): SimpleMetadataListState | undefined {
 		const listState: SimpleMetadataListState = {};
 		const facets = serializeFacetFilters();
@@ -293,6 +299,7 @@ export function createSimpleMetadataTable(options: SimpleMetadataTableOptions) {
 		sorting,
 		sortMode,
 		serializeListState,
+		applyListState,
 		normalizePlaceSortValue,
 		compareStringValues,
 		comparePlaceUndefinedPosition,

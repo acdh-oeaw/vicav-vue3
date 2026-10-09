@@ -38,6 +38,12 @@ const createId = function (params: Zod.infer<typeof GeoMapSchema>["params"]): It
 	return `${endpoint}:${queryString}:${scope}:${queryParams}`;
 };
 
+const isDataListMap = computed(() => params.value.endpoint === "data_markers");
+const dataListLayers = computed(() => {
+	if (!isDataListMap.value) return params.value.dataListLayers;
+	return dataListMapStore.mergeMapLayers(params.value.dataListLayers);
+});
+
 function getDataListToolbarTitle(title: string): string {
 	//TODO: this comes from the list window title set through the projectConfig
 	//we should consider changing it, as it may contain a filtered state, not all items
@@ -45,9 +51,9 @@ function getDataListToolbarTitle(title: string): string {
 }
 
 const itemsById = computed(() => {
-	if (params.value.dataListLayers) {
+	if (dataListLayers.value) {
 		return new Map<ItemId, GeoMapToolbarOption>(
-			params.value.dataListLayers.map((layer) => [
+			dataListLayers.value.map((layer) => [
 				`data-list:${layer.id}`,
 				{ title: getDataListToolbarTitle(layer.title), color: layer.color },
 			]),
@@ -69,7 +75,7 @@ const itemsById = computed(() => {
 });
 
 const id = createId(params.value);
-if (!params.value.dataListLayers && !itemsById.value.has(id)) {
+if (!dataListLayers.value && !itemsById.value.has(id)) {
 	itemsById.value.set(id, {
 		title: params.value.title ?? title.value,
 		params: params.value,
@@ -78,8 +84,8 @@ if (!params.value.dataListLayers && !itemsById.value.has(id)) {
 
 const selected = ref<Set<ItemId>>(
 	new Set(
-		params.value.dataListLayers
-			? params.value.dataListLayers
+		dataListLayers.value
+			? dataListLayers.value
 					.filter((layer) => layer.enabled !== false)
 					.map((layer) => `data-list:${layer.id}`)
 			: [id],
@@ -103,7 +109,7 @@ function onSelect(id: ItemId) {
 
 watch(
 	() =>
-		params.value.dataListLayers?.map((layer) => ({
+		dataListLayers.value?.map((layer) => ({
 			id: layer.id,
 			enabled: layer.enabled !== false,
 		})),
@@ -113,14 +119,14 @@ watch(
 				layers.filter((layer) => layer.enabled).map((layer) => `data-list:${layer.id}`),
 			);
 	},
-	{ deep: true },
+	{ deep: true, immediate: true },
 );
 
 const onMarkerClick = useMarkerClickHandler();
 
 const queries = useGeoMarkerLayers(
 	computed(() => {
-		if (params.value.dataListLayers) return [];
+		if (dataListLayers.value) return [];
 		return Array.from(selected.value).map((id) => {
 			return (itemsById.value.get(id) as Zod.infer<typeof GeoMapSubnavItemSchema> | undefined)
 				?.params as Required<GeoTargetTypeParameters>;
@@ -155,9 +161,9 @@ function createDataListMarkerFeature(
 
 // TODO: pass as separate feature groups to geo map (?)
 const markers = computed<Array<Feature<Point, MarkerProperties>>>(() => {
-	if (params.value.dataListLayers) {
+	if (dataListLayers.value) {
 		const locations = new Map<string, Array<DataListMarkerFeature>>();
-		for (const layer of params.value.dataListLayers) {
+		for (const layer of dataListLayers.value) {
 			if (!selected.value.has(`data-list:${layer.id}`)) continue;
 			for (const marker of layer.markers) {
 				const key = marker.coordinates.join(",");
@@ -214,8 +220,6 @@ const hasSpatialData = computed(() =>
 		);
 	}),
 );
-
-const isDataListMap = computed(() => params.value.endpoint === "data_markers");
 </script>
 
 <template>

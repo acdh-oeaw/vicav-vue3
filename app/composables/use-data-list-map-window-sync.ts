@@ -19,7 +19,13 @@ export function useDataListMapWindowSync() {
 		([layerRecord, window], [previousLayers]) => {
 			const layers = Object.values(layerRecord);
 			if (window) {
-				windowsStore.updateWindowParams(window.id, { ...window.params, dataListLayers: layers });
+				const mergedLayers = dataListMapStore.mergeMapLayers(window.params.dataListLayers);
+				if (JSON.stringify(window.params.dataListLayers) !== JSON.stringify(mergedLayers)) {
+					windowsStore.updateWindowParams(window.id, {
+						...window.params,
+						dataListLayers: mergedLayers,
+					});
+				}
 			} else if (
 				previousLayers &&
 				layers.some(

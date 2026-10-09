@@ -8,7 +8,7 @@ import type { DataListMapLayer, OpenWindowItem, WindowItem } from "@/types/globa
 import { useDataListMapWindowSync } from "./use-data-list-map-window-sync.ts";
 
 const mocks = vi.hoisted(() => ({
-	dataLists: { layers: {} },
+	dataLists: { layers: {}, mergeMapLayers: () => [] as Array<DataListMapLayer> },
 	windows: {
 		registry: new Map() as WindowRegistry,
 		addWindow: vi.fn<(state: WindowState) => void>(),
@@ -45,7 +45,10 @@ describe("data list map window synchronization", () => {
 	let scope: ReturnType<typeof effectScope>;
 
 	beforeEach(() => {
-		mocks.dataLists = reactive({ layers: {} });
+		mocks.dataLists = reactive({
+			layers: {},
+			mergeMapLayers: () => Object.values(mocks.dataLists.layers),
+		});
 		mocks.windows.registry = reactive(new Map());
 		mocks.windows.addWindow.mockReset();
 		mocks.windows.updateWindowParams.mockReset();
