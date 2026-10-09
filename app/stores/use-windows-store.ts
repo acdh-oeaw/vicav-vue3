@@ -6,11 +6,13 @@ import type { QueryParamsType } from "@/lib/api-client";
 import {
 	GeojsonMapSchema,
 	ListMapSchema,
+	type OpenWindowItem,
 	QueryString,
 	Schema,
 	TeiSource,
 	TextId,
 	type WindowItem,
+	type WindowItemMap,
 	type WindowItemTargetType,
 } from "@/types/global.ts";
 import * as arrange from "@/utils/window-arrangement";
@@ -24,7 +26,7 @@ import { useToastsStore } from "./use-toasts-store.ts";
 export const narrowScreenBreakpoint = 1024;
 const listMapDefaultTitle = "Variety data";
 
-export type WindowRegistry = Map<WindowItem["id"], WindowItem>;
+export type WindowRegistry = Map<WindowItem["id"], OpenWindowItem>;
 
 export const arrangements = {
 	none: { id: "none", label: "None" },
@@ -49,8 +51,22 @@ const WindowState = z.intersection(
 );
 export type WindowState = z.infer<typeof WindowState>;
 
+interface WindowControlConfig<TTargetType extends WindowItemTargetType> {
+	targetTypes: ReadonlyArray<TTargetType>;
+	className: string;
+	title: string;
+	click: (windowItem: WindowItemMap[TTargetType]) => void;
+}
+
+//helper to preserve Param shape inference according to target type
+function defineWindowControl<TTargetType extends WindowItemTargetType>(
+	config: WindowControlConfig<TTargetType>,
+) {
+	return config;
+}
+
 export const useWindowsStore = defineStore("windows", () => {
-	const registry = ref(new Map<WindowItem["id"], WindowItem>());
+	const registry = ref<WindowRegistry>(new Map());
 	const arrangement = ref<WindowArrangement>("smart-tile");
 
 	const router = useRouter();
@@ -65,6 +81,106 @@ export const useWindowsStore = defineStore("windows", () => {
 	const openOrUpdateWindow = useOpenOrUpdateWindow();
 
 	const geojsonStore = useGeojsonStore();
+
+	watch(
+		[() => [...registry.value.keys()], arrangement],
+		() => {
+			arrangeWindows();
+			updateUrl();
+		},
+		{ flush: "post" },
+	);
+
+	const windowControlConfigs = [
+		defineWindowControl({
+			targetTypes: [
+				"ExploreSamples",
+				"Profile",
+				"Feature",
+				"CorpusText",
+				"SampleText",
+				"Text",
+				"FeatureValue",
+				"Location",
+			],
+			className: "wb-cite",
+			title: "Show citation",
+			click(windowItem) {
+				windowItem.params.showCitation = !windowItem.params.showCitation;
+			},
+		}),
+		defineWindowControl({
+			targetTypes: ["ListMap"],
+			className: "wb-map",
+			title: "Open map",
+			click() {
+				openOrUpdateWindow(
+					{
+						targetType: "GeojsonMap",
+						params: {
+							markerType: "petal",
+						},
+					} as unknown as WindowItem,
+					"Variety Data - Map View",
+					GeojsonMapSchema.shape.params,
+					"markerType",
+					true,
+				);
+			},
+		}),
+		defineWindowControl({
+			targetTypes: ["DataList"],
+			className: "wb-map",
+			title: "Show or remove from map",
+			click(windowItem) {
+				updateWindowParams(windowItem.id, {
+					...windowItem.params,
+					mapEnabled: !windowItem.params.mapEnabled,
+					mapSyncId: windowItem.params.mapSyncId ?? windowItem.id,
+				});
+			},
+		}),
+		defineWindowControl({
+			targetTypes: ["GeojsonMap"],
+			className: "wb-table",
+			title: "Open table",
+			click() {
+				const table = geojsonStore.table;
+				const globalFilter = (table?.getState().globalFilter as string | undefined) ?? "";
+				openOrUpdateWindow(
+					{
+						targetType: "ListMap",
+						params: {
+							queryString: globalFilter,
+						},
+					} as unknown as WindowItem,
+					globalFilter || listMapDefaultTitle,
+					ListMapSchema.shape.params,
+					"queryString",
+					true,
+				);
+			},
+		}),
+		defineWindowControl({
+			targetTypes: ["ListMap"],
+			className: "wb-map",
+			title: "Open table",
+			click() {
+				openOrUpdateWindow(
+					{
+						targetType: "GeojsonMap",
+						params: {
+							markerType: "petal",
+						},
+					} as unknown as WindowItem,
+					"Variety Data - Map View",
+					GeojsonMapSchema.shape.params,
+					"markerType",
+					true,
+				);
+			},
+		}),
+	];
 
 	async function initializeScreen() {
 		await suspense();
@@ -168,29 +284,31 @@ export const useWindowsStore = defineStore("windows", () => {
 			}
 		}
 
-		const winbox = new WinBox({
-			id,
-			title,
-			index: windowState.zIndex ?? undefined,
-			x: windowState.x ?? "center",
-			y: windowState.y ?? "center",
-			width: windowState.width,
-			height: windowState.height,
-			onfocus() {
-				updateUrl();
-			},
-			onresize() {
-				updateUrl();
-			},
-			onmove() {
-				updateUrl();
-			},
-			onclose() {
-				registry.value.delete(id);
-				return false;
-			},
-			root: rootElement,
-		});
+		const winbox = markRaw(
+			new WinBox({
+				id,
+				title,
+				index: windowState.zIndex ?? undefined,
+				x: windowState.x ?? "center",
+				y: windowState.y ?? "center",
+				width: windowState.width,
+				height: windowState.height,
+				onfocus() {
+					updateUrl();
+				},
+				onresize() {
+					updateUrl();
+				},
+				onmove() {
+					updateUrl();
+				},
+				onclose() {
+					registry.value.delete(id);
+					return false;
+				},
+				root: rootElement,
+			}),
+		);
 		// window ids are random, so the kind of content is the only stable way to address a window
 		// from the outside (the guided tour attaches its steps to elements inside specific windows)
 		(winbox.dom as HTMLElement).dataset.windowType = targetType;
@@ -214,104 +332,62 @@ export const useWindowsStore = defineStore("windows", () => {
 
 		registry.value.set(id, {
 			id,
+			label: title,
 			winbox,
 			targetType,
 			params,
-		} as WindowItem);
+		} as OpenWindowItem);
 
 		const w = registry.value.get(id);
+		if (w == null) return;
 
-		if (
-			w?.winbox &&
-			[
-				"ExploreSamples",
-				"Profile",
-				"Feature",
-				"CorpusText",
-				"SampleText",
-				"Text",
-				"FeatureValue",
-				"Location",
-			].includes(w.targetType)
-		) {
-			w.winbox.addControl({
-				index: 0,
-				class: "wb-cite",
-				click: function () {
-					w.params.showCitation = !w.params.showCitation;
-				},
-			});
-			const winboxElement = w.winbox.dom as HTMLElement;
-			const cite = winboxElement.querySelectorAll(".wb-cite");
-			if (cite.length > 0) {
-				const el = cite[0] as HTMLSpanElement;
-				el.title = "Show citation";
-			}
-		}
-
-		if (w?.winbox && w.targetType === "ListMap") {
-			w.winbox.addControl({
-				index: 0,
-				class: "wb-map",
-				click: function () {
-					openOrUpdateWindow(
-						{
-							targetType: "GeojsonMap",
-							params: {
-								markerType: "petal",
-							},
-						} as unknown as WindowItem,
-						"Variety Data - Map View",
-						GeojsonMapSchema.shape.params,
-						"markerType",
-						true,
-					);
-				},
-			});
-			const winboxElement = w.winbox.dom as HTMLElement;
-			const cite = winboxElement.querySelectorAll(".wb-map");
-			if (cite.length > 0) {
-				const el = cite[0] as HTMLSpanElement;
-				el.title = "Open map";
-			}
-		}
-		if (w?.winbox && w.targetType === "GeojsonMap") {
-			w.winbox.addControl({
-				index: 0,
-				class: "wb-table",
-				click: function () {
-					const table = geojsonStore.table;
-					const globalFilter = (table?.getState().globalFilter as string | undefined) ?? "";
-					openOrUpdateWindow(
-						{
-							targetType: "ListMap",
-							params: {
-								queryString: globalFilter,
-							},
-						} as unknown as WindowItem,
-						globalFilter || listMapDefaultTitle,
-						ListMapSchema.shape.params,
-						"queryString",
-						true,
-					);
-				},
-			});
-			const winboxElement = w.winbox.dom as HTMLElement;
-			const cite = winboxElement.querySelectorAll(".wb-table");
-			if (cite.length > 0) {
-				const el = cite[0] as HTMLSpanElement;
-				el.title = "Open table";
-			}
-		}
+		addConfiguredWindowControls(w);
 		return w;
+	}
+
+	function addConfiguredWindowControls(windowItem: OpenWindowItem) {
+		windowControlConfigs.forEach((config) => {
+			const targetTypes: ReadonlyArray<WindowItemTargetType> = config.targetTypes;
+			if (!targetTypes.includes(windowItem.targetType)) return;
+
+			windowItem.winbox.addControl({
+				index: 0,
+				class: config.className,
+				click: function () {
+					config.click(windowItem as never);
+				},
+			});
+
+			const winboxElement = windowItem.winbox.dom as HTMLElement;
+			const controls = winboxElement.querySelectorAll(`.${config.className}`);
+			if (controls.length > 0) {
+				const el = controls[0] as HTMLSpanElement;
+				el.title = config.title;
+			}
+		});
+		updateDataListMapControlState(windowItem);
+	}
+
+	function updateDataListMapControlState(windowItem: OpenWindowItem) {
+		if (windowItem.targetType !== "DataList") return;
+
+		const control = (windowItem.winbox.dom as HTMLElement).querySelector<HTMLSpanElement>(
+			".wb-map",
+		);
+		if (control == null) return;
+
+		const isMapEnabled = windowItem.params.mapEnabled === true;
+		control.classList.toggle("wb-map-active", isMapEnabled);
+		control.setAttribute("aria-pressed", String(isMapEnabled));
+		control.title = isMapEnabled ? "Remove from map" : "Show on map";
 	}
 
 	function findWindowByTypeAndParam(
 		targetType: WindowItemTargetType,
 		paramName: string,
 		value: string,
-	): WindowItem | null {
-		let foundWindow: WindowItem | null = null;
+	): OpenWindowItem | null {
+		let foundWindow: OpenWindowItem | null = null;
 		const dot = paramName.indexOf(".");
 		let paramName1: string | undefined, paramName2: string | undefined;
 
@@ -345,13 +421,13 @@ export const useWindowsStore = defineStore("windows", () => {
 	function findWindowByTypeAndTitle(
 		targetType: WindowItemTargetType,
 		title: string,
-	): WindowItem | null {
-		let foundWindow: WindowItem | null = null;
+	): OpenWindowItem | null {
+		let foundWindow: OpenWindowItem | null = null;
 		registry.value.forEach((w) => {
 			const ci = Schema.safeParse(w);
 			if (!ci.success || foundWindow !== null || w.targetType !== targetType) return;
 
-			if (w.winbox?.title === title) {
+			if (w.winbox.title === title) {
 				foundWindow = w;
 			}
 		});
@@ -359,7 +435,7 @@ export const useWindowsStore = defineStore("windows", () => {
 	}
 
 	function removeWindow(id: WindowItem["id"]) {
-		registry.value.get(id)?.winbox?.close();
+		registry.value.get(id)?.winbox.close();
 	}
 
 	function setWindowArrangement(id: WindowArrangement) {
@@ -406,12 +482,16 @@ export const useWindowsStore = defineStore("windows", () => {
 				break;
 			}
 		}
+		arrange.splitDataListsAndMap(viewport, windows);
 	}
 
-	watch([() => registry.value.size, arrangement], () => {
-		arrangeWindows();
-		updateUrl();
-	});
+	function getPersistedWindowParams(windowItem: WindowItem): WindowItem["params"] {
+		if (windowItem.targetType !== "WMap" || windowItem.params.endpoint !== "data_markers")
+			return windowItem.params;
+
+		const { dataListLayers: _, ...params } = windowItem.params;
+		return params;
+	}
 
 	function serializeWindowStates() {
 		const windowStates: Array<WindowState> = [];
@@ -425,18 +505,16 @@ export const useWindowsStore = defineStore("windows", () => {
 		}
 
 		registry.value.forEach((w) => {
-			if (w.winbox) {
-				windowStates.push({
-					x: viewportPercentageWith2DigitPrecision(w.winbox.x as number, "width"),
-					y: viewportPercentageWith2DigitPrecision(w.winbox.y as number, "height"),
-					z: w.winbox.index,
-					width: viewportPercentageWith2DigitPrecision(w.winbox.width as number, "width"),
-					height: viewportPercentageWith2DigitPrecision(w.winbox.height as number, "height"),
-					targetType: w.targetType,
-					title: w.winbox.title,
-					params: w.params,
-				} as WindowState);
-			}
+			windowStates.push({
+				x: viewportPercentageWith2DigitPrecision(w.winbox.x as number, "width"),
+				y: viewportPercentageWith2DigitPrecision(w.winbox.y as number, "height"),
+				z: w.winbox.index,
+				width: viewportPercentageWith2DigitPrecision(w.winbox.width as number, "width"),
+				height: viewportPercentageWith2DigitPrecision(w.winbox.height as number, "height"),
+				targetType: w.targetType,
+				title: w.winbox.title,
+				params: getPersistedWindowParams(w),
+			} as WindowState);
 		});
 		return windowStates;
 	}
@@ -458,6 +536,7 @@ export const useWindowsStore = defineStore("windows", () => {
 	function updateUrl() {
 		if (route.path === "/imprint") return;
 		const windowStates = serializeWindowStates();
+		if (windowStates == null) return;
 		// TODO: check url length, it may be too long. Note: shortest limit is 2047 (MS Edge) https://serpstat.com/blog/how-long-should-be-the-page-url-length-for-seo/
 		void navigateTo({
 			path: "/",
@@ -499,6 +578,7 @@ export const useWindowsStore = defineStore("windows", () => {
 		}
 
 		w.params = parsedWindow.data.params;
+		updateDataListMapControlState(w);
 		updateUrl();
 	}
 

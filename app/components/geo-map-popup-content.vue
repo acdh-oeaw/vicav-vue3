@@ -23,8 +23,12 @@ const groupedMarkers = computed<Record<string, LocationDataPoints> | null>(() =>
 	if (props.groupMarkers) {
 		const grouped: Record<string, LocationDataPoints> = {};
 		props.markers.forEach((marker) => {
-			if (!grouped[marker.properties.label])
-				grouped[marker.properties.label] = {
+			const location =
+				"dataListMapColors" in marker.properties
+					? (marker.properties.name ?? marker.properties.label)
+					: marker.properties.label;
+			if (!grouped[location])
+				grouped[location] = {
 					Text: [],
 					CorpusText: [],
 					Feature: [],
@@ -34,11 +38,9 @@ const groupedMarkers = computed<Record<string, LocationDataPoints> | null>(() =>
 					BiblioEntries: [],
 				};
 
-			if (grouped[marker.properties.label] !== undefined) {
+			if (grouped[location] !== undefined) {
 				const markerArray =
-					grouped[marker.properties.label]![
-						marker.properties.targetType as DataTypesEnum | "DataTable"
-					];
+					grouped[location]![marker.properties.targetType as DataTypesEnum | "DataTable"];
 				if (markerArray) {
 					markerArray.push(marker);
 				}
@@ -49,6 +51,13 @@ const groupedMarkers = computed<Record<string, LocationDataPoints> | null>(() =>
 		return null;
 	}
 });
+
+function locationHeading(location: string, markersByType: LocationDataPoints): string {
+	const markers = Object.values(markersByType).flat();
+	return markers.some((marker) => "dataListMapColors" in marker.properties)
+		? `${location} (${markers.length})`
+		: location;
+}
 
 defineExpose({
 	$el,
@@ -65,7 +74,7 @@ const emit = defineEmits<{
 		<template v-if="groupedMarkers">
 			<div v-for="(markersGroupedByType, location) in groupedMarkers" :key="location" class="pb-2">
 				<h2 class="text-base font-bold">
-					{{ location }}
+					{{ locationHeading(location, markersGroupedByType) }}
 				</h2>
 				<div
 					v-for="(markersOfType, contentType) in markersGroupedByType"

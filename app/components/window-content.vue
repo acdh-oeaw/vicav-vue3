@@ -1,8 +1,8 @@
 <script lang="ts" setup>
-import type { WindowItem } from "@/types/global.ts";
+import type { OpenWindowItem, WindowItem } from "@/types/global.ts";
 
 interface Props {
-	item: WindowItem;
+	item: OpenWindowItem;
 }
 
 const windowsStore = useWindowsStore();
@@ -20,7 +20,7 @@ function updateWindowParams(params: WindowItem["params"]) {
 
 <template>
 	<GeoMapWindowContent
-		v-if="props.item.targetType === 'WMap' && props.item.winbox"
+		v-if="props.item.targetType === 'WMap'"
 		:params="props.item.params"
 		:title="props.item.winbox.title"
 	/>
@@ -81,6 +81,8 @@ function updateWindowParams(params: WindowItem["params"]) {
 	<DataListWindowContent
 		v-else-if="props.item.targetType === 'DataList'"
 		:params="props.item.params"
+		:title="props.item.winbox.title"
+		:window-id="props.item.id"
 		@update:params="updateWindowParams"
 	/>
 
