@@ -17,7 +17,7 @@ const props = withDefaults(
 		inlineLemmaAnnotation: boolean;
 		inlineLinguisticAnnotation: boolean;
 		highlight?: boolean;
-		hits?: string;
+		hits?: string | ReadonlyArray<string>;
 	}>(),
 	{
 		highlight: false,
@@ -55,15 +55,18 @@ function openDictWindow(lemmaRef: string) {
 
 const wordAnnotations = computed(() => extractCorpusAnnotations(props.utterance.w));
 const segmentAnnotations = computed(() => extractCorpusAnnotations(props.utterance.seg));
+const hitIds = computed(
+	() => new Set(typeof props.hits === "string" ? [props.hits] : (props.hits ?? [])),
+);
 const wordIsHit = computed(() => {
 	return (
-		props.utterance.w?.["@id"] === props.hits ||
+		(props.utterance.w != null && hitIds.value.has(props.utterance.w["@id"])) ||
 		(props.highlight && props.hits == null && props.utterance.w != null)
 	);
 });
 const segmentIsHit = computed(() => {
 	return (
-		props.utterance.seg?.["@id"] === props.hits ||
+		(props.utterance.seg != null && hitIds.value.has(props.utterance.seg["@id"])) ||
 		(props.highlight && props.hits == null && props.utterance.seg != null)
 	);
 });
