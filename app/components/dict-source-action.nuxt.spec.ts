@@ -86,8 +86,6 @@ describe("dictionary source action", () => {
 				params: { queryString: "Lentin 2013" },
 			},
 			"Bibliography: Lentin 2013, p.164",
-			expect.anything(),
-			"queryString",
 			true,
 		);
 	});
