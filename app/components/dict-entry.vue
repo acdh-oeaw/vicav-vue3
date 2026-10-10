@@ -2,7 +2,7 @@
 import { BookA, Braces, CircleAlert, Code, MapPin, MessageSquareQuote, Search } from "@lucide/vue";
 
 import type { RestVLEEntry } from "@/lib/api-client";
-import { QueryString, type WindowItem } from "@/types/global.ts";
+import type { WindowItem } from "@/types/global.ts";
 import {
 	formatLocation,
 	normalizeEntry,
@@ -129,8 +129,6 @@ const openCorpusSearchWindow = () => {
 			},
 		} as unknown as WindowItem,
 		`Corpus search: ${e.value.title ?? e.value.lemma}`,
-		QueryString,
-		"queryString",
 		true,
 	);
 };

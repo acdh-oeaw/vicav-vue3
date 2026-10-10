@@ -123,4 +123,24 @@ describe("compound corpus utterances", () => {
 		);
 		expect(wrapper.get("#word-1").attributes("data-highlight-scope")).toBe("word");
 	});
+
+	it("highlights multiple nested hits and reacts to changed hit arrays", async () => {
+		const wrapper = await mountSuspended(CorpusTextJsonUtterance, {
+			props: {
+				utterance: { seg: compound },
+				inlineLemmaAnnotation: false,
+				inlineLinguisticAnnotation: false,
+				hits: ["word-1", "word-2"],
+				highlight: true,
+			},
+		});
+		expect(wrapper.findAll('[data-highlight-scope="word"]')).toHaveLength(2);
+		expect(wrapper.get("#seg-1").attributes("data-highlight-scope")).toBeUndefined();
+		await wrapper.setProps({ hits: ["seg-1", "word-2", "missing"] });
+		expect(wrapper.get("#seg-1").attributes("data-highlight-scope")).toBe("segment");
+		expect(wrapper.get("#word-1").attributes("data-highlight-scope")).toBeUndefined();
+		expect(wrapper.get("#word-2").attributes("data-highlight-scope")).toBe("word");
+		await wrapper.setProps({ hits: [] });
+		expect(wrapper.findAll("[data-highlight-scope]")).toHaveLength(0);
+	});
 });

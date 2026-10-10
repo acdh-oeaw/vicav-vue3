@@ -8,6 +8,7 @@ interface Props {
 
 const props = defineProps<Props>();
 const { params } = toRefs(props);
+const emit = defineEmits<{ "update:params": [params: ExploreSamplesWindowItem["params"]] }>();
 const content: Ref<HTMLElement | undefined> = ref();
 const tooltip: Ref<HTMLElement | null> = ref(null);
 const { simpleItems } = useTeiHeadersStore();
@@ -36,11 +37,11 @@ const ids = computed(() => {
 });
 
 const features: Ref<Array<string>> = ref(params.value.features?.split(",") ?? []);
-const page: Ref<number> = ref(1);
+const page: Ref<number> = ref(params.value.page ?? 1);
 
 watch(params, (value) => {
-	if (value.features) features.value = value.features.split(",");
-	if (value.page) page.value = value.page;
+	features.value = value.features?.split(",") ?? [];
+	page.value = value.page ?? 1;
 });
 
 const extractedParams = computed(() => {
@@ -64,11 +65,8 @@ const { showTooltip, tooltipContent, handleHoverTooltip } = useHoverTooltipHandl
 const isLoading = computed(() => {
 	return isPending.value || isPlaceholderData.value;
 });
-const { findWindowByTypeAndParam } = useWindowsStore();
-
 watch(page, () => {
-	const window = findWindowByTypeAndParam("ExploreSamples", "ids", ids.value);
-	(window! as ExploreSamplesWindowItem).params.page = page.value;
+	emit("update:params", { ...params.value, page: page.value });
 });
 
 watch(isLoading, () => {

@@ -1,6 +1,6 @@
 import type WinBox from "winbox";
 
-import type { WindowItem } from "@/types/global.ts";
+import type { OpenWindowItem, WindowItem } from "@/types/global.ts";
 
 export function cascade(viewport: DOMRect, windows: Array<WindowItem>): void {
 	const windowWidth = Math.floor(viewport.width / 2);
@@ -124,4 +124,22 @@ function addWindowControls(winbox: WinBox) {
 		.removeClass("no-full")
 		.removeClass("no-resize")
 		.removeClass("no-move");
+}
+
+export function splitDataListsAndMap(viewport: DOMRect, windows: Array<OpenWindowItem>): void {
+	const map = windows.find(
+		(window) => window.targetType === "WMap" && window.params.endpoint === "data_markers",
+	);
+	const lists = windows.filter((window) => window.targetType === "DataList");
+	if (!map || lists.length === 0) return;
+
+	const mapWidth = Math.floor(viewport.width / 2);
+	const listWidth = viewport.width - mapWidth;
+	map.winbox.resize(mapWidth, viewport.height).move(listWidth, 0);
+
+	lists.forEach((list, index) => {
+		const top = Math.floor((index * viewport.height) / lists.length);
+		const bottom = Math.floor(((index + 1) * viewport.height) / lists.length);
+		list.winbox.resize(listWidth, bottom - top).move(0, top);
+	});
 }

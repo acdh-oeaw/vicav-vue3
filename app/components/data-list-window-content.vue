@@ -7,15 +7,14 @@ import FeatureDataList from "@/components/feature-data-list.vue";
 import ProfileDataList from "@/components/profile-data-list.vue";
 import SampleTextDataList from "@/components/sample-text-data-list.vue";
 import dataTypes from "@/config/dataTypes.ts";
-import {
-	type SimpleMetadataAccessorKey,
-	simpleMetadataAccessors,
-	useTeiHeadersStore,
-} from "@/stores/use-tei-headers-store.ts";
+import { useDataListMapStore } from "@/stores/use-data-list-map-store.ts";
+import { groupSimpleItems } from "@/stores/use-tei-headers-store.ts";
 import type { DataListWindowItem, DataTypesEnum } from "@/types/global.ts";
 
 interface Props {
 	params: DataListWindowItem["params"];
+	windowId: string;
+	title: string;
 }
 
 const debug = false;
@@ -25,8 +24,8 @@ const emit = defineEmits<{
 	"update:params": [params: DataListWindowItem["params"]];
 }>();
 
-const teiHeadersStore = useTeiHeadersStore();
-const { simpleItems } = storeToRefs(teiHeadersStore);
+const dataListMapStore = useDataListMapStore();
+const windowsStore = useWindowsStore();
 const specializedListType = computed(() => {
 	if (props.params.dataTypes.length !== 1) return undefined;
 
@@ -41,29 +40,72 @@ const specializedListType = computed(() => {
 	}
 });
 
-function normalizeFilterListBy() {
-	const filter = props.params.filterListBy;
-	if (!filter) return undefined;
-	if (!Object.hasOwn(simpleMetadataAccessors, filter.key)) return undefined;
-
-	return filter as { key: SimpleMetadataAccessorKey; value: string };
-}
-
-const groupedItems = computed(() => {
-	return teiHeadersStore.getGroupedSimpleItems({
-		dataTypes: props.params.dataTypes,
-		filterListBy: normalizeFilterListBy(),
-	});
-});
 const openNewWindowFromAnchor = useAnchorClickHandler();
+
+const listMapId = computed(() =>
+	dataListMapStore.resolveDatasetId(
+		props.params.mapSyncId ?? props.windowId,
+		props.params,
+		props.windowId,
+	),
+);
+const dataset = computed(() =>
+	dataListMapStore.attachList(
+		props.params.mapSyncId ?? props.windowId,
+		props.title,
+		props.params,
+		props.windowId,
+	),
+);
+
+const filteredItems = computed(() => dataset.value.items.value);
+const groupedItems = computed(() =>
+	groupSimpleItems(filteredItems.value, { dataTypes: props.params.dataTypes }),
+);
+watch(
+	() => props.params.mapEnabled,
+	(enabled) => {
+		if (enabled != null) dataListMapStore.setEnabled(listMapId.value, enabled);
+	},
+);
+watch(
+	() => props.title,
+	(title) => {
+		if (!dataListMapStore.records[listMapId.value]?.configured) dataset.value.title.value = title;
+	},
+);
+watch(
+	() => [
+		dataset.value.definition.value.filterListBy,
+		dataset.value.enabled.value,
+		dataListMapStore.records[listMapId.value]?.listState,
+		listMapId.value,
+	],
+	() => {
+		syncSharedListParams();
+		void nextTick(windowsStore.arrangeWindows);
+	},
+	{ deep: true, immediate: true },
+);
+
+function syncSharedListParams(): void {
+	const params = {
+		...props.params,
+		filterListBy: dataset.value.definition.value.filterListBy,
+		mapSyncId: listMapId.value,
+		mapEnabled: dataset.value.enabled.value,
+		listState: dataListMapStore.records[listMapId.value]?.listState,
+	};
+	if (JSON.stringify(props.params) !== JSON.stringify(params)) emit("update:params", params);
+}
 
 const debugString = computed(() => (debug ? JSON.stringify(groupedItems.value, null, 2) : ""));
 
 function updateListState(listState: DataListWindowItem["params"]["listState"]) {
-	emit("update:params", {
-		...props.params,
-		listState,
-	});
+	const record = dataListMapStore.records[listMapId.value];
+	if (record && JSON.stringify(record.listState) !== JSON.stringify(listState))
+		record.listState = listState;
+	syncSharedListParams();
 }
 
 function getDataTypeName(dataType: string): string {
@@ -86,25 +128,33 @@ function hierarchyLevelClass(level: string | number): string {
 <template>
 	<CorpusTextDataList
 		v-if="specializedListType === 'CorpusText'"
-		:items="simpleItems"
+		:key="listMapId"
+		:dataset-id="listMapId"
+		:items="filteredItems"
 		:list-state="params.listState"
 		@update:list-state="updateListState"
 	/>
 	<SampleTextDataList
 		v-else-if="specializedListType === 'SampleText'"
-		:items="simpleItems"
+		:key="listMapId"
+		:dataset-id="listMapId"
+		:items="filteredItems"
 		:list-state="params.listState"
 		@update:list-state="updateListState"
 	/>
 	<FeatureDataList
 		v-else-if="specializedListType === 'Feature'"
-		:items="simpleItems"
+		:key="listMapId"
+		:dataset-id="listMapId"
+		:items="filteredItems"
 		:list-state="params.listState"
 		@update:list-state="updateListState"
 	/>
 	<ProfileDataList
 		v-else-if="specializedListType === 'Profile'"
-		:items="simpleItems"
+		:key="listMapId"
+		:dataset-id="listMapId"
+		:items="filteredItems"
 		:list-state="params.listState"
 		@update:list-state="updateListState"
 	/>
@@ -114,9 +164,9 @@ function hierarchyLevelClass(level: string | number): string {
 			<br />
 			<textarea
 				id="debug"
+				class="h-[100px] w-[1024px]"
 				cols="25"
 				rows="80"
-				style="width: 1024px; height: 100px"
 				:value="debugString"
 			></textarea>
 		</div>
