@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import dataTypes from "@/config/dataTypes.ts";
 import { useTeiHeadersStore } from "@/stores/use-tei-headers-store.ts";
-import type { ExploreSamplesFormWindowItem, GeoMapWindowItem, WindowItem } from "@/types/global.ts";
+import type { ExploreSamplesFormWindowItem } from "@/types/global.ts";
 
-const { findWindowByTypeAndParam } = useWindowsStore();
+const { openWindow } = useWindowsStore();
 
 interface Props {
 	params: ExploreSamplesFormWindowItem["params"];
@@ -24,17 +24,12 @@ const sentenceOptions = Array.from(
 const props = defineProps<Props>();
 const { params } = toRefs(props);
 const { simpleItems } = useTeiHeadersStore();
-const windowsStore = useWindowsStore();
-const { addWindow } = windowsStore;
 
 interface Tag {
 	label: string;
 	value: string;
 	heading?: boolean;
 }
-
-const mapWindow: Ref<WindowItem | null> = ref(null);
-const resultsWindow: Ref<WindowItem | null> = ref(null);
 
 const places: Ref<Array<string>> = ref([]);
 const words: Ref<Array<string>> = ref([]);
@@ -193,37 +188,17 @@ const submitDisabled = computed(() => {
 	);
 });
 
-/**
- * Intercept anchor clicks to open window instead of navigating.
- */
-const openSearchResultsWindow = function () {
-	resultsWindow.value = findWindowByTypeAndParam(
-		"ExploreSamples",
-		"dataType",
-		params.value.dataTypes[0]!,
-	);
-	mapWindow.value = findWindowByTypeAndParam("WMap", "queryParams.type", queryParams.value.type);
-
-	if (!resultsWindow.value)
-		resultsWindow.value = addWindow({
+function openSearchResults(reuse: boolean) {
+	openWindow(
+		{
 			targetType: "ExploreSamples",
 			params: resultWindowParams.value,
 			title: `Search results for ${[words.value.join(","), places.value.join(",")].join(", ")}`,
-		} as WindowState)!;
-	else if (resultsWindow.value.winbox) {
-		resultsWindow.value.params = resultWindowParams.value as WindowItem["params"];
-		resultsWindow.value.winbox.setTitle(
-			`Search results for ${[words.value.join(","), places.value.join(",")].join(", ")}`,
-		);
-		resultsWindow.value.winbox.focus();
-		resultsWindow.value.winbox.addClass("highlighted");
-		setTimeout(() => {
-			resultsWindow.value?.winbox?.removeClass("highlighted");
-		}, 1000);
-	}
-
-	if (!mapWindow.value)
-		mapWindow.value = addWindow({
+		} as WindowState,
+		{ reuse, highlight: true },
+	);
+	openWindow(
+		{
 			targetType: "WMap",
 			params: {
 				title: "Search results",
@@ -232,40 +207,12 @@ const openSearchResultsWindow = function () {
 				queryParams: queryParams.value,
 			},
 			title: `${params.value.dataTypes[0]}s for ${[words.value.join(","), places.value.join(",")].join(", ")}`,
-		} as WindowState)!;
-	else if (mapWindow.value.winbox) {
-		(mapWindow.value as GeoMapWindowItem).params.queryParams = queryParams.value;
-		mapWindow.value.winbox.setTitle(
-			`Search results for ${[words.value.join(","), places.value.join(",")].join(", ")}`,
-		);
-		mapWindow.value.winbox.focus();
-		mapWindow.value.winbox.addClass("highlighted");
-		setTimeout(() => {
-			mapWindow.value?.winbox?.removeClass("highlighted");
-		}, 1000);
-	}
-};
-
-/**
- * Open search results in new window.
- */
-const openSearchResultsNewWindow = function () {
-	addWindow({
-		targetType: "ExploreSamples",
-		params: resultWindowParams.value,
-		title: `Search results for ${[words.value.join(","), places.value.join(",")].join(", ")}`,
-	} as WindowState)!;
-	addWindow({
-		targetType: "WMap",
-		params: {
-			title: "Search results",
-			queryString: "",
-			endpoint: "compare_markers",
-			queryParams: queryParams.value,
-		},
-		title: `${params.value.dataTypes[0]}s for ${[words.value.join(","), places.value.join(",")].join(", ")}`,
-	} as WindowState)!;
-};
+		} as WindowState,
+		{ reuse, highlight: true },
+	);
+}
+const openSearchResultsWindow = () => openSearchResults(true);
+const openSearchResultsNewWindow = () => openSearchResults(false);
 </script>
 
 <template>

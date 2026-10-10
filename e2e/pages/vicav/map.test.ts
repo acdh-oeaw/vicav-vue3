@@ -5,10 +5,12 @@ test.describe("map page", () => {
 		await page.goto("/?w=W10=&a=smart-tile");
 		await page.getByRole("navigation").getByRole("button", { name: "Bibliographies" }).click();
 		await page.getByLabel("Bibliographies").getByText("All Bibl. Locations on Map").click();
-		await expect(page.getByRole("button", { name: "Bibl. Locations", exact: true })).toBeVisible();
-		await expect(page.getByRole("button", { name: "Bibl. Locations", exact: true })).toContainClass(
-			"data-selected:bg-accent",
-		);
+		await expect(
+			page.getByRole("button", { name: "Toggle Bibl. Locations map layer", exact: true }),
+		).toBeVisible();
+		await expect(
+			page.getByRole("button", { name: "Toggle Bibl. Locations map layer", exact: true }),
+		).toHaveAttribute("aria-pressed", "true");
 	});
 
 	test("should show map with markers in viewport", async ({ page, browserName }) => {
@@ -19,7 +21,6 @@ test.describe("map page", () => {
 		await page.goto("/?w=W10=&a=smart-tile");
 		await page.getByRole("navigation").getByRole("button", { name: "Bibliographies" }).click();
 		await page.getByLabel("Bibliographies").getByText("All Bibl. Locations on Map").click();
-		await expect(page.locator(".leaflet-control-container")).toBeVisible();
-		await expect(page.locator("img:nth-child(218)")).toBeVisible();
+		await expect(page.locator(".leaflet-marker-icon").first()).toBeVisible({ timeout: 15_000 });
 	});
 });

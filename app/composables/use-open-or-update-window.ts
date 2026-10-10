@@ -1,66 +1,7 @@
-import type { ZodObject } from "zod";
-
-import { TextId, type WindowItem } from "@/types/global.ts";
+import type { WindowItem } from "@/types/global.ts";
 
 export function useOpenOrUpdateWindow() {
 	const windowsStore = useWindowsStore();
-
-	const { data: config } = useProjectInfo();
-	return function (
-		item: WindowItem,
-		title: string,
-		type: ZodObject = TextId,
-		paramName = "textId",
-		highlight = false,
-	) {
-		const { addWindow, findWindowByTypeAndParam } = windowsStore;
-		const ci = type.safeParse(item.params);
-		if (ci.success) {
-			const targetConfig = config.value?.projectConfig?.menu?.main
-				?.flatMap((menuEntry) => menuEntry.item)
-				.find((menuEntry) => {
-					return menuEntry.id === ci.data[paramName];
-				});
-
-			const window = findWindowByTypeAndParam(
-				item.targetType,
-				paramName,
-				String(ci.data[paramName]),
-			);
-			if (window?.winbox) {
-				const originalParams: object = window.params;
-				window.params = {
-					...originalParams,
-					...(item.params as object),
-				};
-				window.winbox.focus();
-				if (highlight) {
-					window.winbox.addClass("highlighted");
-					setTimeout(() => {
-						window.winbox?.removeClass("highlighted");
-					}, 1000);
-				}
-				return;
-			}
-
-			if (targetConfig) {
-				addWindow({
-					...targetConfig,
-					params: { ...targetConfig.params, ...item.params },
-					title: title,
-				} as WindowState);
-			} else {
-				addWindow({
-					targetType: item.targetType,
-					params: item.params,
-					title: title,
-				} as WindowState);
-			}
-		} else
-			addWindow({
-				targetType: item.targetType,
-				params: item.params,
-				title: title,
-			} as WindowState);
-	};
+	return (item: WindowItem, title: string, highlight = false) =>
+		windowsStore.openWindow({ ...item, title }, { highlight });
 }

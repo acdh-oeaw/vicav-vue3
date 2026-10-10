@@ -4,7 +4,7 @@ import { QueryClient, VueQueryPlugin } from "@tanstack/vue-query";
 import { describe, expect, it, vi } from "vitest";
 import { reactive } from "vue";
 
-import type { DictQueryWindowItem } from "@/types/global.ts";
+import type { DictQueryWindowItem, OpenWindowItem } from "@/types/global.ts";
 
 import WindowContent from "./window-content.vue";
 
@@ -45,6 +45,8 @@ describe("dictionary window content refresh", () => {
 	it("requests and renders a second entry when the existing window parameters change", async () => {
 		const item = reactive({
 			id: "window-test",
+			label: "Dictionary",
+			winbox: { title: "Dictionary" },
 			targetType: "DictQuery",
 			params: {
 				textId: "test-dict",
@@ -53,7 +55,7 @@ describe("dictionary window content refresh", () => {
 				isQueryVisible: false,
 				queryParams: { id: "111" },
 			},
-		} as DictQueryWindowItem);
+		} as OpenWindowItem & DictQueryWindowItem);
 		const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
 		const wrapper = await mountSuspended(WindowContent, {
 			props: { item },
