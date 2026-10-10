@@ -5,12 +5,11 @@ import { test } from "liqe";
 
 import { useGeojsonStore } from "@/stores/use-geojson-store.ts";
 import { narrowScreenBreakpoint } from "@/stores/use-windows-store.ts";
-import {
-	type FeatureType,
-	type FeatureValueGroup,
-	GeojsonMapSchema,
-	type ListMapWindowItem,
-	type WindowItem,
+import type {
+	FeatureType,
+	FeatureValueGroup,
+	ListMapWindowItem,
+	WindowItem,
 } from "@/types/global.ts";
 
 interface Props {
@@ -253,8 +252,6 @@ function openGeoJsonMap() {
 			},
 		} as unknown as WindowItem,
 		"Variety Data - Map View",
-		GeojsonMapSchema.shape.params,
-		"markerType",
 		false,
 	);
 	void nextTick(splitTableAndMapWindows);
@@ -284,7 +281,7 @@ function splitTableAndMapWindows() {
 }
 
 windowsStore.$onAction(({ name, after }) => {
-	if (["arrangeWindows", "addWindow", "removeWindow"].includes(name)) {
+	if (["arrangeWindows", "addWindow", "openWindow", "removeWindow"].includes(name)) {
 		after(() => void nextTick(splitTableAndMapWindows));
 	}
 });
