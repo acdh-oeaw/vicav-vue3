@@ -100,7 +100,7 @@ const partners = computed(() => config.value?.projectConfig?.partners ?? []);
 								Austrian Academy of Sciences
 							</p>
 							<p class="mt-0 mb-4 block">
-								Bäckerstraße 13,
+								Bäckerstraße 13
 								<br />
 								1010 Vienna
 							</p>
