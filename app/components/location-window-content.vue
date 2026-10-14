@@ -3,7 +3,7 @@ import { Info } from "@lucide/vue";
 import type { Cell, Column, Row } from "@tanstack/vue-table";
 
 import type { TEI } from "@/lib/api-client";
-import { type LocationWindowItem, ProfileSchema, type WindowItem } from "@/types/global.ts";
+import type { LocationWindowItem, WindowItem } from "@/types/global.ts";
 import type { simpleTEIMetadata } from "@/types/teiCorpus";
 
 interface Props {
@@ -72,8 +72,6 @@ function openProfile(profile: TEI) {
 			},
 		} as unknown as WindowItem,
 		profile.teiHeader?.fileDesc.titleStmt.titles?.[0]?.$ ?? "",
-		ProfileSchema.shape.params,
-		"textId",
 		true,
 	);
 }
