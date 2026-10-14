@@ -75,8 +75,8 @@ const partners = computed(() => config.value?.projectConfig?.partners ?? []);
 							<a href="https://www.oeaw.ac.at/acdh" rel="noopener" target="_blank">
 								<img
 									alt="ACDH Logo"
+									class="max-w-full h-auto"
 									src="https://fundament.acdh.oeaw.ac.at/common-assets/images/acdh_logo.svg"
-									style="max-width: 100%; height: auto"
 									title="ACDH Logo"
 								/>
 							</a>
@@ -97,12 +97,10 @@ const partners = computed(() => config.value?.projectConfig?.partners ?? []);
 								<br />
 								Austrian Centre for Digital Humanities
 								<br />
-								and Cultural Heritage
-								<br />
 								Austrian Academy of Sciences
 							</p>
 							<p class="mt-0 mb-4 block">
-								Bäckerstraße 13,
+								Bäckerstraße 13
 								<br />
 								1010 Vienna
 							</p>

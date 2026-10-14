@@ -13,10 +13,12 @@ import {
 	type FeatureTaxonomyCategory,
 	type FeatureTaxonomyFeature,
 } from "@/composables/use-feature-taxonomy.ts";
+import type { TEI } from "@/lib/api-client";
 import type { FeatureType } from "@/types/global.ts";
 
 export interface PatchedFeatureType extends FeatureType {
 	properties: Record<string, Record<string, unknown>>;
+	profiles?: Array<TEI>;
 }
 
 const columnHelper = createColumnHelper<PatchedFeatureType>();
@@ -50,6 +52,7 @@ function buildFeatureColumnDef(
 				highlightedValues: highlightedValues,
 				column: cell.column,
 				fullEntry: cell.row.original.properties,
+				showAllDetails: useGeojsonStore().showAllDetails,
 			});
 		},
 		filterFn: (row, columnId, _filterValue: Map<string, unknown>) => {
@@ -94,7 +97,7 @@ function createColumnDefs(
 			.map((heading) => {
 				return {
 					id: Object.keys(heading)[0],
-					header: Object.values(heading)[0],
+					header: Object.values(heading)[0] === "Name" ? "Location" : Object.values(heading)[0],
 					enableHiding: false,
 					cell: ({ cell }: CellContext<PatchedFeatureType, never>) => {
 						return h(GeojsonTableSimpleCell, {

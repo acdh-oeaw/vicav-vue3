@@ -159,8 +159,19 @@ function prepareStep(step: TourStep, index: number): StepEntity {
 const steps = stepDefinitions.map(prepareStep);
 
 onMounted(() => {
-	wrapper.value?.start();
+	if (!(sessionStorage.getItem("tourDismissed") || localStorage.getItem("tourCompleted")))
+		wrapper.value?.start();
 });
+
+let exited = false;
+function onFinish() {
+	if (exited) return;
+	localStorage.setItem("tourCompleted", "true");
+}
+function onExit() {
+	exited = true;
+	sessionStorage.setItem("tourDismissed", "true");
+}
 </script>
 
 <template>
@@ -176,6 +187,8 @@ onMounted(() => {
 				overlay: { preventOverlayInteraction: false },
 			}"
 			:steps="steps"
+			@exit="onExit"
+			@finish="onFinish"
 	/></Teleport>
 </template>
 

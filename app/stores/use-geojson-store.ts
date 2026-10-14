@@ -1,6 +1,7 @@
 import type { Table } from "@tanstack/vue-table";
 import { defineStore } from "pinia";
 
+import type { TeiCorpus } from "@/lib/api-client";
 import type { FeatureCollectionType, FeatureType } from "@/types/global.ts";
 
 export interface TaxonomyTreeEntry {
@@ -121,7 +122,19 @@ export const useGeojsonStore = defineStore("geojson", () => {
 			(data) => {
 				const projectData = data?.projectConfig?.staticData?.geo?.[0];
 				if (!projectData) return;
-				geojsonData.value = structuredClone(toRaw(projectData)) as FeatureCollectionType;
+				const profiles = data.projectConfig?.staticData?.table?.find(
+					(entry) => "@id" in entry && entry["@id"] === "vicav_profiles",
+				) as TeiCorpus | undefined;
+				const clonedData = structuredClone(toRaw(projectData)) as FeatureCollectionType;
+				clonedData.features.forEach((feature: PatchedFeatureType) => {
+					feature.profiles = profiles?.TEIs?.filter(
+						(tei) =>
+							tei.teiHeader?.profileDesc?.langUsage?.language?.settingDesc?.listPlace?.place?.[
+								"@sameAs"
+							] === feature.id,
+					);
+				});
+				geojsonData.value = clonedData;
 			},
 			{ immediate: true },
 		);

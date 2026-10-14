@@ -27,6 +27,7 @@ function mountCell() {
 				columnDef: { id: COLUMN, header: "Feature 1" },
 			} as unknown as Column<PatchedFeatureType>,
 			fullEntry: { name: "Somewhere" } as unknown as PatchedFeatureType["properties"],
+			showAllDetails: useGeojsonStore().showAllDetails,
 		},
 	});
 }

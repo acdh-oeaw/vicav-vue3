@@ -1,7 +1,9 @@
 <script lang="ts" setup>
+import { Info } from "@lucide/vue";
 import type { Cell, Column, Row } from "@tanstack/vue-table";
 
-import type { LocationWindowItem, WindowItem } from "@/types/global.ts";
+import type { TEI } from "@/lib/api-client";
+import { type LocationWindowItem, ProfileSchema, type WindowItem } from "@/types/global.ts";
 import type { simpleTEIMetadata } from "@/types/teiCorpus";
 
 interface Props {
@@ -61,6 +63,22 @@ function onFeatureClick(col: Column<PatchedFeatureType, unknown>) {
 		`Feature: ${col.columnDef.header}`,
 	);
 }
+function openProfile(profile: TEI) {
+	openOrUpdateWindow(
+		{
+			targetType: "Profile",
+			params: {
+				textId: profile["@id"],
+			},
+		} as unknown as WindowItem,
+		profile.teiHeader?.fileDesc.titleStmt.titles?.[0]?.$ ?? "",
+		ProfileSchema.shape.params,
+		"textId",
+		true,
+	);
+}
+
+const showDetails = ref(true);
 </script>
 
 <template>
@@ -68,13 +86,38 @@ function onFeatureClick(col: Column<PatchedFeatureType, unknown>) {
 		<div v-if="params.showCitation">
 			<Citation :header="citation" type="entry" />
 		</div>
+		<div class="flex justify-end justify-items-end border-b bg-white p-2">
+			<div class="flex gap-2">
+				<Toggle
+					v-model:model-value="showDetails"
+					class="h-8 text-neutral-700"
+					data-onboarding="show-details"
+					><Info class="size-4 stroke-neutral-800 transition-colors" />
+					<span class="line-clamp-1 text-ellipsis">Show details</span></Toggle
+				>
+			</div>
+		</div>
 		<Table>
 			<TableBody>
+				<TableRow v-if="rowOriginal.profiles && rowOriginal.profiles.length > 0">
+					<TableCell class="capitalize">Profile</TableCell>
+					<TableCell class="capitalize">
+						<Button
+							v-for="p in rowOriginal.profiles"
+							:key="p['@id']"
+							class="p-0"
+							variant="link"
+							@click="openProfile(p)"
+						>
+							{{ p.teiHeader?.fileDesc.titleStmt.titles?.map((t) => t.$).join(", ") }}
+						</Button>
+					</TableCell>
+				</TableRow>
 				<TableRow v-for="col in columns" :key="col.column.id">
 					<TableCell class="capitalize"
 						><Button
 							v-if="col.column.id.startsWith('ft_')"
-							class="h-auto shrink-0 p-0 font-normal text-black!"
+							class="h-auto shrink-0 p-0 font-normal text-black! text-left whitespace-normal"
 							data-onboarding="feature-link"
 							variant="link"
 							@click="onFeatureClick(col.column)"
@@ -88,6 +131,7 @@ function onFeatureClick(col: Column<PatchedFeatureType, unknown>) {
 							:column="col.column"
 							:full-entry="rowOriginal.properties"
 							:highlighted-values="getHighlightedValues(col.column)"
+							:show-all-details="showDetails"
 							:value="rowOriginal.properties[col.column.columnDef.id!]"
 						></GeojsonTablePropertyCell>
 						<span v-else class="font-normal">{{ getNonFeatureValue(col) }}</span>
