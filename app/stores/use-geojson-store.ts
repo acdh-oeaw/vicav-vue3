@@ -122,7 +122,7 @@ export const useGeojsonStore = defineStore("geojson", () => {
 			(data) => {
 				const projectData = data?.projectConfig?.staticData?.geo?.[0];
 				if (!projectData) return;
-				const profiles = data.projectConfig?.staticData?.table?.find(
+				const profiles = data.projectConfig.staticData.table?.find(
 					(entry) => "@id" in entry && entry["@id"] === "vicav_profiles",
 				) as TeiCorpus | undefined;
 				const clonedData = structuredClone(toRaw(projectData)) as FeatureCollectionType;
