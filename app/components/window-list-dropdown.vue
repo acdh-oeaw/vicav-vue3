@@ -49,7 +49,7 @@ const { arrangement: currentArrangement, registry } = storeToRefs(windowsStore);
 							}
 						"
 					>
-						{{ item.winbox?.title }}
+						{{ item.label }}
 						<Button class="p-1 size-fit" variant="ghost" @click="removeWindow(id)"
 							><X class="size-3"></X><span class="sr-only">Close window</span></Button
 						>

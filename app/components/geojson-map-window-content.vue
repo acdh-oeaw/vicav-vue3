@@ -65,6 +65,7 @@ function onMarkerClick(feature: Feature) {
 				:marker-type="params.markerType"
 				:markers="filteredMarkers as Array<Feature<Point, MarkerProperties>>"
 				:selection="selectedRowCoordinates"
+				:show-single-marker-popup="true"
 				:use-custom-click-handler="true"
 				:width="width"
 				@marker-click="onMarkerClick"

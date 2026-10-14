@@ -687,6 +687,23 @@ function resolveAudioAvailability(
 	return item.teiHeader?.fileDesc.publicationStmt.availability?.["@status"] ?? "unknown";
 }
 
+function resolveCoordinates(item: TEI): [number, number] | undefined {
+	const location = item.teiHeader?.profileDesc?.settingDesc?.place?.location;
+	const value = location?.geo.$;
+	if (!value) return undefined;
+	const [latitude, longitude] = value.split(",").map((coordinate) => Number(coordinate.trim()));
+	if (
+		latitude == null ||
+		longitude == null ||
+		!Number.isFinite(latitude) ||
+		!Number.isFinite(longitude) ||
+		Math.abs(latitude) > 90 ||
+		Math.abs(longitude) > 180
+	)
+		return undefined;
+	return [longitude, latitude];
+}
+
 function extractMetadata(
 	item: TEI,
 	dataTypeCollection: string,
@@ -728,6 +745,9 @@ function extractMetadata(
 		duration: formatDuration(durationInSeconds),
 		audioAvailability: resolveAudioAvailability(item, resolvedDataType, durationInSeconds),
 		"@hasTEIw": item["@hasTEIw"] === "true" ? "true" : "false",
+		geoSource: dataTypeCollection,
+		geoReference: teiHeader?.profileDesc?.settingDesc?.place?.["@sameAs"],
+		coordinates: resolveCoordinates(item),
 		publication: buildPublication(item),
 	});
 

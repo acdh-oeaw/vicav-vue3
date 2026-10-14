@@ -184,7 +184,7 @@ onMounted(async () => {
 							</ToggleGroupItem>
 						</TooltipTrigger>
 						<TooltipContent class="border-black bg-black text-white">
-							Show lemma annotations and dictionary links in utterances.
+							Show dictionary links on tokens.
 						</TooltipContent>
 					</Tooltip>
 					<Tooltip v-if="hasLinguisticAnnotations">

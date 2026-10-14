@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Cell } from "@tanstack/vue-table";
 
-import { LocationSchema, type WindowItem } from "@/types/global";
+import type { WindowItem } from "@/types/global";
 
 const openOrUpdateWindow = useOpenOrUpdateWindow();
 const props = defineProps<{
@@ -16,8 +16,6 @@ function openLocationWindow() {
 			params: props.cell.row,
 		} as unknown as WindowItem,
 		props.cell.row.original.properties.name as unknown as string,
-		LocationSchema.shape.params,
-		"id",
 	);
 }
 </script>

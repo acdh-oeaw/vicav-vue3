@@ -2,15 +2,13 @@ import { nanoid } from "nanoid";
 import WinBox from "winbox";
 import { z } from "zod";
 
-import type { QueryParamsType } from "@/lib/api-client";
 import {
-	GeojsonMapSchema,
-	ListMapSchema,
+	type OpenWindowItem,
 	QueryString,
 	Schema,
 	TeiSource,
-	TextId,
 	type WindowItem,
+	type WindowItemMap,
 	type WindowItemTargetType,
 } from "@/types/global.ts";
 import * as arrange from "@/utils/window-arrangement";
@@ -18,13 +16,15 @@ import {
 	enableWindowBodyKeyboardScrollFocus,
 	focusWindowBodyKeyboardScrollTarget,
 } from "@/utils/window-body-focus.ts";
+import { getWindowIdentity } from "@/utils/window-identity";
+import { decodeWindowStates, encodeWindowStates } from "@/utils/window-state-codec";
 
 import { useToastsStore } from "./use-toasts-store.ts";
 
 export const narrowScreenBreakpoint = 1024;
 const listMapDefaultTitle = "Variety data";
 
-export type WindowRegistry = Map<WindowItem["id"], WindowItem>;
+export type WindowRegistry = Map<WindowItem["id"], OpenWindowItem>;
 
 export const arrangements = {
 	none: { id: "none", label: "None" },
@@ -47,10 +47,24 @@ const WindowState = z.intersection(
 		title: z.string(),
 	}),
 );
-export type WindowState = z.infer<typeof WindowState>;
+export type WindowState = z.input<typeof WindowState>;
+
+interface WindowControlConfig<TTargetType extends WindowItemTargetType> {
+	targetTypes: ReadonlyArray<TTargetType>;
+	className: string;
+	title: string;
+	click: (windowItem: WindowItemMap[TTargetType]) => void;
+}
+
+//helper to preserve Param shape inference according to target type
+function defineWindowControl<TTargetType extends WindowItemTargetType>(
+	config: WindowControlConfig<TTargetType>,
+) {
+	return config;
+}
 
 export const useWindowsStore = defineStore("windows", () => {
-	const registry = ref(new Map<WindowItem["id"], WindowItem>());
+	const registry = ref<WindowRegistry>(new Map());
 	const arrangement = ref<WindowArrangement>("smart-tile");
 
 	const router = useRouter();
@@ -62,135 +76,259 @@ export const useWindowsStore = defineStore("windows", () => {
 	const initialScreenSetup = computed(() => {
 		return data.value?.projectConfig?.panel ?? [];
 	});
-	const openOrUpdateWindow = useOpenOrUpdateWindow();
+	const highlightTimers = new Map<string, ReturnType<typeof setTimeout>>();
+	const focusOrder = new Map<string, number>();
+	let focusSequence = 0;
+	const geometryRevision = ref(0);
+	let restoring = false;
+	let persistenceTimer: ReturnType<typeof setTimeout> | undefined;
+	let navigation = Promise.resolve();
+	let persistenceGeneration = 0;
 
 	const geojsonStore = useGeojsonStore();
 
-	async function initializeScreen() {
-		await suspense();
-		await navigateTo({
-			path: "/",
-			query: { w: btoa(JSON.stringify(initialScreenSetup.value)), a: arrangement.value },
-		});
-		await restoreState();
+	watch(
+		[() => [...registry.value.keys()], arrangement],
+		() => {
+			arrangeWindows();
+		},
+		{ flush: "post" },
+	);
+
+	const windowControlConfigs = [
+		defineWindowControl({
+			targetTypes: [
+				"ExploreSamples",
+				"Profile",
+				"Feature",
+				"CorpusText",
+				"SampleText",
+				"Text",
+				"FeatureValue",
+				"Location",
+			],
+			className: "wb-cite",
+			title: "Show citation",
+			click(windowItem) {
+				updateWindowParams(windowItem.id, {
+					...windowItem.params,
+					showCitation: !windowItem.params.showCitation,
+				});
+			},
+		}),
+		defineWindowControl({
+			targetTypes: ["ListMap"],
+			className: "wb-map",
+			title: "Open map",
+			click() {
+				openWindow(
+					{
+						targetType: "GeojsonMap",
+						params: {
+							markerType: "petal",
+						},
+						title: "Variety Data - Map View",
+					},
+					{ highlight: true },
+				);
+			},
+		}),
+		defineWindowControl({
+			targetTypes: ["DataList"],
+			className: "wb-map",
+			title: "Show or remove from map",
+			click(windowItem) {
+				updateWindowParams(windowItem.id, {
+					...windowItem.params,
+					mapEnabled: !windowItem.params.mapEnabled,
+					mapSyncId: windowItem.params.mapSyncId ?? windowItem.id,
+				});
+			},
+		}),
+		defineWindowControl({
+			targetTypes: ["GeojsonMap"],
+			className: "wb-table",
+			title: "Open table",
+			click() {
+				const table = geojsonStore.table;
+				const globalFilter = (table?.getState().globalFilter as string | undefined) ?? "";
+				openWindow(
+					{
+						targetType: "ListMap",
+						params: {
+							queryString: globalFilter,
+						},
+						title: globalFilter || listMapDefaultTitle,
+					},
+					{ highlight: true },
+				);
+			},
+		}),
+		defineWindowControl({
+			targetTypes: ["ListMap"],
+			className: "wb-map",
+			title: "Open table",
+			click() {
+				openWindow(
+					{
+						targetType: "GeojsonMap",
+						params: {
+							markerType: "petal",
+						},
+						title: "Variety Data - Map View",
+					},
+					{ highlight: true },
+				);
+			},
+		}),
+	];
+
+	async function restoreState() {
+		cancelPersistence();
+		restoring = true;
+		try {
+			let states: ReadonlyArray<unknown>;
+			let restoredArrangement: WindowArrangement = "smart-tile";
+			try {
+				if (!route.query.w) throw new Error("Missing window state");
+				states = decodeWindowStates(String(route.query.w));
+				if (typeof route.query.a === "string" && route.query.a in arrangements)
+					restoredArrangement = route.query.a as WindowArrangement;
+			} catch (error) {
+				if (route.query.w)
+					toasts.addToast({
+						title: "RestoreState Error",
+						description: error instanceof Error ? error.message : "Invalid window state",
+						type: "foreground",
+						variant: "negative",
+					});
+				await suspense();
+				states = initialScreenSetup.value;
+			}
+			await nextTick();
+			for (const window of [...registry.value.values()]) window.winbox.close();
+			for (const state of states) openWindowState(state, { reuse: false });
+			setWindowArrangement(restoredArrangement);
+			await nextTick();
+		} finally {
+			restoring = false;
+			schedulePersistence();
+		}
 	}
 
-	const restoreState = async () => {
-		if (!route.query.w || !route.query.a) {
-			await initializeScreen();
-			return;
-		}
+	function highlightWindow(window: OpenWindowItem) {
+		clearTimeout(highlightTimers.get(window.id));
+		window.winbox.addClass("highlighted");
+		highlightTimers.set(
+			window.id,
+			setTimeout(() => {
+				window.winbox.removeClass("highlighted");
+				highlightTimers.delete(window.id);
+			}, 1000),
+		);
+	}
 
-		let windowStates: Array<WindowState>;
-		try {
-			const w = atob(route.query.w as string);
-			windowStates = JSON.parse(w) as Array<WindowState>;
-		} catch (e) {
-			toasts.addToast({
-				title: "RestoreState Error: JSON parse failed",
-				description: e instanceof Error ? e.message : "Unknown error, check console",
-				type: "foreground",
-				variant: "negative",
-			});
-			console.error(e);
-			await initializeScreen();
-			return;
-		}
+	function openWindow(state: WindowState, options: { reuse?: boolean; highlight?: boolean } = {}) {
+		return openWindowState(state, options);
+	}
 
-		if (!Array.isArray(windowStates)) {
-			toasts.addToast({
-				title: "RestoreState Error: Window list is not array",
-				description: "Window list parameter must be an array",
-				type: "foreground",
-				variant: "negative",
-			});
-			await initializeScreen();
-			return;
-		}
-
-		await nextTick();
-		windowStates.forEach((w) => {
-			addWindow(w);
-		});
-		setWindowArrangement(route.query.a as WindowArrangement);
-	};
-
-	function addWindow(stateParams: WindowState) {
-		const rootElement = document.getElementById(windowRootId);
-		if (rootElement == null) return;
-
-		/** Ensure windows open only on `/`. */
-		if (route.path !== "/") {
-			void router.push("/");
-		}
-
-		let windowState: WindowState;
-		try {
-			windowState = WindowState.parse(stateParams);
-		} catch (e) {
+	function openWindowState(input: unknown, { reuse = true, highlight = false } = {}) {
+		const candidate = z
+			.object({ targetType: z.string(), params: z.record(z.string(), z.unknown()) })
+			.loose()
+			.safeParse(input);
+		const stateParams = candidate.success ? candidate.data : undefined;
+		const textId = stateParams?.params.textId;
+		const defaults =
+			textId == null
+				? undefined
+				: data.value?.projectConfig?.menu?.main
+						?.flatMap((entry) => entry.item)
+						.find(
+							(entry) =>
+								entry.targetType === stateParams?.targetType &&
+								(entry.id === textId ||
+									(entry.params != null &&
+										"textId" in entry.params &&
+										entry.params.textId === textId)),
+						);
+		const result = WindowState.safeParse(
+			stateParams
+				? {
+						...defaults,
+						...stateParams,
+						zIndex: stateParams.zIndex ?? stateParams.z,
+						params: { ...defaults?.params, ...stateParams.params },
+					}
+				: input,
+		);
+		if (!result.success) {
 			toasts.addToast({
 				title: "AddWindow Error: parameter parse failed",
 				description: "Check the console for details.",
 				type: "foreground",
 				variant: "negative",
 			});
-			console.error(e);
+			console.error(result.error);
 			return;
 		}
+		if (route.path !== "/") void router.push("/");
+		const state = result.data;
+		const identity = getWindowIdentity(state);
+		const existing =
+			reuse && identity != null
+				? [...registry.value.values()]
+						.filter((window) => getWindowIdentity(window) === identity)
+						.sort((a, b) => (focusOrder.get(b.id) ?? 0) - (focusOrder.get(a.id) ?? 0))[0]
+				: undefined;
+		if (existing) {
+			updateWindow(existing.id, state.params, state.title);
+			existing.winbox.focus();
+			focusOrder.set(existing.id, ++focusSequence);
+			if (highlight) highlightWindow(existing);
+			return existing;
+		}
+		return createWindow(state);
+	}
 
+	function addWindow(state: WindowState) {
+		return openWindow(state);
+	}
+
+	function createWindow(windowState: WindowState) {
+		const rootElement = document.getElementById(windowRootId);
+		if (rootElement == null) return;
 		const id = `window-${nanoid()}`;
 		const { title, targetType, params } = windowState;
-
-		const ci = TextId.safeParse(params);
-		if (ci.success) {
-			let w: WindowItem | null;
-			if (targetType === "DictQuery") {
-				const isDictEntryRequest = params.queryParams?.id != null;
-				w = isDictEntryRequest
-					? findWindowByTypeAndParam(targetType, "textId", params.textId)
-					: findWindowByTypeAndTitle(targetType, title);
-
-				if (w?.winbox && params.queryParams != null) {
-					w.params = params;
-					w.winbox.setTitle(title);
-					updateUrl();
-				}
-			} else {
-				w = findWindowByTypeAndParam(targetType, "textId", ci.data.textId);
-			}
-			if (w?.winbox) {
-				w.winbox.focus();
-				w.winbox.addClass("highlighted");
-				setTimeout(() => {
-					w.winbox?.removeClass("highlighted");
-				}, 1000);
-				return;
-			}
-		}
-
-		const winbox = new WinBox({
-			id,
-			title,
-			index: windowState.zIndex ?? undefined,
-			x: windowState.x ?? "center",
-			y: windowState.y ?? "center",
-			width: windowState.width,
-			height: windowState.height,
-			onfocus() {
-				updateUrl();
-			},
-			onresize() {
-				updateUrl();
-			},
-			onmove() {
-				updateUrl();
-			},
-			onclose() {
-				registry.value.delete(id);
-				return false;
-			},
-			root: rootElement,
-		});
+		const winbox = markRaw(
+			new WinBox({
+				id,
+				title,
+				index: windowState.zIndex ?? undefined,
+				x: windowState.x ?? "center",
+				y: windowState.y ?? "center",
+				width: windowState.width,
+				height: windowState.height,
+				onfocus() {
+					focusOrder.set(id, ++focusSequence);
+					geometryRevision.value++;
+				},
+				onresize() {
+					geometryRevision.value++;
+				},
+				onmove() {
+					geometryRevision.value++;
+				},
+				onclose() {
+					clearTimeout(highlightTimers.get(id));
+					highlightTimers.delete(id);
+					focusOrder.delete(id);
+					registry.value.delete(id);
+					return false;
+				},
+				root: rootElement,
+			}),
+		);
 		// window ids are random, so the kind of content is the only stable way to address a window
 		// from the outside (the guided tour attaches its steps to elements inside specific windows)
 		(winbox.dom as HTMLElement).dataset.windowType = targetType;
@@ -214,152 +352,59 @@ export const useWindowsStore = defineStore("windows", () => {
 
 		registry.value.set(id, {
 			id,
+			label: title,
 			winbox,
 			targetType,
 			params,
-		} as WindowItem);
+		} as OpenWindowItem);
 
 		const w = registry.value.get(id);
+		if (w == null) return;
 
-		if (
-			w?.winbox &&
-			[
-				"ExploreSamples",
-				"Profile",
-				"Feature",
-				"CorpusText",
-				"SampleText",
-				"Text",
-				"FeatureValue",
-				"Location",
-			].includes(w.targetType)
-		) {
-			w.winbox.addControl({
-				index: 0,
-				class: "wb-cite",
-				click: function () {
-					w.params.showCitation = !w.params.showCitation;
-				},
-			});
-			const winboxElement = w.winbox.dom as HTMLElement;
-			const cite = winboxElement.querySelectorAll(".wb-cite");
-			if (cite.length > 0) {
-				const el = cite[0] as HTMLSpanElement;
-				el.title = "Show citation";
-			}
-		}
-
-		if (w?.winbox && w.targetType === "ListMap") {
-			w.winbox.addControl({
-				index: 0,
-				class: "wb-map",
-				click: function () {
-					openOrUpdateWindow(
-						{
-							targetType: "GeojsonMap",
-							params: {
-								markerType: "petal",
-							},
-						} as unknown as WindowItem,
-						"Variety Data - Map View",
-						GeojsonMapSchema.shape.params,
-						"markerType",
-						true,
-					);
-				},
-			});
-			const winboxElement = w.winbox.dom as HTMLElement;
-			const cite = winboxElement.querySelectorAll(".wb-map");
-			if (cite.length > 0) {
-				const el = cite[0] as HTMLSpanElement;
-				el.title = "Open map";
-			}
-		}
-		if (w?.winbox && w.targetType === "GeojsonMap") {
-			w.winbox.addControl({
-				index: 0,
-				class: "wb-table",
-				click: function () {
-					const table = geojsonStore.table;
-					const globalFilter = (table?.getState().globalFilter as string | undefined) ?? "";
-					openOrUpdateWindow(
-						{
-							targetType: "ListMap",
-							params: {
-								queryString: globalFilter,
-							},
-						} as unknown as WindowItem,
-						globalFilter || listMapDefaultTitle,
-						ListMapSchema.shape.params,
-						"queryString",
-						true,
-					);
-				},
-			});
-			const winboxElement = w.winbox.dom as HTMLElement;
-			const cite = winboxElement.querySelectorAll(".wb-table");
-			if (cite.length > 0) {
-				const el = cite[0] as HTMLSpanElement;
-				el.title = "Open table";
-			}
-		}
+		focusOrder.set(id, ++focusSequence);
+		addConfiguredWindowControls(w);
 		return w;
 	}
 
-	function findWindowByTypeAndParam(
-		targetType: WindowItemTargetType,
-		paramName: string,
-		value: string,
-	): WindowItem | null {
-		let foundWindow: WindowItem | null = null;
-		const dot = paramName.indexOf(".");
-		let paramName1: string | undefined, paramName2: string | undefined;
+	function addConfiguredWindowControls(windowItem: OpenWindowItem) {
+		windowControlConfigs.forEach((config) => {
+			const targetTypes: ReadonlyArray<WindowItemTargetType> = config.targetTypes;
+			if (!targetTypes.includes(windowItem.targetType)) return;
 
-		if (dot !== -1) {
-			paramName1 = paramName.substring(0, dot);
-			paramName2 = paramName.substring(dot + 1);
-		}
+			windowItem.winbox.addControl({
+				index: 0,
+				class: config.className,
+				click: function () {
+					config.click(windowItem as never);
+				},
+			});
 
-		registry.value.forEach((w) => {
-			const ci = Schema.safeParse(w);
-			let windowValue;
-
-			if (!ci.success || foundWindow !== null || w.targetType !== targetType) return;
-
-			if (!paramName1) {
-				//@ts-expect-error TODO distill a proper type for paramName
-				windowValue = (ci.data.params as typeof Schema)[paramName] as string;
-			} else if (paramName1 === "queryParams" && paramName2) {
-				const params = ci.data.params as { queryParams?: QueryParamsType };
-				windowValue = params.queryParams ? (params.queryParams[paramName2] as string) : undefined;
-			} else {
-				return;
-			}
-			if (windowValue === value) {
-				foundWindow = w;
+			const winboxElement = windowItem.winbox.dom as HTMLElement;
+			const controls = winboxElement.querySelectorAll(`.${config.className}`);
+			if (controls.length > 0) {
+				const el = controls[0] as HTMLSpanElement;
+				el.title = config.title;
 			}
 		});
-		return foundWindow;
+		updateDataListMapControlState(windowItem);
 	}
 
-	function findWindowByTypeAndTitle(
-		targetType: WindowItemTargetType,
-		title: string,
-	): WindowItem | null {
-		let foundWindow: WindowItem | null = null;
-		registry.value.forEach((w) => {
-			const ci = Schema.safeParse(w);
-			if (!ci.success || foundWindow !== null || w.targetType !== targetType) return;
+	function updateDataListMapControlState(windowItem: OpenWindowItem) {
+		if (windowItem.targetType !== "DataList") return;
 
-			if (w.winbox?.title === title) {
-				foundWindow = w;
-			}
-		});
-		return foundWindow;
+		const control = (windowItem.winbox.dom as HTMLElement).querySelector<HTMLSpanElement>(
+			".wb-map",
+		);
+		if (control == null) return;
+
+		const isMapEnabled = windowItem.params.mapEnabled === true;
+		control.classList.toggle("wb-map-active", isMapEnabled);
+		control.setAttribute("aria-pressed", String(isMapEnabled));
+		control.title = isMapEnabled ? "Remove from map" : "Show on map";
 	}
 
 	function removeWindow(id: WindowItem["id"]) {
-		registry.value.get(id)?.winbox?.close();
+		registry.value.get(id)?.winbox.close();
 	}
 
 	function setWindowArrangement(id: WindowArrangement) {
@@ -406,12 +451,16 @@ export const useWindowsStore = defineStore("windows", () => {
 				break;
 			}
 		}
+		arrange.splitDataListsAndMap(viewport, windows);
 	}
 
-	watch([() => registry.value.size, arrangement], () => {
-		arrangeWindows();
-		updateUrl();
-	});
+	function getPersistedWindowParams(windowItem: WindowItem): WindowItem["params"] {
+		if (windowItem.targetType !== "WMap" || windowItem.params.endpoint !== "data_markers")
+			return windowItem.params;
+
+		const { dataListLayers: _, ...params } = windowItem.params;
+		return params;
+	}
 
 	function serializeWindowStates() {
 		const windowStates: Array<WindowState> = [];
@@ -425,62 +474,80 @@ export const useWindowsStore = defineStore("windows", () => {
 		}
 
 		registry.value.forEach((w) => {
-			if (w.winbox) {
-				windowStates.push({
-					x: viewportPercentageWith2DigitPrecision(w.winbox.x as number, "width"),
-					y: viewportPercentageWith2DigitPrecision(w.winbox.y as number, "height"),
-					z: w.winbox.index,
-					width: viewportPercentageWith2DigitPrecision(w.winbox.width as number, "width"),
-					height: viewportPercentageWith2DigitPrecision(w.winbox.height as number, "height"),
-					targetType: w.targetType,
-					title: w.winbox.title,
-					params: w.params,
-				} as WindowState);
-			}
+			windowStates.push({
+				x: viewportPercentageWith2DigitPrecision(w.winbox.x as number, "width"),
+				y: viewportPercentageWith2DigitPrecision(w.winbox.y as number, "height"),
+				z: w.winbox.index,
+				width: viewportPercentageWith2DigitPrecision(w.winbox.width as number, "width"),
+				height: viewportPercentageWith2DigitPrecision(w.winbox.height as number, "height"),
+				targetType: w.targetType,
+				title: w.label,
+				params: getPersistedWindowParams(w),
+			} as WindowState);
 		});
 		return windowStates;
 	}
 
-	function escapeUnicode(s: string) {
-		return s
-			.split("")
-			.map((c) =>
-				/^[\x20-\x7f]$/.test(c)
-					? c
-					: c
-							.split("")
-							.map((a) => `\\u${a.charCodeAt(0).toString(16).padStart(4, "0")}`)
-							.join(""),
-			)
-			.join("");
+	function cancelPersistence() {
+		clearTimeout(persistenceTimer);
+		persistenceGeneration++;
 	}
 
-	function updateUrl() {
-		if (route.path === "/imprint") return;
-		const windowStates = serializeWindowStates();
-		// TODO: check url length, it may be too long. Note: shortest limit is 2047 (MS Edge) https://serpstat.com/blog/how-long-should-be-the-page-url-length-for-seo/
-		void navigateTo({
-			path: "/",
-			query: {
-				w: btoa(escapeUnicode(JSON.stringify(windowStates))),
-				a: arrangement.value,
-			},
-		});
+	function schedulePersistence() {
+		cancelPersistence();
+		if (restoring || route.path !== "/") return;
+		const generation = persistenceGeneration;
+		persistenceTimer = setTimeout(() => {
+			navigation = navigation
+				.then(async () => {
+					await nextTick();
+					if (restoring || generation !== persistenceGeneration || route.path !== "/") return;
+					const states = serializeWindowStates();
+					if (states == null) return;
+					const w = encodeWindowStates(states);
+					const a = arrangement.value;
+					if (route.query.w === w && route.query.a === a) return;
+					await navigateTo({ path: "/", query: { w, a } });
+				})
+				.catch((error: unknown) => {
+					console.error(error);
+				});
+		}, 150);
 	}
+
+	watch(
+		() => {
+			const revision = geometryRevision.value;
+			return JSON.stringify({
+				revision,
+				arrangement: arrangement.value,
+				states: serializeWindowStates(),
+			});
+		},
+		schedulePersistence,
+		{ flush: "post" },
+	);
+	watch(() => route.path, schedulePersistence);
+	onScopeDispose(() => {
+		cancelPersistence();
+		for (const timer of highlightTimers.values()) clearTimeout(timer);
+	});
 
 	function updateQueryParam(id: WindowItem["id"], query: string) {
-		const w = registry.value.get(id);
-		if (w?.winbox) {
-			const wi = QueryString.safeParse(w.params);
-			if (wi.success && "queryString" in w.params) {
-				w.params.queryString = query;
-				w.winbox.setTitle(w.targetType === "ListMap" ? query || listMapDefaultTitle : query);
-				updateUrl();
-			}
-		}
+		const window = registry.value.get(id);
+		if (window && QueryString.safeParse(window.params).success)
+			updateWindow(
+				id,
+				{ ...window.params, queryString: query },
+				window.targetType === "ListMap" ? query || listMapDefaultTitle : query,
+			);
 	}
 
 	function updateWindowParams(id: WindowItem["id"], params: WindowItem["params"]) {
+		updateWindow(id, params);
+	}
+
+	function updateWindow(id: WindowItem["id"], params: WindowItem["params"], title?: string) {
 		const w = registry.value.get(id);
 
 		if (w == null) return;
@@ -499,21 +566,25 @@ export const useWindowsStore = defineStore("windows", () => {
 		}
 
 		w.params = parsedWindow.data.params;
-		updateUrl();
+		if (title != null) {
+			w.label = title;
+			w.winbox.setTitle(title);
+		}
+		updateDataListMapControlState(w);
+		geometryRevision.value++;
 	}
 
 	return {
 		restoreState,
 		addWindow,
+		openWindow,
+		updateWindow,
 		removeWindow,
 		updateQueryParam,
 		updateWindowParams,
-		updateUrl,
 		registry,
 		arrangement,
 		setWindowArrangement,
 		arrangeWindows,
-		findWindowByTypeAndParam,
-		findWindowByTypeAndTitle,
 	};
 });

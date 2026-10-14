@@ -7,7 +7,7 @@ import {
 	type FeatureTaxonomyCategory,
 	type FeatureTaxonomyFeature,
 } from "@/composables/use-feature-taxonomy.ts";
-import { type FeatureDescriptionListWindowItem, ListMapSchema } from "@/types/global.ts";
+import type { FeatureDescriptionListWindowItem } from "@/types/global.ts";
 
 interface Props {
 	params: FeatureDescriptionListWindowItem["params"];
@@ -192,8 +192,6 @@ function openFeature(feature: FeatureTaxonomyFeature) {
 			params: { textId: `${feature.id}` },
 		},
 		feature.label,
-		ListMapSchema.shape.params,
-		"queryString",
 		true,
 	);
 }

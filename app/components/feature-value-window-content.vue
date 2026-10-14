@@ -2,7 +2,7 @@
 import { ExternalLink, Map } from "@lucide/vue";
 import type { Table } from "@tanstack/vue-table";
 
-import { type FeatureValueWindowItem, GeojsonMapSchema, type WindowItem } from "@/types/global.ts";
+import type { FeatureValueWindowItem, WindowItem } from "@/types/global.ts";
 import type { simpleTEIMetadata } from "@/types/teiCorpus";
 
 interface Props {
@@ -108,8 +108,6 @@ function updateMap(updateQueryTo: QueryUpdateType, entry: (typeof props.params.v
 			},
 		} as unknown as WindowItem,
 		"Variety Data - Map View",
-		GeojsonMapSchema.shape.params,
-		"markerType",
 		true,
 	);
 }

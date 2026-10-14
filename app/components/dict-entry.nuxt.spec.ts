@@ -40,8 +40,6 @@ describe("dictionary entry corpus search", () => {
 				},
 			}),
 			expect.any(String),
-			expect.anything(),
-			"queryString",
 			true,
 		);
 	});

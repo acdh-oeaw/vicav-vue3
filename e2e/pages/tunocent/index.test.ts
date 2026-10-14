@@ -20,6 +20,7 @@ test.describe("home page", () => {
 
 	test("should open window menu with appropriate entries", async ({ page }) => {
 		await page.goto("/");
+		await expect(page.locator("#window-root")).toBeVisible({ timeout: 15_000 });
 		await expect(page.getByRole("menuitem", { name: "Windows" })).toBeVisible();
 		await page.getByRole("menuitem", { name: "Windows" }).click();
 		await expect(page.getByRole("menuitem", { name: "Welcome to TUNOCENT" })).toBeVisible();

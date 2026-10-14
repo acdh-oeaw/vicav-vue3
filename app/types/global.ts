@@ -198,6 +198,22 @@ export type LocationWindowItem = WindowItemBase & z.infer<typeof LocationSchema>
 export const CompareMarkersParams = z.object();
 
 export const GeoMapScope = z.enum(["reg", "geo", "diaGroup"]);
+export const DataListMapMarkerSchema = z.object({
+	id: z.string(),
+	label: z.string(),
+	placeName: z.string().optional(),
+	alt: z.string().optional(),
+	dataType: DataTypesEnum,
+	coordinates: z.tuple([z.number(), z.number()]),
+});
+export const DataListMapLayerSchema = z.object({
+	id: z.string(),
+	title: z.string(),
+	color: z.string(),
+	enabled: z.boolean().optional(),
+	markers: z.array(DataListMapMarkerSchema),
+});
+export type DataListMapLayer = z.infer<typeof DataListMapLayerSchema>;
 export const GeoMapSchema = z.object({
 	targetType: z.literal("WMap"),
 	params: QueryString.extend({
@@ -206,6 +222,7 @@ export const GeoMapSchema = z.object({
 		queryParams: ExploreSamplesQueryDbParams.optional(),
 		scope: z.array(GeoMapScope).optional(),
 		hideDefaultLayers: z.boolean().optional(),
+		dataListLayers: z.array(DataListMapLayerSchema).optional(),
 	}).extend(ShowCitation.partial().shape),
 });
 export type GeoMapWindowItem = WindowItemBase & z.infer<typeof GeoMapSchema>;
@@ -299,6 +316,8 @@ export const DataListSchema = z.object({
 				})
 				.optional(),
 			listState: SimpleMetadataListState.optional(),
+			mapEnabled: z.boolean().optional(),
+			mapSyncId: z.string().optional(),
 		})
 		.extend(TextId.partial().shape)
 		.extend(ShowCitation.partial().shape),
@@ -363,6 +382,7 @@ export const Schema = z.discriminatedUnion("targetType", [
 	LocationSchema,
 ]);
 export type WindowItem = WindowItemBase & z.infer<typeof Schema>;
+export type OpenWindowItem = WindowItem & { winbox: NonNullable<WindowItem["winbox"]> };
 
 export type WindowItemTargetType = WindowItem["targetType"];
 

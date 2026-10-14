@@ -344,7 +344,7 @@ const { cqlTriggers } = useCqlTriggers(cqlConfig);
 				>
 					<td class="p-0">
 						<a
-							:data-hits="hit.hits![0]"
+							:data-hits="context.anchorHitId"
 							data-target-type="CorpusText"
 							:data-text-id="hit['@docRef']"
 							:data-u="context.utteranceId"
@@ -356,7 +356,7 @@ const { cqlTriggers } = useCqlTriggers(cqlConfig);
 					</td>
 					<td>
 						<div
-							v-if="context.before.length || context.match || context.after.length"
+							v-if="context.before.length || context.matches.length || context.after.length"
 							class="overflow-x-auto px-6 py-3"
 						>
 							<div
@@ -366,27 +366,27 @@ const { cqlTriggers } = useCqlTriggers(cqlConfig);
 									<CorpusTextJsonUtterance
 										v-for="(uContent, index) in context.before"
 										:key="`before-${index}`"
-										:hits="hit.hits?.[0]"
+										:hits="hit.hits"
 										:inline-lemma-annotation="showLemmaAnnotations"
 										:inline-linguistic-annotation="showLinguisticAnnotations"
 										:utterance="uContent"
 									></CorpusTextJsonUtterance>
 								</div>
-								<div class="min-w-fit justify-self-center">
+								<div class="flex min-w-fit flex-nowrap justify-self-center">
 									<CorpusTextJsonUtterance
-										v-if="context.match"
-										:highlight="true"
-										:hits="hit.hits?.[0]"
+										v-for="(uContent, index) in context.matches"
+										:key="`match-${index}`"
+										:hits="hit.hits"
 										:inline-lemma-annotation="showLemmaAnnotations"
 										:inline-linguistic-annotation="showLinguisticAnnotations"
-										:utterance="context.match!"
+										:utterance="uContent"
 									></CorpusTextJsonUtterance>
 								</div>
 								<div class="flex flex-nowrap justify-self-start">
 									<CorpusTextJsonUtterance
 										v-for="(uContent, index) in context.after"
 										:key="`after-${index}`"
-										:hits="hit.hits?.[0]"
+										:hits="hit.hits"
 										:inline-lemma-annotation="showLemmaAnnotations"
 										:inline-linguistic-annotation="showLinguisticAnnotations"
 										:utterance="uContent"

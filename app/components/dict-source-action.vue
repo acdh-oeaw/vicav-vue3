@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { BookOpen } from "@lucide/vue";
 
-import { BibliographyEntriesSchema, type WindowItem } from "@/types/global.ts";
+import type { WindowItem } from "@/types/global.ts";
 import type { RenderedBibliographyReference } from "@/utils/dict-entry-rendering.ts";
 
 const props = defineProps<{
@@ -19,8 +19,6 @@ function openBibliographyResults() {
 			},
 		} as unknown as WindowItem,
 		`Bibliography: ${props.reference.label}`,
-		BibliographyEntriesSchema.shape.params,
-		"queryString",
 		true,
 	);
 }

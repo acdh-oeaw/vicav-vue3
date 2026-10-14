@@ -27,17 +27,45 @@ const second = utterance("u2", [
 ]);
 
 describe("corpus hit context", () => {
+	it("centers hits across utterances in document order", () => {
+		const third = utterance("u3", [{ w: { "@id": "w3", $: "last" } }]);
+		const context = getCorpusHitContext({
+			us: [first, second, third],
+			hits: ["missing", "w3", "w1"],
+		});
+		expect(context.before).toEqual([]);
+		expect(context.matches).toEqual([...first.$$, ...second.$$, ...third.$$]);
+		expect(context.after).toEqual([]);
+		expect(context.anchorHitId).toBe("w1");
+		expect(context.utteranceId).toBe("u1");
+	});
+
+	it("includes intervening context between hits in one utterance", () => {
+		const tokens = utterance("u3", [
+			{ w: { "@id": "before", $: "before" } },
+			{ w: { "@id": "a", $: "a" } },
+			{ w: { "@id": "between", $: "between" } },
+			{ w: { "@id": "b", $: "b" } },
+			{ w: { "@id": "after", $: "after" } },
+		]);
+		const context = getCorpusHitContext({ u: tokens, hits: ["b", "a", "a"] });
+		expect(context.before).toEqual(tokens.$$.slice(0, 1));
+		expect(context.matches).toEqual(tokens.$$.slice(1, 4));
+		expect(context.after).toEqual(tokens.$$.slice(4));
+		expect(context.anchorHitId).toBe("a");
+	});
+
 	it("keeps all tokens and targets the second utterance containing the hit", async () => {
 		const context = getCorpusHitContext({ us: [first, second], hits: ["w2"] });
 
 		expect(context.before).toEqual(first.$$);
-		expect(context.match).toBe(second.$$[0]);
+		expect(context.matches).toEqual([second.$$[0]]);
 		expect(context.after).toEqual([second.$$[1]]);
 		expect(context.utteranceId).toBe("u2");
 
 		const wrapper = await mountSuspended(CorpusTextJsonUtterance, {
 			props: {
-				utterance: context.match!,
+				utterance: context.matches[0]!,
 				hits: "w2",
 				inlineLemmaAnnotation: true,
 				inlineLinguisticAnnotation: true,
@@ -55,7 +83,7 @@ describe("corpus hit context", () => {
 	it("preserves single-utterance results", () => {
 		const context = getCorpusHitContext({ u: second, hits: ["w2"] });
 		expect(context.before).toEqual([]);
-		expect(context.match).toBe(second.$$[0]);
+		expect(context.matches).toEqual([second.$$[0]]);
 		expect(context.after).toEqual([second.$$[1]]);
 		expect(context.utteranceId).toBe("u2");
 	});
@@ -66,17 +94,18 @@ describe("corpus hit context", () => {
 		]);
 		const context = getCorpusHitContext({ us: [first, compound], hits: [hitId] });
 		expect(context.before).toEqual(first.$$);
-		expect(context.match).toBe(compound.$$[0]);
+		expect(context.matches).toEqual([compound.$$[0]]);
 		expect(context.utteranceId).toBe("u3");
 	});
 
 	it("keeps context without inventing a navigation target when the hit is absent", () => {
-		for (const hits of [undefined, ["missing"]]) {
+		for (const hits of [undefined, [], ["missing"]]) {
 			const context = getCorpusHitContext({ us: [first, second], hits });
 			expect(context.before).toEqual([...first.$$, ...second.$$]);
-			expect(context.match).toBeUndefined();
+			expect(context.matches).toEqual([]);
 			expect(context.after).toEqual([]);
 			expect(context.utteranceId).toBeUndefined();
+			expect(context.anchorHitId).toBeUndefined();
 		}
 		expect(getCorpusHitContext({}).before).toEqual([]);
 	});
