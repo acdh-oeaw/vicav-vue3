@@ -112,8 +112,11 @@ const updateQueryParams = () => {
 	setQueryParam(queryParamsValue, "format", format.value);
 	params.value.queryParams = queryParamsValue;
 	// There is a label passed from the TEI description text. Can we use it?
-	params.value.queryString = `${params.value.textId ?? ""}: ${queryParamsValue.q ?? ""}`;
-	emit("updateQueryParam", params.value.queryString);
+	const queryString = `${params.value.textId ?? ""}: ${queryParamsValue.q ?? ""}`;
+	if (params.value.queryString !== queryString) {
+		params.value.queryString = queryString;
+		emit("updateQueryParam", queryString);
+	}
 };
 updateQueryParams();
 watch(params, (newParams) => {
@@ -127,7 +130,6 @@ watch(params, (newParams) => {
 	updateFilterCriteria();
 	updateQueryParams();
 });
-watch(params, updateQueryParams, { deep: true });
 const { data, isPending, isPlaceholderData } = useDictsEntries({
 	dictId: String(myDict?.id),
 	queryParams: queryParams.value,
