@@ -371,7 +371,7 @@ function buildGeoPlaceMetadata(place: GeoPlace): PlaceMetadata {
 
 	return {
 		[hierarchyKey]: placeName,
-		country: place.location.country.$,
+		country: place.location.country?.$,
 	};
 }
 
@@ -386,7 +386,7 @@ function buildGeoPlaceIndex(geoItems: Array<GeoPlaceSource> = []): Map<string, P
 				resolveGeoPlaceName(place),
 				place.standard_placeName?.$,
 				place.local_placeName?.$,
-				place.geoNames_idno.$,
+				place.geoNames_idno?.$,
 			].filter((reference): reference is string => Boolean(reference));
 
 			for (const reference of references) {
