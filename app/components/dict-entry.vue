@@ -55,10 +55,12 @@ const compactGrammar = computed(() => {
 		class: findGrammarValue(e.value.grammar, "Class"),
 		synRoot: findGrammarValue(e.value.grammar, "Syn root"),
 		diaRoot: findGrammarValue(e.value.grammar, "Dia root"),
+		root: findGrammarValue(e.value.grammar, "Root"),
 	};
 	const roots = [
 		formatRootGrammar(values.synRoot, "synRoot"),
 		formatRootGrammar(values.diaRoot, "diaRoot"),
+		formatRootGrammar(values.root, "Root"),
 	].filter(Boolean);
 
 	return [values.partOfSpeech, values.class, roots.join(", ")].filter(Boolean).join(", ");
