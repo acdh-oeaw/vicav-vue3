@@ -39,6 +39,7 @@ export type place = z.infer<typeof placeSchema>;
 
 export const SimpleTEIMetadataSchema = z.object({
 	id: z.string(),
+	teiSource_idno: z.string().optional(),
 	label: z.string(),
 	title: z.string(),
 	author: z.array(AuthorSchema),
