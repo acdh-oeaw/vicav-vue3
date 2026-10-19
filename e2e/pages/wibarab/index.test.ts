@@ -41,13 +41,13 @@ test.describe("home page", () => {
 
 	test("should open extended footer", async ({ page }) => {
 		await page.goto("/");
-		await page
-			.getByRole("contentinfo")
-			.locator("div")
-			.filter({ hasText: "© 2026 ACDH |Imprint|" })
-			.locator("div")
-			.first()
-			.hover();
+		const footer = page.getByRole("contentinfo");
+		await footer.getByRole("button", { name: "Expand footer" }).first().hover();
+
 		await expect(page.getByText("CONTACT")).toBeVisible();
+		await expect(footer).toHaveCSS("transform", "none");
+
+		await page.mouse.move(0, 0);
+		await expect(page.getByText("CONTACT")).not.toBeInViewport();
 	});
 });
