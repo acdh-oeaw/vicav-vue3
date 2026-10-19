@@ -178,6 +178,7 @@ export default defineNuxtConfig({
 				"v3-infinite-loading",
 				"vee-validate",
 				"vue-codemirror6",
+				"vue-draggable-next",
 				"winbox",
 				"zod",
 			],
