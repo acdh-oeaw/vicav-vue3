@@ -208,6 +208,7 @@ function hierarchyLevelClass(level: string | number): string {
 									v-if="item.dataType !== 'CorpusText' || item['@hasTEIw'] === 'true'"
 									class="text-primary underline"
 									:data-target-type="getTargetType(dataType)"
+									:data-tei-source="item.teiSource_idno"
 									:data-text-id="item.id"
 									href="#"
 									@click="openNewWindowFromAnchor"

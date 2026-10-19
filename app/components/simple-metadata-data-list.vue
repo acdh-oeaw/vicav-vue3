@@ -341,6 +341,7 @@ function formatFacetValue(columnId: string, value: string): string {
 							v-if="canOpenItem(row.original)"
 							class="text-primary underline"
 							:data-target-type="targetType"
+							:data-tei-source="row.original.teiSource_idno"
 							:data-text-id="row.original.id"
 							href="#"
 							@click="openNewWindowFromAnchor"

@@ -76,10 +76,11 @@ const showInlineTranslations = computed(() => {
 	return hasInlineTranslations.value && inlineTranslations.value === true;
 });
 
-function enrichHitsWithLabels(items: Array<Div & { label?: string }>) {
+function enrichHitsWithLabels(items: Array<Div & { label?: string; teiSource?: string }>) {
 	items.forEach((hit) => {
 		const teiHeader = simpleItems.find((header) => header.id === hit["@docRef"]);
 		hit.label = teiHeader?.label;
+		hit.teiSource = teiHeader?.teiSource_idno;
 	});
 }
 
@@ -346,6 +347,7 @@ const { cqlTriggers } = useCqlTriggers(cqlConfig);
 						<a
 							:data-hits="context.anchorHitId"
 							data-target-type="CorpusText"
+							:data-tei-source="hit.teiSource"
 							:data-text-id="hit['@docRef']"
 							:data-u="context.utteranceId"
 							href="#"
