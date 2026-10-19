@@ -76,7 +76,7 @@ const segmentIsHit = computed(() => {
 	<div
 		v-if="props.utterance.w"
 		:id="props.utterance.w['@id']"
-		class="u flex flex-col items-center"
+		class="u flex shrink-0 flex-col items-center whitespace-nowrap"
 		:class="{ 'text-primary': wordIsHit }"
 		:data-highlight-scope="wordIsHit ? 'word' : undefined"
 	>
@@ -101,10 +101,10 @@ const segmentIsHit = computed(() => {
 			{{ annotation.values.join(", ") }}&nbsp;
 		</div>
 	</div>
-	<div v-if="props.utterance.pc" class="u flex flex-col text-lg">
+	<div v-if="props.utterance.pc" class="u flex shrink-0 flex-col whitespace-nowrap text-lg">
 		<div>{{ props.utterance.pc["$"] }}{{ "&nbsp;" }}</div>
 	</div>
-	<div v-if="props.utterance.gap" class="u flex flex-col py-3 text-lg">
+	<div v-if="props.utterance.gap" class="u flex shrink-0 flex-col whitespace-nowrap py-3 text-lg">
 		<div>
 			{{
 				props.utterance.gap["@rendition"] === "rend:ellipsisInSquareBrackets"
@@ -116,7 +116,7 @@ const segmentIsHit = computed(() => {
 	<div
 		v-if="props.utterance.seg"
 		:id="props.utterance.seg['@id']"
-		class="flex flex-col items-center rounded-xs border-b-2 border-dotted border-gray-400 bg-gray-100/60"
+		class="relative flex shrink-0 flex-col items-center whitespace-nowrap rounded-xs border-b-2 border-dotted border-gray-400 bg-gray-100/60"
 		:class="{ 'border-primary bg-primary/15': segmentIsHit }"
 		:data-compound-id="props.utterance.seg['@id']"
 		:data-highlight-scope="segmentIsHit ? 'segment' : undefined"
@@ -126,7 +126,7 @@ const segmentIsHit = computed(() => {
 				(inlineLemmaAnnotation && segmentAnnotations.lemmaRef) ||
 				(inlineLinguisticAnnotation && segmentAnnotations.linguistic.length > 0)
 			"
-			class="flex min-h-3 items-center justify-center gap-1 text-xs text-gray-500"
+			class="absolute top-[calc(100%+2px)] inset-x-0 z-10 flex min-h-3 items-center justify-center gap-1 bg-gray-100/90 text-xs text-gray-500"
 		>
 			<button
 				v-if="inlineLemmaAnnotation && segmentAnnotations.lemmaRef"

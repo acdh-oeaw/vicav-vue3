@@ -281,7 +281,7 @@ onMounted(async () => {
 								<div
 									v-for="(u, uIndex) in getUtterances(a)"
 									:key="uIndex"
-									class="flex max-w-full flex-row flex-wrap px-6 py-3"
+									class="flex max-w-full flex-row flex-nowrap overflow-x-auto px-6 py-3"
 								>
 									<CorpusTextJsonUtterance
 										v-for="(uContent, index) in u['$$']"
