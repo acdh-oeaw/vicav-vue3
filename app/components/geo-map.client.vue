@@ -34,6 +34,8 @@ interface Props {
 	selection?: [number, number];
 	useCustomClickHandler?: boolean;
 	showSingleMarkerPopup?: boolean;
+	/** List active feature values (with links) per location instead of just the locations. */
+	showActiveFeaturesPopup?: boolean;
 }
 
 const props = defineProps<Props>();
@@ -440,8 +442,15 @@ provide(key, context);
 <template>
 	<div ref="mapRef" class="absolute inset-0 grid" data-geo-map />
 	<slot :context="context" />
+	<GeojsonMapPopupContent
+		v-if="currentPopup && props.showActiveFeaturesPopup"
+		:key="`features-${currentPopup.id}`"
+		ref="popupRef"
+		:markers="currentPopup.props.markers"
+		@anchor-click="(feature) => emit('marker-click', feature)"
+	/>
 	<GeoMapPopupContent
-		v-if="currentPopup"
+		v-else-if="currentPopup"
 		v-bind="currentPopup.props"
 		:id="currentPopup.id"
 		:key="currentPopup.id"
