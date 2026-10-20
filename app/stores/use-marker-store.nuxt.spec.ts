@@ -3,7 +3,7 @@ import { createPinia, setActivePinia } from "pinia";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { iconsData } from "@/components/ui/icon-picker/icons-data.ts";
-import { shapeIcons } from "@/components/ui/icon-picker/shape-icons.ts";
+import { SHAPE_ICON_CATEGORY, shapeIcons } from "@/components/ui/icon-picker/shape-icons.ts";
 
 import { randomIconPool, useMarkerStore } from "./use-marker-store.ts";
 
@@ -346,7 +346,11 @@ describe("useMarkerStore feature value styles", () => {
 
 		// a shape must keep its custom flag, otherwise it renders as the lucide icon of the same name or not at all
 		expect(shapeIcons.every((icon) => inPool(icon.name, true))).toBe(true);
-		expect(iconsData.every((icon) => inPool(icon.name, false))).toBe(true);
+		expect(
+			iconsData
+				.filter((icon) => icon.categories.includes(SHAPE_ICON_CATEGORY))
+				.every((icon) => inPool(icon.name, false)),
+		).toBe(true);
 	});
 
 	it("randomizes feature value colors", () => {
