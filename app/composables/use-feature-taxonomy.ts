@@ -55,7 +55,8 @@ function getFeaturesInCategory(
 				label: String(heading[id] ?? id),
 				count: typeof heading.count === "number" ? heading.count : undefined,
 			};
-		});
+		})
+		.toSorted((a, b) => a.label.localeCompare(b.label));
 }
 
 function buildCategory(
