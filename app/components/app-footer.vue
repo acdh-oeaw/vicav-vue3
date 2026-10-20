@@ -58,7 +58,7 @@ function expandFooter() {
 			class="absolute inset-x-0 bottom-full w-full bg-neutral-50 px-0 text-gray-900 transition-transform duration-500"
 			:class="isExpanded ? 'pointer-events-auto' : 'pointer-events-none'"
 			:style="{
-				transform: isExpanded ? 'translateY(0)' : 'translateY(calc(100% + 1.75rem))',
+				transform: isExpanded ? 'translateY(0)' : 'translateY(calc(100% + 2rem))',
 			}"
 		>
 			<div id="footer-full-content" class="mx-auto w-full px-4" tabindex="-1">
