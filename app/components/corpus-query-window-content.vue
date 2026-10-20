@@ -34,7 +34,7 @@ const emit = defineEmits<{
 	updateQueryParam: [queryString: string];
 }>();
 const queryString = ref(props.params.queryString);
-const hits = ref<Array<Div & { label?: string }>>([]);
+const hits = ref<Array<Div & { label?: string; teiSource?: string }>>([]);
 const scrollCursor = ref({ count: 0, page: 1, pageSize: 30, complete: false });
 const showHelp = ref<boolean>(false);
 const isSearching = ref(false);
@@ -154,7 +154,7 @@ async function loadMoreHits() {
 		const newScrollCursor = scrollCursor.value;
 
 		if (isCorpusSearch(result.data) && result.data.hits && !Array.isArray(result.data.hits)) {
-			const newHits: Array<Div & { label?: string }> = [];
+			const newHits: Array<Div & { label?: string; teiSource?: string }> = [];
 			if (Array.isArray(result.data.hits?.divs)) newHits.push(...result.data.hits.divs);
 			else if (result.data.hits?.div) newHits.push(result.data.hits.div);
 			enrichHitsWithLabels(newHits);
@@ -301,7 +301,7 @@ const { cqlTriggers } = useCqlTriggers(cqlConfig);
 				<Checkbox
 					id="switch-lemma-annotations"
 					:checked="inlineLemmaAnnotations === true"
-					@update:checked="inlineLemmaAnnotations = $event === true"
+					@update:checked="inlineLemmaAnnotations = $event"
 				/>
 				<label for="switch-lemma-annotations">&nbsp;Lemma annotations</label>
 			</div>
@@ -309,7 +309,7 @@ const { cqlTriggers } = useCqlTriggers(cqlConfig);
 				<Checkbox
 					id="switch-linguistic-annotations"
 					:checked="inlineLinguisticAnnotations === true"
-					@update:checked="inlineLinguisticAnnotations = $event === true"
+					@update:checked="inlineLinguisticAnnotations = $event"
 				/>
 				<label for="switch-linguistic-annotations">&nbsp;Linguistic annotations</label>
 			</div>
@@ -317,7 +317,7 @@ const { cqlTriggers } = useCqlTriggers(cqlConfig);
 				<Checkbox
 					id="switch-translations"
 					:checked="inlineTranslations === true"
-					@update:checked="inlineTranslations = $event === true"
+					@update:checked="inlineTranslations = $event"
 				/>
 				<label for="switch-translations">&nbsp;Inline Translations</label>
 			</div>
