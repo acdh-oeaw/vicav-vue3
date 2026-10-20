@@ -214,13 +214,13 @@ function randomizeIcons() {
 				class="mt-2 border-t border-neutral-200 pt-2"
 				:class="hidden ? 'pointer-events-none opacity-45' : ''"
 			>
-				<div class="mb-1.5 text-xs font-medium text-neutral-500">All feature values</div>
+				<div class="mb-1.5 text-xs font-medium text-neutral-500">Underlying feature values</div>
 				<div class="grid grid-cols-[auto_1fr_1fr] items-center gap-1 text-xs">
 					<span class="pr-1 text-neutral-600">Icon</span>
 					<Button
 						:class="actionButtonClass"
 						:disabled="hidden"
-						title="Apply this icon to all feature values"
+						title="Apply this icon to all underlying feature values"
 						variant="outline"
 						@click.prevent.stop="applyToUnderlyingFeatureValues()"
 					>
@@ -276,7 +276,7 @@ function randomizeIcons() {
 			>
 				<Eye v-if="hidden" class="size-3.5 shrink-0" />
 				<EyeOff v-else class="size-3.5 shrink-0" />
-				<span>{{ hidden ? "Show in markers and legend" : "Hide from markers and legend" }}</span>
+				<span>{{ hidden ? "Show in markers" : "Hide from markers" }}</span>
 			</button>
 		</PopoverContent>
 	</Popover>
