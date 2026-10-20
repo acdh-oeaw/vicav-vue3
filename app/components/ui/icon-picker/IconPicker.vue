@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Eye, EyeOff, Palette, PencilIcon } from "@lucide/vue";
+import { Dices, Eye, EyeOff, PencilIcon, SwatchBook } from "@lucide/vue";
 import { useDebounce } from "@vueuse/core";
 import type { SVGAttributes } from "vue";
 
@@ -48,6 +48,8 @@ const emit = defineEmits([
 	"update:hidden",
 	"apply-style-to-underlying",
 	"generate-color-variants",
+	"randomize-colors",
+	"randomize-icons",
 ]);
 
 const isOpen = ref(false);
@@ -116,6 +118,16 @@ function applyToUnderlyingFeatureValues() {
 function generateColorVariants() {
 	emit("generate-color-variants");
 }
+
+const actionButtonClass = "flex h-7 items-center justify-start gap-1.5 px-2 text-xs font-normal";
+
+function randomizeColors() {
+	emit("randomize-colors");
+}
+
+function randomizeIcons() {
+	emit("randomize-icons");
+}
 </script>
 
 <template>
@@ -134,7 +146,7 @@ function generateColorVariants() {
 				<span v-else class="px-1">{{ triggerPlaceholder || "Select an icon" }}</span>
 			</Button>
 		</PopoverTrigger>
-		<PopoverContent class="max-w-56 bg-white p-2 text-sm" :use-portal="usePopoverPortal">
+		<PopoverContent class="max-w-58 bg-white p-2 text-sm" :use-portal="usePopoverPortal">
 			<div :aria-disabled="hidden" :class="hidden ? 'opacity-45 pointer-events-none' : ''">
 				<label class="flex grow-0 basis-0 items-center p-0" @click.capture.stop>
 					<span class="mr-2 text-neutral-800">Pick a marker color</span>
@@ -196,43 +208,76 @@ function generateColorVariants() {
 					</Button>
 				</div>
 			</div>
-			<Button
+			<div
 				v-if="enableApplyToUnderlyingFeatureValues"
-				class="mt-2 ml-auto flex h-fit w-full items-center gap-2 px-2 text-left text-xs whitespace-normal"
-				:disabled="hidden"
-				variant="outline"
-				@click.prevent.stop="applyToUnderlyingFeatureValues()"
+				:aria-disabled="hidden"
+				class="mt-2 border-t border-neutral-200 pt-2"
+				:class="hidden ? 'pointer-events-none opacity-45' : ''"
 			>
-				<Icon
-					v-if="currentIcon"
-					:additional-attributes="currentIcon.additionalAttributes"
-					class="size-3.5"
-					:is-custom-icon="currentIcon.custom"
-					:name="currentIcon.name"
-					:style="{ stroke: '#000', fill: currentIcon.custom ? '#000' : null }"
-				/>
-				<span>Apply icon to all feature values</span>
-			</Button>
-			<Button
-				v-if="enableApplyToUnderlyingFeatureValues"
-				class="mt-2 ml-auto flex h-fit w-full items-center gap-2 px-2 text-left text-xs whitespace-normal"
-				:disabled="hidden"
-				variant="outline"
-				@click.prevent.stop="generateColorVariants()"
-			>
-				<Palette class="size-4.5" /> <span>Generate color variants for feature values</span>
-			</Button>
-			<Button
+				<div class="mb-1.5 text-xs font-medium text-neutral-500">All feature values</div>
+				<div class="grid grid-cols-[auto_1fr_1fr] items-center gap-1 text-xs">
+					<span class="pr-1 text-neutral-600">Icon</span>
+					<Button
+						:class="actionButtonClass"
+						:disabled="hidden"
+						title="Apply this icon to all feature values"
+						variant="outline"
+						@click.prevent.stop="applyToUnderlyingFeatureValues()"
+					>
+						<Icon
+							v-if="currentIcon"
+							:additional-attributes="currentIcon.additionalAttributes"
+							class="size-3 shrink-0"
+							:is-custom-icon="currentIcon.custom"
+							:name="currentIcon.name"
+							:style="{ stroke: 'currentColor', fill: currentIcon.custom ? 'currentColor' : null }"
+						/>
+						<span>Apply</span>
+					</Button>
+					<Button
+						:class="actionButtonClass"
+						:disabled="hidden"
+						title="Give each feature value a different random shape"
+						variant="outline"
+						@click.prevent.stop="randomizeIcons()"
+					>
+						<Dices class="size-3 shrink-0" />
+						<span>Randomize</span>
+					</Button>
+
+					<span class="pr-1 text-neutral-600">Color</span>
+					<Button
+						:class="actionButtonClass"
+						:disabled="hidden"
+						title="Generate lighter and darker variants of this color for all feature values"
+						variant="outline"
+						@click.prevent.stop="generateColorVariants()"
+					>
+						<SwatchBook class="size-3 shrink-0" />
+						<span>Variants</span>
+					</Button>
+					<Button
+						:class="actionButtonClass"
+						:disabled="hidden"
+						title="Give each feature value a different random color"
+						variant="outline"
+						@click.prevent.stop="randomizeColors()"
+					>
+						<Dices class="size-3 shrink-0" />
+						<span>Randomize</span>
+					</Button>
+				</div>
+			</div>
+			<button
 				v-if="enableHideToggle"
-				class="mt-2 ml-auto flex h-fit w-full items-center justify-between gap-2 px-2 text-left text-xs"
-				variant="outline"
+				class="mt-2 flex w-full items-center gap-2 rounded-md border-t border-neutral-200 px-1 pt-2 text-xs text-neutral-600 hover:text-neutral-900"
+				type="button"
 				@click.prevent.stop="updateHidden(!(hidden ?? false))"
 			>
-				<Eye v-if="hidden" class="size-3.5" />
-				<EyeOff v-else class="size-3.5 text-neutral-500" />
-
+				<Eye v-if="hidden" class="size-3.5 shrink-0" />
+				<EyeOff v-else class="size-3.5 shrink-0" />
 				<span>{{ hidden ? "Show in markers and legend" : "Hide from markers and legend" }}</span>
-			</Button>
+			</button>
 		</PopoverContent>
 	</Popover>
 </template>
