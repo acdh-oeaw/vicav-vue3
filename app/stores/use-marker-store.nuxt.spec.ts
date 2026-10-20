@@ -333,10 +333,12 @@ describe("useMarkerStore feature value styles", () => {
 
 	it("randomizes feature value icons into distinct shapes", () => {
 		const store = setupStore();
+		const iconKey = (marker: { icon: { name: string; custom?: boolean } }) =>
+			`${marker.icon.custom === true ? "custom" : "lucide"}:${marker.icon.name}`;
 
 		store.randomizeIconsForFeatureValues(COLUMN);
 
-		expect(new Set(valueMarkers(store).map(iconName)).size).toBe(VALUES.length);
+		expect(new Set(valueMarkers(store).map(iconKey)).size).toBe(VALUES.length);
 		expect(store.markerSettings.triggerRepaint).toBe(true);
 	});
 
