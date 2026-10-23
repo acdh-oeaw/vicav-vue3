@@ -51,17 +51,19 @@ the parent can fetch remote suggestions (the corpus window uses this for the `wo
 
 `searchbar.vue` is the only component consumers mount. Props:
 
-| Prop                | Type                      | Notes                                                                                                     |
-| ------------------- | ------------------------- | --------------------------------------------------------------------------------------------------------- |
-| `triggers`          | `TriggerMap`              | **Required.** Suggestion source (see above).                                                              |
-| `table`             | `Table<unknown>`          | TanStack table to filter when no `onSubmit` is given.                                                     |
-| `onSubmit`          | `(value: string) => void` | If set, search submits the raw query string here instead of filtering a table.                            |
-| `queryMode`         | `"lucene" \| "cql"`       | Selects the syntax/highlighting. Defaults to Lucene.                                                      |
-| `featureTrigger`    | `string`                  | Trigger for the first selection step. `""` = Lucene, `"["` = CQL.                                         |
-| `freeTriggerKey`    | `string`                  | CQL only: attribute key used to wrap free-text input, e.g. `word` → `[word="…"]`.                         |
-| `dynamicKeys`       | `ReadonlyArray<string>`   | Bare keys whose value lists are resolved remotely. Internally mapped to `key:` (Lucene) or `[key=` (CQL). |
-| `operators`         | `ReadonlyArray<string>`   | Operator choices for the chip dropdowns. Defaults to `AND / OR / AND NOT / OR NOT`.                       |
-| `specialCharacters` | `SpecialCharacters`       | Optional buttons that insert glyphs at the caret.                                                         |
+| Prop                | Type                                                                                     | Notes                                                                                                                                                |
+| ------------------- | ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `triggers`          | `TriggerMap`                                                                             | **Required.** Suggestion source (see above).                                                                                                         |
+| `table`             | `Table<unknown>`                                                                         | TanStack table to filter when no `onSubmit` is given.                                                                                                |
+| `onSubmit`          | `(value: string) => Promise<{ isValid: boolean; warnings: Array<string> }> \| undefined` | If set, search submits the raw query string here instead of filtering a table. The returned promise resolves the validation result and its warnings. |
+| `queryMode`         | `"lucene" \| "cql"`                                                                      | Selects the syntax/highlighting. Defaults to Lucene.                                                                                                 |
+| `mode`              | `"tag" \| "text"`                                                                        | Initial mode. Defaults to `"tag"`. The prop is watched, so a parent can force the mode.                                                              |
+| `featureTrigger`    | `string`                                                                                 | Trigger for the first selection step. `""` = Lucene, `"["` = CQL.                                                                                    |
+| `freeTriggerKey`    | `string`                                                                                 | CQL only: attribute key used to wrap free-text input, e.g. `word` → `[word="…"]`.                                                                    |
+| `dynamicKeys`       | `ReadonlyArray<string>`                                                                  | Bare keys whose value lists are resolved remotely. Internally mapped to `key:` (Lucene) or `[key=` (CQL).                                            |
+| `operators`         | `ReadonlyArray<string>`                                                                  | Operator choices for the chip dropdowns. Defaults to `AND / OR / AND NOT / OR NOT`.                                                                  |
+| `specialCharacters` | `SpecialCharacters`                                                                      | Optional buttons that insert glyphs at the caret.                                                                                                    |
+| `isLoading`         | `boolean`                                                                                | Shows a loading indicator in the tag-mode suggestion dropdown and keeps it open. Only forwarded to `tag-searchbar.vue`.                              |
 
 Models:
 
@@ -74,9 +76,11 @@ Exposed (via `ref`): `submitSearch()` and `value`.
 
 - **Mode toggle.** A button switches between `tag` and `text` mode. `toggleMode()` preserves the
   current query by routing it through the `v-model` while the components swap (the `syncing` flag
-  prevents a feedback loop between the two watchers).
+  prevents a feedback loop between the two watchers). The `mode` prop sets the initial mode and is
+  watched, so a parent can force the mode at any time.
 - **Validation.** In table mode it runs `validateQuery()` and renders non-blocking warnings (e.g.
-  "consider using parentheses"). When `onSubmit` is set, warnings are suppressed.
+  "consider using parentheses"). When `onSubmit` is set, the local validation is skipped, but the
+  warnings returned by `onSubmit` are still rendered.
 - **No-results hint.** When a table is attached and the filtered row model is empty, it shows "Your
   query returned no results."
 - **Clear / special characters** delegate to whichever subcomponent is active.
@@ -132,15 +136,17 @@ Both subcomponents share the same `submitSearch()`:
 
 ```ts
 if (props.onSubmit) {
-	props.onSubmit(value);
-	return;
-} // delegated mode (e.g. corpus search)
-parseSearchString(value, table); // apply column filters
-table.setGlobalFilter(normalizeParens(normalizeOperators(value))); // set the global filter
+	return props.onSubmit(value.value);
+}
+if (!props.table) return;
+parseSearchString(value.value, props.table); // apply column filters
+props.table.setGlobalFilter(normalizeParens(normalizeOperators(value.value))); // set the global filter
 ```
 
 So a searchbar either drives a TanStack table (default) or hands the raw string back through
-`onSubmit`.
+`onSubmit`. The delegated `onSubmit` returns a promise resolving to `{ isValid, warnings }`; the
+public wrapper awaits it and appends the warnings to the ones shown under the input
+(`postSubmitWarnings` in `searchbar.vue`).
 
 ## Query languages
 
@@ -174,15 +180,18 @@ Corpus query window — CQL mode with a remote `word` lookup, submitting via `on
 	:dynamic-keys="['word']"
 	feature-trigger="["
 	free-trigger-key="word"
-	query-mode="cql"
+	:is-loading="autocompleteFetching"
+	:mode="props.params.mode"
 	:on-submit="
 		(v) => {
 			if (!isSearching) {
 				queryString = v;
-				searchCorpus();
+				return searchCorpus();
 			}
+			return;
 		}
 	"
+	query-mode="cql"
 	:special-characters="specialCharacters"
 	:triggers="cqlTriggers"
 />
