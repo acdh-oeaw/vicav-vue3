@@ -28,21 +28,35 @@ Consequences:
 ## 2. The URL is the entire application state
 
 There are only two routes: `/` and `/imprint`. All content lives in WinBox windows whose complete
-state is serialized into the query string — `app/stores/use-windows-store.ts:447` (`updateUrl`).
+state is serialized into the query string by `app/utils/window-state-codec.ts` (`encodeWindowStates`
+/ `decodeWindowStates`).
 
 ```
 /?w=<base64 JSON of every window>&a=<arrangement>
 ```
 
-- Serialized per window: `targetType`, `params`, `title`, `x`, `y`, `width`, `height`, `z`.
+- Serialized per window (`serializeWindowStates`, `app/stores/use-windows-store.ts:465`):
+  `targetType`, `params`, `title`, `x`, `y`, `width`, `height`, `z`.
 - Geometry is stored as viewport **percentages** rounded to two decimals
-  (`viewportPercentageWith2DigitPrecision`), so state survives resizes and different screens.
-- `updateUrl()` fires on `onfocus`, `onmove`, `onresize`, and on every window count change.
-- A hand-rolled `escapeUnicode()` (`app/stores/use-windows-store.ts:433`) keeps the URL pure ASCII.
-- Restored state is validated against a Zod discriminated union (`app/types/global.ts:301`); parse
-  failures surface as toasts instead of crashes.
-- A literal `// TODO: check url length` marks the known cliff: this scheme can exceed the ~2k URL
-  limit that some browsers and proxies enforce.
+  (`viewportPercentageWith2DigitPrecision`, `app/stores/use-windows-store.ts:472`), so state
+  survives resizes and different screens.
+- Encoding is base64 over JSON, with a hand-rolled ASCII escaping step: every code point above
+  `U+007F` is rewritten as a `\uXXXX` escape before `btoa()`
+  (`app/utils/window-state-codec.ts:1-8`), which keeps the URL pure ASCII.
+- `w` carries the window list, `a` the arrangement (`none`, `cascade`, `tile`, `smart-tile`,
+  `column-five-flex`).
+- Persistence is **debounced** by 150 ms: `schedulePersistence()`
+  (`app/stores/use-windows-store.ts:496`) is triggered by a watcher over `geometryRevision` /
+  `arrangement` / the serialized states (`:518-529`) plus a `route.path` watcher (`:530`). Focus,
+  move and resize only bump `geometryRevision` — they no longer write the URL themselves.
+- WMap windows with `endpoint: "data_markers"` drop their `dataListLayers` param before
+  serialization (`getPersistedWindowParams`, `app/stores/use-windows-store.ts:457`), because that
+  layer state is re-derived from the map at runtime.
+- Restored state is validated against a Zod discriminated union (`app/types/global.ts:363`, wrapped
+  as `WindowState` in `app/stores/use-windows-store.ts:39`); parse failures surface as toasts
+  instead of crashes.
+- The scheme can still exceed the ~2k URL limit that some browsers and proxies enforce. The old
+  `// TODO: check url length` marker has been removed from the source, but the cliff itself remains.
 
 ## 3. Runtime validation is generated from the OpenAPI document
 
@@ -60,8 +74,8 @@ re-downloaded from `raw.githubusercontent.com` on every `pnpm install` and `pnpm
 | Layer       | Location                                              | Mechanism                                                                                                                                                                                       |
 | ----------- | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | SSR         | `server/plugins/compression.ts`                       | SHA-256 of the response body becomes the ETag; matching `If-None-Match` returns an empty 304; **compressed** bytes cached in a Nitro LRU keyed `${method}:${hash}` with in-flight promise dedup |
-| SSR         | `nuxt.config.ts:31-36`                                | `features.devLogs: false` — Nuxt dev logs embed timestamps that poison the compressed-SSR cache                                                                                                 |
-| Server-only | `shared/utils/use-api-client.ts:35` (`fetchWithETag`) | ETag revalidation cache plus a **refcounted single-flight** map (`currentRequests` / `currentRequestRefs`)                                                                                      |
+| SSR         | `nuxt.config.ts:32-36`                                | `features.devLogs: false` — Nuxt dev logs embed timestamps that poison the compressed-SSR cache                                                                                                 |
+| Server-only | `shared/utils/use-api-client.ts:37` (`fetchWithETag`) | ETag revalidation cache plus a **refcounted single-flight** map (`currentRequests` / `currentRequestRefs`)                                                                                      |
 
 Details worth knowing:
 
@@ -74,7 +88,7 @@ Details worth knowing:
 
 ## 5. Correctness depends on SSR global-scope leakage
 
-`shared/utils/use-api-client.ts:8` holds a mutable module-level singleton (`let api`) that is
+`shared/utils/use-api-client.ts:10` holds a mutable module-level singleton (`let api`) that is
 reassigned on every `useApiClient()` call. The in-file comment states that the dev server isolates
 API-route and frontend scopes while the production build shares a single global scope. Behaviour
 therefore differs between `pnpm run dev` and the deployed container by design.
@@ -92,10 +106,8 @@ generated regexes from `/…/` to `/^(…)$/`.
   `@types/winbox`, and `liqe` (regex anchoring).
 - `app/types/add-ObjectMap.groupBy.d.ts` hand-declares `Object.groupBy` / `Map.groupBy` because the
   TypeScript lib target lacks them.
-- `nuxt.config.ts` maintains a ~30-entry `vite.optimizeDeps.include` list, annotated with `// CJS`
+- `nuxt.config.ts` maintains a 32-entry `vite.optimizeDeps.include` list, annotated with `// CJS`
   markers where relevant.
-- `@ts-expect-error` is used as a routine escape hatch for WinBox properties missing from upstream
-  types (`app/stores/use-windows-store.ts:416-424`).
 
 ## 8. Redundant libraries coexist
 
@@ -104,7 +116,7 @@ generated regexes from `/…/` to `/^(…)$/`.
 | Primitives  | `radix-vue` (64 files) **and** its renamed successor `reka-ui` (43 files), both live                   |
 | Variants    | `cva` **and** `class-variance-authority` — the same package under two names                            |
 | Maps        | `leaflet` + `maplibre-gl` + `@maplibre/maplibre-gl-leaflet`, i.e. MapLibre rendered through Leaflet    |
-| Icons       | `@lucide/vue` (44 files), `@iconify/vue`, `vue-material-design-icons`, `@fortawesome/fontawesome-free` |
+| Icons       | `@lucide/vue` (48 files), `@iconify/vue`, `vue-material-design-icons`, `@fortawesome/fontawesome-free` |
 | Drag & drop | `sortablejs` (dependency, unused) + `vue-draggable-next`                                               |
 | Data tables | `@tanstack/vue-table` frozen at `8.11.8` while every other dependency tracks latest                    |
 
@@ -119,20 +131,21 @@ academic corpus viewer.
   on `/**` unless `BOTS=enabled`.
 - **Source maps in production** for both client and server
   (`sourcemap: { server: true, client: true }`).
-- **DOM mutation from templates.** `app/components/app-footer.vue` assigns
-  `document.querySelector('footer').style.transform` inline in `onmouseleave`/`onmouseover`
-  attributes (5 occurrences).
+- **The footer expands without touching the DOM.** `app/components/app-footer.vue` drives the
+  expand/collapse transform through a Vue `:style` binding (`:60-64`) rather than assigning
+  `document.querySelector('footer').style.transform` imperatively.
 - **Error handling is an acknowledged TODO.** `app/plugins/error.ts` `console.log`s stacks under
-  `// TODO: remove or transform before deploying to production`; `window-content.vue:101` falls
+  `// TODO: remove or transform before deploying to production`; `window-content.vue:110` falls
   through to `<pre>{{ props }}</pre>` for unknown `targetType`s.
 - **The "thin components, fat composables" rule breaks at the window layer.** The Pinia store calls
   `document.getElementById(windowRootId)` and `new WinBox(...)` directly
-  (`app/stores/use-windows-store.ts:118`, `:161`).
+  (`app/stores/use-windows-store.ts:299`, `:304`).
 - **Config is auto-imported as globals** via `imports.dirs: ["./config/"]`, which is why
   `defaultLocale` and the data-type map need no import statement.
 - **Dual deploy-target heritage.** `heroku-postbuild-cleanup.js` and `/.heroku/**` in `.gitignore`
   coexist with the Kubernetes deployment path; `checkenv.mjs` dumps the environment as a test step.
-- **Aggressive browser targets.** `browserslist` production is `>=0.75%`, `not dead`.
+- **Aggressive browser targets.** `browserslist` production is `>=0.75%`, `not dead`,
+  `not op_mini all`.
 
 ## 11. AI tooling as first-class infrastructure
 
