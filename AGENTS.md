@@ -34,3 +34,4 @@ pnpm run validate   # Format, lint, typecheck, unit tests
 | [docs/searchbar.md](./docs/searchbar.md)                                       | Searchbar component docs: tag/text modes, CodeMirror integration, Lucene/CQL syntax highlighting, TriggerMap concept                   |
 | [docs/menu.md](./docs/menu.md)                                                 | Menu system overview: components, data flow, menu item types, test selectors                                                           |
 | [docs/dict-entry-component-mapping.md](./docs/dict-entry-component-mapping.md) | Dictionary entry rendering: API field to template mapping, entry shell, senses, examples, grammar items                                |
+| [docs/unusual-design-decisions.md](./docs/unusual-design-decisions.md)         | Catalogue of non-obvious architecture choices: backend-driven UI, URL-as-state, generated Zod schemas, 3 caching layers, dep overlaps  |
