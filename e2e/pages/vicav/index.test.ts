@@ -50,13 +50,9 @@ test.describe("home page", () => {
 		await page.goto("/");
 		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
 		const footer = page.getByRole("contentinfo");
-		await footer
-			.locator("div")
-			.filter({ hasText: "© 2026 ACDH |Imprint|" })
-			.locator("div")
-			.first()
-			.hover();
+		await footer.getByRole("button", { name: "Expand footer" }).first().hover();
 		await expect(page.getByText("CONTACT")).toBeVisible();
+		await expect(footer).toHaveCSS("transform", "none");
 		await page.mouse.move(0, 0);
 		await expect(page.getByText("CONTACT")).not.toBeInViewport();
 	});
