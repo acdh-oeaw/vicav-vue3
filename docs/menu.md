@@ -40,11 +40,6 @@ The menu and the initial windows (`panel`) are described by the OpenAPI spec
 The generated TypeScript equivalents are `MenuType`, `MainItemType`, `ItemType`, `ProjectConfigType`
 in `app/lib/api-client/index.ts` (regenerated from the spec on install/build).
 
-> [!NOTE] `item_type.params`' `oneOf` has known gaps against live data (a `BiblioEntries` item with
-> only `queryString` matches no branch; a tunocent `WMap` item carrying both geo and text params
-> matches both branches — both fail the exclusive `oneOf`). See
-> [docs/openapi-spec-change-requests.md](./openapi-spec-change-requests.md) (CR-1).
-
 ## Menu Item Types
 
 The hand-written shape below summarizes what the components consume. The authoritative definitions

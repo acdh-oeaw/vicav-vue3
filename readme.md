@@ -23,7 +23,8 @@ This README file is AI generated and maintained using AI.
 ## Prerequisites
 
 - [Node.js 24.x](https://nodejs.org/en/download)
-- [pnpm 10.x](https://pnpm.io/installation) (enabled via corepack: `corepack enable`)
+- [pnpm 11.x](https://pnpm.io/installation) (enabled via corepack: `corepack enable`; the repo pins
+  `pnpm@11.1.2` via `packageManager`)
 
 ## Getting started
 
@@ -49,19 +50,19 @@ Open http://127.0.0.1:3000 in your browser.
 
 Copy `.env.example` to `.env.local` and adjust as needed.
 
-| Variable                      | Description                                                                                                                            |
-| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `NUXT_PUBLIC_API_BASE_URL`    | **Required.** Base URL of the backend API. Determines which app (VICAV, SHAWI, TUNOCENT, Wibarab) is displayed.                        |
-| `NUXT_PUBLIC_APP_BASE_URL`    | Public URL of this frontend (default: `http://localhost:3000`).                                                                        |
-| `NUXT_PUBLIC_REDMINE_ID`      | Redmine project ID for the imprint service.                                                                                            |
-| `NUXT_PUBLIC_MATOMO_BASE_URL` | Matomo analytics base URL (analytics is only active when `NUXT_PUBLIC_MATOMO_ID` is also set; `.env.example` ships the ACDH instance). |
-| `NUXT_PUBLIC_MATOMO_ID`       | Matomo site ID (optional).                                                                                                             |
-| `NUXT_PUBLIC_API_USER`        | API username for authenticated endpoints (optional).                                                                                   |
-| `NUXT_PUBLIC_API_PASS`        | API password for authenticated endpoints (optional).                                                                                   |
-| `NUXT_PUBLIC_CURRENT_GIT_SHA` | Set automatically by `pnpm run dev` / `pnpm build` via `git describe`; used as the OpenTelemetry service version.                      |
-| `NUXT_API_BASE_URL`           | Server-only backend URL for server-side requests (defaults to `NUXT_PUBLIC_API_BASE_URL`; set for internal K8s communication).         |
-| `BOTS`                        | Set to `enabled` to allow web crawlers; defaults to `disabled`.                                                                        |
-| `OTEL_EXPORTER_OTLP_ENDPOINT` | OpenTelemetry collector endpoint (e.g., `http://127.0.0.1:4317`).                                                                      |
+| Variable                      | Description                                                                                                                                                                                  |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `NUXT_PUBLIC_API_BASE_URL`    | **Required.** Base URL of the backend API. Determines which app (VICAV, SHAWI, TUNOCENT, Wibarab) is displayed.                                                                              |
+| `NUXT_PUBLIC_APP_BASE_URL`    | Public URL of this frontend (default: `http://localhost:3000`).                                                                                                                              |
+| `NUXT_PUBLIC_REDMINE_ID`      | Redmine project ID for the imprint service.                                                                                                                                                  |
+| `NUXT_PUBLIC_MATOMO_BASE_URL` | Matomo analytics base URL (analytics is only active when `NUXT_PUBLIC_MATOMO_ID` is also set; `.env.example` ships the ACDH instance).                                                       |
+| `NUXT_PUBLIC_MATOMO_ID`       | Matomo site ID (optional).                                                                                                                                                                   |
+| `NUXT_PUBLIC_API_USER`        | API username for authenticated endpoints (optional).                                                                                                                                         |
+| `NUXT_PUBLIC_API_PASS`        | API password for authenticated endpoints (optional).                                                                                                                                         |
+| `NUXT_PUBLIC_CURRENT_GIT_SHA` | Set automatically by `pnpm run dev` / `pnpm build` via `git describe`; used as the OpenTelemetry service version.                                                                            |
+| `NUXT_API_BASE_URL`           | Server-only backend URL for server-side requests (falls back to `NUXT_PUBLIC_API_BASE_URL`; set for internal K8s communication). Only applied on the server and only when not running in CI. |
+| `BOTS`                        | Set to `enabled` to allow web crawlers; defaults to `disabled`.                                                                                                                              |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | OpenTelemetry collector endpoint (e.g., `http://127.0.0.1:4317`).                                                                                                                            |
 
 ### Backend URLs
 
@@ -73,6 +74,12 @@ Set `NUXT_PUBLIC_API_BASE_URL` to one of the following to switch apps:
 | SHAWI    | `https://shawi-api.acdh-dev.oeaw.ac.at` or `https://shawi-api.acdh.oeaw.ac.at`       |
 | TUNOCENT | `https://tunocent-api.acdh-dev.oeaw.ac.at` or `https://tunocent-api.acdh.oeaw.ac.at` |
 | Wibarab  | `https://wibarab-api.acdh-dev.oeaw.ac.at` or `https://wibarab-api.acdh.oeaw.ac.at`   |
+
+A locally running VICAV backend can be used via `http://localhost:8984`.
+
+The app itself accepts any backend URL. The exact-match restriction applies to Playwright only:
+`playwright.config.ts` maps `NUXT_PUBLIC_API_BASE_URL` to a backend name against the list above and
+throws `Unknown backend <url>` for anything else (no trailing slashes allowed).
 
 ## Scripts
 
@@ -111,14 +118,17 @@ pnpm run test:unit
 Playwright E2E tests live in `e2e/pages/{vicav,shawi,tunocent,wibarab}/`. Tests run against real
 backends; the backend is selected via `NUXT_PUBLIC_API_BASE_URL` in your `.env.local`.
 
-**Important:** E2E tests require a pre-built application because public environment variables are
-baked into the bundle at build time.
+**Important:** E2E tests require a pre-built application, because Playwright starts the built server
+(`pnpm run start:local`) via `webServer`. The `NUXT_PUBLIC_*` variables are **not** baked into the
+bundle: Nuxt re-reads them from the environment every time the server starts, so switching backends
+does **not** require a rebuild. Kill any process already listening on port 3000 first — Playwright
+reuses it (`reuseExistingServer`) instead of restarting it with the new backend.
 
 ```bash
-# Build the app with your chosen backend
+# Build the app once
 pnpm build
 
-# Run E2E tests
+# Run E2E tests (backend is taken from .env.local)
 pnpm run test:e2e
 ```
 
@@ -135,7 +145,9 @@ vicav-vue3/
 │   ├── composables/           # Vue composables (business logic)
 │   ├── config/                # App configuration (i18n, imprint, data types)
 │   ├── layouts/               # Page layouts
-│   ├── lib/                   # Generated API client (gitignored)
+│   ├── lib/                   # Generated API client (gitignored) + hand-written project code
+│   │   ├── api-client/        # Generated API client (gitignored)
+│   │   └── project/           # Backend project response preparation/validation
 │   ├── pages/                 # Route pages
 │   ├── plugins/               # Nuxt plugins (query client, store init)
 │   ├── stores/                # Pinia stores
@@ -148,16 +160,19 @@ vicav-vue3/
 │   ├── plugins/               # Server plugins
 │   └── routes/                # Custom routes (status)
 ├── shared/                    # Shared utilities (API client wrapper)
+│   └── utils/
 ├── e2e/                       # Playwright E2E tests
-│   └── pages/                 # Test specs per app
+│   ├── pages/                 # Test specs per app
+│   └── seed.spec.ts           # Codegen placeholder (never matches `testMatch`)
 ├── docs/                      # Architecture documentation
 ├── specs/                     # Test plans
 ├── public/                    # Public assets (favicon, robots.txt, css)
 ├── patches/                   # pnpm patches (winbox, liqe, @types/winbox)
 ├── .devcontainer/             # Devcontainer configuration
+├── .github/                   # GitHub Actions workflows
 ├── checkenv.mjs               # Dumps the environment (run by `pnpm run test`)
 ├── heroku-postbuild-cleanup.js # CI image cleanup (run by `heroku-postbuild`)
-├── pnpm-workspace.yaml        # pnpm workspace settings (Node version, shell)
+├── pnpm-workspace.yaml        # pnpm overrides, build allowlist, patched dependencies
 ├── playwright.config.ts       # Playwright configuration
 ├── vitest.config.ts           # Vitest configuration
 └── nuxt.config.ts             # Nuxt configuration
@@ -169,7 +184,9 @@ vicav-vue3/
   enabling deep linking.
 - **Composable-first**: Business logic resides in `app/composables/use-*.ts`. Components are thin
   dispatchers.
-- **TanStack Query**: All API calls use TanStack Query with a 15‑minute stale time.
+- **TanStack Query**: All API calls use TanStack Query with a 15‑minute stale time. During SSR the
+  dehydrated state timestamps are bucketed to 3‑minute windows so that compressed SSR responses stay
+  cacheable.
 - **Client-only components**: Maps and the window manager are client‑only (`.client.vue` suffix).
 - **Zod schemas**: Window types are defined in `app/types/global.ts` as discriminated unions.
 - **API contract**: The backend API contract lives in the
@@ -196,7 +213,8 @@ vicav-vue3/
 ## CI/CD
 
 The project uses GitHub Actions (`.github/workflows/starter.yaml`), triggered on every push to any
-branch and via `workflow_dispatch`:
+branch and via `workflow_dispatch`. The workflow itself only prepares environments and delegates the
+actual work to reusable workflows from `acdh-oeaw/gl-autodevops-minimal-port`:
 
 1. **Build**: Creates a Herokuish image containing the built Nuxt app.
 2. **Test**: Runs Vitest and Playwright E2E tests against each backend variant.
@@ -204,11 +222,14 @@ branch and via `workflow_dispatch`:
 
 ### Environments
 
-| Branch / Trigger     | Environment       |
-| -------------------- | ----------------- |
-| `main` or a `v*` tag | `production`      |
-| `develop`            | `review/develop`  |
-| Any other branch     | `review/<branch>` |
+| Branch / Trigger         | Environment       |
+| ------------------------ | ----------------- |
+| `main` or a `vX.Y.Z` tag | `production`      |
+| `develop`                | `review/develop`  |
+| Any other branch         | `review/<branch>` |
+
+Only tags of the exact form `v<major>.<minor>.<patch>` (e.g. `v0.9.5`) trigger the `production`
+environment; other tags fall through to `review/<tag>`.
 
 Each app variant (SHAWI, TUNOCENT, Wibarab) additionally gets a suffixed environment per branch
 (`-shawi`, `-tunocent`, `-wibarab`) with separate backend configurations.
@@ -218,7 +239,10 @@ Each app variant (SHAWI, TUNOCENT, Wibarab) additionally gets a suffixed environ
 Configure in the repository settings (per environment):
 
 - **Variables**: `NUXT_PUBLIC_API_BASE_URL`, `NUXT_PUBLIC_APP_BASE_URL`, etc., plus
-  `KUBE_INGRESS_BASE_DOMAIN` (used to derive the deployment URL).
+  `KUBE_INGRESS_BASE_DOMAIN` (used to derive the deployment URL) and `PUBLIC_URL` (optional; if set,
+  it overrides the URL derived from `KUBE_INGRESS_BASE_DOMAIN`).
+- **Variables** (copied between environments): `SERVICE_ID_*` and `K8S_SECRET_*` are copied from the
+  template environment (`develop`) into new review environments by the workflow.
 - **Secrets**: `ENVIRONMENT_WRITE_TOKEN` (fine-grained PAT used to copy template variables into new
   review environments) and the Kubernetes credentials consumed by the reusable workflows.
 
@@ -262,13 +286,15 @@ pnpm prune
 
 1. Checkout the `main` branch.
 2. Merge `develop` into `main`.
-3. Update the `version` field in `package.json` (e.g., `0.9.0`).
-4. Commit the version change.
-5. Create an annotated tag: `git tag -a v0.9.0 -m "Release v0.9.0"`.
-6. Push the commit and tag: `git push && git push origin --tags`.
-7. Checkout the `develop` branch.
-8. Merge `main` into `develop`.
-9. Push the `develop` branch.
+3. Create an annotated tag for the new version: `git tag -a v0.9.0 -m "Release v0.9.0"`.
+4. Push the commit and tag: `git push && git push origin --tags`.
+5. Checkout the `develop` branch.
+6. Merge `main` into `develop`.
+7. Push the `develop` branch.
+
+The git tag is the authoritative version: the `version` field in `package.json` is kept in sync
+manually (sometimes, can read `0.8.0` while the latest tag is `v0.9.5`). The tag must have the exact
+form `v<major>.<minor>.<patch>` — only such tags trigger the `production` environment in CI.
 
 ## Telemetry
 
@@ -302,7 +328,9 @@ The global map configuration has been moved from environment variables to
 
 A `.devcontainer` configuration is provided for VS Code Remote - Containers. It uses the
 `gplane/pnpm:10-node24` image, forwards port 3000, and pre‑configures the Wibarab backend for
-development.
+development. Note that the image ships pnpm 10 while the repo requires pnpm 11 — run
+`corepack enable && corepack prepare pnpm@11.1.2 --activate` inside the container if the install
+fails.
 
 ## License
 
