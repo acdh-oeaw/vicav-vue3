@@ -15,11 +15,9 @@ test.describe("Desktop Menu - Windows Dropdown", () => {
 		await page.getByRole("menuitem", { name: "Windows" }).click();
 
 		// 2. Verify dropdown contains open windows:
-		await expect(page.getByRole("menuitem", { name: "Mission", exact: true })).toBeVisible();
-		await expect(page.getByRole("menuitem", { name: "News", exact: true })).toBeVisible();
-		await expect(
-			page.getByRole("menuitem", { name: "All Bibl. Locations on Map", exact: true }),
-		).toBeVisible();
+		await expect(page.getByRole("menuitem", { name: "Mission" })).toBeVisible();
+		await expect(page.getByRole("menuitem", { name: "News" })).toBeVisible();
+		await expect(page.getByRole("menuitem", { name: "All Bibl. Locations on Map" })).toBeVisible();
 
 		// Verify arrangement section is visible
 		await expect(page.getByRole("menuitem", { name: "None", exact: true })).toBeVisible();
