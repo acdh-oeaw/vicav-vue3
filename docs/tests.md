@@ -4,14 +4,17 @@
 
 One env var controls everything: `NUXT_PUBLIC_API_BASE_URL`.
 
-| URL                                        | Backend  |
-| ------------------------------------------ | -------- |
-| `https://vicav-dev.acdh.oeaw.ac.at`        | vicav    |
-| `https://vicav.acdh.oeaw.ac.at`            | vicav    |
-| `http://localhost:8984`                    | vicav    |
-| `https://shawi-api.acdh-dev.oeaw.ac.at`    | shawi    |
-| `https://tunocent-api.acdh-dev.oeaw.ac.at` | tunocent |
-| `https://wibarab-api.acdh-dev.oeaw.ac.at`  | wibarab  |
+| URL                                        | Backend  | Variant |
+| ------------------------------------------ | -------- | ------- |
+| `https://vicav-dev.acdh.oeaw.ac.at`        | vicav    | dev     |
+| `https://vicav.acdh.oeaw.ac.at`            | vicav    | prod    |
+| `http://localhost:8984`                    | vicav    | local   |
+| `https://shawi-api.acdh-dev.oeaw.ac.at`    | shawi    | dev     |
+| `https://shawi-api.acdh.oeaw.ac.at`        | shawi    | prod    |
+| `https://tunocent-api.acdh-dev.oeaw.ac.at` | tunocent | dev     |
+| `https://tunocent-api.acdh.oeaw.ac.at`     | tunocent | prod    |
+| `https://wibarab-api.acdh-dev.oeaw.ac.at`  | wibarab  | dev     |
+| `https://wibarab-api.acdh.oeaw.ac.at`      | wibarab  | prod    |
 
 `playwright.config.ts` reads this var and sets `testMatch: "<backend>/**/*.@(test|spec).ts"`.
 
@@ -21,7 +24,7 @@ One env var controls everything: `NUXT_PUBLIC_API_BASE_URL`.
 # Set in .env.local (gitignored)
 NUXT_PUBLIC_API_BASE_URL="https://vicav-dev.acdh.oeaw.ac.at"
 
-# Build (PUBLIC vars baked at build time!)
+# Build (PUBLIC vars are read at server start, not baked at build time — see "Quirks")
 pnpm run build
 
 # Run tests
@@ -33,7 +36,7 @@ The npm scripts use `dotenv -e .env.local` to inject the var into both the app a
 
 ## Test Locations
 
-- `e2e/pages/vicav/menu/` — 41 test files
+- `e2e/pages/vicav/menu/` — 43 test files
 - `e2e/pages/tunocent/`, `e2e/pages/shawi/`, `e2e/pages/wibarab/` — other backends
 
 ## Prefer Live API Examples over `openapi.json`
@@ -58,6 +61,9 @@ authoritative for the _schema_ (request/response shapes); only its _examples_ ar
 
 ## Current Vicav Menu Data (live)
 
+Live counts below are **snapshots of the backend content, not repo state** — the backend can change
+them at any time, so re-verify (via `GET /vicav/project`) before relying on them in a test.
+
 - **Project**: Mission, News, Types of Text/Data, Contributors, Linguistics
 - **Bibliographies**: 8 items (first is Explanation)
 - **Profiles**: Explanation + List, Show All Profiles on Map, Contribute a Profile
@@ -68,32 +74,50 @@ authoritative for the _schema_ (request/response shapes); only its _examples_ ar
   "Contribute a Dictionary" match)
 - **Tools & Technology**: 16 items
 
+Counts are per menu **entry** (separators excluded). Re-verified live 2026-10-23 against
+`https://vicav-dev.acdh.oeaw.ac.at/vicav/project`; previously verified live 2026-09-03.
+
 ## Initial Windows & Text-Window Verification
 
 ### Initial windows are backend-defined, not in the repo
 
 The windows that open on first load of `/` are defined **server-side** in the backend project config
 (`GET /vicav/project` → `projectConfig.panel`), **not** in the repo's `app/assets/openapi.json`.
-That file only documents the VICAV example (`panel` at lines 112-152: Mission, News, "All Bibl.
-Locations on Map") and an empty SHAWI panel (line 2070); TUNOCENT and wibarab are absent. To learn a
-backend's initial windows, query the live backend:
+That file only contains the `ProjectConfig` **schema** (whose `panel` property is an array of
+`item_type`) and two stale **examples**: `project_config_VICAV` (panel: Mission, News, "All Bibl.
+Locations on Map") and `project_config_SHAWI` (empty panel — SHAWI now serves a non-empty panel
+live). TUNOCENT and wibarab examples are absent. To learn a backend's initial windows, query the
+live backend:
 
 ```bash
 curl -s -H "Accept: application/json" "<backend-url>/vicav/project" | grep -o '"panel".*'
 ```
 
-Verified live (2026-09-03):
+Verified live (2026-10-23; previously 2026-09-03):
 
 | Backend  | Initial windows (title · targetType · textId)                                             |
 | -------- | ----------------------------------------------------------------------------------------- |
 | vicav    | Mission (Text, vicavMission) · News (Text, vicavNews) · All Bibl. Locations on Map (WMap) |
 | tunocent | Welcome to TUNOCENT (Text, tunocentOpeningPage) — a single window                         |
-| shawi    | none (empty `panel`)                                                                      |
+| shawi    | The Shawi Project (Text, shawi.paratexts.about) — a single window                         |
 
-Restoration pipeline: `useProjectInfo()` (SSR-prefetched) → `initialScreenSetup` computed
-(`app/stores/use-windows-store.ts:61-63`) → `initializeScreen()` navigates to `/?w=<base64(panel)>`
-→ `restoreState()` → `addWindow()` per entry, triggered on mount when `route.path === "/"`
-(`app/components/window-manager.client.vue:16-18`).
+Restoration pipeline (`app/stores/use-windows-store.ts`):
+
+```
+restoreState()                                    // :186 — triggered on mount
+  → route.query.w present and decodable?
+      yes → states = decodeWindowStates(String(route.query.w))   // app/utils/window-state-codec.ts
+             arrangement = route.query.a (if it is a known arrangement)
+      no  → await suspense()                     // waits for the SSR-prefetched useProjectInfo()
+             states = initialScreenSetup.value   // data.value?.projectConfig?.panel ?? []  (:76-78)
+  → for (const state of states) openWindowState(state, { reuse: false })   // :210
+```
+
+`restoreState()` is called from `app/components/window-manager.client.vue:19-21` (on mount, when
+`route.path === "/"`). There is no `initializeScreen()` step and no navigation to `/?w=<base64>`:
+the URL is written back afterwards by the debounced `schedulePersistence()` (`:496`), not before the
+restore. `addWindow()` (`:294`) is a different entry point — it opens a _new_ window from the menu,
+it is not used for restoring.
 
 ### Verifying a Text window loaded (and the correct text)
 
@@ -175,7 +199,7 @@ To re-verify: start `.output/server/index.mjs` with `PORT=<port>` and
 
 ### Backend selection is exact-match
 
-`playwright.config.ts` matches `NUXT_PUBLIC_API_BASE_URL` against a hardcoded list of URLs (no
+`playwright.config.ts` matches `NUXT_PUBLIC_API_BASE_URL` against a hardcoded list of nine URLs (no
 trailing slash) and throws `Unknown backend ...` for any other value. The matched backend also sets
 `testMatch`, so only tests under `e2e/pages/<backend>/` run.
 
@@ -284,13 +308,18 @@ otherwise).
 
 E2E in CI runs per backend variant (vicav, shawi, tunocent, wibarab) via the reusable
 `acdh-oeaw/gl-autodevops-minimal-port` workflow `herokuish-tests-db-url.yaml`, against the built
-Herokuish image. The local `starter.yaml` only contains env-setup jobs.
+Herokuish image. The local `.github/workflows/starter.yaml` is more than env setup: besides the
+`setup_workflow_env` / `generate_workflow_vars*` jobs it defines `_1` (build the Herokuish image and
+push it to the registry), the per-backend test jobs `_2`, `_2_tunocent`, `_2_shawi`, `_2_wibarab`
+(all using `herokuish-tests-db-url.yaml`), and the deploy jobs `_3`, `_3-shawi`, `_3_tunocent`,
+`_3_wibarab` (using `deploy.yml`).
 
 ### API path prefix is hardcoded `/vicav/`
 
-The generated client (`app/lib/api-client/index.ts`) uses fixed paths — `GET /vicav/project`
-(line 2129) and `GET /vicav/text` (line 2173) — for **every** backend. TUNOCENT, SHAWI, and WIBARAB
-all serve their API under the same `/vicav/` prefix; the backend is selected purely by the base URL
+The generated client (`app/lib/api-client/index.ts`) uses fixed paths — `GET /vicav/project` and
+`GET /vicav/text` (the file is regenerated by `pnpm run generate:api-client`, so cite the paths
+rather than line numbers) — for **every** backend. TUNOCENT, SHAWI, and WIBARAB all serve their API
+under the same `/vicav/` prefix; the backend is selected purely by the base URL
 (`NUXT_PUBLIC_API_BASE_URL`), and the path segment never changes. So when fetching live examples
 (see "Prefer Live API Examples over `openapi.json`"), use `<backend-url>/vicav/...` regardless of
 which backend you are on.
