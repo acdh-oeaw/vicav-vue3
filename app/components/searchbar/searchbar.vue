@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { SquareMousePointer, TextCursorInput, X } from "@lucide/vue";
 import type { Table } from "@tanstack/vue-table";
+import type { ReadonlyDeep } from "type-fest";
 import { computed, nextTick, ref, watch } from "vue";
 
 import type { SpecialCharacters } from "@/lib/api-client";
@@ -19,11 +20,13 @@ const _props = defineProps<{
 	 */
 	featureTrigger?: string;
 	queryMode?: "lucene" | "cql";
-	onSubmit?: (value: string) => void;
+	mode?: "tag" | "text";
+	onSubmit?: (value: string) => Promise<{ isValid: boolean; warnings: Array<string> }> | undefined;
 	/** CQL mode: attribute key used when wrapping free-text input (e.g. "word"). */
 	freeTriggerKey?: string;
-	specialCharacters?: SpecialCharacters;
+	specialCharacters?: ReadonlyDeep<SpecialCharacters>;
 	dynamicKeys?: ReadonlyArray<string>;
+	isLoading?: boolean;
 }>();
 
 const model = defineModel<string>({ default: "" });
@@ -37,7 +40,7 @@ const dynamicTriggers = computed(() =>
 );
 
 type SearchMode = "tag" | "text";
-const mode = ref<SearchMode>("tag");
+const mode = ref<SearchMode>(_props.mode ?? "tag");
 
 const tagRef = useTemplateRef<InstanceType<typeof TagSearchbar>>("tagRef");
 const multiRef = useTemplateRef<InstanceType<typeof MultiValueSearchbar>>("multiRef");
@@ -63,14 +66,17 @@ watch(model, (value) => {
 onMounted(() => {
 	if (model.value && model.value !== currentValue.value) currentValue.value = model.value;
 });
+
+const postSubmitWarnings = ref<Array<string>>([]);
 const queryWarnings = computed(() => {
-	if (_props.onSubmit) return { isValid: true, warnings: [] as Array<string> };
-	return validateQuery(currentValue.value);
+	if (_props.onSubmit) return { isValid: true, warnings: postSubmitWarnings.value };
+	const res = validateQuery(currentValue.value);
+	return { isValid: res.isValid, warnings: [...res.warnings, ...postSubmitWarnings.value] };
 });
 const hasValue = computed(() => Boolean(currentValue.value.trim()));
 
 function submitSearch() {
-	active.value?.submitSearch();
+	active.value?.submitSearch()?.then((res) => (postSubmitWarnings.value = res.warnings));
 }
 
 function clearAll() {
@@ -81,14 +87,26 @@ function insertSnippet(snippet: string) {
 	void active.value?.insertSnippet(snippet);
 }
 
-async function toggleMode() {
+async function setMode(nextMode: SearchMode) {
+	if (mode.value === nextMode) return;
 	syncing = true;
-	const saved = currentValue.value;
+	const saved = currentValue.value || model.value;
 	model.value = saved;
-	mode.value = mode.value === "tag" ? "text" : "tag";
+	mode.value = nextMode;
 	await nextTick();
 	if (active.value) active.value.value = saved;
 	syncing = false;
+}
+
+watch(
+	() => _props.mode,
+	(value) => {
+		void setMode(value ?? "tag");
+	},
+);
+
+function toggleMode() {
+	void setMode(mode.value === "tag" ? "text" : "tag");
 }
 
 defineExpose({ submitSearch, value: currentValue });
@@ -118,6 +136,7 @@ defineExpose({ submitSearch, value: currentValue });
 				:dynamic-triggers="dynamicTriggers"
 				:feature-trigger="featureTrigger"
 				:free-trigger-key="freeTriggerKey"
+				:is-loading="isLoading"
 				:on-submit="onSubmit"
 				:operators="operators"
 				:table="table"

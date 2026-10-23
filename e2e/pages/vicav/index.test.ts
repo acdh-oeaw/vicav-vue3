@@ -49,13 +49,15 @@ test.describe("home page", () => {
 	test("should open extended footer", async ({ page }) => {
 		await page.goto("/");
 		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
-		await page
-			.getByRole("contentinfo")
+		const footer = page.getByRole("contentinfo");
+		await footer
 			.locator("div")
 			.filter({ hasText: "© 2026 ACDH |Imprint|" })
 			.locator("div")
 			.first()
 			.hover();
 		await expect(page.getByText("CONTACT")).toBeVisible();
+		await page.mouse.move(0, 0);
+		await expect(page.getByText("CONTACT")).not.toBeInViewport();
 	});
 });

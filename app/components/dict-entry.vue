@@ -2,7 +2,7 @@
 import { BookA, Braces, CircleAlert, Code, MapPin, MessageSquareQuote, Search } from "@lucide/vue";
 
 import type { RestVLEEntry } from "@/lib/api-client";
-import { QueryString, type WindowItem } from "@/types/global.ts";
+import type { WindowItem } from "@/types/global.ts";
 import {
 	formatLocation,
 	normalizeEntry,
@@ -55,10 +55,12 @@ const compactGrammar = computed(() => {
 		class: findGrammarValue(e.value.grammar, "Class"),
 		synRoot: findGrammarValue(e.value.grammar, "Syn root"),
 		diaRoot: findGrammarValue(e.value.grammar, "Dia root"),
+		root: findGrammarValue(e.value.grammar, "Root"),
 	};
 	const roots = [
 		formatRootGrammar(values.synRoot, "synRoot"),
 		formatRootGrammar(values.diaRoot, "diaRoot"),
+		formatRootGrammar(values.root, "Root"),
 	].filter(Boolean);
 
 	return [values.partOfSpeech, values.class, roots.join(", ")].filter(Boolean).join(", ");
@@ -101,7 +103,7 @@ const getEntryLink = (entry: RenderedDictEntry, responseFormat?: "json") => {
 const entryXmlLink = computed(() => getEntryLink(e.value));
 const entryJsonLink = computed(() => getEntryLink(e.value, "json"));
 const corpusDictIDQuery = computed(() => {
-	return `[dict=="dict:${escapeCorpusQueryValue(e.value.id)}"]`;
+	return `[dict="dict:${escapeCorpusQueryValue(e.value.id)}"] | <seg lemmaRef="dict:${escapeCorpusQueryValue(e.value.id)}"/> containing []`;
 });
 
 const findGrammarValue = (items: Array<RenderedGrammarItem>, label: string) => {
@@ -125,11 +127,10 @@ const openCorpusSearchWindow = () => {
 			targetType: "CorpusQuery",
 			params: {
 				queryString,
+				mode: "text",
 			},
 		} as unknown as WindowItem,
 		`Corpus search: ${e.value.title ?? e.value.lemma}`,
-		QueryString,
-		"queryString",
 		true,
 	);
 };
@@ -329,10 +330,10 @@ const languageClass = (language: string | undefined) => {
 			</header>
 
 			<div class="px-4 py-3">
-				<div class="grid grid-cols-[max-content_minmax(0,1fr)] gap-x-4">
+				<div class="grid grid-cols-[8rem_minmax(0,1fr)] gap-x-4">
 					<div
 						v-if="hasEtymology"
-						class="px-4 py-3 text-base leading-none font-semibold text-primary uppercase"
+						class="px-4 py-3 text-base leading-none font-semibold text-primary uppercase whitespace-nowrap"
 					>
 						Etymology
 					</div>
@@ -359,7 +360,7 @@ const languageClass = (language: string | undefined) => {
 
 					<div
 						v-if="hasInflectedForms"
-						class="px-4 py-3 text-base leading-none font-semibold text-primary uppercase"
+						class="px-4 py-3 text-base leading-none font-semibold text-primary uppercase whitespace-nowrap"
 					>
 						Infl. Forms
 					</div>
@@ -417,7 +418,9 @@ const languageClass = (language: string | undefined) => {
 					</section>
 
 					<template v-for="(sense, senseIndex) in e.senses" :key="sense.id ?? senseIndex">
-						<div class="px-4 py-3 text-base leading-none font-semibold text-primary uppercase">
+						<div
+							class="px-4 py-3 text-base leading-none font-semibold text-primary uppercase whitespace-nowrap"
+						>
 							{{ e.senses.length > 1 ? `Sense ${String(senseIndex + 1)}` : "Sense" }}
 						</div>
 						<section class="py-0.5">
@@ -529,7 +532,7 @@ const languageClass = (language: string | undefined) => {
 
 					<div
 						v-if="hasEditors"
-						class="px-4 py-3 text-base leading-none font-semibold text-primary uppercase"
+						class="px-4 py-3 text-base leading-none font-semibold text-primary uppercase whitespace-nowrap"
 					>
 						Editors
 					</div>

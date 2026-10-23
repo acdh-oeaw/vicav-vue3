@@ -35,7 +35,7 @@ const props = defineProps<{
 	table?: Table<unknown>;
 	triggers: TriggerMap;
 	queryMode?: "lucene" | "cql";
-	onSubmit?: (value: string) => void;
+	onSubmit?: (value: string) => Promise<{ isValid: boolean; warnings: Array<string> }> | undefined;
 	dynamicTriggers?: ReadonlyArray<string>;
 }>();
 
@@ -213,12 +213,12 @@ function handleSelect(ev: CustomEvent) {
 
 function submitSearch() {
 	if (props.onSubmit) {
-		props.onSubmit(value.value);
-		return;
+		return props.onSubmit(value.value);
 	}
 	if (!props.table) return;
 	parseSearchString(value.value, props.table);
 	props.table.setGlobalFilter(normalizeParens(normalizeOperators(value.value)));
+	return;
 }
 
 function clear() {

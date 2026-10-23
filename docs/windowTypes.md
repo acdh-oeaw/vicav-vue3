@@ -10,11 +10,12 @@ taken from [app/types/global.ts](../app/types/global.ts).
 - `TeiSource`: `{ teiSource: string }`
 - `ShowCitation`: `{ showCitation: boolean }`
 - `QueryString`: `{ queryString: string }`
-- `FeatureValueGroup`: `{ columnId: string; label: string; values: string[] }` — a set of feature
-  values the user merged into one legend entry and one map marker. Used by `ListMap`.
+- `FeatureValueGroup`: `{ label: string; values: Array<{ columnId: string; value: string }> }` — a
+  set of feature values the user merged into one legend entry and one map marker. Used by `ListMap`.
+  The schema also accepts the legacy `{ columnId, label, values: string[] }` form and normalizes it.
 
-Schemas commonly include `TeiSource` and `ShowCitation` through `.partial()`, which makes those
-fields optional in the window params documented below.
+`TextId`, `TeiSource`, `ShowCitation`, and `QueryString` are shared schema fields. Schemas commonly
+include `TeiSource` and `ShowCitation` through `.partial()`, which makes those fields optional.
 
 ## Implemented window types
 
@@ -41,10 +42,27 @@ Rendered as [geo-map-window-content.vue](../app/components/geo-map-window-conten
   };
   scope?: Array<"reg" | "geo" | "diaGroup">;
   hideDefaultLayers?: boolean;
+  dataListLayers?: Array<{
+    id: string;
+    title: string;
+    color: string;
+    enabled?: boolean;
+    markers: Array<{
+      id: string;
+      label: string;
+      placeName?: string;
+      alt?: string;
+      dataType: "Profile" | "Text" | "SampleText" | "Feature" | "CorpusText" | "BiblioEntries";
+      coordinates: [number, number];
+    }>;
+  }>;
 }
 ```
 
 - Additional prop passed by `window-content.vue`: `title: props.item.winbox.title`
+- For `endpoint: "data_markers"`, `useDataListMapWindowSync`, initialized by the window manager,
+  supplies retained layers from the data-list map store. Hidden layers stay in the toolbar and can
+  be toggled without an open list. An omitted `enabled` means visible.
 
 ### `Text`
 
@@ -239,10 +257,11 @@ Rendered as [geojson-map-window-content.vue](../app/components/geojson-map-windo
 
 ```ts
 {
-  url: string;
   markerType?: "petal" | "default";
 }
 ```
+
+The schema does not require a URL; the map content derives its data from the shared geojson store.
 
 ### `CorpusQuery`
 
@@ -277,7 +296,7 @@ Rendered as
 
 Rendered as [data-list-window-content.vue](../app/components/data-list-window-content.vue).
 
-Single-type `CorpusText`, `SampleText`, and `Feature` lists are delegated to specialized
+Single-type `CorpusText`, `SampleText`, `Profile`, and `Feature` lists are delegated to specialized
 searchable/filterable simple-metadata list components. Mixed lists and other data types use the
 grouped list rendering in `data-list-window-content.vue`.
 
@@ -297,12 +316,34 @@ grouped list rendering in `data-list-window-content.vue`.
     globalFilter?: string;
     facets?: Record<string, string[]>;
   };
+  mapEnabled?: boolean;
+  mapSyncId?: string;
   textId?: string;
 }
 ```
 
 - Event wired by `window-content.vue`: `update:params` replaces the window params through the
   generic validated `updateWindowParams()` store path, which updates the encoded URL state.
+- The map dataset is keyed by `mapSyncId` (initially the window ID). Its table and filter state
+  survive closing the list during the current session; reopening with the same ID reuses them.
+
+### `FeatureDescriptionList`
+
+Rendered as
+[feature-description-list-window-content.vue](../app/components/feature-description-list-window-content.vue).
+
+- `params`:
+
+```ts
+{
+  taxonomyPath?: string;
+  globalFilter?: string;
+  textId?: string;
+}
+```
+
+- Event wired by `window-content.vue`: `update:params` replaces the window params through
+  `updateWindowParams()`, updating the encoded URL state.
 
 ### `DataTable`
 
@@ -370,6 +411,18 @@ Rendered as
 Every `targetType` in the `Schema` discriminated union is currently rendered by
 [window-content.vue](../app/components/window-content.vue), and every concrete render branch in
 `window-content.vue` has schema coverage in [app/types/global.ts](../app/types/global.ts).
+
+## URL State And Updates
+
+The `w` query parameter stores the base64 encoded JSON array of open window states, including each
+window's `targetType`, title, position, size, and `params` object, except runtime `dataListLayers`
+for `WMap` windows with `endpoint: "data_markers"`. Retained list tables and layers are session
+state and are not restored after a reload without their list windows. The `a` parameter stores the
+window arrangement. `update-query-param` updates `params.queryString` and writes the state back to
+the URL. `update:params` is wired for `ListMap`, `DataList`, and `FeatureDescriptionList`; the store
+validates the replacement params against that target type's schema before updating the URL. Query
+visibility and other UI state carried in params (including `ListMap.featureValueGroups` and
+`DataList.listState`) is therefore restored with a shared URL.
 
 ## Maintenance Prompt
 

@@ -1,4 +1,5 @@
 import type { Row } from "@tanstack/vue-table";
+import type WinBox from "winbox";
 import { z } from "zod";
 
 export const DataTypesEnum = z.enum([
@@ -23,7 +24,7 @@ export type DataTypes = Record<DataTypesEnum, DataType>;
 
 interface WindowItemBase {
 	id: string;
-	winbox: WinBox;
+	winbox?: WinBox;
 	label: string;
 }
 
@@ -54,7 +55,7 @@ export const ExploreSamplesQueryParams = ExploreSamplesQueryBase.extend({
 	dataType: z.enum(["SampleText", "Feature"]),
 	region: z.string().optional(),
 	settlement: z.string().optional(),
-});
+}).extend(ShowCitation.partial().shape);
 
 export const ExploreSamplesQueryDbParams = ExploreSamplesQueryBase.extend({
 	type: z.enum(["samples", "lingfeatures"]),
@@ -79,7 +80,8 @@ export const ExploreSamplesFormSchema = z.object({
 		.object({
 			dataTypes: z.array(DataTypesEnum),
 		})
-		.extend(TextId.partial().shape),
+		.extend(TextId.partial().shape)
+		.extend(ShowCitation.partial().shape),
 });
 
 export type ExploreSamplesFormWindowItem = WindowItemBase &
@@ -91,7 +93,7 @@ export const BibliographyEntriesSchema = z.object({
 		xslt: z.string().optional(),
 		showMap: z.boolean().optional(),
 		isQueryVisible: z.boolean().optional(),
-	}),
+	}).extend(ShowCitation.partial().shape),
 });
 export type BibliographyEntriesWindowItem = WindowItemBase &
 	z.infer<typeof BibliographyEntriesSchema>;
@@ -104,32 +106,36 @@ export const Dict = z.object({
 });
 export const DictQuerySchema = z.object({
 	targetType: z.literal("DictQuery"),
-	params: z.object({
-		textId: Dict.shape.id,
-		queryParams: z
-			.object({
-				q: z.string().optional().nullable(),
-				page: z.number().optional().nullable(),
-				pageSize: z.number().optional().nullable(),
-				id: z.string().optional().nullable(),
-				ids: z.string().optional().nullable(),
-				sort: z.enum(["asc", "desc", "none"]).optional().nullable(),
-				altLemma: z.string().optional().nullable(),
-				format: z.string().optional().nullable(),
-			})
-			.optional(),
-		queryString: z.string(),
-		queryTemplateTextInput: z.string().optional(),
-		queryTemplate: z.string().optional(),
-		isTextInputManual: z.boolean().optional().default(false),
-		isQueryVisible: z.boolean().optional().default(true),
-	}),
+	params: z
+		.object({
+			textId: Dict.shape.id,
+			queryParams: z
+				.object({
+					q: z.string().optional().nullable(),
+					page: z.number().optional().nullable(),
+					pageSize: z.number().optional().nullable(),
+					id: z.string().optional().nullable(),
+					ids: z.string().optional().nullable(),
+					sort: z.enum(["asc", "desc", "none"]).optional().nullable(),
+					altLemma: z.string().optional().nullable(),
+					format: z.string().optional().nullable(),
+				})
+				.optional(),
+			queryString: z.string(),
+			queryTemplateTextInput: z.string().optional(),
+			queryTemplate: z.string().optional(),
+			isTextInputManual: z.boolean().optional().default(false),
+			isQueryVisible: z.boolean().optional().default(true),
+		})
+		.extend(ShowCitation.partial().shape),
 });
 export type DictQueryWindowItem = WindowItemBase & z.infer<typeof DictQuerySchema>;
 
 export const CorpusQuerySchema = z.object({
 	targetType: z.literal("CorpusQuery"),
-	params: QueryString,
+	params: QueryString.extend({
+		mode: z.enum(["tag", "text"]).optional(),
+	}).extend(ShowCitation.partial().shape),
 });
 export type CorpusQueryWindowItem = WindowItemBase & z.infer<typeof CorpusQuerySchema>;
 
@@ -192,6 +198,22 @@ export type LocationWindowItem = WindowItemBase & z.infer<typeof LocationSchema>
 export const CompareMarkersParams = z.object();
 
 export const GeoMapScope = z.enum(["reg", "geo", "diaGroup"]);
+export const DataListMapMarkerSchema = z.object({
+	id: z.string(),
+	label: z.string(),
+	placeName: z.string().optional(),
+	alt: z.string().optional(),
+	dataType: DataTypesEnum,
+	coordinates: z.tuple([z.number(), z.number()]),
+});
+export const DataListMapLayerSchema = z.object({
+	id: z.string(),
+	title: z.string(),
+	color: z.string(),
+	enabled: z.boolean().optional(),
+	markers: z.array(DataListMapMarkerSchema),
+});
+export type DataListMapLayer = z.infer<typeof DataListMapLayerSchema>;
 export const GeoMapSchema = z.object({
 	targetType: z.literal("WMap"),
 	params: QueryString.extend({
@@ -200,7 +222,8 @@ export const GeoMapSchema = z.object({
 		queryParams: ExploreSamplesQueryDbParams.optional(),
 		scope: z.array(GeoMapScope).optional(),
 		hideDefaultLayers: z.boolean().optional(),
-	}),
+		dataListLayers: z.array(DataListMapLayerSchema).optional(),
+	}).extend(ShowCitation.partial().shape),
 });
 export type GeoMapWindowItem = WindowItemBase & z.infer<typeof GeoMapSchema>;
 export const GeoMapSubnavItemSchema = z.intersection(
@@ -252,10 +275,12 @@ export type FeatureValueGroup = z.infer<typeof FeatureValueGroupObject>;
 
 export const ListMapSchema = z.object({
 	targetType: z.literal("ListMap"),
-	params: z.object({
-		queryString: z.string().default(""),
-		featureValueGroups: z.array(FeatureValueGroup).optional(),
-	}),
+	params: z
+		.object({
+			queryString: z.string().default(""),
+			featureValueGroups: z.array(FeatureValueGroup).optional(),
+		})
+		.extend(ShowCitation.partial().shape),
 });
 export type ListMapWindowItem = WindowItemBase & z.infer<typeof ListMapSchema>;
 
@@ -263,9 +288,11 @@ export const MarkerEnum = z.enum(["petal", "default"]);
 export type MarkerType = z.infer<typeof MarkerEnum>;
 export const GeojsonMapSchema = z.object({
 	targetType: z.literal("GeojsonMap"),
-	params: z.object({
-		markerType: MarkerEnum.optional(),
-	}),
+	params: z
+		.object({
+			markerType: MarkerEnum.optional(),
+		})
+		.extend(ShowCitation.partial().shape),
 });
 export type GeojsonMapWindowItem = WindowItemBase & z.infer<typeof GeojsonMapSchema>;
 
@@ -289,11 +316,29 @@ export const DataListSchema = z.object({
 				})
 				.optional(),
 			listState: SimpleMetadataListState.optional(),
+			mapEnabled: z.boolean().optional(),
+			mapSyncId: z.string().optional(),
 		})
-		.extend(TextId.partial().shape),
+		.extend(TextId.partial().shape)
+		.extend(ShowCitation.partial().shape),
 });
 
 export type DataListWindowItem = WindowItemBase & z.infer<typeof DataListSchema>;
+
+export const FeatureDescriptionListSchema = z.object({
+	targetType: z.literal("FeatureDescriptionList"),
+	params: z
+		.object({
+			/** Dot separated category path the list is scoped to, e.g. `personal_pronouns`. */
+			taxonomyPath: z.string().optional(),
+			globalFilter: z.string().optional(),
+		})
+		.extend(TextId.partial().shape)
+		.extend(ShowCitation.partial().shape),
+});
+
+export type FeatureDescriptionListWindowItem = WindowItemBase &
+	z.infer<typeof FeatureDescriptionListSchema>;
 
 export const DataTableSchema = z.object({
 	targetType: z.literal("DataTable"),
@@ -330,12 +375,14 @@ export const Schema = z.discriminatedUnion("targetType", [
 	ListMapSchema,
 	GeojsonMapSchema,
 	DataListSchema,
+	FeatureDescriptionListSchema,
 	DataTableSchema,
 	ExploreSamplesSchema,
 	ExploreSamplesFormSchema,
 	LocationSchema,
 ]);
 export type WindowItem = WindowItemBase & z.infer<typeof Schema>;
+export type OpenWindowItem = WindowItem & { winbox: NonNullable<WindowItem["winbox"]> };
 
 export type WindowItemTargetType = WindowItem["targetType"];
 

@@ -3,21 +3,28 @@ const env = useRuntimeConfig();
 const { data: config } = useProjectInfo();
 const funders = computed(() => config.value?.projectConfig?.funders ?? []);
 const partners = computed(() => config.value?.projectConfig?.partners ?? []);
+const isExpanded = ref(false);
+
+function expandFooter() {
+	isExpanded.value = true;
+}
 </script>
 
 <template>
+	<!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -->
 	<footer
-		class="inset-x-0 bottom-0 h-7 bg-surface text-on-surface transition duration-500"
-		onmouseleave="document.querySelector('footer').style.transform = `translateY(0)`"
+		class="relative z-50 h-7 bg-surface text-on-surface"
+		@focusout="isExpanded = false"
+		@mouseleave="isExpanded = false"
 	>
 		<div class="flex items-center gap-2 border px-8 py-1.5 text-xs">
-			<div
+			<button
+				aria-label="Expand footer"
 				class="h-4 flex-1"
-				onmouseover="
-					document.querySelector('footer').style.transform =
-						`translateY(-${document.querySelector('#footer-content').clientHeight}px)`
-				"
-			></div>
+				type="button"
+				@focus="expandFooter"
+				@mouseover="expandFooter"
+			></button>
 			<span class="flex gap-1">
 				<span>&copy; {{ new Date().getUTCFullYear() }}</span>
 				<a class="hover:underline hover:underline-offset-2" href="https://www.oeaw.ac.at/acdh">
@@ -38,15 +45,22 @@ const partners = computed(() => config.value?.projectConfig?.partners ?? []);
 			<span class="flex gap-1">
 				<span>Data: {{ config?.projectConfig?.version?.data }}</span>
 			</span>
-			<div
+			<button
+				aria-label="Expand footer"
 				class="h-4 flex-1"
-				onmouseover="
-					document.querySelector('footer').style.transform =
-						`translateY(-${document.querySelector('#footer-content').clientHeight}px)`
-				"
-			></div>
+				type="button"
+				@focus="expandFooter"
+				@mouseover="expandFooter"
+			></button>
 		</div>
-		<div id="footer-content" class="mb-0 w-full bg-neutral-50 px-0 text-gray-900">
+		<div
+			id="footer-content"
+			class="absolute inset-x-0 bottom-full w-full bg-neutral-50 px-0 text-gray-900 transition-transform duration-500"
+			:class="isExpanded ? 'pointer-events-auto' : 'pointer-events-none'"
+			:style="{
+				transform: isExpanded ? 'translateY(0)' : 'translateY(calc(100% + 2rem))',
+			}"
+		>
 			<div id="footer-full-content" class="mx-auto w-full px-4" tabindex="-1">
 				<div
 					class="footer-logo-widget mb-4 flex items-center border-b pt-2 pb-4 text-sm font-semibold"
@@ -75,8 +89,8 @@ const partners = computed(() => config.value?.projectConfig?.partners ?? []);
 							<a href="https://www.oeaw.ac.at/acdh" rel="noopener" target="_blank">
 								<img
 									alt="ACDH Logo"
+									class="max-w-full h-auto"
 									src="https://fundament.acdh.oeaw.ac.at/common-assets/images/acdh_logo.svg"
-									style="max-width: 100%; height: auto"
 									title="ACDH Logo"
 								/>
 							</a>
@@ -97,12 +111,10 @@ const partners = computed(() => config.value?.projectConfig?.partners ?? []);
 								<br />
 								Austrian Centre for Digital Humanities
 								<br />
-								and Cultural Heritage
-								<br />
 								Austrian Academy of Sciences
 							</p>
 							<p class="mt-0 mb-4 block">
-								Bäckerstraße 13,
+								Bäckerstraße 13
 								<br />
 								1010 Vienna
 							</p>
@@ -228,26 +240,5 @@ const partners = computed(() => config.value?.projectConfig?.partners ?? []);
 .footer-logo-widget {
 	flex: 0 0 8.333%;
 	max-width: 8.333%;
-}
-
-@keyframes slide-in-out {
-	0% {
-		transform: translateY(0);
-	}
-
-	50% {
-		transform: translateY(-20rem);
-	}
-
-	100% {
-		transform: translateY(0);
-	}
-}
-
-footer {
-	animation-name: slide-in-out;
-	animation-duration: 2s !important;
-	animation-timing-function: ease-in-out;
-	animation-delay: 500ms;
 }
 </style>

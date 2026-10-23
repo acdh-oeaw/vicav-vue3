@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { noop } from "@acdh-oeaw/lib";
+import type { ReadonlyDeep } from "type-fest";
 
 import type { ItemType } from "@/lib/api-client";
 import type {
@@ -11,6 +12,7 @@ import type {
 	DictQueryWindowItem,
 	ExploreSamplesFormWindowItem,
 	ExploreSamplesWindowItem,
+	FeatureDescriptionListWindowItem,
 	FeatureWindowItem,
 	GeoMapWindowItem,
 	ListMapWindowItem,
@@ -43,7 +45,7 @@ const titlestring = computed(() => {
 	return data.value?.projectConfig?.logo?.string;
 });
 
-function onSelectMenuItem(item: ItemType) {
+function onSelectMenuItem(item: ReadonlyDeep<ItemType>) {
 	let newWindowState: WindowState;
 	// TODO: move zod-based typing to the api definition, so this switch can be deleted
 	switch (item.targetType) {
@@ -124,6 +126,13 @@ function onSelectMenuItem(item: ItemType) {
 				targetType: "DataList",
 				title: item.label ?? "",
 				params: item.params as DataListWindowItem["params"],
+			};
+			break;
+		case "FeatureDescriptionList":
+			newWindowState = {
+				targetType: "FeatureDescriptionList",
+				title: item.label ?? "",
+				params: item.params as FeatureDescriptionListWindowItem["params"],
 			};
 			break;
 		case "ExploreSamplesForm":

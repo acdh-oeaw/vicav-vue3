@@ -1,12 +1,14 @@
 <script lang="ts" setup>
+import type { ReadonlyDeep } from "type-fest";
+
 import type { ItemType, MainItemType } from "@/lib/api-client";
 
 const props = defineProps<{
-	menus: Array<MainItemType>;
+	menus: ReadonlyDeep<Array<MainItemType>>;
 }>();
 
 const emit = defineEmits<{
-	(event: "select-menu-item", item: ItemType): void;
+	(event: "select-menu-item", item: ReadonlyDeep<ItemType>): void;
 }>();
 
 const { menus } = toRefs(props);

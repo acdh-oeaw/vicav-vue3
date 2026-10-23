@@ -5,12 +5,11 @@ import { test } from "liqe";
 
 import { useGeojsonStore } from "@/stores/use-geojson-store.ts";
 import { narrowScreenBreakpoint } from "@/stores/use-windows-store.ts";
-import {
-	type FeatureType,
-	type FeatureValueGroup,
-	GeojsonMapSchema,
-	type ListMapWindowItem,
-	type WindowItem,
+import type {
+	FeatureType,
+	FeatureValueGroup,
+	ListMapWindowItem,
+	WindowItem,
 } from "@/types/global.ts";
 
 interface Props {
@@ -72,6 +71,22 @@ const columnVisibility = computed(() => {
 		country: false,
 	};
 });
+
+const nameCollator = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });
+
+function nameSortKey(feature: FeatureType) {
+	return String((feature.properties as Record<string, unknown>).name ?? "")
+		.normalize("NFD")
+		.replace(/\p{Mn}/gu, "")
+		.replace(/[ʿʾʼ‘’'`]/g, "")
+		.trim();
+}
+
+const sortedFeatures = computed(() =>
+	[...(geojsonData.value?.features ?? [])].sort((a, b) =>
+		nameCollator.compare(nameSortKey(a), nameSortKey(b)),
+	),
+);
 
 function applyGlobalFilter(row: Row<FeatureType>, _colId: string, queryString: string) {
 	const hidableVisibleCells = row.getVisibleCells().filter((cell) => cell.column.getCanHide());
@@ -222,7 +237,6 @@ function registerTable(table: Table<FeatureType>) {
 		table.setGlobalFilter(normalizeOperators(queryString.value));
 	}
 	if (params.value.featureValueGroups) restoreFeatureValueGroups(params.value.featureValueGroups);
-
 	GeojsonStore.table = table;
 	tableRef.value = table;
 
@@ -238,8 +252,6 @@ function openGeoJsonMap() {
 			},
 		} as unknown as WindowItem,
 		"Variety Data - Map View",
-		GeojsonMapSchema.shape.params,
-		"markerType",
 		false,
 	);
 	void nextTick(splitTableAndMapWindows);
@@ -252,7 +264,7 @@ function splitTableAndMapWindows() {
 	const windows = Array.from(windowsStore.registry.values());
 	const table = windows.find((w) => w.targetType === "ListMap");
 	const map = windows.find((w) => w.targetType === "GeojsonMap");
-	if (!table || !map || windows.length > 3) return;
+	if (!table?.winbox || !map?.winbox || windows.length > 3) return;
 
 	const additionalWindow = windows.find((w) => w !== table && w !== map);
 
@@ -262,14 +274,14 @@ function splitTableAndMapWindows() {
 	map.winbox
 		.resize(viewport.width - tableWidth - additionalWidth, viewport.height)
 		.move(tableWidth, 0);
-	if (additionalWindow)
+	if (additionalWindow?.winbox)
 		additionalWindow.winbox
 			.resize(additionalWidth, viewport.height)
 			.move(viewport.width - additionalWidth, 0);
 }
 
 windowsStore.$onAction(({ name, after }) => {
-	if (["arrangeWindows", "addWindow", "removeWindow"].includes(name)) {
+	if (["arrangeWindows", "addWindow", "openWindow", "removeWindow"].includes(name)) {
 		after(() => void nextTick(splitTableAndMapWindows));
 	}
 });
@@ -355,7 +367,7 @@ function onFeatureClick(val: Header<unknown, unknown>) {
 		<Centered v-if="isPending">
 			<LoadingIndicator />
 		</Centered>
-		<div class="flex justify-between justify-items-end border-b bg-white py-2">
+		<div class="flex justify-between justify-items-end border-b bg-white p-2">
 			<!-- <DataTablePagination v-if="tableRef" :table="tableRef as unknown as Table<never>" /> -->
 			<div class="flex px-2 text-neutral-700" data-onboarding="jump-to-location">
 				<SearchableCombobox
@@ -412,7 +424,7 @@ function onFeatureClick(val: Header<unknown, unknown>) {
 				:enable-filter-on-columns="false"
 				:global-filter-fn="applyGlobalFilter"
 				:initial-column-visibility="columnVisibility"
-				:items="geojsonData?.features as Array<never>"
+				:items="sortedFeatures as Array<never>"
 				:min-header-depth="2"
 				:sticky-header="true"
 				:visibility-change-fn="onVisibilityChange"

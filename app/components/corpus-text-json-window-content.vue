@@ -184,7 +184,7 @@ onMounted(async () => {
 							</ToggleGroupItem>
 						</TooltipTrigger>
 						<TooltipContent class="border-black bg-black text-white">
-							Show lemma annotations and dictionary links in utterances.
+							Show dictionary links on tokens.
 						</TooltipContent>
 					</Tooltip>
 					<Tooltip v-if="hasLinguisticAnnotations">
@@ -281,7 +281,7 @@ onMounted(async () => {
 								<div
 									v-for="(u, uIndex) in getUtterances(a)"
 									:key="uIndex"
-									class="flex max-w-full flex-row flex-wrap px-6 py-3"
+									class="flex max-w-full flex-row flex-nowrap overflow-x-auto px-6 py-3"
 								>
 									<CorpusTextJsonUtterance
 										v-for="(uContent, index) in u['$$']"

@@ -32,9 +32,11 @@ const { arrangement: currentArrangement, registry } = storeToRefs(windowsStore);
 						class="justify-between gap-2 items-center"
 						@select="
 							() => {
-								// @ts-expect-error Property missing in upstream types.
+								if (!item.winbox) {
+									return;
+								}
+
 								if (item.winbox.min) {
-									// @ts-expect-error Method missing in upstream types.
 									item.winbox.restore();
 								}
 
@@ -47,7 +49,7 @@ const { arrangement: currentArrangement, registry } = storeToRefs(windowsStore);
 							}
 						"
 					>
-						{{ item.winbox.title }}
+						{{ item.label }}
 						<Button class="p-1 size-fit" variant="ghost" @click="removeWindow(id)"
 							><X class="size-3"></X><span class="sr-only">Close window</span></Button
 						>

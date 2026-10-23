@@ -26,6 +26,7 @@ const props = defineProps<{
 	highlightedValues?: Array<string>;
 	column: Column<PatchedFeatureType>;
 	fullEntry: PatchedFeatureType["properties"];
+	showAllDetails: boolean;
 }>();
 
 function getSources(featureValueEntry: unknown) {
@@ -111,17 +112,16 @@ function trimPrefix(str: string) {
 	if (typeof str === "string") return str.replace(/#|pgr:/, "");
 	else return str;
 }
-const { showAllDetails } = storeToRefs(useGeojsonStore());
 const infoOpen = ref(
 	Object.fromEntries(
-		Object.keys(props.value ?? {}).map((key) => [key, showAllDetails.value ?? false]),
+		Object.keys(props.value ?? {}).map((key) => [key, props.showAllDetails ?? false]),
 	),
 );
 watch(
-	() => showAllDetails.value,
+	() => props.showAllDetails,
 	() => {
 		infoOpen.value = Object.fromEntries(
-			Object.keys(props.value ?? {}).map((key) => [key, showAllDetails.value ?? false]),
+			Object.keys(props.value ?? {}).map((key) => [key, props.showAllDetails ?? false]),
 		);
 	},
 );
@@ -250,7 +250,7 @@ const cellRows = computed<Array<CellRow>>(() => {
 		const petalEntry = getPetalEntry(key);
 		const groupId = getGroupId(petalEntry);
 
-		if (groupId && !showAllDetails.value) {
+		if (groupId && !props.showAllDetails) {
 			const collapsed = collapsedGroups.get(groupId);
 			if (collapsed) {
 				collapsed.values.push({ key, val });

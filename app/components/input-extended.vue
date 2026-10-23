@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import type { ReadonlyDeep } from "type-fest";
+
 import type { SpecialCharacters } from "@/lib/api-client";
 
 const props = defineProps<{
 	modelValue: string;
-	specialCharacters: SpecialCharacters;
+	specialCharacters: ReadonlyDeep<SpecialCharacters>;
 	placeholder: string;
 }>();
 const emit = defineEmits(["update:modelValue", "submit"]);

@@ -1,0 +1,10 @@
+diff --git a/index.d.ts b/index.d.ts
+index 95820cf339..ac7d527ed9 100644
+--- a/index.d.ts
++++ b/index.d.ts
+@@ -159,4 +159,4 @@ declare const WinBox: WinBox.WinBoxConstructor & {
+     new: ((title: string, params?: WinBox.Params) => WinBox) | ((params: WinBox.Params) => WinBox);
+ };
+ 
+-export = WinBox;
++export default WinBox;

@@ -4,18 +4,21 @@ import type { SimpleMetadataListState } from "@/types/global.ts";
 import type { simpleTEIMetadata } from "@/types/teiCorpus.ts";
 
 defineProps<{
+	datasetId?: string;
 	items: Array<simpleTEIMetadata>;
 	listState?: SimpleMetadataListState;
 }>();
 
 defineEmits<{
 	"update:listState": [listState: SimpleMetadataListState | undefined];
+	"update:visibleItems": [items: Array<simpleTEIMetadata>];
 }>();
 </script>
 
 <template>
 	<SimpleMetadataDataList
 		data-type="Feature"
+		:dataset-id="datasetId"
 		:items="items"
 		:list-state="listState"
 		:require-tei-availability-for-link="false"
@@ -23,5 +26,6 @@ defineEmits<{
 		:show-audio-availability="false"
 		target-type="Feature"
 		@update:list-state="$emit('update:listState', $event)"
+		@update:visible-items="$emit('update:visibleItems', $event)"
 	/>
 </template>

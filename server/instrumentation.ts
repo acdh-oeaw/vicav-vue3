@@ -171,7 +171,7 @@ v${metrics.resource.attributes[ATTR_SERVICE_VERSION]?.toString() ?? "unknown ver
 const contextManager = new AsyncLocalStorageContextManager();
 const traceProvider = new NodeTracerProvider({
 	resource: resourceFromAttributes({
-		[ATTR_SERVICE_NAME]: "vicav-vue3",
+		[ATTR_SERVICE_NAME]: process.env.OTEL_SERVICE_NAME ?? "vicav-vue3",
 		[ATTR_SERVICE_VERSION]: env.public.currentGitSha,
 	}),
 	spanProcessors: [
@@ -189,7 +189,7 @@ traceProvider.register({
 
 const meterProvider = new MeterProvider({
 	resource: resourceFromAttributes({
-		[ATTR_SERVICE_NAME]: "vicav-vue3",
+		[ATTR_SERVICE_NAME]: process.env.OTEL_SERVICE_NAME ?? "vicav-vue3",
 		[ATTR_SERVICE_VERSION]: env.public.currentGitSha,
 	}),
 	readers: [

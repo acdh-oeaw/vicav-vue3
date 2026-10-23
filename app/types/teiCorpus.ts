@@ -39,6 +39,7 @@ export type place = z.infer<typeof placeSchema>;
 
 export const SimpleTEIMetadataSchema = z.object({
 	id: z.string(),
+	teiSource_idno: z.string().optional(),
 	label: z.string(),
 	title: z.string(),
 	author: z.array(AuthorSchema),
@@ -56,6 +57,9 @@ export const SimpleTEIMetadataSchema = z.object({
 	place: placeSchema,
 	person: z.array(SimplePersonSchema),
 	"@hasTEIw": z.string(),
+	geoSource: z.string(),
+	geoReference: z.string().optional(),
+	coordinates: z.tuple([z.number(), z.number()]).optional(),
 	publication: z.object({
 		refType: z.enum(["external", "internal"]),
 		type: z.string(),
