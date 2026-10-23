@@ -16,36 +16,87 @@ One env var controls everything: `NUXT_PUBLIC_API_BASE_URL`.
 | `https://wibarab-api.acdh-dev.oeaw.ac.at`  | wibarab  | dev     |
 | `https://wibarab-api.acdh.oeaw.ac.at`      | wibarab  | prod    |
 
-`playwright.config.ts` reads this var and sets `testMatch: "<backend>/**/*.@(test|spec).ts"`.
+### Backend matching is exact-match
+
+`playwright.config.ts` switches on the **full string** `process.env.NUXT_PUBLIC_API_BASE_URL` (no
+trailing slash, no prefix matching). Any other value aborts the run before collection:
+
+```
+Error: Unknown backend https://wibarab-api.acdh-ch-dev.oeaw.ac.at
+    at file:///V:/vicav-vue3/playwright.config.ts:35:10
+```
+
+Note the commented-out `https://wibarab-api.acdh-ch-dev.oeaw.ac.at` in `.env.local` is **not** in
+the list above (`-ch-dev` vs `-dev`) — uncommenting it fails the config.
+
+The matched backend name is used for `testMatch: "<backend>/**/*.@(test|spec).ts"`. Playwright
+prefixes every non-`**/` pattern with `**/`, so the effective pattern is
+`**/<backend>/**/*.@(test|spec).ts`: a file runs iff **any directory segment** of its path equals
+the backend name (verified in `playwright-core`'s `createFileMatcher`). Consequence:
+
+- `e2e/pages/vicav/menu/x.test.ts` runs for backend `vicav` only.
+- `e2e/seed.spec.ts` (at the `e2e/` root) never runs for any backend.
+
+## Test Locations and Counts
+
+Counts below are from `npx playwright test --list` (all three browser projects) on **2026-10-23**.
+
+| Backend  | Directory                    | Files | Tests (×3 browsers) |
+| -------- | ---------------------------- | ----- | ------------------- |
+| vicav    | `e2e/pages/vicav/` + `menu/` | 46    | 162                 |
+| tunocent | `e2e/pages/tunocent/`        | 13    | 138                 |
+| shawi    | `e2e/pages/shawi/` + `menu/` | 7     | 48                  |
+| wibarab  | `e2e/pages/wibarab/`         | 2     | 21                  |
+| —        | `e2e/seed.spec.ts`           | 1     | never runs          |
+
+- `e2e/pages/vicav/` holds 3 top-level files (`index.test.ts`, `map.test.ts`, `imprint.test.ts`)
+  plus 43 files in `e2e/pages/vicav/menu/` — the largest suite.
+- `e2e/pages/tunocent/` uses `.spec.ts` for most files, `.test.ts` for a few.
+- `e2e/pages/shawi/` holds 2 top-level files plus 5 in `e2e/pages/shawi/menu/`.
+- `e2e/pages/wibarab/` holds only `index.test.ts` and `imprint.test.ts`.
+- Every test file is executed by all three projects (chromium, firefox, webkit).
 
 ## Running Tests
 
-```bash
-# Set in .env.local (gitignored)
-NUXT_PUBLIC_API_BASE_URL="https://vicav-dev.acdh.oeaw.ac.at"
+| Script                      | What it does                                                                                                                                                                                 |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm run test`             | Full gate: `dotenv -e .env.local -- node checkenv.mjs` (env dump) → `pnpm playwright install` → in parallel `format:check`, `lint:*:check-no-cache`, `types:check`, `test:unit`, `test:e2e`. |
+| `pnpm run test:e2e`         | `dotenv -e .env.local -- playwright test`. Needs a **pre-built** app (see below).                                                                                                            |
+| `pnpm run test:e2e:ui`      | `dotenv -e .env.local -- playwright test --ui` — Playwright UI mode.                                                                                                                         |
+| `pnpm run test:e2e:debug`   | Playwright `--debug`.                                                                                                                                                                        |
+| `pnpm run test:e2e:codegen` | Playwright codegen (used to create `e2e/seed.spec.ts`).                                                                                                                                      |
+| `pnpm run test:unit`        | `vitest --run --typecheck --passWithNoTests`.                                                                                                                                                |
+| `pnpm run validate`         | `format:check` + `lint:check` + `types:check` + `test:unit` (no E2E).                                                                                                                        |
+| `pnpm run build`            | `generate:api-client` (downloads `openapi.json` from GitHub + regenerates `app/lib/api-client/`) → `nuxt build --dotenv ./.env.local`.                                                       |
+| `pnpm run start:local`      | `dotenv -e .env.local -- pnpm run start` → `node .output/server/index.mjs`. This is what Playwright's `webServer` runs.                                                                      |
 
-# Build (PUBLIC vars are read at server start, not baked at build time — see "Quirks")
-pnpm run build
+All `test:*` scripts require `.env.local` (the `dotenv -e` wrapper fails without it).
 
-# Run tests
-pnpm run test:e2e                # all vicav tests
-pnpm run test:e2e keyboard       # only keyboard tests
-```
+### Is a rebuild needed for a backend switch?
 
-The pnpm scripts use `dotenv -e .env.local` to inject the var into both the app and playwright.
+**No.** `NUXT_PUBLIC_API_BASE_URL` is a `runtimeConfig.public` value: Nitro re-applies `NUXT_*` env
+vars to the runtime config on **server start** (and per request), so restarting
+`.output/server/index.mjs` with a different value switches the backend without rebuilding.
 
-## Test Locations
-
-- `e2e/pages/vicav/menu/` — 43 test files
-- `e2e/pages/tunocent/`, `e2e/pages/shawi/`, `e2e/pages/wibarab/` — other backends
+- `pnpm run test:e2e` needs an existing `.output/` build (`pnpm run build` once), but not a rebuild
+  per backend.
+- `playwright.config.ts` reads the env var directly in the test-runner process to pick `testMatch`;
+  `webServer` starts `pnpm run start:local`, which loads the same `.env.local`.
+- The real pitfall is `webServer.reuseExistingServer: !isCI`: locally Playwright **reuses** whatever
+  already listens on port 3000 and will not restart it with the new env var. Kill the process on
+  port 3000 before switching backends locally.
 
 ## Prefer Live API Examples over `openapi.json`
 
-`app/assets/openapi.json` is a generated/stale artifact. Its example responses only cover VICAV (and
-an empty SHAWI panel) and do **not** reflect TUNOCENT, WIBARAB, or the current live data of any
-backend. When you need to know what an endpoint actually returns — project config / `panel`, the
-menu tree, a text's rendered HTML, a data list, a dictionary entry — **fetch it from the live
-backend** instead of trusting the `openapi.json` examples:
+`app/assets/openapi.json` is a generated artifact. Its **schema** is authoritative
+(`components.schemas.ProjectConfig` → `projectConfig_type`, whose `panel` property is an array of
+`item_type`), but its **examples** are stale: the `GET /vicav/project` response carries only two
+examples, `project_config_VICAV` (panel: Mission, News, "All Bibl. Locations on Map") and
+`project_config_SHAWI` (panel: `[]`, while SHAWI now serves a non-empty panel live). There are no
+TUNOCENT/WIBARAB examples.
+
+When you need to know what an endpoint actually returns — project config / `panel`, the menu tree, a
+text's rendered HTML — **fetch it from the live backend**:
 
 ```bash
 # Project config (initial windows / panel + menus)
@@ -56,26 +107,33 @@ curl -s -H "Accept: application/xml" "<backend-url>/vicav/text?id=<textId>"
 ```
 
 Substitute `<backend-url>` from the "Backend Switching" table (or `.env.local`). This applies to
-**every** backend (VICAV, TUNOCENT, SHAWI, WIBARAB) and every endpoint. The `openapi.json` is still
-authoritative for the _schema_ (request/response shapes); only its _examples_ are stale.
+**every** backend (VICAV, TUNOCENT, SHAWI, WIBARAB) and every endpoint.
 
 ## Current Vicav Menu Data (live)
 
 Live counts below are **snapshots of the backend content, not repo state** — the backend can change
 them at any time, so re-verify (via `GET /vicav/project`) before relying on them in a test.
 
-- **Project**: Mission, News, Types of Text/Data, Contributors, Linguistics
-- **Bibliographies**: 8 items (first is Explanation)
-- **Profiles**: Explanation + List, Show All Profiles on Map, Contribute a Profile
-- **Feature Lists**: Explanation, Cross-examine, Show All on Map, Contribute
-- **Samples**: Explanation, Show All on Map, Contribute
-- **Texts**: Explanation and Overview
-- **Dictionaries**: 10 items (last is "Contribute a Dictionary/Glossary", so substring names like
-  "Contribute a Dictionary" match)
-- **Tools & Technology**: 16 items
+Re-verified live **2026-10-23** against `https://vicav-dev.acdh.oeaw.ac.at/vicav/project`
+(previously 2026-09-03). The frontend renders `menu.title` for the triggers and `item.title` for the
+content items (`app/components/app-navigation-menu.vue`), so the titles below are what the tests
+see.
 
-Counts are per menu **entry** (separators excluded). Re-verified live 2026-10-23 against
-`https://vicav-dev.acdh.oeaw.ac.at/vicav/project`; previously verified live 2026-09-03.
+| Trigger (dropdown) | Items | Titles                                                                                                                                                                                                                                                                                                                                                                                             |
+| ------------------ | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Project            | 5     | Mission, News, Types of Text/Data, Contributors, Linguistics                                                                                                                                                                                                                                                                                                                                       |
+| Bibliographies     | 8     | Explanation, All Bibl. Locations on Map, All Bibl. Regions on Map, All Bibl. Dialect Regions on Map, All Dictionaries in Bibl. on Map, All Textbooks in Bibl. on Map, Query Bibliography, Contribute to the Bibliography                                                                                                                                                                           |
+| Profiles           | 3     | Explanation + List, Show All Profiles on Map, Contribute a Profile                                                                                                                                                                                                                                                                                                                                 |
+| Feature Lists      | 4     | Explanation, Cross-examine the VICAV Feature Lists, Show All Feature Lists on Map, Contribute a Feature List                                                                                                                                                                                                                                                                                       |
+| Samples            | 3     | Explanation, Show All Samples on Map, Contribute a Sample Text                                                                                                                                                                                                                                                                                                                                     |
+| Texts              | 1     | Explanation and Overview                                                                                                                                                                                                                                                                                                                                                                           |
+| Dictionaries       | 10    | All Dictionaries in Bibl. on Map, All VICAV Dictionaries on Map, Query the VICAV Dictionaries, TUNICO Dictionary, Damascus Dictionary, Cairo Dictionary, Baghdad Dictionary, MSA Dictionary, Technicalities, Contribute a Dictionary/Glossary                                                                                                                                                      |
+| Tools & Technology | 16    | Dictionary Editor (VLE), Arabic Research Tools, Corpora (Spoken Varieties), Corpora (MSA), Special Corpora, Corpora (Historical Varieties), Dictionaries, Language Processing Tools, Other Websites & Projects, Learning Materials, Textbook Syrian Arabic (Sound files), Textbook Baghdad Arabic (Sound files), Vocabularies on Smartphones, Available Programs, Available Data, Keyboard Layouts |
+
+Counts are per menu **entry** (separators excluded) and match the assertions in the E2E suite
+(`toHaveCount(8)`, `10`, `4`, `3`, `5`, `3`, `1`, `16`, and 8 category triggers). Note the last
+Dictionaries item is titled "Contribute a Dictionary/Glossary", so substring names like "Contribute
+a Dictionary" match.
 
 ## Initial Windows & Text-Window Verification
 
@@ -83,51 +141,78 @@ Counts are per menu **entry** (separators excluded). Re-verified live 2026-10-23
 
 The windows that open on first load of `/` are defined **server-side** in the backend project config
 (`GET /vicav/project` → `projectConfig.panel`), **not** in the repo's `app/assets/openapi.json`.
-That file only contains the `ProjectConfig` **schema** (whose `panel` property is an array of
-`item_type`) and two stale **examples**: `project_config_VICAV` (panel: Mission, News, "All Bibl.
-Locations on Map") and `project_config_SHAWI` (empty panel — SHAWI now serves a non-empty panel
-live). TUNOCENT and wibarab examples are absent. To learn a backend's initial windows, query the
-live backend:
 
-```bash
-curl -s -H "Accept: application/json" "<backend-url>/vicav/project" | grep -o '"panel".*'
-```
+Verified live **2026-10-23** (dev backends):
 
-Verified live (2026-10-23; previously 2026-09-03):
+| Backend  | Initial windows (title · targetType · textId)                                                                              |
+| -------- | -------------------------------------------------------------------------------------------------------------------------- |
+| vicav    | Mission (Text, `vicavMission`) · News (Text, `vicavNews`) · All Bibl. Locations on Map (WMap, endpoint `bibl_markers_tei`) |
+| tunocent | Welcome to TUNOCENT (Text, `tunocentOpeningPage`) — a single window                                                        |
+| shawi    | The Shawi Project (Text, `shawi.paratexts.about`) — a single window                                                        |
+| wibarab  | Welcome (Text, `wibarab.paratexts.index`) · Map (ListMap, `wibarabFeatures`) — two windows                                 |
 
-| Backend  | Initial windows (title · targetType · textId)                                             |
-| -------- | ----------------------------------------------------------------------------------------- |
-| vicav    | Mission (Text, vicavMission) · News (Text, vicavNews) · All Bibl. Locations on Map (WMap) |
-| tunocent | Welcome to TUNOCENT (Text, tunocentOpeningPage) — a single window                         |
-| shawi    | The Shawi Project (Text, shawi.paratexts.about) — a single window                         |
+Note: the VICAV panel item is titled "News" but labelled "VICAV News"; the window title comes from
+`title`.
 
-Restoration pipeline (`app/stores/use-windows-store.ts`):
+### Restoration pipeline
+
+`app/stores/use-windows-store.ts`:
 
 ```
-restoreState()                                    // :186 — triggered on mount
-  → route.query.w present and decodable?
+restoreState()                                          // :186
+  → cancelPersistence(); restoring = true
+  → try { route.query.w present and decodable?
       yes → states = decodeWindowStates(String(route.query.w))   // app/utils/window-state-codec.ts
-             arrangement = route.query.a (if it is a known arrangement)
-      no  → await suspense()                     // waits for the SSR-prefetched useProjectInfo()
-             states = initialScreenSetup.value   // data.value?.projectConfig?.panel ?? []  (:76-78)
-  → for (const state of states) openWindowState(state, { reuse: false })   // :210
+             arrangement = route.query.a (if it is a known arrangement, else "column-five-flex")
+      no  → catch: toast "RestoreState Error" (only if route.query.w was present)
+             await suspense()                       // waits for the SSR-prefetched useProjectInfo()
+             states = initialScreenSetup.value      // data.value?.projectConfig?.panel ?? []  (:76)
+    }
+  → await nextTick()
+  → close every window currently in the registry
+  → for (const state of states) openWindowState(state, { reuse: false })   // :235
+  → setWindowArrangement(restoredArrangement)
+  → await nextTick()
+  → finally: restoring = false; schedulePersistence()                    // :496
 ```
 
-`restoreState()` is called from `app/components/window-manager.client.vue:19-21` (on mount, when
-`route.path === "/"`). There is no `initializeScreen()` step and no navigation to `/?w=<base64>`:
-the URL is written back afterwards by the debounced `schedulePersistence()` (`:496`), not before the
-restore. `addWindow()` (`:294`) is a different entry point — it opens a _new_ window from the menu,
-it is not used for restoring.
+- `restoreState()` is called from `app/components/window-manager.client.vue:19-21` (on mount, when
+  `route.path === "/"`). There is no `initializeScreen()` step and no navigation to `/?w=<base64>`
+  before the restore: the URL is written back afterwards by the debounced (150 ms)
+  `schedulePersistence()`.
+- `openWindowState()` merges the backend's configured defaults for a `textId` (looked up in
+  `projectConfig.menu.main`) into the state before validating it with the `WindowState` Zod schema;
+  a parse failure shows the toast "AddWindow Error: parameter parse failed" and skips the window.
+- `addWindow()` (`:294`) is a different entry point — it opens a _new_ window from the menu
+  (`reuse: true`), it is not used for restoring.
+- URL encoding (`app/utils/window-state-codec.ts`): `encodeWindowStates()` =
+  `btoa(JSON.stringify(...))` with all non-ASCII characters escaped as `\uXXXX`;
+  `decodeWindowStates()` = `JSON.parse(atob(...))` and throws unless the result is an array. The
+  query string is `?w=<base64>&a=<arrangement>` (`a` ∈
+  `none | cascade | tile | smart-tile | column-five-flex`).
+- Unit tests for this pipeline live in `app/stores/use-windows-store.nuxt.spec.ts` (malformed URLs
+  fall back to the initial state, Unicode round-trip, legacy `z` geometry field, duplicate windows).
 
 ### Verifying a Text window loaded (and the correct text)
 
-A `Text` window (`window-content.vue:27` → `text-window-content.vue`) fetches via `useTextById()`
-(`app/composables/use-text-by-id.ts`: `retry: false`, `GET /vicav/text?id=<textId>`,
-`Accept: application/xml`) and renders the returned HTML into
-`<div v-if="data" class="prose max-w-3xl p-8">`. While `isPending || isPlaceholderData` the wrapper
-is `opacity-50 grayscale` with a centered `LoadingIndicator`
-(`<svg><title>Loading...</title></svg>`). A failed fetch leaves `.prose` absent (no retry), so an
-empty window + spinner is the tell-tale sign.
+A `Text` window (`app/components/window-content.vue:27` → `app/components/text-window-content.vue`)
+fetches via `useTextById()` (`app/composables/use-text-by-id.ts`: `retry: false`,
+`api.vicav.getText({ id }, { headers: { accept: "application/xml" } })` →
+`GET /vicav/text?id=<textId>`) and renders the returned HTML into
+
+```
+<div v-if="data" class="prose max-w-3xl p-8" v-html="data" />     // text-window-content.vue:32
+```
+
+While `isPending || isPlaceholderData` the wrapper gets `opacity-50 grayscale` (`:26`) and a
+`<Centered><LoadingIndicator /></Centered>` (`:34-36`) is rendered — the indicator is an `<svg>`
+with `<title>Loading...</title>` (`app/components/ui/loading-indicator.vue`).
+
+**Failure behaviour:** the query has `retry: false`, so a failed fetch never produces `.prose`; the
+vue-query `QueryCache.onError` (`app/plugins/query-client.ts`) shows a toast titled "Error"
+(foreground, variant `negative`) with the RFC7807 problem title/detail. The spinner disappears when
+the query settles into the error state (`isPending` → false) — so "no `.prose`" is the reliable
+signal, not a permanent spinner.
 
 To assert a Text window **loaded**:
 
@@ -146,7 +231,7 @@ To prove it loaded the **correct** text (right `textId`), assert unique, stable 
 discriminator is the document `<h2>` plus one or two body phrases. Playwright normalizes whitespace,
 so phrases match across the backend's source line breaks.
 
-TUNOCENT opening text (`tunocentOpeningPage`) — verified unique phrases:
+TUNOCENT opening text (`tunocentOpeningPage`) — phrases verified live 2026-10-23:
 
 - heading `The TUNOCENT project` (the About text's `<h2>` is only `TUNOCENT`, so this is unique to
   the opening page)
@@ -173,8 +258,8 @@ the window **title** (`div` filter `.nth(1)`) — it does not verify content or 
 | `[role='menubar']`           | `[data-slot=navigation-menu]`           |
 | `[role='separator']`         | `[data-slot=navigation-menu-separator]` |
 
-**Windows dropdown** (`window-list-dropdown.vue`) still uses Menubar — keep `menuitem` selectors for
-it.
+**Windows dropdown** (`app/components/window-list-dropdown.vue`) still uses Menubar — keep
+`menuitem` selectors for it (e.g. `page.getByRole("menuitem", { name: "Windows" })`).
 
 Trigger lookups should be scoped to `[data-slot=navigation-menu-list]` with `exact: true` (see
 "Locator name collisions" below); content items are scoped to `[data-slot=navigation-menu-content]`.
@@ -188,36 +273,30 @@ every time `.output/server/index.mjs` starts (Nitro's `nitro.envPrefix: "NUXT_"`
 env vars to `runtimeConfig` on startup and per-request). Restarting the built server with a
 different `NUXT_PUBLIC_API_BASE_URL` changes the backend without a rebuild.
 
-No rebuild is needed for `test:e2e` either: `playwright.config.ts` reads the env var directly in the
-test-runner process to pick `testMatch`, and `webServer` starts the server with the same
-`.env.local`. The actual pitfall is `webServer.reuseExistingServer: true` (local only) — if a server
-is already listening on port 3000 from a previous run, Playwright reuses it as-is and won't restart
-it with the new env var. Kill any process on port 3000 before changing backends locally.
-
 To re-verify: start `.output/server/index.mjs` with `PORT=<port>` and
 `NUXT_PUBLIC_API_BASE_URL=<url>`, `curl` `/`, and check `apiBaseUrl:"..."` in the HTML payload.
-
-### Backend selection is exact-match
-
-`playwright.config.ts` matches `NUXT_PUBLIC_API_BASE_URL` against a hardcoded list of nine URLs (no
-trailing slash) and throws `Unknown backend ...` for any other value. The matched backend also sets
-`testMatch`, so only tests under `e2e/pages/<backend>/` run.
 
 ### Env comes from the pnpm scripts, not the config
 
 The `import "dotenv/config"` in `playwright.config.ts` is commented out; the env var is injected by
 the `dotenv -e .env.local` wrapper in the pnpm scripts. The VS Code Playwright extension UI bypasses
 the pnpm scripts, so you must set the variable via `playwright.env` in your VS Code settings —
-otherwise the config throws.
+otherwise the config throws "Unknown backend undefined".
 
 ### CI vs local behaviour
 
-| Setting                         | Local   | CI                                     |
-| ------------------------------- | ------- | -------------------------------------- |
-| `forbidOnly`                    | off     | on (a stray `test.only` fails the run) |
-| `retries`                       | 0       | 2                                      |
-| `workers`                       | default | 1                                      |
-| `webServer.reuseExistingServer` | true    | false                                  |
+| Setting                         | Local                        | CI                                     |
+| ------------------------------- | ---------------------------- | -------------------------------------- |
+| `forbidOnly`                    | off                          | on (a stray `test.only` fails the run) |
+| `retries`                       | 0                            | 2                                      |
+| `workers`                       | not set (Playwright default) | not set (Playwright default)           |
+| `webServer.reuseExistingServer` | true                         | false                                  |
+| `trace` / `video`               | `on-first-retry`             | `on-first-retry`                       |
+
+`workers` is **not** configured in `playwright.config.ts` — parallelism comes from Playwright's
+default (a fraction of the CPU cores) unless the reusable CI workflow restricts it via
+`--workers`/`PLAYWRIGHT_WORKERS`. `fullyParallel` is `true`, `reporter` is `"html"`, and all three
+desktop projects (chromium, firefox, webkit) run the same test files.
 
 ### Browser projects need WebGL flags
 
@@ -269,14 +348,15 @@ Dictionaries" — these collide with menu trigger names page-wide. Scope trigger
 Menu handlers only exist after client hydration. Under parallel load a test can click a trigger
 before hydration finishes; the click is then silently dropped and the test times out waiting for the
 dropdown. Every test should first `await expect(page.locator("#window-root")).toBeInViewport()`
-(hydration + window restore), which is also the established suite convention.
+(hydration + window restore), which is also the established suite convention. `#window-root` is the
+id of the client-only window root (`app/utils/constants.ts` → `windowRootId`).
 
 ### Aborting the API still serves SSR data
 
 `page.route(...).abort()` only intercepts **browser** requests; the SSR fetch to the backend still
-succeeds. In `api-error-handling.test.ts` the menu is therefore rendered from SSR HTML but
-non-interactive (`**/_nuxt/**` is also aborted, so nothing hydrates): triggers are visible, clicking
-does nothing, and `#window-root` never appears.
+succeeds. In `e2e/pages/vicav/menu/api-error-handling.test.ts` the menu is therefore rendered from
+SSR HTML but non-interactive (`**/_nuxt/**` is also aborted, so nothing hydrates): triggers are
+visible, clicking does nothing, and `#window-root` never appears.
 
 ### NavigationMenu DOM/ARIA notes
 
@@ -289,11 +369,13 @@ lookups are unique without scoping, except where a name repeats inside one menu.
 ### `e2e/seed.spec.ts` never runs
 
 It is a codegen placeholder at the `e2e/` root, outside any backend folder, so it does not match
-`testMatch` (`<backend>/**/*.@(test|spec).ts`).
+`testMatch` (`**/<backend>/**/*.@(test|spec).ts`).
 
 ### Unit tests
 
 - Co-located with sources; Nuxt component tests use the `.nuxt.spec.ts` suffix (`@nuxt/test-utils`).
+  34 unit test files exist (e.g. `app/stores/use-windows-store.nuxt.spec.ts`,
+  `app/components/dict-entry.nuxt.spec.ts`, `app/utils/api-error.test.ts`).
 - `vitest.config.ts` explicitly excludes `**/e2e/**`.
 - `pnpm run test:unit` runs with `--typecheck --passWithNoTests`.
 
@@ -306,23 +388,31 @@ otherwise).
 
 ### CI test jobs
 
-E2E in CI runs per backend variant (vicav, shawi, tunocent, wibarab) via the reusable
-`acdh-oeaw/gl-autodevops-minimal-port` workflow `herokuish-tests-db-url.yaml`, against the built
-Herokuish image. The local `.github/workflows/starter.yaml` is more than env setup: besides the
-`setup_workflow_env` / `generate_workflow_vars*` jobs it defines `_1` (build the Herokuish image and
-push it to the registry), the per-backend test jobs `_2`, `_2_tunocent`, `_2_shawi`, `_2_wibarab`
-(all using `herokuish-tests-db-url.yaml`), and the deploy jobs `_3`, `_3-shawi`, `_3_tunocent`,
-`_3_wibarab` (using `deploy.yml`).
+`.github/workflows/starter.yaml` (triggered on every push and via `workflow_dispatch`) contains only
+environment setup and job wiring; the actual work is delegated to reusable workflows of
+`acdh-oeaw/gl-autodevops-minimal-port`:
+
+| Job                                                   | Reusable workflow                           | Purpose                                      |
+| ----------------------------------------------------- | ------------------------------------------- | -------------------------------------------- |
+| `setup_workflow_env`                                  | —                                           | environment/registry/branch → outputs        |
+| `generate_workflow_vars{,_shawi,_tunocent,_wibarab}`  | —                                           | per-variant env + `PUBLIC_URL`               |
+| `_1`                                                  | `build-herokuish-and-push-to-registry.yaml` | build image, push to registry                |
+| `_2` (vicav), `_2_shawi`, `_2_tunocent`, `_2_wibarab` | `herokuish-tests-db-url.yaml`               | per-backend test run against the built image |
+| `_3`, `_3-shawi`, `_3_tunocent`, `_3_wibarab`         | `deploy.yml`                                | deploy to Kubernetes                         |
+
+The backend is selected in CI through the environment variables of the corresponding GitHub
+environment (`NUXT_PUBLIC_API_BASE_URL`), not via a local `.env.local`; the per-variant test jobs
+therefore exercise the same four backends as the local `testMatch` split. The reusable workflow
+itself lives outside this repository — per `readme.md` it runs Vitest **and** Playwright E2E.
 
 ### API path prefix is hardcoded `/vicav/`
 
-The generated client (`app/lib/api-client/index.ts`) uses fixed paths — `GET /vicav/project` and
-`GET /vicav/text` (the file is regenerated by `pnpm run generate:api-client`, so cite the paths
-rather than line numbers) — for **every** backend. TUNOCENT, SHAWI, and WIBARAB all serve their API
-under the same `/vicav/` prefix; the backend is selected purely by the base URL
-(`NUXT_PUBLIC_API_BASE_URL`), and the path segment never changes. So when fetching live examples
-(see "Prefer Live API Examples over `openapi.json`"), use `<backend-url>/vicav/...` regardless of
-which backend you are on.
+The generated client (`app/lib/api-client/index.ts`, regenerated by `pnpm run generate:api-client`)
+uses fixed paths — `getProject` → `GET /vicav/project` and `getText` → `GET /vicav/text` (cite the
+operation names, not line numbers) — for **every** backend. TUNOCENT, SHAWI, and WIBARAB all serve
+their API under the same `/vicav/` prefix; the backend is selected purely by the base URL
+(`NUXT_PUBLIC_API_BASE_URL`), and the path segment never changes. So when fetching live examples,
+use `<backend-url>/vicav/...` regardless of which backend you are on.
 
 ## Maintenance Prompt
 
