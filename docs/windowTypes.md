@@ -42,6 +42,7 @@ Rendered as [geo-map-window-content.vue](../app/components/geo-map-window-conten
   };
   scope?: Array<"reg" | "geo" | "diaGroup">;
   hideDefaultLayers?: boolean;
+  showCitation?: boolean;
   dataListLayers?: Array<{
     id: string;
     title: string;
@@ -59,7 +60,8 @@ Rendered as [geo-map-window-content.vue](../app/components/geo-map-window-conten
 }
 ```
 
-- Additional prop passed by `window-content.vue`: `title: props.item.winbox.title`
+- Additional prop passed by `window-content.vue`: `:title="props.item.label"` (the window label, not
+  `winbox.title`).
 - For `endpoint: "data_markers"`, `useDataListMapWindowSync`, initialized by the window manager,
   supplies retained layers from the data-list map store. Hidden layers stay in the toolbar and can
   be toggled without an open list. An omitted `enabled` means visible.
@@ -193,6 +195,7 @@ Rendered as
   xslt?: string;
   showMap?: boolean;
   isQueryVisible?: boolean; // defaults to false
+  showCitation?: boolean;
 }
 ```
 
@@ -222,6 +225,7 @@ Rendered as [dict-query-window-content.vue](../app/components/dict-query-window-
   queryTemplate?: string;
   isTextInputManual?: boolean; // defaults to false
   isQueryVisible?: boolean; // defaults to true
+  showCitation?: boolean;
 }
 ```
 
@@ -237,6 +241,7 @@ Rendered as [geojson-table-window-content.vue](../app/components/geojson-table-w
 {
   queryString: string; // defaults to ""
   featureValueGroups?: Array<FeatureValueGroup>;
+  showCitation?: boolean;
 }
 ```
 
@@ -258,6 +263,7 @@ Rendered as [geojson-map-window-content.vue](../app/components/geojson-map-windo
 ```ts
 {
   markerType?: "petal" | "default";
+  showCitation?: boolean;
 }
 ```
 
@@ -271,9 +277,13 @@ Rendered as [corpus-query-window-content.vue](../app/components/corpus-query-win
 
 ```ts
 {
-	queryString: string;
+  queryString: string;
+  mode?: "tag" | "text";
+  showCitation?: boolean;
 }
 ```
+
+- Event wired by `window-content.vue`: `update-query-param` updates the window query string.
 
 ### `CorpusText`
 
@@ -319,9 +329,12 @@ grouped list rendering in `data-list-window-content.vue`.
   mapEnabled?: boolean;
   mapSyncId?: string;
   textId?: string;
+  showCitation?: boolean;
 }
 ```
 
+- Additional props passed by `window-content.vue`: `:title="props.item.label"` and
+  `:window-id="props.item.id"`.
 - Event wired by `window-content.vue`: `update:params` replaces the window params through the
   generic validated `updateWindowParams()` store path, which updates the encoded URL state.
 - The map dataset is keyed by `mapSyncId` (initially the window ID). Its table and filter state
@@ -339,6 +352,7 @@ Rendered as
   taxonomyPath?: string;
   globalFilter?: string;
   textId?: string;
+  showCitation?: boolean;
 }
 ```
 
@@ -379,6 +393,7 @@ Rendered as
     "Profile" | "Text" | "SampleText" | "Feature" | "CorpusText" | "BiblioEntries"
   >;
   textId?: string;
+  showCitation?: boolean;
 }
 ```
 
@@ -406,6 +421,9 @@ Rendered as
 }
 ```
 
+- Event wired by `window-content.vue`: `update:params` replaces the window params through the
+  generic validated `updateWindowParams()` store path, which updates the encoded URL state.
+
 ## Schema And Render Coverage
 
 Every `targetType` in the `Schema` discriminated union is currently rendered by
@@ -414,15 +432,25 @@ Every `targetType` in the `Schema` discriminated union is currently rendered by
 
 ## URL State And Updates
 
-The `w` query parameter stores the base64 encoded JSON array of open window states, including each
-window's `targetType`, title, position, size, and `params` object, except runtime `dataListLayers`
-for `WMap` windows with `endpoint: "data_markers"`. Retained list tables and layers are session
-state and are not restored after a reload without their list windows. The `a` parameter stores the
-window arrangement. `update-query-param` updates `params.queryString` and writes the state back to
-the URL. `update:params` is wired for `ListMap`, `DataList`, and `FeatureDescriptionList`; the store
-validates the replacement params against that target type's schema before updating the URL. Query
-visibility and other UI state carried in params (including `ListMap.featureValueGroups` and
-`DataList.listState`) is therefore restored with a shared URL.
+Encoding is not store-local: [app/utils/window-state-codec.ts](../app/utils/window-state-codec.ts)
+provides `encodeWindowStates()` and `decodeWindowStates()`, which base64-encode the JSON array of
+open window states (non-ASCII characters are escaped as `\uXXXX` before encoding). The store
+([app/stores/use-windows-store.ts](../app/stores/use-windows-store.ts)) serializes the states and
+persists them through a 150 ms-debounced `schedulePersistence()`; a watcher over the geometry
+revision, the arrangement and the serialized states triggers it, and the debounce collapses bursts
+of window moves/resizes into a single URL update.
+
+The `w` query parameter holds the encoded array, including each window's `targetType`, title,
+position, size and `params` object, except runtime `dataListLayers` for `WMap` windows with
+`endpoint: "data_markers"` (those layers are stripped by `getPersistedWindowParams()`). Retained
+list tables and layers are session state and are not restored after a reload without their list
+windows. The `a` parameter stores the window arrangement.
+
+`update-query-param` updates `params.queryString`. `update:params` is wired for `ListMap`,
+`DataList`, `FeatureDescriptionList` and `ExploreSamples`; the store validates the replacement
+params against that target type's schema before updating the URL. Query visibility and other UI
+state carried in params (including `ListMap.featureValueGroups` and `DataList.listState`) is
+therefore restored with a shared URL.
 
 ## Maintenance Prompt
 
@@ -432,7 +460,7 @@ branches:
 ```text
 Review app/types/global.ts and app/components/window-content.vue.
 Also review app/stores/use-windows-store.ts for URL/state serialization helpers and generic window
-param update paths.
+param update paths, and app/utils/window-state-codec.ts for the encoding of the w= URL state.
 Update docs/windowTypes.md so it accurately documents the current implemented window targetType
 values, the component rendered for each targetType, the params shape for each schema, and any
 additional props or events passed by window-content.vue.
