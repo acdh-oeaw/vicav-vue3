@@ -33,12 +33,32 @@ The menu and the initial windows (`panel`) are described by the OpenAPI spec
 - **`main_item_type`** — a top-level dropdown: `id`, `target`, `title`, `item: item_type[]`,
   `type: "dropdown"` (all required, `additionalProperties: false`)
 - **`item_type`** — one shared item shape for `menu.main[].item[]`, `menu.subnav[]` and `panel[]`:
-  `type: "panel" | "item" | "separator" | "dropdown"` (the only required key) plus `id` / `target` /
-  `title` / `targetType` / `label` / `class` / `params` linked by `dependentRequired`; `params` is
+  `type: "panel" | "item" | "separator" | "dropdown"` is the **only** required key
+  (`required: ["type"]`). The remaining properties (`id` / `target` / `title` / `targetType` /
+  `label` / `class` / `params`) are independent and optional — the schema contains **no**
+  `dependentRequired` constraints (and no `dependencies`/`if`/`then`); `params` is
   `oneOf [geo_target_type_parameters, text_target_type_parameters]`
 
 The generated TypeScript equivalents are `MenuType`, `MainItemType`, `ItemType`, `ProjectConfigType`
 in `app/lib/api-client/index.ts` (regenerated from the spec on install/build).
+
+### Enum Values Without Front-End Support
+
+The OpenAPI `item_type.targetType` enum contains 17 values. Two of them — **`CrossDictQuery`** and
+**`BiblioQuery`** — have neither a Zod schema in `app/types/global.ts` nor a render branch in
+`app/components/window-content.vue`:
+
+- Selecting such a menu item throws `Window targetType not implemented on front-end: <targetType>`
+  in `onSelectMenuItem()` (`app/components/app-header.vue:159-160`), because the `switch` there has
+  no matching case.
+- Restoring such an item from the `panel` or from the encoded URL state fails Zod validation
+  (`WindowState` intersects the `Schema` union), which produces the "AddWindow Error: parameter
+  parse failed" toast instead of a window.
+
+Both values are nevertheless part of the published spec and can be delivered by the backend (the
+OpenAPI example contains a `CrossDictQuery` item "Query the VICAV Dictionaries"). The "Schema And
+Render Coverage" section in [`windowTypes.md`](./windowTypes.md) therefore holds for the Zod
+`Schema` union only — these two enum values lie outside it.
 
 ## Menu Item Types
 
@@ -54,11 +74,14 @@ type MainItemType = {
 		id: string;
 		type: "item" | "separator";
 		title?: string; // For type="item"
-		targetType: string; // Window type (e.g., "Profile", "DataTable")
+		targetType: string; // Window type (e.g., "Profile", "DataTable") — OpenAPI enum value
 		params?: object; // Window parameters
 	}>;
 };
 ```
+
+`targetType` is typed as a plain string here, but the backend is bound by the OpenAPI enum listed
+above (see "Enum Values Without Front-End Support").
 
 ## Test Selectors
 
