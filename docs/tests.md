@@ -32,7 +32,7 @@ pnpm run test:e2e                # all vicav tests
 pnpm run test:e2e keyboard       # only keyboard tests
 ```
 
-The npm scripts use `dotenv -e .env.local` to inject the var into both the app and playwright.
+The pnpm scripts use `dotenv -e .env.local` to inject the var into both the app and playwright.
 
 ## Test Locations
 
@@ -203,11 +203,11 @@ To re-verify: start `.output/server/index.mjs` with `PORT=<port>` and
 trailing slash) and throws `Unknown backend ...` for any other value. The matched backend also sets
 `testMatch`, so only tests under `e2e/pages/<backend>/` run.
 
-### Env comes from the npm scripts, not the config
+### Env comes from the pnpm scripts, not the config
 
 The `import "dotenv/config"` in `playwright.config.ts` is commented out; the env var is injected by
-the `dotenv -e .env.local` wrapper in the npm scripts. The VS Code Playwright extension UI bypasses
-the npm scripts, so you must set the variable via `playwright.env` in your VS Code settings —
+the `dotenv -e .env.local` wrapper in the pnpm scripts. The VS Code Playwright extension UI bypasses
+the pnpm scripts, so you must set the variable via `playwright.env` in your VS Code settings —
 otherwise the config throws.
 
 ### CI vs local behaviour
@@ -323,3 +323,49 @@ under the same `/vicav/` prefix; the backend is selected purely by the base URL
 (`NUXT_PUBLIC_API_BASE_URL`), and the path segment never changes. So when fetching live examples
 (see "Prefer Live API Examples over `openapi.json`"), use `<backend-url>/vicav/...` regardless of
 which backend you are on.
+
+## Maintenance Prompt
+
+Use this prompt after changing `playwright.config.ts`, `vitest.config.ts`, the pnpm scripts in
+`package.json`, `.github/workflows/starter.yaml`, any file under `e2e/`, the window restore pipeline
+(`app/stores/use-windows-store.ts`, `app/utils/window-state-codec.ts`,
+`app/components/window-manager.client.vue`), or the Text-window rendering
+(`app/components/window-content.vue`, `app/components/text-window-content.vue`,
+`app/composables/use-text-by-id.ts`):
+
+```text
+Review playwright.config.ts (backend URL switch, testMatch, projects/browser flags, webServer
+settings, forbidOnly/retries/workers), vitest.config.ts, the pnpm scripts in package.json, and
+.github/workflows/starter.yaml (job graph, reusable workflows, per-backend test jobs).
+Review the e2e/ tree for the current test file counts, locations, and selector conventions.
+Review app/stores/use-windows-store.ts (restoreState(), initialScreenSetup, openWindowState(),
+addWindow(), schedulePersistence()), app/utils/window-state-codec.ts (w=/a= URL state encoding), and
+app/components/window-manager.client.vue (when the restore is triggered).
+Review app/components/window-content.vue, app/components/text-window-content.vue, and
+app/composables/use-text-by-id.ts for the Text window render branch, loading state, and markup.
+
+Update docs/tests.md so it accurately documents the current implemented test setup and behavior.
+
+Include:
+- the accepted NUXT_PUBLIC_API_BASE_URL values, their backend mapping, and how the backend is matched
+  (exact match, unknown-backend error)
+- test file counts and directory layout per backend
+- the current restoration pipeline from URL state or projectConfig.panel to opened windows
+- Text window loading/rendering contract: .prose markup, loading indicator, failure behavior, and
+  the selectors used to assert that a window loaded and loaded the correct textId
+- CI behavior: per-backend test jobs, the workflows they call, and local-vs-CI config differences
+- pnpm script semantics (test as a full gate, test:e2e, test:unit, build, start:local) and whether
+  a rebuild is needed for a backend switch
+- selector patterns and known quirks (hydration gate, substring locator collisions, focus and tab
+  order, SSR-only data when requests are aborted, NavigationMenu click handling)
+- re-verified live backend claims: the initial-window table and the menu item counts
+
+For live claims, re-verify against the live backends instead of reusing the old numbers, e.g.
+  curl -s -H "Accept: application/json" "<backend-url>/vicav/project"
+and record the date of the verification. Prefer schema/example names over line numbers for
+app/assets/openapi.json and the generated client, and re-check every file.ts:NNN reference so it
+still resolves to the described code.
+
+Keep the document concise, table/list driven, and consistent with the existing format. Do not change
+application code.
+```
