@@ -10,7 +10,6 @@ const props = withDefaults(
 			seg?: Seg;
 			vocal?: Vocal;
 		};
-		inlineLemmaAnnotation: boolean;
 		inlineLinguisticAnnotation: boolean;
 		highlight?: boolean;
 		hits?: string | ReadonlyArray<string>;
@@ -36,11 +35,6 @@ function renderUtterance(u: typeof props.utterance) {
 
 const wordAnnotations = computed(() => extractCorpusAnnotations(props.utterance.w));
 const segmentAnnotations = computed(() => extractCorpusAnnotations(props.utterance.seg));
-const visibleMenuActions = computed(() =>
-	props.menuActions.filter(
-		(action) => props.inlineLemmaAnnotation || (action !== "dictionary" && action !== "lemma"),
-	),
-);
 const hitIds = computed(
 	() => new Set(typeof props.hits === "string" ? [props.hits] : (props.hits ?? [])),
 );
@@ -67,8 +61,9 @@ const segmentIsHit = computed(() => {
 		:data-highlight-scope="wordIsHit ? 'word' : undefined"
 	>
 		<div class="flex items-start justify-center text-lg">
-			<span>{{ renderUtterance(props.utterance) }}</span>
-			<CorpusTokenMenu :actions="visibleMenuActions" :token="props.utterance.w" />
+			<CorpusTokenMenu :actions="props.menuActions" :token="props.utterance.w">
+				{{ renderUtterance(props.utterance) }}
+			</CorpusTokenMenu>
 		</div>
 		<div
 			v-for="annotation in inlineLinguisticAnnotation ? wordAnnotations.linguistic : []"
@@ -102,33 +97,33 @@ const segmentIsHit = computed(() => {
 		:data-compound-id="props.utterance.seg['@id']"
 		:data-highlight-scope="segmentIsHit ? 'segment' : undefined"
 	>
-		<div class="flex flex-row">
-			<CorpusTextJsonUtterance
-				v-for="(uContent, index) in props.utterance.seg['$$']"
-				:key="uContent.w?.['@id'] ?? uContent.seg?.['@id'] ?? index"
-				:hits="props.hits"
-				:inline-lemma-annotation="props.inlineLemmaAnnotation"
-				:inline-linguistic-annotation="props.inlineLinguisticAnnotation"
-				:menu-actions="props.menuActions"
-				:utterance="uContent"
-			></CorpusTextJsonUtterance>
-		</div>
-		<div
-			v-if="
-				props.menuActions.length ||
-				(inlineLinguisticAnnotation && segmentAnnotations.linguistic.length > 0)
-			"
-			class="mt-0.5 flex min-h-3 items-center justify-center gap-1 bg-gray-100/90 text-xs text-gray-500"
-		>
-			<CorpusTokenMenu :actions="visibleMenuActions" compound :token="props.utterance.seg" />
-			<span
-				v-for="annotation in inlineLinguisticAnnotation ? segmentAnnotations.linguistic : []"
-				:key="annotation.label"
+		<CorpusTokenMenu :actions="props.menuActions" compound :token="props.utterance.seg">
+			<div class="flex flex-row">
+				<CorpusTextJsonUtterance
+					v-for="(uContent, index) in props.utterance.seg['$$']"
+					:key="uContent.w?.['@id'] ?? uContent.seg?.['@id'] ?? index"
+					:hits="props.hits"
+					:inline-linguistic-annotation="props.inlineLinguisticAnnotation"
+					:menu-actions="props.menuActions"
+					:utterance="uContent"
+				></CorpusTextJsonUtterance>
+			</div>
+			<div
+				v-if="
+					props.menuActions.length ||
+					(inlineLinguisticAnnotation && segmentAnnotations.linguistic.length > 0)
+				"
+				class="mt-0.5 flex min-h-3 items-center justify-center gap-1 bg-gray-100/90 text-xs text-gray-500"
 			>
-				<span class="sr-only">{{ annotation.label }}:</span>
-				{{ annotation.values.join(", ") }}
-			</span>
-		</div>
+				<span
+					v-for="annotation in inlineLinguisticAnnotation ? segmentAnnotations.linguistic : []"
+					:key="annotation.label"
+				>
+					<span class="sr-only">{{ annotation.label }}:</span>
+					{{ annotation.values.join(", ") }}
+				</span>
+			</div>
+		</CorpusTokenMenu>
 	</div>
 </template>
 

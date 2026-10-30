@@ -41,7 +41,6 @@ describe("compound corpus utterances", () => {
 		const wrapper = await mountSuspended(CorpusTextJsonUtterance, {
 			props: {
 				utterance: { seg: compound },
-				inlineLemmaAnnotation: false,
 				inlineLinguisticAnnotation: false,
 				menuActions: [],
 			},
@@ -57,12 +56,13 @@ describe("compound corpus utterances", () => {
 		const wrapper = await mountSuspended(CorpusTextJsonUtterance, {
 			props: {
 				utterance: { seg: compound },
-				inlineLemmaAnnotation: true,
 				inlineLinguisticAnnotation: false,
 			},
 		});
 
-		expect(wrapper.find('button[aria-label="Actions for compound wakt in"]').exists()).toBe(true);
+		expect(
+			wrapper.find('[role="button"][aria-label="Actions for compound wakt in"]').exists(),
+		).toBe(true);
 		expect(wrapper.find('button[aria-label="Actions for word wakt"]').exists()).toBe(true);
 		expect(wrapper.find('button[aria-label="Actions for word in"]').exists()).toBe(true);
 	});
@@ -71,7 +71,6 @@ describe("compound corpus utterances", () => {
 		const wrapper = await mountSuspended(CorpusTextJsonUtterance, {
 			props: {
 				utterance: { seg: compound },
-				inlineLemmaAnnotation: false,
 				inlineLinguisticAnnotation: true,
 				menuActions: [],
 			},
@@ -88,7 +87,6 @@ describe("compound corpus utterances", () => {
 		const wrapper = await mountSuspended(CorpusTextJsonUtterance, {
 			props: {
 				utterance: { seg: compound },
-				inlineLemmaAnnotation: false,
 				inlineLinguisticAnnotation: false,
 				hits: "seg-1",
 			},
@@ -110,7 +108,6 @@ describe("compound corpus utterances", () => {
 		const wrapper = await mountSuspended(CorpusTextJsonUtterance, {
 			props: {
 				utterance: { seg: compound },
-				inlineLemmaAnnotation: false,
 				inlineLinguisticAnnotation: false,
 				hits: ["word-1", "word-2"],
 				highlight: true,

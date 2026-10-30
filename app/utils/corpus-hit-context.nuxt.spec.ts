@@ -67,7 +67,6 @@ describe("corpus hit context", () => {
 			props: {
 				utterance: context.matches[0]!,
 				hits: "w2",
-				inlineLemmaAnnotation: true,
 				inlineLinguisticAnnotation: true,
 			},
 		});
@@ -75,9 +74,7 @@ describe("corpus hit context", () => {
 		expect(wrapper.text()).toContain("ēwa");
 		expect(wrapper.text()).toContain("responseParticle");
 		expect(wrapper.get("#w2").attributes("data-highlight-scope")).toBe("word");
-		expect(wrapper.find('[aria-label="Open dictionary entry DShaAr.ii_00000"]').exists()).toBe(
-			true,
-		);
+		expect(wrapper.find('[aria-label="Actions for word ēwa"]').exists()).toBe(true);
 	});
 
 	it("preserves single-utterance results", () => {

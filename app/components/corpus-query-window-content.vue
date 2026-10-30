@@ -40,7 +40,6 @@ const showHelp = ref<boolean>(false);
 const isSearching = ref(false);
 const isLoadingMore = ref(false);
 
-const inlineLemmaAnnotations = ref<false | true | "indeterminate">(true);
 const inlineLinguisticAnnotations = ref<false | true | "indeterminate">(true);
 const inlineTranslations = ref<false | true | "indeterminate">(true);
 const words: Ref<Array<string>> = ref([]);
@@ -48,13 +47,8 @@ const words: Ref<Array<string>> = ref([]);
 const lastRestoredQueryString = ref<string>();
 const {
 	hasInlineTranslations: blockHasInlineTranslations,
-	hasLemmaAnnotations: blockHasLemmaAnnotations,
 	hasLinguisticAnnotations: blockHasLinguisticAnnotations,
 } = useCorpusAnnotationAvailability();
-
-const hasLemmaAnnotations = computed(() => {
-	return blockHasLemmaAnnotations(hits.value);
-});
 
 const hasLinguisticAnnotations = computed(() => {
 	return blockHasLinguisticAnnotations(hits.value);
@@ -62,10 +56,6 @@ const hasLinguisticAnnotations = computed(() => {
 
 const hasInlineTranslations = computed(() => {
 	return blockHasInlineTranslations(hits.value);
-});
-
-const showLemmaAnnotations = computed(() => {
-	return hasLemmaAnnotations.value && inlineLemmaAnnotations.value === true;
 });
 
 const showLinguisticAnnotations = computed(() => {
@@ -294,17 +284,9 @@ const { cqlTriggers } = useCqlTriggers(cqlConfig);
 			<br />
 		</form>
 		<div
-			v-if="hasLemmaAnnotations || hasLinguisticAnnotations || hasInlineTranslations"
+			v-if="hasLinguisticAnnotations || hasInlineTranslations"
 			class="flex justify-end gap-3 p-4"
 		>
-			<div v-if="hasLemmaAnnotations">
-				<Checkbox
-					id="switch-lemma-annotations"
-					:checked="inlineLemmaAnnotations === true"
-					@update:checked="inlineLemmaAnnotations = $event"
-				/>
-				<label for="switch-lemma-annotations">&nbsp;Lemma annotations</label>
-			</div>
 			<div v-if="hasLinguisticAnnotations">
 				<Checkbox
 					id="switch-linguistic-annotations"
@@ -369,7 +351,6 @@ const { cqlTriggers } = useCqlTriggers(cqlConfig);
 										v-for="(uContent, index) in context.before"
 										:key="`before-${index}`"
 										:hits="hit.hits"
-										:inline-lemma-annotation="showLemmaAnnotations"
 										:inline-linguistic-annotation="showLinguisticAnnotations"
 										:utterance="uContent"
 									></CorpusTextJsonUtterance>
@@ -379,7 +360,6 @@ const { cqlTriggers } = useCqlTriggers(cqlConfig);
 										v-for="(uContent, index) in context.matches"
 										:key="`match-${index}`"
 										:hits="hit.hits"
-										:inline-lemma-annotation="showLemmaAnnotations"
 										:inline-linguistic-annotation="showLinguisticAnnotations"
 										:utterance="uContent"
 									></CorpusTextJsonUtterance>
@@ -389,7 +369,6 @@ const { cqlTriggers } = useCqlTriggers(cqlConfig);
 										v-for="(uContent, index) in context.after"
 										:key="`after-${index}`"
 										:hits="hit.hits"
-										:inline-lemma-annotation="showLemmaAnnotations"
 										:inline-linguistic-annotation="showLinguisticAnnotations"
 										:utterance="uContent"
 									></CorpusTextJsonUtterance>

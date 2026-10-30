@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { Ellipsis } from "@lucide/vue";
-
 import type { Seg, W } from "@/lib/api-client";
 
 const props = defineProps<{
@@ -10,6 +8,19 @@ const props = defineProps<{
 }>();
 
 const { addWindow } = useWindowsStore();
+const menuId = useId();
+const openMenuId = useState<string | null>("open-corpus-token-menu", () => null);
+const isOpen = computed(() => openMenuId.value === menuId);
+
+function setOpen(open: boolean) {
+	if (open) openMenuId.value = menuId;
+	else if (isOpen.value) openMenuId.value = null;
+}
+
+onUnmounted(() => {
+	if (isOpen.value) openMenuId.value = null;
+});
+
 const lemmaRef = computed(() => props.token["@lemmaRef"]);
 const words = computed(() => {
 	function collect(token: W | Seg): Array<string> {
@@ -76,18 +87,23 @@ function openDictionary() {
 </script>
 
 <template>
-	<DropdownMenu v-if="available">
+	<DropdownMenu v-if="available" :open="isOpen" @update:open="setOpen">
 		<DropdownMenuTrigger as-child>
-			<button
+			<component
+				:is="compound ? 'div' : 'button'"
 				:aria-label="`Actions for ${compound ? 'compound' : 'word'} ${words.join(' ')}`"
-				class="rounded-sm text-gray-500 hover:text-primary focus-visible:outline-2 focus-visible:outline-primary"
-				type="button"
+				class="cursor-pointer rounded-sm hover:bg-primary/30 focus-visible:outline-2 focus-visible:outline-primary"
+				:role="compound ? 'button' : undefined"
+				:tabindex="compound ? 0 : undefined"
+				:type="compound ? undefined : 'button'"
 				@click.stop
+				@keydown.stop
+				@pointerdown.stop
 			>
-				<Ellipsis aria-hidden="true" class="size-4" />
-			</button>
+				<slot />
+			</component>
 		</DropdownMenuTrigger>
-		<DropdownMenuContent align="start">
+		<DropdownMenuContent align="start" class="whitespace-nowrap">
 			<DropdownMenuItem v-if="actions.includes('wordForm') && words.length" @select="searchWordForm"
 				>Search corpus by {{ compound ? "compound " : "" }}word form</DropdownMenuItem
 			>
@@ -102,4 +118,5 @@ function openDictionary() {
 			>
 		</DropdownMenuContent>
 	</DropdownMenu>
+	<slot v-else />
 </template>

@@ -1,8 +1,10 @@
 // @vitest-environment nuxt
 import { mockNuxtImport, mountSuspended } from "@nuxt/test-utils/runtime";
 import { describe, expect, it, vi } from "vitest";
+import { defineComponent } from "vue";
 
 import CorpusTokenMenu from "./corpus-token-menu.vue";
+import DropdownMenu from "./ui/dropdown-menu/DropdownMenu.vue";
 
 const { addWindow } = vi.hoisted(() => ({ addWindow: vi.fn() }));
 mockNuxtImport("useWindowsStore", () => () => ({ addWindow }));
@@ -15,6 +17,39 @@ const stubs = {
 };
 
 describe("corpus token menu", () => {
+	it("closes the previous menu when another token opens", async () => {
+		const wrapper = await mountSuspended(
+			defineComponent({
+				components: { CorpusTokenMenu },
+				template: `<div>
+					<CorpusTokenMenu :token="{ '@id': 'one', $: 'one' }" :actions="['wordForm']">one</CorpusTokenMenu>
+					<CorpusTokenMenu :token="{ '@id': 'two', $: 'two' }" :actions="['wordForm']">two</CorpusTokenMenu>
+				</div>`,
+			}),
+		);
+		const menus = wrapper.findAllComponents(DropdownMenu);
+		(menus[0]!.vm as { $emit: (event: "update:open", value: boolean) => void }).$emit(
+			"update:open",
+			true,
+		);
+		await nextTick();
+		expect(menus[0]!.props("open")).toBe(true);
+		(menus[1]!.vm as { $emit: (event: "update:open", value: boolean) => void }).$emit(
+			"update:open",
+			true,
+		);
+		await nextTick();
+		expect(menus[0]!.props("open")).toBe(false);
+		expect(menus[1]!.props("open")).toBe(true);
+		(menus[0]!.vm as { $emit: (event: "update:open", value: boolean) => void }).$emit(
+			"update:open",
+			false,
+		);
+		await nextTick();
+		expect(menus[1]!.props("open")).toBe(true);
+		wrapper.unmount();
+	});
+
 	it("opens searches and dictionary entries for a word", async () => {
 		addWindow.mockClear();
 		const wrapper = await mountSuspended(CorpusTokenMenu, {
@@ -54,12 +89,12 @@ describe("corpus token menu", () => {
 			global: { stubs },
 		});
 		const buttons = wrapper.findAll("button");
-		expect(buttons).toHaveLength(3);
-		await buttons[1]!.trigger("click");
+		expect(buttons).toHaveLength(2);
+		await buttons[0]!.trigger("click");
 		expect(
 			(addWindow.mock.lastCall?.[0] as { params: { queryString: string } }).params.queryString,
 		).toBe('[word="b"] [word="nōb"] within <seg/>');
-		await buttons[2]!.trigger("click");
+		await buttons[1]!.trigger("click");
 		expect(
 			(addWindow.mock.lastCall?.[0] as { params: { queryString: string } }).params.queryString,
 		).toBe('[] within <seg id="seg-1"/>');

@@ -7,15 +7,10 @@ import {
 	useCorpusAnnotationAvailability,
 } from "./use-corpus-annotation-availability.ts";
 
-const {
-	hasLemmaAnnotation,
-	hasLemmaAnnotations,
-	hasLinguisticAnnotation,
-	hasLinguisticAnnotations,
-} = useCorpusAnnotationAvailability();
+const { hasLinguisticAnnotation, hasLinguisticAnnotations } = useCorpusAnnotationAvailability();
 
-type AnnotationToken = Parameters<typeof hasLemmaAnnotation>[0];
-type AnnotationBlocks = Parameters<typeof hasLemmaAnnotations>[0];
+type AnnotationToken = Parameters<typeof hasLinguisticAnnotation>[0];
+type AnnotationBlocks = Parameters<typeof hasLinguisticAnnotations>[0];
 
 function token(value: unknown): AnnotationToken {
 	return value as AnnotationToken;
@@ -52,7 +47,6 @@ describe("corpus annotation extraction", () => {
 
 describe("corpus annotation availability", () => {
 	it("detects independent word annotations", () => {
-		expect(hasLemmaAnnotation(token({ w: { $: "wakt", "@lemmaRef": "dict:wakt" } }))).toBe(true);
 		expect(hasLinguisticAnnotation(token({ w: { $: "wakt", "@lemmaRef": "dict:wakt" } }))).toBe(
 			false,
 		);
@@ -68,7 +62,6 @@ describe("corpus annotation availability", () => {
 			},
 		});
 
-		expect(hasLemmaAnnotation(segment)).toBe(true);
 		expect(hasLinguisticAnnotation(segment)).toBe(true);
 	});
 
@@ -94,7 +87,6 @@ describe("corpus annotation availability", () => {
 			{ seg: { diaRoots: [], $$: [{ w: { $: "word", "@msd": "verb" } }] } },
 		);
 
-		expect(hasLemmaAnnotations(annotationBlocks)).toBe(false);
 		expect(hasLinguisticAnnotations(annotationBlocks)).toBe(true);
 		expect(hasLinguisticAnnotations(blocks({ seg: { $$: [{ w: { $: "plain" } }] } }))).toBe(false);
 	});
