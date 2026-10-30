@@ -1,0 +1,45 @@
+{
+	"changeRequest": "CR-9",
+	"summary": "Describe the ft_* variety table in staticData.table",
+	"target": "acdh-oeaw/vicav-app-api",
+	"upstreamWorkflow": "Hand-authored in Insomnia; openapi.yaml and openapi.json are generated from it and must not be edited by hand.",
+	"liveOccurrence": "wibarab staticData.table[0] — 111 ft_* keys, each { \"taxonomy\": [{ \"<path>\": \"<label>\" }], \"values\": { \"<feature value>\": \"<taxonomy node id>\" } }",
+	"addSchemas": {
+		"FeatureTypeTaxonomyEntry": {
+			"title": "One node of the feature type taxonomy",
+			"type": "object",
+			"additionalProperties": { "type": "string" }
+		},
+		"FeatureTypeTableEntry": {
+			"title": "One feature type with its taxonomy path and its values",
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["values"],
+			"properties": {
+				"taxonomy": {
+					"type": "array",
+					"items": { "$ref": "#/components/schemas/FeatureTypeTaxonomyEntry" }
+				},
+				"values": { "type": "object", "additionalProperties": { "type": "string" } }
+			},
+			"patternProperties": { "^ft_": { "$ref": "#/components/schemas/FeatureTypeTableEntry" } }
+		},
+		"FeatureTypeTable": {
+			"title": "The feature type table of the feature database",
+			"type": "object",
+			"additionalProperties": false,
+			"patternProperties": { "^ft_": { "$ref": "#/components/schemas/FeatureTypeTableEntry" } }
+		}
+	},
+	"operations": [
+		{
+			"op": "add",
+			"path": "/components/schemas/projectConfig_type/properties/staticData/properties/table/items/anyOf/-",
+			"value": { "$ref": "#/components/schemas/FeatureTypeTable" }
+		}
+	],
+	"notes": [
+		"The catch-alls { \"type\": \"object\" } and { \"type\": \"array\" } stay — the table schema is deliberately a suggestion only.",
+		"Verified against the live payload: accepts all 111 ft_* keys, rejects an entry without \"values\" and a non-string value."
+	]
+}

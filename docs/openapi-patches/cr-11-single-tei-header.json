@@ -1,0 +1,66 @@
+{
+	"changeRequest": "CR-11",
+	"summary": "The TEI headers of the single-TEI documents do not validate against TeiHeader",
+	"target": "acdh-oeaw/vicav-app-api",
+	"upstreamWorkflow": "Hand-authored in Insomnia; openapi.yaml and openapi.json are generated from it and must not be edited by hand.",
+	"liveOccurrence": "The 5 single-TEI documents of CR-10 (vicav_biblio x3, vicav_geo x2). The 4734 corpus TEIs of the four backends have none of these issues — the two documents come from a different pipeline.",
+	"issues": [
+		{
+			"path": "teiHeader.fileDesc.publicationStmt.publishers",
+			"issue": "expected array, received undefined",
+			"documents": ["vicav_biblio", "vicav_geo"],
+			"dataFix": "emit the publisher array",
+			"specFix": "drop \"publishers\" from PublicationStmt.required"
+		},
+		{
+			"path": "teiHeader.fileDesc.titleStmt",
+			"issue": "unrecognized keys: \"author\", \"respStmt\"",
+			"documents": ["vicav_geo"],
+			"dataFix": "use \"authors\" (array) and \"respStmts\" (array)",
+			"specFix": "add \"author\" and \"respStmt\" to TitleStmt"
+		},
+		{
+			"path": "teiHeader.fileDesc.publicationStmt.p",
+			"issue": "expected object, received string",
+			"documents": ["vicav_geo"],
+			"dataFix": "emit { \"$\": \"…\" }",
+			"specFix": "allow a string in P"
+		},
+		{
+			"path": "teiHeader.fileDesc.sourceDesc.p",
+			"issue": "expected object, received string",
+			"documents": ["vicav_geo"],
+			"dataFix": "emit { \"$\": \"…\" }",
+			"specFix": "allow a string in P"
+		},
+		{
+			"path": "teiHeader.encodingDesc",
+			"issue": "unrecognized key: \"geoDecls\"",
+			"documents": ["vicav_geo"],
+			"dataFix": "not applicable — the data is meaningful",
+			"specFix": "add \"geoDecls\" to EncodingDesc"
+		}
+	],
+	"liveShapes": {
+		"titleStmt": {
+			"title": { "$": "VICAV Geolocations" },
+			"author": { "names": [{ "$": "Charly Mörth" }, { "$": "Stephan Prochazka" }] },
+			"respStmt": { "resp": { "$": "Datamodel provided by" }, "name": { "$": "Daniel Schopper" } }
+		},
+		"publicationStmt": { "p": "" },
+		"sourceDesc": { "p": "" },
+		"encodingDesc": {
+			"geoDecls": [
+				{
+					"@id": "dms",
+					"@datum": "WGS84-DMS",
+					"$": "World Geodetic System: degrees - minutes - seconds"
+				}
+			]
+		}
+	},
+	"notes": [
+		"The data fix is preferable: the corpus TEIs already use the spec's shape, so the two pipelines should agree.",
+		"These issues are invisible until CR-10 makes the wrapper visible — the wrapped documents are never validated today."
+	]
+}

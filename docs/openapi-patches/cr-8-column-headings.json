@@ -1,0 +1,54 @@
+{
+	"changeRequest": "CR-8",
+	"summary": "Describe the column headings of the feature collection and relax the pinned gazetteer marker description",
+	"target": "acdh-oeaw/vicav-app-api",
+	"upstreamWorkflow": "Hand-authored in Insomnia; openapi.yaml and openapi.json are generated from it and must not be edited by hand.",
+	"liveOccurrence": "wibarab staticData.geo[0].properties.column_headings — 96 items: { name }, { country }, { alternateNames } and 93 x { category, count, ft_* }; the same collection ships description \"GEOJSON for the WIBARAB Feature DB\" instead of the pinned \"GEOJSON of the VICAV gazetteer\"",
+	"addSchemas": {
+		"ColumnHeading": {
+			"title": "One column of the feature collection",
+			"oneOf": [
+				{
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"name": { "type": "string" },
+						"country": { "type": "string" },
+						"alternateNames": { "type": "string" }
+					}
+				},
+				{
+					"type": "object",
+					"additionalProperties": false,
+					"required": ["category", "count"],
+					"properties": {
+						"category": { "type": "string" },
+						"count": { "type": "number" }
+					},
+					"patternProperties": { "^ft_": { "type": "string" } }
+				}
+			]
+		}
+	},
+	"operations": [
+		{
+			"op": "replace",
+			"path": "/components/schemas/ColumnHeadings/properties/column_headings/items",
+			"value": { "$ref": "#/components/schemas/ColumnHeading" }
+		},
+		{
+			"op": "replace",
+			"path": "/components/schemas/GazetteerMarker",
+			"value": {
+				"type": "object",
+				"properties": { "description": { "type": "string" } }
+			}
+		}
+	],
+	"notes": [
+		"The two branches of ColumnHeading are mutually exclusive: the plain branch has no category/count, the feature-type branch requires them.",
+		"The catch-all { \"type\": \"object\" } in FeatureCollection.properties stays — the collection metadata is deliberately a suggestion only.",
+		"Alternative to the GazetteerMarker change: keep the const and extend it to an enum of the known collection descriptions.",
+		"Verified against the live payload: all 96 headings validate, an unknown key is rejected."
+	]
+}

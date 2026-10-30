@@ -1,0 +1,30 @@
+{
+	"changeRequest": "CR-7",
+	"summary": "Describe the feature-type vocabulary array in staticData.table",
+	"target": "acdh-oeaw/vicav-app-api",
+	"upstreamWorkflow": "Hand-authored in Insomnia; openapi.yaml and openapi.json are generated from it and must not be edited by hand.",
+	"liveOccurrence": "wibarab staticData.table[1] — 24 entries of { \"<feature type path>\": \"<label>\" }",
+	"addSchemas": {
+		"FeatureTypeVocabularyEntry": {
+			"title": "One feature type path with its label",
+			"type": "object",
+			"additionalProperties": { "type": "string" }
+		},
+		"FeatureTypeVocabulary": {
+			"title": "The feature type taxonomy of the feature database",
+			"type": "array",
+			"items": { "$ref": "#/components/schemas/FeatureTypeVocabularyEntry" }
+		}
+	},
+	"operations": [
+		{
+			"op": "add",
+			"path": "/components/schemas/projectConfig_type/properties/staticData/properties/table/items/anyOf/-",
+			"value": { "$ref": "#/components/schemas/FeatureTypeVocabulary" }
+		}
+	],
+	"notes": [
+		"The catch-alls { \"type\": \"object\" } and { \"type\": \"array\" } stay — the table schema is deliberately a suggestion only.",
+		"minProperties/maxProperties are not enforced by zod v4.5.4 (z.fromJSONSchema ignores them), so they are not used here."
+	]
+}

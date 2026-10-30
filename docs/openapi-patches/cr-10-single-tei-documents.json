@@ -1,0 +1,78 @@
+{
+	"changeRequest": "CR-10",
+	"summary": "Describe the single-TEI table entries and tighten TeiCorpus",
+	"target": "acdh-oeaw/vicav-app-api",
+	"upstreamWorkflow": "Hand-authored in Insomnia; openapi.yaml and openapi.json are generated from it and must not be edited by hand.",
+	"liveOccurrence": "5 table entries of the shape { \"TEI\": { \"@id\": \"vicav_biblio\" | \"vicav_geo\", \"teiHeader\": { … }, \"text\": { … } } } — vicav table[5], shawi table[2] and table[4], wibarab table[4] and table[5]",
+	"addSchemas": {
+		"TeiDocument": {
+			"title": "A single TEI document",
+			"type": "object",
+			"required": ["@id", "teiHeader"],
+			"properties": {
+				"@id": { "type": "string" },
+				"@space": { "type": "string" },
+				"teiHeader": { "$ref": "#/components/schemas/TeiHeader" },
+				"text": { "type": "object" }
+			}
+		},
+		"TeiDocumentWrapper": {
+			"title": "A single TEI document, wrapped",
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["TEI"],
+			"properties": { "TEI": { "$ref": "#/components/schemas/TeiDocument" } }
+		}
+	},
+	"operations": [
+		{
+			"op": "add",
+			"path": "/components/schemas/projectConfig_type/properties/staticData/properties/table/items/anyOf/-",
+			"value": { "$ref": "#/components/schemas/TeiDocumentWrapper" }
+		},
+		{
+			"op": "replace",
+			"path": "/components/schemas/TeiCorpus",
+			"value": {
+				"type": "object",
+				"additionalProperties": false,
+				"required": ["@id", "TEIs"],
+				"properties": {
+					"@id": {
+						"type": "string",
+						"examples": [
+							"vicav_corpus",
+							"vicav_lingfeatures",
+							"vicav_profiles",
+							"vicav_samples",
+							"vicav_texts"
+						]
+					},
+					"@document-uri": {
+						"type": "string",
+						"examples": ["/vicav_corpus/vicav_corpus_v001.xml", "/vicav_texts/corpus.xml"]
+					},
+					"teiHeader": { "$ref": "#/components/schemas/TeiHeader" },
+					"TEIs": { "type": "array", "items": { "$ref": "#/components/schemas/TEI" } },
+					"standOff": {
+						"type": "object",
+						"properties": {
+							"listPerson": {
+								"type": "array",
+								"items": { "$ref": "#/components/schemas/listPersonStandOff" }
+							}
+						},
+						"additionalProperties": false,
+						"required": ["listPerson"]
+					}
+				}
+			}
+		}
+	],
+	"notes": [
+		"The catch-alls { \"type\": \"object\" } and { \"type\": \"array\" } stay — the table schema is deliberately a suggestion only.",
+		"Verified against the live payloads: all 22 corpus entries of the four backends still validate against the tightened TeiCorpus, and the five wrapper entries now match TeiDocumentWrapper instead of TeiCorpus.",
+		"Tightening TeiCorpus only becomes visible once the wrapper has its own schema — the two changes belong together.",
+		"The TEI headers of the wrapped documents do not validate (see CR-11)."
+	]
+}
