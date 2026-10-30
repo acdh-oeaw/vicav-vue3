@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { BookA, Braces, CircleAlert, Code, MapPin, MessageSquareQuote, Search } from "@lucide/vue";
+import { Braces, CircleAlert, Code, MapPin, Search } from "@lucide/vue";
 
 import type { RestVLEEntry } from "@/lib/api-client";
 import type { WindowItem } from "@/types/global.ts";
@@ -35,7 +35,7 @@ const env = useRuntimeConfig();
 const openOrUpdateWindow = useOpenOrUpdateWindow();
 
 const compactBadgeClass =
-	"inline-flex min-h-6 items-center gap-1 rounded-full border border-gray-300 bg-white/90 px-1.5 text-sm leading-none text-gray-900 shadow-xs";
+	"inline-flex min-h-6 items-center gap-1 rounded-full border border-primary/20 bg-[color-mix(in_srgb,hsl(var(--color-primary))_10%,white)] px-1.5 text-sm leading-none text-gray-900 shadow-xs";
 
 const bibliographyById = computed(() => {
 	return new Map(
@@ -227,27 +227,15 @@ const languageClass = (language: string | undefined) => {
 			v-else
 			class="not-prose overflow-hidden border-2 border-primary bg-white text-gray-950"
 		>
-			<header class="bg-primary px-3 py-2 text-white">
+			<header class="bg-primary/20 px-3 py-2 text-gray-950">
 				<div class="flex flex-wrap items-start justify-between gap-x-2 gap-y-1">
-					<span
-						class="mt-0.5 inline-flex size-7 shrink-0 items-center justify-center rounded-sm border border-white/70 bg-white text-primary"
-					>
-						<BookA v-if="e.type === 'entry'" class="size-4" />
-						<MessageSquareQuote v-else class="size-4" />
-					</span>
 					<div class="min-w-0 flex-1">
-						<div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-lg/tight">
+						<div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-lg">
 							<template v-for="(form, formIndex) in headerForms" :key="`header-${formIndex}`">
-								<span
-									v-if="formIndex > 0"
-									aria-hidden="true"
-									class="hidden text-white/80 sm:inline"
-								>
-									;
-								</span>
+								<span v-if="formIndex > 0" aria-hidden="true" class="hidden sm:inline"> ; </span>
 								<span
 									v-if="formText(form)"
-									class="text-2xl leading-none font-medium wrap-break-word italic underline decoration-white/70 decoration-2 underline-offset-4"
+									class="text-2xl font-bold wrap-break-word"
 									:title="languageTooltip(formLanguage(form))"
 								>
 									{{ formText(form) }}
@@ -266,7 +254,7 @@ const languageClass = (language: string | undefined) => {
 								/>
 							</template>
 						</div>
-						<div v-if="compactGrammar" class="pl-10 text-xl/tight">
+						<div v-if="compactGrammar" class="text-lg">
 							{{ compactGrammar }}
 						</div>
 					</div>
@@ -277,7 +265,7 @@ const languageClass = (language: string | undefined) => {
 									<TooltipTrigger as-child>
 										<NuxtLink
 											aria-label="entry as xml"
-											class="flex size-8 items-center justify-center rounded-sm border border-white/50 text-white hover:bg-white hover:text-primary"
+											class="flex size-8 items-center justify-center rounded-sm border border-primary/20 bg-[color-mix(in_srgb,hsl(var(--color-primary))_10%,white)] text-primary hover:bg-primary hover:text-white"
 											external
 											rel="noopener noreferrer"
 											target="_blank"
@@ -296,7 +284,7 @@ const languageClass = (language: string | undefined) => {
 									<TooltipTrigger as-child>
 										<NuxtLink
 											aria-label="entry as JSON"
-											class="flex size-8 items-center justify-center rounded-sm border border-white/50 text-white hover:bg-white hover:text-primary"
+											class="flex size-8 items-center justify-center rounded-sm border border-primary/20 bg-[color-mix(in_srgb,hsl(var(--color-primary))_10%,white)] text-primary hover:bg-primary hover:text-white"
 											external
 											rel="noopener noreferrer"
 											target="_blank"
@@ -315,7 +303,7 @@ const languageClass = (language: string | undefined) => {
 									<TooltipTrigger as-child>
 										<button
 											aria-label="search lemma in corpus"
-											class="flex size-8 items-center justify-center rounded-sm border border-white/50 text-white hover:bg-white hover:text-primary"
+											class="flex size-8 items-center justify-center rounded-sm border border-primary/20 bg-[color-mix(in_srgb,hsl(var(--color-primary))_10%,white)] text-primary hover:bg-primary hover:text-white"
 											type="button"
 											@click="openCorpusSearchWindow"
 										>
