@@ -1,10 +1,5 @@
 <script setup lang="ts">
-import { BookA } from "@lucide/vue";
-
 import type { Gap, Pc, Seg, Vocal, W } from "@/lib/api-client";
-
-const windowsStore = useWindowsStore();
-const { addWindow } = windowsStore;
 
 const props = withDefaults(
 	defineProps<{
@@ -19,9 +14,11 @@ const props = withDefaults(
 		inlineLinguisticAnnotation: boolean;
 		highlight?: boolean;
 		hits?: string | ReadonlyArray<string>;
+		menuActions?: ReadonlyArray<"wordForm" | "dictionary" | "tokenId" | "lemma">;
 	}>(),
 	{
 		highlight: false,
+		menuActions: () => ["wordForm", "dictionary", "tokenId", "lemma"],
 	},
 );
 
@@ -37,25 +34,13 @@ function renderUtterance(u: typeof props.utterance) {
 	return renderedUtterance;
 }
 
-function openDictWindow(lemmaRef: string) {
-	const dictionaryEntryId = getDictionaryEntryId(lemmaRef);
-	addWindow({
-		targetType: "DictQuery",
-		title: dictionaryEntryId || "Dictionary Entry",
-		params: {
-			queryString: dictionaryEntryId,
-			textId: "dc_shawi_eng",
-			queryParams: {
-				id: dictionaryEntryId,
-			},
-			isTextInputManual: false,
-			isQueryVisible: false,
-		},
-	});
-}
-
 const wordAnnotations = computed(() => extractCorpusAnnotations(props.utterance.w));
 const segmentAnnotations = computed(() => extractCorpusAnnotations(props.utterance.seg));
+const visibleMenuActions = computed(() =>
+	props.menuActions.filter(
+		(action) => props.inlineLemmaAnnotation || (action !== "dictionary" && action !== "lemma"),
+	),
+);
 const hitIds = computed(
 	() => new Set(typeof props.hits === "string" ? [props.hits] : (props.hits ?? [])),
 );
@@ -83,15 +68,7 @@ const segmentIsHit = computed(() => {
 	>
 		<div class="flex items-start justify-center text-lg">
 			<span>{{ renderUtterance(props.utterance) }}</span>
-			<button
-				v-if="inlineLemmaAnnotation && wordAnnotations.lemmaRef"
-				:aria-label="`Open dictionary entry ${getDictionaryEntryId(wordAnnotations.lemmaRef)}`"
-				class="rounded-sm text-gray-500 hover:text-primary focus-visible:outline-2 focus-visible:outline-primary"
-				type="button"
-				@click.stop="openDictWindow(wordAnnotations.lemmaRef)"
-			>
-				<BookA aria-hidden="true" class="size-3" />
-			</button>
+			<CorpusTokenMenu :actions="visibleMenuActions" :token="props.utterance.w" />
 		</div>
 		<div
 			v-for="annotation in inlineLinguisticAnnotation ? wordAnnotations.linguistic : []"
@@ -132,25 +109,18 @@ const segmentIsHit = computed(() => {
 				:hits="props.hits"
 				:inline-lemma-annotation="props.inlineLemmaAnnotation"
 				:inline-linguistic-annotation="props.inlineLinguisticAnnotation"
+				:menu-actions="props.menuActions"
 				:utterance="uContent"
 			></CorpusTextJsonUtterance>
 		</div>
 		<div
 			v-if="
-				(inlineLemmaAnnotation && segmentAnnotations.lemmaRef) ||
+				props.menuActions.length ||
 				(inlineLinguisticAnnotation && segmentAnnotations.linguistic.length > 0)
 			"
 			class="mt-0.5 flex min-h-3 items-center justify-center gap-1 bg-gray-100/90 text-xs text-gray-500"
 		>
-			<button
-				v-if="inlineLemmaAnnotation && segmentAnnotations.lemmaRef"
-				:aria-label="`Open compound dictionary entry ${getDictionaryEntryId(segmentAnnotations.lemmaRef)}`"
-				class="rounded-sm hover:text-primary focus-visible:outline-2 focus-visible:outline-primary"
-				type="button"
-				@click.stop="openDictWindow(segmentAnnotations.lemmaRef)"
-			>
-				<BookA aria-hidden="true" class="size-3" />
-			</button>
+			<CorpusTokenMenu :actions="visibleMenuActions" compound :token="props.utterance.seg" />
 			<span
 				v-for="annotation in inlineLinguisticAnnotation ? segmentAnnotations.linguistic : []"
 				:key="annotation.label"

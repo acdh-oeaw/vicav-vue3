@@ -43,6 +43,7 @@ describe("compound corpus utterances", () => {
 				utterance: { seg: compound },
 				inlineLemmaAnnotation: false,
 				inlineLinguisticAnnotation: false,
+				menuActions: [],
 			},
 		});
 
@@ -61,29 +62,9 @@ describe("compound corpus utterances", () => {
 			},
 		});
 
-		const compoundLemma = wrapper.get(
-			'button[aria-label="Open compound dictionary entry DShaAr.wakt_in_000"]',
-		);
-		await compoundLemma.trigger("click");
-
-		expect(addWindow).toHaveBeenCalledTimes(1);
-		expect(addWindow).toHaveBeenLastCalledWith(
-			expect.objectContaining({
-				title: "DShaAr.wakt_in_000",
-				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-				params: expect.objectContaining({
-					queryParams: { id: "DShaAr.wakt_in_000" },
-				}),
-			}),
-		);
-
-		await wrapper
-			.get('button[aria-label="Open dictionary entry DShaAr.wakt_001"]')
-			.trigger("click");
-		expect(addWindow).toHaveBeenCalledTimes(2);
-		expect(addWindow).toHaveBeenLastCalledWith(
-			expect.objectContaining({ title: "DShaAr.wakt_001" }),
-		);
+		expect(wrapper.find('button[aria-label="Actions for compound wakt in"]').exists()).toBe(true);
+		expect(wrapper.find('button[aria-label="Actions for word wakt"]').exists()).toBe(true);
+		expect(wrapper.find('button[aria-label="Actions for word in"]').exists()).toBe(true);
 	});
 
 	it("renders POS and MSD annotations without exposing root elements", async () => {
@@ -92,6 +73,7 @@ describe("compound corpus utterances", () => {
 				utterance: { seg: compound },
 				inlineLemmaAnnotation: false,
 				inlineLinguisticAnnotation: true,
+				menuActions: [],
 			},
 		});
 
