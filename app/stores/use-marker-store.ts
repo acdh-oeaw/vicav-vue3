@@ -3,6 +3,12 @@ import Color from "colorjs.io";
 import { defineStore } from "pinia";
 
 import type { IconType } from "@/components/ui/icon-picker/IconPicker.vue";
+import { iconsData } from "@/components/ui/icon-picker/icons-data.ts";
+import {
+	SHAPE_ICON_CATEGORY,
+	shapeIcons,
+	type ShapeIconType,
+} from "@/components/ui/icon-picker/shape-icons.ts";
 import type { FeatureValueGroup, FeatureValueGroupMember } from "@/types/global.ts";
 
 interface ColorInterface {
@@ -30,6 +36,30 @@ function buildVariantColor(baseColor: string) {
 	return newColor.toGamut({ space: "srgb" }).to("srgb").toString({ format: "hex" });
 }
 
+function buildRandomColor() {
+	const newColor = new Color("lch", [
+		Math.random() * 50 + 30, //lightness values from 30 to 80, so markers stay visible on the map
+		Math.random() * 70 + 30, //chroma values from 30 to 100, so markers do not turn grey
+		Math.random() * 360,
+	]);
+	return newColor.toGamut({ space: "srgb" }).to("srgb").toString({ format: "hex" });
+}
+
+/** Custom shapes plus the lucide icons offered in the icon picker. */
+export const randomIconPool: Array<Omit<ShapeIconType, "custom"> & { custom?: true }> = [
+	...shapeIcons,
+	...iconsData.filter((entry) => entry.categories.includes(SHAPE_ICON_CATEGORY)),
+];
+
+function shuffle<T>(entries: Array<T>) {
+	const shuffled = [...entries];
+	for (let i = shuffled.length - 1; i > 0; i--) {
+		const j = Math.floor(Math.random() * (i + 1));
+		[shuffled[i], shuffled[j]] = [shuffled[j]!, shuffled[i]!];
+	}
+	return shuffled;
+}
+
 export const useMarkerStore = defineStore("markers", () => {
 	const markers = ref(new Map<MarkerInterface["id"], MarkerInterface>());
 	const markerSettings = ref({
@@ -39,6 +69,10 @@ export const useMarkerStore = defineStore("markers", () => {
 		greyscale: false,
 		showCenter: true,
 		showOtherFeatureValues: false,
+		/** New feature values get random colors instead of lightness variants of the feature color. */
+		distinctFeatureValueColors: false,
+		/** New feature values get distinct shapes instead of the feature's icon. */
+		distinctFeatureValueIcons: false,
 		triggerRepaint: false,
 	});
 	const defaultMarkers = {
@@ -120,6 +154,37 @@ export const useMarkerStore = defineStore("markers", () => {
 			updateCssVariable({ id, colorCode });
 			updateColorValue({ id, colorCode });
 		});
+	}
+
+	function randomizeColorsForFeatureValues(featureId: string) {
+		forEachUnderlyingFeatureValue(featureId, (_entry, id) => {
+			const colorCode = buildRandomColor();
+			updateCssVariable({ id, colorCode });
+			updateColorValue({ id, colorCode });
+		});
+	}
+
+	function randomizeIconsForFeatureValues(featureId: string) {
+		let shuffledIcons: typeof randomIconPool = [];
+		forEachUnderlyingFeatureValue(featureId, (entry, id) => {
+			if (shuffledIcons.length === 0) shuffledIcons = shuffle(randomIconPool);
+			markers.value.set(id, { ...entry, icon: shuffledIcons.pop()! });
+		});
+		markerSettings.value.triggerRepaint = true;
+	}
+
+	function pickDistinctIcon(featureId: string): ShapeIconType {
+		const usedIcons = new Set<string>();
+		let siblingCount = 0;
+		forEachUnderlyingFeatureValue(featureId, (entry) => {
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
+			usedIcons.add(entry.icon.name);
+			siblingCount += 1;
+		});
+		return (
+			shapeIcons.find((icon) => !usedIcons.has(icon.name)) ??
+			shapeIcons[siblingCount % shapeIcons.length]!
+		);
 	}
 
 	const featureValueGroups = ref(new Map<string, FeatureValueGroupInterface>());
@@ -340,7 +405,9 @@ export const useMarkerStore = defineStore("markers", () => {
 
 		const color: ColorInterface = {
 			id: buildFeatureValueId(baseId, subId),
-			colorCode: buildVariantColor(baseColor),
+			colorCode: markerSettings.value.distinctFeatureValueColors
+				? buildRandomColor()
+				: buildVariantColor(baseColor),
 		};
 		updateCssVariable(color);
 		updateColorValue(color);
@@ -359,7 +426,10 @@ export const useMarkerStore = defineStore("markers", () => {
 			setMarker({
 				id: subId ? buildFeatureValueId(baseId, subId) : baseId,
 				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-				icon: markers.value.get(baseId)!.icon,
+				icon:
+					subId && markerSettings.value.distinctFeatureValueIcons
+						? pickDistinctIcon(baseId)
+						: markers.value.get(baseId)!.icon,
 				colorCode: "",
 				hidden: inheritedHidden,
 			});
@@ -404,6 +474,8 @@ export const useMarkerStore = defineStore("markers", () => {
 		setMarker,
 		applyStyleToUnderlyingFeatureValues,
 		generateColorVariantsForFeatureValues,
+		randomizeColorsForFeatureValues,
+		randomizeIconsForFeatureValues,
 		hasUnderlyingFeatureValues,
 		removeMarker,
 		markers,

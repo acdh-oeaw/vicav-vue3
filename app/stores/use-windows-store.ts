@@ -65,7 +65,7 @@ function defineWindowControl<TTargetType extends WindowItemTargetType>(
 
 export const useWindowsStore = defineStore("windows", () => {
 	const registry = ref<WindowRegistry>(new Map());
-	const arrangement = ref<WindowArrangement>("smart-tile");
+	const arrangement = ref<WindowArrangement>("column-five-flex");
 
 	const router = useRouter();
 	const route = useRoute();
@@ -188,7 +188,7 @@ export const useWindowsStore = defineStore("windows", () => {
 		restoring = true;
 		try {
 			let states: ReadonlyArray<unknown>;
-			let restoredArrangement: WindowArrangement = "smart-tile";
+			let restoredArrangement: WindowArrangement = "column-five-flex";
 			try {
 				if (!route.query.w) throw new Error("Missing window state");
 				states = decodeWindowStates(String(route.query.w));

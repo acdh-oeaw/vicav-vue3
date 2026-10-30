@@ -134,6 +134,16 @@ function downloadLegend() {
 					><span>Show other feature values</span>
 					<input v-model="markerSettings.showOtherFeatureValues" type="checkbox"
 				/></label>
+				<div class="my-0.5 w-full border-b"></div>
+				<span class="text-neutral-500">Defaults for new feature values</span>
+				<label class="flex items-center justify-between gap-2"
+					><span class="max-w-36">Random colors instead of color variants</span>
+					<input v-model="markerSettings.distinctFeatureValueColors" type="checkbox"
+				/></label>
+				<label class="flex items-center justify-between gap-2"
+					><span class="max-w-36">Distinct icons instead of the same icon</span>
+					<input v-model="markerSettings.distinctFeatureValueIcons" type="checkbox"
+				/></label>
 			</PopoverContent>
 		</Popover>
 		<Popover>

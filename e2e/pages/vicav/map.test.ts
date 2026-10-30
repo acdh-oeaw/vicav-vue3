@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 test.describe("map page", () => {
 	test("should have map bar with appropriate selection", async ({ page }) => {
-		await page.goto("/?w=W10=&a=smart-tile");
+		await page.goto("/?w=W10=&a=column-five-flex");
 		await page.getByRole("navigation").getByRole("button", { name: "Bibliographies" }).click();
 		await page.getByLabel("Bibliographies").getByText("All Bibl. Locations on Map").click();
 		await expect(
@@ -18,7 +18,7 @@ test.describe("map page", () => {
 			browserName === "firefox",
 			"WebGL does not work in headless Firefox, see https://bugzilla.mozilla.org/show_bug.cgi?id=1375585",
 		);
-		await page.goto("/?w=W10=&a=smart-tile");
+		await page.goto("/?w=W10=&a=column-five-flex");
 		await page.getByRole("navigation").getByRole("button", { name: "Bibliographies" }).click();
 		await page.getByLabel("Bibliographies").getByText("All Bibl. Locations on Map").click();
 		await expect(page.locator(".leaflet-marker-icon").first()).toBeVisible({ timeout: 15_000 });

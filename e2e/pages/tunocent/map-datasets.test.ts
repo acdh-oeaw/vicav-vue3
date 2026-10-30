@@ -35,7 +35,7 @@ test("hydrates configured datasets and shares list filters and map toggles", asy
 	];
 	const query = new URLSearchParams({
 		w: Buffer.from(JSON.stringify(windows)).toString("base64"),
-		a: "smart-tile",
+		a: "column-five-flex",
 	});
 	const projectRequests: Array<string> = [];
 	page.on("request", (request) => {
@@ -134,7 +134,7 @@ test("opens a preloaded dataset list directly from a map with no lists", async (
 	];
 	const query = new URLSearchParams({
 		w: Buffer.from(JSON.stringify(windows)).toString("base64"),
-		a: "smart-tile",
+		a: "column-five-flex",
 	});
 	await page.goto(`/?${query.toString()}`);
 	const listToggle = page.getByRole("button", { name: "Toggle Corpus texts list", exact: true });

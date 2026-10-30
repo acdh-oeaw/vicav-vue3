@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { isReactive, nextTick, reactive } from "vue";
 
 import { useOpenOrUpdateWindow } from "@/composables/use-open-or-update-window";
+import * as windowArrangement from "@/utils/window-arrangement";
 import { decodeWindowStates, encodeWindowStates } from "@/utils/window-state-codec";
 
 import { useWindowsStore, type WindowState } from "./use-windows-store";
@@ -110,6 +111,7 @@ vi.mock("@/utils/window-arrangement", () => ({
 	maximize: vi.fn(),
 	none: vi.fn(),
 	smartTile: vi.fn(),
+	columnFiveFlex: vi.fn(),
 	splitDataListsAndMap: vi.fn(),
 }));
 vi.mock("@/utils/window-body-focus.ts", () => ({
@@ -136,6 +138,8 @@ describe("window opening and persistence", () => {
 		vi.mocked(useRouter).mockImplementation(
 			() => ({ push: mocks.navigate }) as unknown as ReturnType<typeof useRouter>,
 		);
+		vi.mocked(windowArrangement.columnFiveFlex).mockClear();
+		vi.mocked(windowArrangement.smartTile).mockClear();
 		setActivePinia(createPinia());
 		mocks.navigate.mockReset();
 		mocks.windows.length = 0;
@@ -206,6 +210,8 @@ describe("window opening and persistence", () => {
 		await persist();
 		mocks.route.query = mocks.navigate.mock.calls.at(-1)![0].query;
 		await store.restoreState();
+		expect(windowArrangement.columnFiveFlex).toHaveBeenCalled();
+		expect(windowArrangement.smartTile).not.toHaveBeenCalled();
 		expect(store.registry.size).toBe(2);
 		expect([...store.registry.values()].map((window) => window.label)).toEqual(["العربية", "ä"]);
 	});
