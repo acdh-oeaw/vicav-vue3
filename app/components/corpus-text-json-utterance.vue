@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { BookA } from "@lucide/vue";
 
-import type { Gap, Pc, Seg, W } from "@/lib/api-client";
+import type { Gap, Pc, Seg, Vocal, W } from "@/lib/api-client";
 
 const windowsStore = useWindowsStore();
 const { addWindow } = windowsStore;
@@ -13,6 +13,7 @@ const props = withDefaults(
 			pc?: Pc;
 			gap?: Gap;
 			seg?: Seg;
+			vocal?: Vocal;
 		};
 		inlineLemmaAnnotation: boolean;
 		inlineLinguisticAnnotation: boolean;
@@ -104,6 +105,9 @@ const segmentIsHit = computed(() => {
 	<div v-if="props.utterance.pc" class="u flex shrink-0 flex-col whitespace-nowrap text-lg">
 		<div>{{ props.utterance.pc["$"] }}{{ "&nbsp;" }}</div>
 	</div>
+	<div v-if="props.utterance.vocal?.desc.$" class="u shrink-0 text-lg italic">
+		[{{ props.utterance.vocal.desc.$ }}]&nbsp;
+	</div>
 	<div v-if="props.utterance.gap" class="u flex shrink-0 flex-col whitespace-nowrap py-3 text-lg">
 		<div>
 			{{
@@ -121,12 +125,22 @@ const segmentIsHit = computed(() => {
 		:data-compound-id="props.utterance.seg['@id']"
 		:data-highlight-scope="segmentIsHit ? 'segment' : undefined"
 	>
+		<div class="flex flex-row">
+			<CorpusTextJsonUtterance
+				v-for="(uContent, index) in props.utterance.seg['$$']"
+				:key="uContent.w?.['@id'] ?? uContent.seg?.['@id'] ?? index"
+				:hits="props.hits"
+				:inline-lemma-annotation="props.inlineLemmaAnnotation"
+				:inline-linguistic-annotation="props.inlineLinguisticAnnotation"
+				:utterance="uContent"
+			></CorpusTextJsonUtterance>
+		</div>
 		<div
 			v-if="
 				(inlineLemmaAnnotation && segmentAnnotations.lemmaRef) ||
 				(inlineLinguisticAnnotation && segmentAnnotations.linguistic.length > 0)
 			"
-			class="absolute top-[calc(100%+2px)] inset-x-0 z-10 flex min-h-3 items-center justify-center gap-1 bg-gray-100/90 text-xs text-gray-500"
+			class="mt-0.5 flex min-h-3 items-center justify-center gap-1 bg-gray-100/90 text-xs text-gray-500"
 		>
 			<button
 				v-if="inlineLemmaAnnotation && segmentAnnotations.lemmaRef"
@@ -144,16 +158,6 @@ const segmentIsHit = computed(() => {
 				<span class="sr-only">{{ annotation.label }}:</span>
 				{{ annotation.values.join(", ") }}
 			</span>
-		</div>
-		<div class="flex flex-row">
-			<CorpusTextJsonUtterance
-				v-for="(uContent, index) in props.utterance.seg['$$']"
-				:key="uContent.w?.['@id'] ?? uContent.seg?.['@id'] ?? index"
-				:hits="props.hits"
-				:inline-lemma-annotation="props.inlineLemmaAnnotation"
-				:inline-linguistic-annotation="props.inlineLinguisticAnnotation"
-				:utterance="uContent"
-			></CorpusTextJsonUtterance>
 		</div>
 	</div>
 </template>
