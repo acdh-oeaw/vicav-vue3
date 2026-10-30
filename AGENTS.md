@@ -42,15 +42,17 @@ pnpm run validate   # Format, lint, typecheck, unit tests
 
 ### Docs (Architecture & Features)
 
-| File                                                                           | Purpose                                                                                                                                |
-| ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
-| [docs/windowTypes.md](./docs/windowTypes.md)                                   | Reference for all window `targetType` values and their params schemas (WMap, Text, Profile, DictQuery, etc.)                           |
-| [docs/tests.md](./docs/tests.md)                                               | E2E testing guide: backend switching via env var, test locations, selector patterns for menu components                                |
-| [docs/tei-metadata-loading-caching.md](./docs/tei-metadata-loading-caching.md) | Deep dive on TEI metadata loading pipeline: 3-layer caching (fetchWithETag → TanStack → SSR hydration), initialization, parsing, joins |
-| [docs/searchbar.md](./docs/searchbar.md)                                       | Searchbar component docs: tag/text modes, CodeMirror integration, Lucene/CQL syntax highlighting, TriggerMap concept                   |
-| [docs/menu.md](./docs/menu.md)                                                 | Menu system overview: components, data flow, menu item types, test selectors                                                           |
-| [docs/dict-entry-component-mapping.md](./docs/dict-entry-component-mapping.md) | Dictionary entry rendering: API field to template mapping, entry shell, senses, examples, grammar items                                |
-| [docs/unusual-design-decisions.md](./docs/unusual-design-decisions.md)         | Catalogue of non-obvious architecture choices: backend-driven UI, URL-as-state, generated Zod schemas, 3 caching layers, dep overlaps  |
+| File                                                                           | Purpose                                                                                                                                                                      |
+| ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [docs/windowTypes.md](./docs/windowTypes.md)                                   | Reference for all window `targetType` values and their params schemas (WMap, Text, Profile, DictQuery, etc.)                                                                 |
+| [docs/tests.md](./docs/tests.md)                                               | E2E testing guide: backend switching via env var, test locations, selector patterns for menu components                                                                      |
+| [docs/tei-metadata-loading-caching.md](./docs/tei-metadata-loading-caching.md) | Deep dive on TEI metadata loading pipeline: 3-layer caching (fetchWithETag → TanStack → SSR hydration), initialization, parsing, joins                                       |
+| [docs/searchbar.md](./docs/searchbar.md)                                       | Searchbar component docs: tag/text modes, CodeMirror integration, Lucene/CQL syntax highlighting, TriggerMap concept                                                         |
+| [docs/menu.md](./docs/menu.md)                                                 | Menu system overview: components, data flow, menu item types, test selectors                                                                                                 |
+| [docs/dict-entry-component-mapping.md](./docs/dict-entry-component-mapping.md) | Dictionary entry rendering: API field to template mapping, entry shell, senses, examples, grammar items                                                                      |
+| [docs/unusual-design-decisions.md](./docs/unusual-design-decisions.md)         | Catalogue of non-obvious architecture choices: backend-driven UI, URL-as-state, generated Zod schemas, 3 caching layers, dep overlaps                                        |
+| [docs/openapi-spec-change-requests.md](./docs/openapi-spec-change-requests.md) | Open change requests against the upstream OpenAPI spec: per-CR evidence, proposed schema fragments, repro harness (implemented CRs are listed as closed)                     |
+| [docs/openapi-patches/](./docs/openapi-patches/)                               | Human readable YAML patches that should be integrated into vicav-app-api. If necessary machine readable JSON can also live here. Removed when implemented in `vicav-app-api` |
 
 # Maintenance Prompt
 
