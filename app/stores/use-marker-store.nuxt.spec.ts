@@ -2,7 +2,10 @@
 import { createPinia, setActivePinia } from "pinia";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { useMarkerStore } from "./use-marker-store.ts";
+import { iconsData } from "@/components/ui/icon-picker/icons-data.ts";
+import { SHAPE_ICON_CATEGORY, shapeIcons } from "@/components/ui/icon-picker/shape-icons.ts";
+
+import { randomIconPool, useMarkerStore } from "./use-marker-store.ts";
 
 const COLUMN = "feature1";
 const OTHER_COLUMN = "feature2";
@@ -291,5 +294,72 @@ describe("useMarkerStore groups across features", () => {
 		expect(restored.resolveMarkerId(COLUMN, "beta")).toBe(
 			restored.resolveMarkerId(OTHER_COLUMN, "delta"),
 		);
+	});
+});
+
+describe("useMarkerStore feature value styles", () => {
+	const VALUES = ["alpha", "beta", "gamma"];
+	const valueMarkers = (store: ReturnType<typeof useMarkerStore>) =>
+		VALUES.map((value) => store.markers.get(store.buildFeatureValueId(COLUMN, value))!);
+	const iconName = (marker: { icon: { name: string } }) => marker.icon.name;
+	// shapes share names with lucide icons, so without the flag they render as the lucide icon or not at all
+	const isCustomIcon = (marker: { icon: { custom?: boolean } }) => marker.icon.custom === true;
+
+	beforeEach(() => {
+		setActivePinia(createPinia());
+	});
+
+	it("gives new feature values the feature icon by default", () => {
+		const store = setupStore();
+		const featureIconName = iconName(store.markers.get(COLUMN)!);
+
+		expect(valueMarkers(store).every((marker) => iconName(marker) === featureIconName)).toBe(true);
+	});
+
+	it("gives new feature values distinct icons and colors when enabled", () => {
+		const store = useMarkerStore();
+		store.markerSettings.distinctFeatureValueIcons = true;
+		store.markerSettings.distinctFeatureValueColors = true;
+		store.addDefaultMarker(COLUMN);
+		VALUES.forEach((value) => {
+			store.addDefaultMarker(COLUMN, value);
+		});
+
+		const markers = valueMarkers(store);
+		expect(new Set(markers.map(iconName)).size).toBe(VALUES.length);
+		expect(markers.every(isCustomIcon)).toBe(true);
+		expect(new Set(markers.map((marker) => marker.colorCode)).size).toBe(VALUES.length);
+	});
+
+	it("randomizes feature value icons into distinct shapes", () => {
+		const store = setupStore();
+		const iconKey = (marker: { icon: { name: string; custom?: boolean } }) =>
+			`${marker.icon.custom === true ? "custom" : "lucide"}:${marker.icon.name}`;
+
+		store.randomizeIconsForFeatureValues(COLUMN);
+
+		expect(new Set(valueMarkers(store).map(iconKey)).size).toBe(VALUES.length);
+		expect(store.markerSettings.triggerRepaint).toBe(true);
+	});
+
+	it("draws random icons from the custom shapes and the lucide icons", () => {
+		const inPool = (name: string, custom: boolean) =>
+			randomIconPool.some((icon) => icon.name === name && (icon.custom === true) === custom);
+
+		// a shape must keep its custom flag, otherwise it renders as the lucide icon of the same name or not at all
+		expect(shapeIcons.every((icon) => inPool(icon.name, true))).toBe(true);
+		expect(
+			iconsData
+				.filter((icon) => icon.categories.includes(SHAPE_ICON_CATEGORY))
+				.every((icon) => inPool(icon.name, false)),
+		).toBe(true);
+	});
+
+	it("randomizes feature value colors", () => {
+		const store = setupStore();
+
+		store.randomizeColorsForFeatureValues(COLUMN);
+
+		expect(new Set(valueMarkers(store).map((marker) => marker.colorCode)).size).toBe(VALUES.length);
 	});
 });
