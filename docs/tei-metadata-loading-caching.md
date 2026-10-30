@@ -46,10 +46,13 @@ query eligible for refetching (for example, on window focus); it is not a pollin
 timestamps into three-minute buckets before serializing it.
 
 The TEI initialization plugin awaits the project query on the server. The TEI store consumes
-prepared metadata and records a pipeline-version-2 snapshot with public project identity and body
-ETag. On the client, a compatible hydrated snapshot reuses and freezes its compact metadata without
-reading the raw table. Incompatible or missing snapshots use preparation as a fallback. Store-local
-in-flight initialization deduplicates calls and clears after success or failure.
+prepared metadata and records a snapshot with the metadata pipeline version, public project identity,
+and body ETag. Pipeline versioning lets the client determine whether hydrated metadata is compatible
+with the current preparation logic. The version is defined in
+`app/stores/use-tei-headers-store.ts`. On the client, a compatible hydrated snapshot reuses and
+freezes its compact metadata without reading the raw table. Incompatible or missing snapshots use
+preparation as a fallback. Store-local in-flight initialization deduplicates calls and clears after
+success or failure.
 
 `project-validation.client.ts` depends on `project-query-client` and begins observing diagnostics
 only after `app:mounted`. It displays one negative toast per validation source, summarizing affected

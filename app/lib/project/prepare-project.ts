@@ -720,11 +720,36 @@ function extractMetadata(
 	const label = resolveLabel(item, resolvedDataType, persons, placeSettlement);
 	const title = resolveTitle(item, label, persons);
 	const responsibilityData = buildResponsibilityData(item, indexes);
+	const rawTriggerWarningNotes: unknown = item.teiHeader?.fileDesc.notesStmt?.note;
+	const triggerWarningNotes: Array<unknown> =
+		rawTriggerWarningNotes == null
+			? []
+			: Array.isArray(rawTriggerWarningNotes)
+				? rawTriggerWarningNotes
+				: [rawTriggerWarningNotes];
+	const triggerWarnings = triggerWarningNotes.flatMap((candidate): Array<string> => {
+		if (
+			typeof candidate !== "object" ||
+			candidate === null ||
+			!("@type" in candidate) ||
+			!("$" in candidate)
+		) {
+			return [];
+		}
+
+		const type = candidate["@type"];
+		const text = candidate.$;
+		if (type !== "triggerWarning" || typeof text !== "string") return [];
+
+		const warning = text.trim();
+		return warning === "" ? [] : [warning];
+	});
 	const parsedItem = SimpleTEIMetadataSchema.safeParse({
 		// Note that there could be several idnos here. The one we need has a type ending in "CorpusID".
 		// At the moment we only need to care about one idno.
 		id: teiHeader?.fileDesc.publicationStmt.idno?.$ ?? item["@id"] ?? "no_id",
 		teiSource_idno: teiHeader?.fileDesc.publicationStmt.teiSource_idno?.$,
+		triggerWarnings,
 		recordingDate: teiHeader?.fileDesc.sourceDesc.recordingStmt?.recording.date?.["@when"],
 		pubDate: teiHeader?.fileDesc.publicationStmt.date?.$ ?? "unknown",
 		dataType: resolvedDataType,

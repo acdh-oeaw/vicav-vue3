@@ -35,8 +35,8 @@ function toggleSpeakerCard(index: number) {
 </script>
 
 <template>
-	<div class="m-3 rounded-sm border border-gray-300 bg-gray-50 p-4">
-		<table class="w-full">
+	<div class="my-3 min-w-0 rounded-sm border border-gray-300 bg-gray-50 p-4">
+		<table class="w-full table-fixed">
 			<thead>
 				<tr></tr>
 				<tr></tr>
