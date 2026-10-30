@@ -7,6 +7,7 @@ import {
 	ChevronsLeftRightEllipsis,
 	Copy,
 	Languages,
+	TriangleAlert,
 } from "@lucide/vue";
 import InfiniteLoading from "v3-infinite-loading";
 import type { StateHandler } from "v3-infinite-loading/lib/types";
@@ -224,10 +225,18 @@ onMounted(async () => {
 			<Citation :header="teiHeader" type="entry" />
 		</div>
 		<!-- eslint-disable tailwindcss/no-custom-classname, vue/no-v-html -->
-		<div :id="params.textId" ref="utterancesWrapper" class="relative inline-block p-4">
+		<div :id="params.textId" ref="utterancesWrapper" class="relative block w-full min-w-0 p-4">
 			<h2 class="m-3 text-lg">{{ props.params.label }}</h2>
 
 			<CorpusTextTeiHeader :dense="denseTeiHeader === true" :text-id="params.textId" />
+			<Alert
+				v-if="teiHeader?.triggerWarnings?.length"
+				class="my-3 w-auto min-w-0"
+				variant="destructive"
+			>
+				<TriangleAlert />
+				<AlertTitle>Content Warning: {{ teiHeader.triggerWarnings.join(", ") }}</AlertTitle>
+			</Alert>
 			<table class="text-sm text-gray-700">
 				<thead class="bg-primary text-xs text-gray-700 uppercase">
 					<tr>

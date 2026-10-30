@@ -27,7 +27,7 @@ export {
 	simpleMetadataAccessors,
 	TeiCorpusSchema,
 } from "@/lib/project/prepare-project.ts";
-const METADATA_PIPELINE_VERSION = 2;
+const METADATA_PIPELINE_VERSION = 3;
 
 interface InitializationSnapshot {
 	ready: true;

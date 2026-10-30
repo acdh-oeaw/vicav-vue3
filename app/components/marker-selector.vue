@@ -3,6 +3,7 @@ import { useMarkerStore } from "@/stores/use-marker-store";
 
 import { CHARACTER_ICON_CATEGORY, characterIcons } from "./ui/icon-picker/character-icons.ts";
 import type { IconType } from "./ui/icon-picker/IconPicker.vue";
+import { shapeIcons } from "./ui/icon-picker/shape-icons.ts";
 
 type SelectorType = "color" | "icon";
 export interface SelectionEntry {
@@ -31,6 +32,8 @@ const emit = defineEmits(["update:modelValue"]);
 const {
 	applyStyleToUnderlyingFeatureValues,
 	generateColorVariantsForFeatureValues,
+	randomizeColorsForFeatureValues,
+	randomizeIconsForFeatureValues,
 	hasUnderlyingFeatureValues,
 } = useMarkerStore();
 
@@ -53,6 +56,14 @@ function generateColorVariants() {
 	generateColorVariantsForFeatureValues(props.modelValue.id);
 }
 
+function randomizeColors() {
+	randomizeColorsForFeatureValues(props.modelValue.id);
+}
+
+function randomizeIcons() {
+	randomizeIconsForFeatureValues(props.modelValue.id);
+}
+
 const localColor = ref(props.modelValue.colorCode ?? "#cccccc");
 watch(
 	() => localColor.value,
@@ -61,44 +72,7 @@ watch(
 	},
 );
 
-const customIcons = [
-	{
-		name: "petal",
-		categories: ["shapes"],
-		tags: [],
-		additionalAttributes: {
-			"stroke-width": "40",
-			height: "90%",
-			y: "5%",
-		},
-	},
-	...[
-		"circle-small",
-		"badge",
-		"club",
-		"cross",
-		"diamond",
-		"heart",
-		"hexagon",
-		"octagon",
-		"pentagon",
-		"rectangle-horizontal",
-		"rectangle-vertical",
-		"shield",
-		"sparkle",
-		"square",
-		"squircle",
-		"star",
-		"triangle",
-	].map(
-		(iconName) =>
-			({
-				name: iconName!,
-				categories: ["shapes"],
-			}) as IconType,
-	),
-	...characterIcons,
-];
+const customIcons = [...shapeIcons, ...characterIcons];
 
 // letters and digits are a marker style of their own, so they stay available
 // no matter which icon categories a caller asks for
@@ -124,6 +98,8 @@ const limitToCategories = computed(() =>
 			:use-popover-portal="usePopoverPortal"
 			@apply-style-to-underlying="applyStyleToUnderlying"
 			@generate-color-variants="generateColorVariants"
+			@randomize-colors="randomizeColors"
+			@randomize-icons="randomizeIcons"
 			@update:color="updateColor"
 			@update:hidden="updateHidden"
 			@update:icon="updateIcon"

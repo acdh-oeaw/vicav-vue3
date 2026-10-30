@@ -63,7 +63,14 @@ const compactGrammar = computed(() => {
 		formatRootGrammar(values.root, "Root"),
 	].filter(Boolean);
 
-	return [values.partOfSpeech, values.class, roots.join(", ")].filter(Boolean).join(", ");
+	const patterns = headerForms.value
+		.flatMap((form) => form.grammar)
+		.filter((item) => item.label === "Pattern" && item.value !== "-")
+		.map((item) => item.value);
+	const uniquePatterns = Array.from(new Set(patterns));
+	return [values.partOfSpeech, values.class, uniquePatterns.join(", "), roots.join(", ")]
+		.filter(Boolean)
+		.join(", ");
 });
 
 const uniqueEditors = computed(() => {

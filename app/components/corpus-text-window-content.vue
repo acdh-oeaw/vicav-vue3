@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import "v3-infinite-loading/lib/style.css"; //required if you're not going to override default slots
 
-import { Pause, Play } from "@lucide/vue";
+import { Pause, Play, TriangleAlert } from "@lucide/vue";
 import InfiniteLoading from "v3-infinite-loading";
 import type { StateHandler } from "v3-infinite-loading/lib/types";
 import type Zod from "zod";
@@ -159,8 +159,8 @@ watch(
 		<div :id="params.textId" ref="utterancesWrapper" class="relative p-4">
 			<h2 class="m-3 text-lg">{{ props.params.label }}</h2>
 
-			<div class="m-3 rounded-sm border border-gray-300 bg-gray-50 p-4">
-				<table>
+			<div class="m-3 min-w-0 rounded-sm border border-gray-300 bg-gray-50 p-4">
+				<table class="w-full table-fixed">
 					<thead>
 						<tr></tr>
 						<tr></tr>
@@ -208,6 +208,14 @@ watch(
 					</tbody>
 				</table>
 			</div>
+			<Alert
+				v-if="teiHeader?.triggerWarnings?.length"
+				class="m-3 w-auto min-w-0"
+				variant="destructive"
+			>
+				<TriangleAlert />
+				<AlertTitle>Content Warning: {{ teiHeader.triggerWarnings.join(", ") }}</AlertTitle>
+			</Alert>
 			<table class="max-w-full text-left text-sm text-gray-700 rtl:text-right">
 				<thead class="bg-accent text-xs text-gray-700 uppercase">
 					<tr>
