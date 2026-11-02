@@ -170,9 +170,15 @@ const languageName = (tag: string) => {
 	}
 };
 
-const sourceReference = (source: string | undefined): RenderedBibliographyReference | undefined => {
-	if (source == null) return undefined;
-	return bibliographyById.value.get(source);
+const sourceReferences = (source: string | undefined): Array<RenderedBibliographyReference> => {
+	if (!source?.trim()) return [];
+	return source
+		.trim()
+		.split(/\s+/)
+		.flatMap((id) => {
+			const reference = bibliographyById.value.get(id.replace(/^#/, ""));
+			return reference ? [reference] : [];
+		});
 };
 
 const grammarValues = (items: Array<RenderedGrammarItem>) => {
@@ -270,8 +276,9 @@ const languageClass = (language: string | undefined) => {
 									{{ formatLocation(location) }}
 								</span>
 								<DictSourceAction
-									v-if="sourceReference(form.source)"
-									:reference="sourceReference(form.source)!"
+									v-for="(reference, sourceIndex) in sourceReferences(form.source)"
+									:key="sourceIndex"
+									:reference="reference"
 								/>
 							</template>
 						</div>
@@ -374,8 +381,9 @@ const languageClass = (language: string | undefined) => {
 									</span>
 								</template>
 								<DictSourceAction
-									v-if="sourceReference(form.source)"
-									:reference="sourceReference(form.source)!"
+									v-for="(reference, sourceIndex) in sourceReferences(form.source)"
+									:key="sourceIndex"
+									:reference="reference"
 								/>
 								<div
 									v-for="(variant, variantIndex) in formVariants(
@@ -404,8 +412,9 @@ const languageClass = (language: string | undefined) => {
 										{{ formatLocation(location) }}
 									</span>
 									<DictSourceAction
-										v-if="sourceReference(variant.source)"
-										:reference="sourceReference(variant.source)!"
+										v-for="(reference, sourceIndex) in sourceReferences(variant.source)"
+										:key="sourceIndex"
+										:reference="reference"
 									/>
 								</div>
 							</div>
@@ -455,8 +464,9 @@ const languageClass = (language: string | undefined) => {
 													({{ translation.gloss }})
 												</span>
 												<DictSourceAction
-													v-if="sourceReference(translation.source)"
-													:reference="sourceReference(translation.source)!"
+													v-for="(reference, sourceIndex) in sourceReferences(translation.source)"
+													:key="sourceIndex"
+													:reference="reference"
 												/>
 												<span v-if="translationIndex < translationGroup.translations.length - 1">
 													,
@@ -496,8 +506,9 @@ const languageClass = (language: string | undefined) => {
 													:reference="item"
 												/>
 												<DictSourceAction
-													v-if="sourceReference(example.source)"
-													:reference="sourceReference(example.source)!"
+													v-for="(reference, sourceIndex) in sourceReferences(example.source)"
+													:key="sourceIndex"
+													:reference="reference"
 												/>
 												<span
 													v-for="location in example.locations"

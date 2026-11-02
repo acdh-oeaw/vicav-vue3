@@ -19,6 +19,39 @@ afterEach(() => {
 });
 
 describe("dictionary entry corpus search", () => {
+	it("renders each bibliography reference in form, translation and example source lists", async () => {
+		const entry = {
+			id: "example",
+			lemma: "example",
+			type: "entry",
+			_links: { self: { href: "/example" } },
+			entry: {
+				entry: {
+					lemma_form: { "@source": " #one   #two #missing ", orth: { $: "example" } },
+					sense: {
+						translationEquivalent_cit: {
+							"@source": "#one #two",
+							form: { orth: { "@lang": "en", $: "meaning" } },
+						},
+						example_cit: { "@source": "#one #two", quote: { $: "example quote" } },
+					},
+					listBibl: [
+						{ "@id": "one", title: { $: "First" } },
+						{ "@id": "two", title: { $: "Second" } },
+					],
+				},
+			},
+		} as unknown as RestVLEEntry;
+		const wrapper = await mountSuspended(DictEntry, { props: { entry } });
+		expect(wrapper.findAll('button[aria-label^="Open bibliography results for"]')).toHaveLength(6);
+		expect(wrapper.find('button[aria-label="Open bibliography results for First"]').exists()).toBe(
+			true,
+		);
+		expect(wrapper.find('button[aria-label="Open bibliography results for Second"]').exists()).toBe(
+			true,
+		);
+	});
+
 	it("shows etymology languages after the senses", async () => {
 		const entry = {
 			id: "example",
