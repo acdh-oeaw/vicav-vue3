@@ -49,36 +49,16 @@ const headerForms = computed(() => {
 	return e.value.lemmaForms;
 });
 
-const compactGrammar = computed(() => {
-	const values = {
-		partOfSpeech: findGrammarValue(e.value.grammar, "Part of speech"),
-		gender: findGrammarValue(e.value.grammar, "Gender"),
-		class: findGrammarValue(e.value.grammar, "Class"),
-		synRoot: findGrammarValue(e.value.grammar, "Syn root"),
-		diaRoot: findGrammarValue(e.value.grammar, "Dia root"),
-		root: findGrammarValue(e.value.grammar, "Root"),
-	};
-	const roots = [
-		formatRootGrammar(values.synRoot, "synRoot"),
-		formatRootGrammar(values.diaRoot, "diaRoot"),
-		formatRootGrammar(values.root, "Root"),
-	].filter(Boolean);
-
+const headerGrammar = computed(() => {
 	const patterns = headerForms.value
 		.concat(e.value.variantForms)
 		.flatMap((form) => form.grammar)
-		.filter((item) => item.label === "Pattern" && item.value !== "-")
-		.map((item) => item.value);
-	const uniquePatterns = Array.from(new Set(patterns));
-	return [
-		values.partOfSpeech,
-		values.partOfSpeech?.toLowerCase().endsWith("noun") ? values.gender : undefined,
-		values.class,
-		uniquePatterns.join(", "),
-		roots.join(", "),
-	]
-		.filter(Boolean)
-		.join(", ");
+		.filter((item) => item.label === "Pattern" && item.value !== "-");
+	return e.value.grammar.concat(
+		patterns.filter(
+			(item, index) => patterns.findIndex((other) => other.value === item.value) === index,
+		),
+	);
 });
 
 const uniqueEditors = computed(() => {
@@ -126,16 +106,6 @@ const entryJsonLink = computed(() => getEntryLink(e.value, "json"));
 const corpusDictIDQuery = computed(() => {
 	return `[dict="dict:${escapeCorpusQueryValue(e.value.id)}"] | <seg lemmaRef="dict:${escapeCorpusQueryValue(e.value.id)}"/> containing []`;
 });
-
-const findGrammarValue = (items: Array<RenderedGrammarItem>, label: string) => {
-	const value = items.find((item) => item.label === label)?.value;
-	return value == null || value === "-" ? undefined : value;
-};
-
-const formatRootGrammar = (value: string | undefined, label: string) => {
-	if (value == null) return undefined;
-	return `${value} (${label})`;
-};
 
 const escapeCorpusQueryValue = (value: string) => {
 	return value.replaceAll("\\", "\\\\").replaceAll('"', '\\"');
@@ -285,8 +255,8 @@ const languageClass = (language: string | undefined) => {
 								/>
 							</template>
 						</div>
-						<div v-if="compactGrammar" class="text-lg">
-							{{ compactGrammar }}
+						<div v-if="headerGrammar.length" class="text-lg">
+							<DictGrammar :items="headerGrammar" />
 						</div>
 					</div>
 					<div class="ml-auto flex flex-col items-end gap-1.5">
@@ -371,6 +341,9 @@ const languageClass = (language: string | undefined) => {
 							>
 								<DictFormDisplay
 									:badge-class="compactBadgeClass"
+									:entry-part-of-speech="
+										e.grammar.find((item) => item.label === 'Part of speech')?.value
+									"
 									:form="form"
 									:references="sourceReferences(form.source)"
 								/>
@@ -383,6 +356,9 @@ const languageClass = (language: string | undefined) => {
 									<span v-if="!section.separateVariants" aria-hidden="true">;</span>
 									<DictFormDisplay
 										:badge-class="compactBadgeClass"
+										:entry-part-of-speech="
+											e.grammar.find((item) => item.label === 'Part of speech')?.value
+										"
 										:form="variant"
 										:references="sourceReferences(variant.source)"
 									/>

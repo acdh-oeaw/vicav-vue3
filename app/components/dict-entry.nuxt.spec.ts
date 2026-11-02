@@ -19,6 +19,35 @@ afterEach(() => {
 });
 
 describe("dictionary entry corpus search", () => {
+	it("labels the verb form within the grammar brackets", async () => {
+		const entry = {
+			id: "example",
+			lemma: "example",
+			type: "entry",
+			_links: { self: { href: "/example" } },
+			entry: {
+				entry: {
+					inflected_form: {
+						orth: { $: "inflected" },
+						gramGrp: {
+							derivedVerbClass_gram: { $: "II" },
+							number_gram: { $: "singular" },
+							msd_gram: { $: "perfect" },
+						},
+					},
+					gramGrp: {
+						pos_gram: { $: "verb" },
+						derivedVerbClass_gram: { $: "II" },
+						number_gram: { $: "singular" },
+					},
+				},
+			},
+		} as unknown as RestVLEEntry;
+		const wrapper = await mountSuspended(DictEntry, { props: { entry } });
+		expect(wrapper.text()).toContain("verb (Form: II, singular)");
+		expect(wrapper.text()).toContain("inflected (perfect, Form: II, singular)");
+	});
+
 	it("italicizes Arabic Latin lemma forms", async () => {
 		const entry = {
 			id: "example",
@@ -72,7 +101,7 @@ describe("dictionary entry corpus search", () => {
 			},
 		} as unknown as RestVLEEntry;
 		const wrapper = await mountSuspended(DictEntry, { props: { entry } });
-		expect(wrapper.text()).toContain("collectiveNoun, feminine, bgr (synRoot)");
+		expect(wrapper.text()).toContain("collectiveNoun (feminine), √bgr");
 	});
 
 	it("renders each bibliography reference in form, translation and example source lists", async () => {

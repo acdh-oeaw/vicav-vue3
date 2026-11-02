@@ -11,14 +11,9 @@ const props = defineProps<{
 	form: RenderedForm;
 	references: Array<RenderedBibliographyReference>;
 	badgeClass: string;
+	entryPartOfSpeech?: string;
 }>();
 const orthography = computed(() => props.form.orthographies.find((item) => !item.isMissing));
-const grammar = computed(() =>
-	props.form.grammar
-		.map((item) => item.value)
-		.filter((value) => value !== "-")
-		.join(", "),
-);
 </script>
 
 <template>
@@ -28,7 +23,9 @@ const grammar = computed(() =>
 		:title="orthography.lang ? `Language: ${orthography.lang}` : undefined"
 		>{{ orthography.text }}</span
 	>
-	<span v-if="grammar">({{ grammar }})</span>
+	<span v-if="form.grammar.length"
+		><DictGrammar :fallback-part-of-speech="entryPartOfSpeech" :items="form.grammar"
+	/></span>
 	<span v-for="(location, index) in form.locations" :key="index" :class="badgeClass"
 		><MapPin class="size-4 text-gray-400" />{{ formatLocation(location) }}</span
 	>
