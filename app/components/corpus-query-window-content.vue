@@ -35,6 +35,15 @@ const emit = defineEmits<{
 }>();
 const queryString = ref(props.params.queryString);
 const hits = ref<Array<Div & { label?: string; teiSource?: string }>>([]);
+const includeContentWarnings = ref(false);
+const contentWarningsId = useId();
+const visibleHits = computed(() => {
+	if (includeContentWarnings.value) return hits.value;
+	const warnedIds = new Set(
+		simpleItems.filter((header) => header.triggerWarnings?.length).map((header) => header.id),
+	);
+	return hits.value.filter((hit) => !hit["@docRef"] || !warnedIds.has(hit["@docRef"]));
+});
 const scrollCursor = ref({ count: 0, page: 1, pageSize: 30, complete: false });
 const showHelp = ref<boolean>(false);
 const isSearching = ref(false);
@@ -50,12 +59,16 @@ const {
 	hasLinguisticAnnotations: blockHasLinguisticAnnotations,
 } = useCorpusAnnotationAvailability();
 
+const hasLemmaAnnotations = computed(() => {
+	return blockHasLemmaAnnotations(visibleHits.value);
+});
+
 const hasLinguisticAnnotations = computed(() => {
-	return blockHasLinguisticAnnotations(hits.value);
+	return blockHasLinguisticAnnotations(visibleHits.value);
 });
 
 const hasInlineTranslations = computed(() => {
-	return blockHasInlineTranslations(hits.value);
+	return blockHasInlineTranslations(visibleHits.value);
 });
 
 const showLinguisticAnnotations = computed(() => {
@@ -204,7 +217,7 @@ function getHitKey(hit: Div, index: number) {
 }
 
 const displayHitContexts = computed(() =>
-	hits.value.map((hit) => ({ hit, context: getCorpusHitContext(hit) })),
+	visibleHits.value.map((hit) => ({ hit, context: getCorpusHitContext(hit) })),
 );
 
 const { cqlConfig: attributeConfig } = useCqlAttributes({
@@ -281,7 +294,14 @@ const { cqlTriggers } = useCqlTriggers(cqlConfig);
 				:special-characters="specialCharacters"
 				:triggers="cqlTriggers"
 			/>
-			<br />
+			<div class="mt-3 flex items-center gap-2">
+				<Checkbox
+					:id="contentWarningsId"
+					:checked="includeContentWarnings"
+					@update:checked="includeContentWarnings = $event === true"
+				/>
+				<label :for="contentWarningsId">Include texts with content warnings</label>
+			</div>
 		</form>
 		<div
 			v-if="hasLinguisticAnnotations || hasInlineTranslations"
@@ -315,9 +335,12 @@ const { cqlTriggers } = useCqlTriggers(cqlConfig);
 				<div>•</div>
 				<div>
 					{{ scrollCursor.count }} {{ scrollCursor.count > 1 ? "results" : "result" }} ({{
-						hits.length
+						visibleHits.length
 					}}
-					shown)
+					shown<span v-if="!includeContentWarnings && visibleHits.length < hits.length"
+						>; {{ hits.length - visibleHits.length }} loaded results hidden due to content
+						warnings</span
+					>)
 				</div>
 			</div>
 			<table>
