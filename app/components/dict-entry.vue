@@ -95,9 +95,9 @@ const uniqueEditors = computed(() => {
 
 const formSections = computed(() =>
 	[
-		{ label: "Variant Forms", forms: e.value.variantForms },
-		{ label: "Infl. Forms", forms: e.value.inflectedForms },
-		{ label: "Derived Forms", forms: e.value.derivativeForms },
+		{ label: "Variant Forms", forms: e.value.variantForms, separateVariants: false },
+		{ label: "Infl. Forms", forms: e.value.inflectedForms, separateVariants: false },
+		{ label: "Derived Forms", forms: e.value.derivativeForms, separateVariants: true },
 	].filter((section) => section.forms.length > 0),
 );
 const hasEtymology = computed(() => e.value.etymologies.length > 0);
@@ -192,11 +192,6 @@ const sourceReferences = (source: string | undefined): Array<RenderedBibliograph
 
 const grammarValues = (items: Array<RenderedGrammarItem>) => {
 	return items.map((item) => item.value).filter((value) => value !== "-");
-};
-
-const formGrammarText = (form: RenderedForm) => {
-	const values = grammarValues(form.grammar);
-	return values.length === 0 ? undefined : values.join(", ");
 };
 
 const formVariants = (form: RenderedForm): Array<RenderedForm> => {
@@ -374,52 +369,22 @@ const languageClass = (language: string | undefined) => {
 								:key="`inflected-${formIndex}`"
 								class="flex flex-wrap items-center gap-x-2 gap-y-1"
 							>
-								<span
-									v-if="formText(form)"
-									class="font-bold italic"
-									:title="languageTooltip(formLanguage(form))"
-								>
-									{{ formText(form) }}
-								</span>
-								<span v-if="formGrammarText(form)">({{ formGrammarText(form) }})</span>
-								<template v-for="location in form.locations" :key="locationKey(location)">
-									<span :class="compactBadgeClass">
-										<MapPin class="size-4 text-gray-400" />
-										{{ formatLocation(location) }}
-									</span>
-								</template>
-								<DictSourceAction
-									v-for="(reference, sourceIndex) in sourceReferences(form.source)"
-									:key="sourceIndex"
-									:reference="reference"
+								<DictFormDisplay
+									:badge-class="compactBadgeClass"
+									:form="form"
+									:references="sourceReferences(form.source)"
 								/>
 								<div
 									v-for="(variant, variantIndex) in formVariants(form)"
-									:key="`inflected-${formIndex}-variant-${variantIndex}`"
+									:key="variantIndex"
 									class="flex flex-wrap items-center gap-x-2 gap-y-1"
-									:class="{ 'w-full': section.label === 'Derived Forms' }"
+									:class="{ 'w-full': section.separateVariants }"
 								>
-									<span v-if="section.label !== 'Derived Forms'" aria-hidden="true">;</span>
-									<span
-										v-if="formText(variant)"
-										class="font-bold italic"
-										:title="languageTooltip(formLanguage(variant))"
-									>
-										{{ formText(variant) }}
-									</span>
-									<span v-if="formGrammarText(variant)">({{ formGrammarText(variant) }})</span>
-									<span
-										v-for="location in variant.locations"
-										:key="locationKey(location)"
-										:class="compactBadgeClass"
-									>
-										<MapPin class="size-4 text-gray-400" />
-										{{ formatLocation(location) }}
-									</span>
-									<DictSourceAction
-										v-for="(reference, sourceIndex) in sourceReferences(variant.source)"
-										:key="sourceIndex"
-										:reference="reference"
+									<span v-if="!section.separateVariants" aria-hidden="true">;</span>
+									<DictFormDisplay
+										:badge-class="compactBadgeClass"
+										:form="variant"
+										:references="sourceReferences(variant.source)"
 									/>
 								</div>
 							</div>
