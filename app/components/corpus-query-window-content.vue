@@ -59,10 +59,6 @@ const {
 	hasLinguisticAnnotations: blockHasLinguisticAnnotations,
 } = useCorpusAnnotationAvailability();
 
-const hasLemmaAnnotations = computed(() => {
-	return blockHasLemmaAnnotations(visibleHits.value);
-});
-
 const hasLinguisticAnnotations = computed(() => {
 	return blockHasLinguisticAnnotations(visibleHits.value);
 });
