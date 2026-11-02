@@ -19,6 +19,62 @@ afterEach(() => {
 });
 
 describe("dictionary entry corpus search", () => {
+	it("italicizes Arabic Latin lemma forms", async () => {
+		const entry = {
+			id: "example",
+			lemma: "example",
+			type: "entry",
+			_links: { self: { href: "/example" } },
+			entry: {
+				entry: {
+					lemma_form: { orth: { "@lang": "ar-Latn", $: "example" } },
+					lemmaVariant_form: {
+						orth: { "@lang": "ar-Arab", $: "مثال" },
+						variant_form: {
+							orth: { $: "first nested" },
+							variant_form: { orth: { $: "deep nested" } },
+						},
+					},
+					inflected_form: { orth: { $: "inflected" } },
+				},
+			},
+		} as unknown as RestVLEEntry;
+		const wrapper = await mountSuspended(DictEntry, { props: { entry } });
+		const forms = wrapper.findAll("header .text-2xl");
+		expect(forms[0]?.classes()).toContain("italic");
+		expect(forms).toHaveLength(1);
+		expect(wrapper.get("header").text()).not.toContain("مثال");
+		expect(wrapper.text().indexOf("Variant Forms")).toBeLessThan(
+			wrapper.text().indexOf("Infl. Forms"),
+		);
+		expect(wrapper.text()).toContain("مثال");
+		const variantSection = wrapper
+			.findAll("section")
+			.find((section) => section.text().includes("مثال"));
+		expect(variantSection?.text()).toContain("first nested");
+		expect(variantSection?.text()).toContain("deep nested");
+	});
+
+	it("shows noun gender immediately after the word class", async () => {
+		const entry = {
+			id: "example",
+			lemma: "example",
+			type: "entry",
+			_links: { self: { href: "/example" } },
+			entry: {
+				entry: {
+					gramGrp: {
+						pos_gram: { $: "collectiveNoun" },
+						gender_gram: { $: "feminine" },
+						synRoot_gram: { $: "bgr" },
+					},
+				},
+			},
+		} as unknown as RestVLEEntry;
+		const wrapper = await mountSuspended(DictEntry, { props: { entry } });
+		expect(wrapper.text()).toContain("collectiveNoun, feminine, bgr (synRoot)");
+	});
+
 	it("renders each bibliography reference in form, translation and example source lists", async () => {
 		const entry = {
 			id: "example",

@@ -46,12 +46,13 @@ const bibliographyById = computed(() => {
 });
 
 const headerForms = computed(() => {
-	return e.value.lemmaForms.concat(e.value.variantForms);
+	return e.value.lemmaForms;
 });
 
 const compactGrammar = computed(() => {
 	const values = {
 		partOfSpeech: findGrammarValue(e.value.grammar, "Part of speech"),
+		gender: findGrammarValue(e.value.grammar, "Gender"),
 		class: findGrammarValue(e.value.grammar, "Class"),
 		synRoot: findGrammarValue(e.value.grammar, "Syn root"),
 		diaRoot: findGrammarValue(e.value.grammar, "Dia root"),
@@ -64,11 +65,18 @@ const compactGrammar = computed(() => {
 	].filter(Boolean);
 
 	const patterns = headerForms.value
+		.concat(e.value.variantForms)
 		.flatMap((form) => form.grammar)
 		.filter((item) => item.label === "Pattern" && item.value !== "-")
 		.map((item) => item.value);
 	const uniquePatterns = Array.from(new Set(patterns));
-	return [values.partOfSpeech, values.class, uniquePatterns.join(", "), roots.join(", ")]
+	return [
+		values.partOfSpeech,
+		values.partOfSpeech?.toLowerCase().endsWith("noun") ? values.gender : undefined,
+		values.class,
+		uniquePatterns.join(", "),
+		roots.join(", "),
+	]
 		.filter(Boolean)
 		.join(", ");
 });
@@ -87,6 +95,7 @@ const uniqueEditors = computed(() => {
 
 const formSections = computed(() =>
 	[
+		{ label: "Variant Forms", forms: e.value.variantForms },
 		{ label: "Infl. Forms", forms: e.value.inflectedForms },
 		{ label: "Derived Forms", forms: e.value.derivativeForms },
 	].filter((section) => section.forms.length > 0),
@@ -190,10 +199,8 @@ const formGrammarText = (form: RenderedForm) => {
 	return values.length === 0 ? undefined : values.join(", ");
 };
 
-const formVariants = (form: RenderedForm, includeNested: boolean): Array<RenderedForm> => {
-	return includeNested
-		? form.variants.flatMap((variant) => [variant, ...formVariants(variant, true)])
-		: form.variants;
+const formVariants = (form: RenderedForm): Array<RenderedForm> => {
+	return form.variants.flatMap((variant) => [variant, ...formVariants(variant)]);
 };
 
 const senseGrammarText = (items: Array<RenderedGrammarItem>) => {
@@ -263,6 +270,7 @@ const languageClass = (language: string | undefined) => {
 								<span
 									v-if="formText(form)"
 									class="text-2xl font-bold wrap-break-word"
+									:class="{ italic: /^ar-(latn|ltn)(-|$)/i.test(formLanguage(form) ?? '') }"
 									:title="languageTooltip(formLanguage(form))"
 								>
 									{{ formText(form) }}
@@ -386,10 +394,7 @@ const languageClass = (language: string | undefined) => {
 									:reference="reference"
 								/>
 								<div
-									v-for="(variant, variantIndex) in formVariants(
-										form,
-										section.label === 'Derived Forms',
-									)"
+									v-for="(variant, variantIndex) in formVariants(form)"
 									:key="`inflected-${formIndex}-variant-${variantIndex}`"
 									class="flex flex-wrap items-center gap-x-2 gap-y-1"
 									:class="{ 'w-full': section.label === 'Derived Forms' }"
