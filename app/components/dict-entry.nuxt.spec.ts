@@ -92,6 +92,7 @@ describe("dictionary entry corpus search", () => {
 			_links: { self: { href: "/example" } },
 			entry: {
 				entry: {
+					"@root": "bqr",
 					gramGrp: {
 						pos_gram: { $: "collectiveNoun" },
 						gender_gram: { $: "feminine" },
@@ -102,6 +103,7 @@ describe("dictionary entry corpus search", () => {
 		} as unknown as RestVLEEntry;
 		const wrapper = await mountSuspended(DictEntry, { props: { entry } });
 		expect(wrapper.text()).toContain("collectiveNoun (feminine), √bgr");
+		expect(wrapper.text()).toContain("√bgr, √bqr");
 	});
 
 	it("renders each bibliography reference in form, translation and example source lists", async () => {

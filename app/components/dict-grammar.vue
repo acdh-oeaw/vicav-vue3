@@ -17,7 +17,13 @@ const heading = computed(() =>
 		.join(", "),
 );
 const roots = computed(() =>
-	valid.value.filter((item) => ["Syn root", "Dia root", "Root"].includes(item.label)),
+	valid.value
+		.filter((item) => ["Syn root", "Dia root", "Root"].includes(item.label))
+		.toSorted(
+			(a, b) =>
+				["Syn root", "Dia root", "Root"].indexOf(a.label) -
+				["Syn root", "Dia root", "Root"].indexOf(b.label),
+		),
 );
 const details = computed(() =>
 	valid.value
@@ -44,6 +50,6 @@ const details = computed(() =>
 	><template v-for="(root, index) in roots" :key="index"
 		><span v-if="index || heading || details.length">, </span
 		><span v-if="root.label === 'Dia root'" class="text-xs text-gray-500 uppercase">Diachron: </span
-		>{{ root.label === "Root" ? `${root.value} (Root)` : `√${root.value}` }}</template
+		>√{{ root.value }}</template
 	>
 </template>

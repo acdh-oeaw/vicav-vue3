@@ -252,6 +252,7 @@ interface SenseLike {
 interface EntryPayloadLike {
 	"@id"?: string;
 	"@lang"?: string;
+	"@root"?: string;
 	lemma_form?: EntryFormLike;
 	lemmaVariant_form?: EntryFormLike;
 	lemmaVariant_forms?: Array<EntryFormLike>;
@@ -776,6 +777,9 @@ export function normalizeEntry(entry: RestVLEEntry): RenderedDictEntry {
 		),
 	);
 	const grammar = collectGrammar(normalizedPayload?.gramGrp);
+	if (normalizedPayload?.["@root"]?.trim()) {
+		grammar.push({ label: "Root", value: normalizedPayload["@root"] });
+	}
 	const etymologies = collectEtymologies(normalizedPayload?.etym);
 	const etymologyGroups = collectEtymologyGroups(normalizedPayload?.etym);
 	const bibliography = collectBibliographyItems(normalizedPayload?.listBibl);
