@@ -24,6 +24,13 @@ const currentPage = ref(1);
 const api = useApiClient();
 const scrollComplete = ref<boolean>(false);
 const teiHeader = simpleItems.find((header) => header.id === props.params.textId);
+const textRevealed = ref(false);
+watch(
+	() => props.params.textId,
+	() => {
+		textRevealed.value = false;
+	},
+);
 const publication = teiHeader?.publication;
 
 function isCorpusTextHTML(item: CorpusTextHTML | CorpusText): item is CorpusTextHTML {
@@ -214,9 +221,22 @@ watch(
 				variant="destructive"
 			>
 				<TriangleAlert />
-				<AlertTitle>Content Warning: {{ teiHeader.triggerWarnings.join(", ") }}</AlertTitle>
+				<div class="flex flex-wrap items-center gap-3">
+					<AlertTitle>Content Warning: {{ teiHeader.triggerWarnings.join(", ") }}</AlertTitle>
+					<button
+						v-if="!textRevealed"
+						class="cursor-pointer rounded-sm border border-destructive/50 px-3 py-1 font-semibold text-destructive hover:bg-destructive/10"
+						type="button"
+						@click="textRevealed = true"
+					>
+						Show Text
+					</button>
+				</div>
 			</Alert>
-			<table class="max-w-full text-left text-sm text-gray-700 rtl:text-right">
+			<table
+				v-if="!teiHeader?.triggerWarnings?.length || textRevealed"
+				class="max-w-full text-left text-sm text-gray-700 rtl:text-right"
+			>
 				<thead class="bg-accent text-xs text-gray-700 uppercase">
 					<tr>
 						<th v-if="hasAudio" class="px-6 py-3" scope="col">Audio</th>
@@ -253,7 +273,11 @@ watch(
 					<td class="table-cell max-w-full px-6 py-3" v-html="u.content"></td>
 				</tr>
 			</table>
-			<InfiniteLoading v-if="!scrollComplete" ref="infinite" @infinite="handleInfiniteScroll" />
+			<InfiniteLoading
+				v-if="(!teiHeader?.triggerWarnings?.length || textRevealed) && !scrollComplete"
+				ref="infinite"
+				@infinite="handleInfiniteScroll"
+			/>
 		</div>
 	</div>
 </template>

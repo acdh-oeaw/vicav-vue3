@@ -25,6 +25,13 @@ const props = defineProps<{
 const toastStore = useToastsStore();
 const { simpleItems, persons } = useTeiHeadersStore();
 const teiHeader = simpleItems.find((header) => header.id === props.params.textId);
+const textRevealed = ref(false);
+watch(
+	() => props.params.textId,
+	() => {
+		textRevealed.value = false;
+	},
+);
 const resolvePersonNameById = computed(() => {
 	return function (personId: string | undefined): string | undefined {
 		if (!personId) return undefined;
@@ -235,9 +242,22 @@ onMounted(async () => {
 				variant="destructive"
 			>
 				<TriangleAlert />
-				<AlertTitle>Content Warning: {{ teiHeader.triggerWarnings.join(", ") }}</AlertTitle>
+				<div class="flex flex-wrap items-center gap-3">
+					<AlertTitle>Content Warning: {{ teiHeader.triggerWarnings.join(", ") }}</AlertTitle>
+					<button
+						v-if="!textRevealed"
+						class="cursor-pointer rounded-sm border border-destructive/50 px-3 py-1 font-semibold text-destructive hover:bg-destructive/10"
+						type="button"
+						@click="textRevealed = true"
+					>
+						Show Text
+					</button>
+				</div>
 			</Alert>
-			<table class="text-sm text-gray-700">
+			<table
+				v-if="!teiHeader?.triggerWarnings?.length || textRevealed"
+				class="text-sm text-gray-700"
+			>
 				<thead class="bg-primary text-xs text-gray-700 uppercase">
 					<tr>
 						<th class="w-[10px] px-6 py-3" scope="col">Audio</th>
@@ -312,7 +332,11 @@ onMounted(async () => {
 					</tr>
 				</tbody>
 			</table>
-			<InfiniteLoading v-if="!scrollComplete" ref="infinite" @infinite="handleInfiniteScroll" />
+			<InfiniteLoading
+				v-if="(!teiHeader?.triggerWarnings?.length || textRevealed) && !scrollComplete"
+				ref="infinite"
+				@infinite="handleInfiniteScroll"
+			/>
 		</div>
 	</div>
 </template>
