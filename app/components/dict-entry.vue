@@ -160,6 +160,16 @@ const languageTooltip = (language: string | undefined) => {
 	return `Language: ${language}`;
 };
 
+const languageNames = new Intl.DisplayNames(["en"], { type: "language" });
+const languageName = (tag: string) => {
+	const normalized = tag.replace(/^gr(?=-|$)/i, "el");
+	try {
+		return languageNames.of(normalized) ?? tag;
+	} catch {
+		return tag;
+	}
+};
+
 const sourceReference = (source: string | undefined): RenderedBibliographyReference | undefined => {
 	if (source == null) return undefined;
 	return bibliographyById.value.get(source);
@@ -337,33 +347,6 @@ const languageClass = (language: string | undefined) => {
 
 			<div class="px-4 py-3">
 				<div class="grid grid-cols-[10rem_minmax(0,1fr)] gap-x-4">
-					<div
-						v-if="hasEtymology"
-						class="px-4 py-3 text-base leading-none font-semibold text-primary uppercase whitespace-nowrap"
-					>
-						Etymology
-					</div>
-					<section v-if="hasEtymology" class="space-y-1 py-3 text-base/snug">
-						<div v-for="(group, groupIndex) in e.etymologyGroups" :key="`etymology-${groupIndex}`">
-							<template v-for="(level, levelIndex) in group.levels" :key="levelIndex">
-								<span v-if="levelIndex > 0"> &lt; </span>
-								<span
-									v-for="(etymology, etymologyIndex) in level"
-									:key="textKey(etymology, etymologyIndex)"
-								>
-									<span v-if="etymologyIndex > 0">; </span>
-									<span
-										class="italic"
-										:class="languageClass(etymology.lang)"
-										:title="languageTooltip(etymology.lang)"
-									>
-										{{ etymology.text }}
-									</span>
-								</span>
-							</template>
-						</div>
-					</section>
-
 					<template v-for="section in formSections" :key="section.label">
 						<div
 							class="px-4 py-3 text-base leading-none font-semibold text-primary uppercase whitespace-nowrap"
@@ -541,6 +524,35 @@ const languageClass = (language: string | undefined) => {
 							</div>
 						</section>
 					</template>
+
+					<div
+						v-if="hasEtymology"
+						class="px-4 py-3 text-base leading-none font-semibold text-primary uppercase whitespace-nowrap"
+					>
+						Etymology
+					</div>
+					<section v-if="hasEtymology" class="space-y-1 py-3 text-base/snug">
+						<div v-for="(group, groupIndex) in e.etymologyGroups" :key="`etymology-${groupIndex}`">
+							<template v-for="(level, levelIndex) in group.levels" :key="levelIndex">
+								<span v-if="levelIndex > 0"> &lt; </span>
+								<span
+									v-for="(etymology, etymologyIndex) in level"
+									:key="textKey(etymology, etymologyIndex)"
+								>
+									<span v-if="etymologyIndex > 0">; </span>
+									<span
+										class="italic"
+										:class="languageClass(etymology.lang)"
+										:lang="etymology.lang"
+										:title="languageTooltip(etymology.lang)"
+									>
+										{{ etymology.text }}
+									</span>
+									<span v-if="etymology.lang"> ({{ languageName(etymology.lang) }})</span>
+								</span>
+							</template>
+						</div>
+					</section>
 
 					<div
 						v-if="hasEditors"

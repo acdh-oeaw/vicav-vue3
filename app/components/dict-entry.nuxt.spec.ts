@@ -19,6 +19,25 @@ afterEach(() => {
 });
 
 describe("dictionary entry corpus search", () => {
+	it("shows etymology languages after the senses", async () => {
+		const entry = {
+			id: "example",
+			lemma: "example",
+			type: "entry",
+			_links: { self: { href: "/example" } },
+			entry: {
+				entry: {
+					sense: { translationEquivalent_cit: { form: { orth: { "@lang": "en", $: "meaning" } } } },
+					etym: { etymon_cit: { form: { orth: { "@lang": "tr", $: "badem" } } } },
+				},
+			},
+		} as unknown as RestVLEEntry;
+		const wrapper = await mountSuspended(DictEntry, { props: { entry } });
+		expect(wrapper.text().indexOf("meaning")).toBeLessThan(wrapper.text().indexOf("Etymology"));
+		expect(wrapper.text()).toContain("badem (Turkish)");
+		expect(wrapper.get('[lang="tr"]').text()).toBe("badem");
+	});
+
 	it("renders derivative forms and variants below inflected forms", async () => {
 		const entry = {
 			id: "DShaAr.begar_00000",
