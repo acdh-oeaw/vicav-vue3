@@ -13,11 +13,11 @@ const props = withDefaults(
 		inlineLinguisticAnnotation: boolean;
 		highlight?: boolean;
 		hits?: string | ReadonlyArray<string>;
-		menuActions?: ReadonlyArray<"wordForm" | "dictionary" | "tokenId" | "lemma">;
+		menuActions?: ReadonlyArray<"wordForm" | "dictionary" | "lemma">;
 	}>(),
 	{
 		highlight: false,
-		menuActions: () => ["wordForm", "dictionary", "tokenId", "lemma"],
+		menuActions: () => ["wordForm", "dictionary", "lemma"],
 	},
 );
 

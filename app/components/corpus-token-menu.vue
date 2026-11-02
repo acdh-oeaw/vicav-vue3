@@ -4,7 +4,7 @@ import type { Seg, W } from "@/lib/api-client";
 const props = defineProps<{
 	token: W | Seg;
 	compound?: boolean;
-	actions: ReadonlyArray<"wordForm" | "dictionary" | "tokenId" | "lemma">;
+	actions: ReadonlyArray<"wordForm" | "dictionary" | "lemma">;
 }>();
 
 const { addWindow } = useWindowsStore();
@@ -35,9 +35,7 @@ const available = computed(() =>
 	props.actions.some((action) =>
 		action === "dictionary" || action === "lemma"
 			? Boolean(lemmaRef.value)
-			: action === "wordForm"
-				? words.value.length > 0
-				: Boolean(props.token["@id"]),
+			: words.value.length > 0,
 	),
 );
 
@@ -56,11 +54,6 @@ function search(queryString: string, label: string) {
 function searchWordForm() {
 	const query = words.value.map((word) => `[word="${quote(word)}"]`).join(" ");
 	search(props.compound ? `${query} within <seg/>` : query, words.value.join(" "));
-}
-
-function searchId() {
-	const id = quote(props.token["@id"]);
-	search(props.compound ? `[] within <seg id="${id}"/>` : `[wid="${id}"]`, props.token["@id"]);
 }
 
 function searchLemma() {
@@ -112,9 +105,6 @@ function openDictionary() {
 			>
 			<DropdownMenuItem v-if="actions.includes('lemma') && lemmaRef" @select="searchLemma"
 				>Search corpus by dictionary entry</DropdownMenuItem
-			>
-			<DropdownMenuItem v-if="actions.includes('tokenId') && token['@id']" @select="searchId"
-				>Search corpus by {{ compound ? "compound " : "" }}token ID</DropdownMenuItem
 			>
 		</DropdownMenuContent>
 	</DropdownMenu>

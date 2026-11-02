@@ -17,6 +17,19 @@ const stubs = {
 };
 
 describe("corpus token menu", () => {
+	it("opens from the token trigger", async () => {
+		const wrapper = await mountSuspended(CorpusTokenMenu, {
+			props: { token: { "@id": "word", $: "word" }, actions: ["wordForm"] },
+			attachTo: document.body,
+		});
+		wrapper
+			.get('button[aria-label="Actions for word word"]')
+			.element.dispatchEvent(new MouseEvent("click", { bubbles: true, button: 0 }));
+		await nextTick();
+		expect(wrapper.getComponent(DropdownMenu).props("open")).toBe(true);
+		expect(document.body.textContent).toContain("Search corpus by word form");
+		wrapper.unmount();
+	});
 	it("closes the previous menu when another token opens", async () => {
 		const wrapper = await mountSuspended(
 			defineComponent({
@@ -55,7 +68,7 @@ describe("corpus token menu", () => {
 		const wrapper = await mountSuspended(CorpusTokenMenu, {
 			props: {
 				token: { "@id": "word-1", $: "wakt", "@lemmaRef": "dict:DShaAr.wakt_001" },
-				actions: ["wordForm", "dictionary", "tokenId", "lemma"],
+				actions: ["wordForm", "dictionary", "lemma"],
 			},
 			global: { stubs },
 		});
@@ -69,10 +82,7 @@ describe("corpus token menu", () => {
 			(addWindow.mock.lastCall?.[0] as { params: { queryParams: { id: string } } }).params
 				.queryParams.id,
 		).toBe("DShaAr.wakt_001");
-		await buttons[4]!.trigger("click");
-		expect(
-			(addWindow.mock.lastCall?.[0] as { params: { queryString: string } }).params.queryString,
-		).toBe('[wid="word-1"]');
+		expect(wrapper.text()).not.toContain("Search corpus by token ID");
 	});
 
 	it("constructs compound searches and respects configured actions", async () => {
@@ -84,19 +94,15 @@ describe("corpus token menu", () => {
 					$$: [{ w: { "@id": "w1", $: "b" } }, { w: { "@id": "w2", $: "nōb" } }],
 				},
 				compound: true,
-				actions: ["wordForm", "tokenId"],
+				actions: ["wordForm"],
 			},
 			global: { stubs },
 		});
 		const buttons = wrapper.findAll("button");
-		expect(buttons).toHaveLength(2);
+		expect(buttons).toHaveLength(1);
 		await buttons[0]!.trigger("click");
 		expect(
 			(addWindow.mock.lastCall?.[0] as { params: { queryString: string } }).params.queryString,
 		).toBe('[word="b"] [word="nōb"] within <seg/>');
-		await buttons[1]!.trigger("click");
-		expect(
-			(addWindow.mock.lastCall?.[0] as { params: { queryString: string } }).params.queryString,
-		).toBe('[] within <seg id="seg-1"/>');
 	});
 });
