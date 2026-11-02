@@ -19,6 +19,42 @@ afterEach(() => {
 });
 
 describe("dictionary entry corpus search", () => {
+	it("renders derivative forms and variants below inflected forms", async () => {
+		const entry = {
+			id: "DShaAr.begar_00000",
+			lemma: "begar",
+			type: "entry",
+			_links: { self: { href: "/restvle/dicts/dc_shawi_eng/entries/DShaAr.begar_00000" } },
+			entry: {
+				entry: {
+					inflected_form: { orth: { $: "begar" } },
+					derivative_form: {
+						orth: { $: "bgara" },
+						gramGrp: { pos_gram: { $: "unitNoun" } },
+						geographic_usg: { place_name: { $: "Harran-Urfa" } },
+						variant_forms: [
+							{
+								orth: { $: "bgaṛa" },
+								geographic_usg: { place_name: { $: "Mayadin" } },
+								variant_form: { orth: { $: "nested" } },
+							},
+						],
+					},
+				},
+			},
+		} as unknown as RestVLEEntry;
+		const wrapper = await mountSuspended(DictEntry, { props: { entry } });
+		const text = wrapper.text();
+		expect(text.indexOf("Infl. Forms")).toBeLessThan(text.indexOf("Derived Forms"));
+		expect(text).toContain("bgara");
+		expect(text).toContain("unitNoun");
+		expect(text).toContain("Harran-Urfa");
+		expect(text).toContain("bgaṛa");
+		expect(text).toContain("Mayadin");
+		expect(text).toContain("nested");
+		expect(text.match(/unitNoun/g)).toHaveLength(3);
+	});
+
 	it("opens a corpus query using the dictionary identifier", async () => {
 		const entry = {
 			id: "DShaAr.wakt_001",

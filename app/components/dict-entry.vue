@@ -85,7 +85,12 @@ const uniqueEditors = computed(() => {
 	return Array.from(names);
 });
 
-const hasInflectedForms = computed(() => e.value.inflectedForms.length > 0);
+const formSections = computed(() =>
+	[
+		{ label: "Infl. Forms", forms: e.value.inflectedForms },
+		{ label: "Derived Forms", forms: e.value.derivativeForms },
+	].filter((section) => section.forms.length > 0),
+);
 const hasEtymology = computed(() => e.value.etymologies.length > 0);
 const hasEditors = computed(() => uniqueEditors.value.length > 0);
 const entryStatus = computed(() => {
@@ -167,6 +172,12 @@ const grammarValues = (items: Array<RenderedGrammarItem>) => {
 const formGrammarText = (form: RenderedForm) => {
 	const values = grammarValues(form.grammar);
 	return values.length === 0 ? undefined : values.join(", ");
+};
+
+const formVariants = (form: RenderedForm, includeNested: boolean): Array<RenderedForm> => {
+	return includeNested
+		? form.variants.flatMap((variant) => [variant, ...formVariants(variant, true)])
+		: form.variants;
 };
 
 const senseGrammarText = (items: Array<RenderedGrammarItem>) => {
@@ -325,7 +336,7 @@ const languageClass = (language: string | undefined) => {
 			</header>
 
 			<div class="px-4 py-3">
-				<div class="grid grid-cols-[8rem_minmax(0,1fr)] gap-x-4">
+				<div class="grid grid-cols-[10rem_minmax(0,1fr)] gap-x-4">
 					<div
 						v-if="hasEtymology"
 						class="px-4 py-3 text-base leading-none font-semibold text-primary uppercase whitespace-nowrap"
@@ -353,64 +364,70 @@ const languageClass = (language: string | undefined) => {
 						</div>
 					</section>
 
-					<div
-						v-if="hasInflectedForms"
-						class="px-4 py-3 text-base leading-none font-semibold text-primary uppercase whitespace-nowrap"
-					>
-						Infl. Forms
-					</div>
-					<section v-if="hasInflectedForms" class="space-y-2 py-3 text-base/snug">
+					<template v-for="section in formSections" :key="section.label">
 						<div
-							v-for="(form, formIndex) in e.inflectedForms"
-							:key="`inflected-${formIndex}`"
-							class="flex flex-wrap items-center gap-x-2 gap-y-1"
+							class="px-4 py-3 text-base leading-none font-semibold text-primary uppercase whitespace-nowrap"
 						>
-							<span
-								v-if="formText(form)"
-								class="font-bold italic"
-								:title="languageTooltip(formLanguage(form))"
-							>
-								{{ formText(form) }}
-							</span>
-							<span v-if="formGrammarText(form)">({{ formGrammarText(form) }})</span>
-							<template v-for="location in form.locations" :key="locationKey(location)">
-								<span :class="compactBadgeClass">
-									<MapPin class="size-4 text-gray-400" />
-									{{ formatLocation(location) }}
-								</span>
-							</template>
-							<DictSourceAction
-								v-if="sourceReference(form.source)"
-								:reference="sourceReference(form.source)!"
-							/>
-							<template
-								v-for="(variant, variantIndex) in form.variants"
-								:key="`inflected-${formIndex}-variant-${variantIndex}`"
-							>
-								<span aria-hidden="true">;</span>
-								<span
-									v-if="formText(variant)"
-									class="font-bold italic"
-									:title="languageTooltip(formLanguage(variant))"
-								>
-									{{ formText(variant) }}
-								</span>
-								<span v-if="formGrammarText(variant)">({{ formGrammarText(variant) }})</span>
-								<span
-									v-for="location in variant.locations"
-									:key="locationKey(location)"
-									:class="compactBadgeClass"
-								>
-									<MapPin class="size-4 text-gray-400" />
-									{{ formatLocation(location) }}
-								</span>
-								<DictSourceAction
-									v-if="sourceReference(variant.source)"
-									:reference="sourceReference(variant.source)!"
-								/>
-							</template>
+							{{ section.label }}
 						</div>
-					</section>
+						<section class="space-y-2 py-3 text-base/snug">
+							<div
+								v-for="(form, formIndex) in section.forms"
+								:key="`inflected-${formIndex}`"
+								class="flex flex-wrap items-center gap-x-2 gap-y-1"
+							>
+								<span
+									v-if="formText(form)"
+									class="font-bold italic"
+									:title="languageTooltip(formLanguage(form))"
+								>
+									{{ formText(form) }}
+								</span>
+								<span v-if="formGrammarText(form)">({{ formGrammarText(form) }})</span>
+								<template v-for="location in form.locations" :key="locationKey(location)">
+									<span :class="compactBadgeClass">
+										<MapPin class="size-4 text-gray-400" />
+										{{ formatLocation(location) }}
+									</span>
+								</template>
+								<DictSourceAction
+									v-if="sourceReference(form.source)"
+									:reference="sourceReference(form.source)!"
+								/>
+								<div
+									v-for="(variant, variantIndex) in formVariants(
+										form,
+										section.label === 'Derived Forms',
+									)"
+									:key="`inflected-${formIndex}-variant-${variantIndex}`"
+									class="flex flex-wrap items-center gap-x-2 gap-y-1"
+									:class="{ 'w-full': section.label === 'Derived Forms' }"
+								>
+									<span v-if="section.label !== 'Derived Forms'" aria-hidden="true">;</span>
+									<span
+										v-if="formText(variant)"
+										class="font-bold italic"
+										:title="languageTooltip(formLanguage(variant))"
+									>
+										{{ formText(variant) }}
+									</span>
+									<span v-if="formGrammarText(variant)">({{ formGrammarText(variant) }})</span>
+									<span
+										v-for="location in variant.locations"
+										:key="locationKey(location)"
+										:class="compactBadgeClass"
+									>
+										<MapPin class="size-4 text-gray-400" />
+										{{ formatLocation(location) }}
+									</span>
+									<DictSourceAction
+										v-if="sourceReference(variant.source)"
+										:reference="sourceReference(variant.source)!"
+									/>
+								</div>
+							</div>
+						</section>
+					</template>
 
 					<template v-for="(sense, senseIndex) in e.senses" :key="sense.id ?? senseIndex">
 						<div
