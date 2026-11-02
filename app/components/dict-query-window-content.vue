@@ -15,6 +15,7 @@ await dictStore.initialize();
 const myDict = await dictStore.getDictById(params.value.textId);
 
 const debug = ref<boolean>(false);
+const scrollContainer = ref<HTMLElement | null>(null);
 
 const formId = `dictQueryForm-${params.value.textId}`;
 
@@ -191,6 +192,7 @@ const api = useApiClient(); */
 <template>
 	<div
 		v-if="!!myDict"
+		ref="scrollContainer"
 		class="relative isolate size-full overflow-auto"
 		:class="{ 'opacity-50 grayscale': isLoading }"
 	>
@@ -448,6 +450,63 @@ const api = useApiClient(); */
 					:entry="entry"
 				/>
 			</div>
+		</div>
+
+		<div
+			v-if="data && showPagination"
+			class="mx-8 mb-2 flex max-w-6xl flex-wrap items-end gap-3 border-y border-border/60 py-3"
+		>
+			<label class="flex flex-col gap-1 text-sm font-medium">
+				<span>Page</span>
+				<input
+					v-model.number="page"
+					class="h-9 w-24 rounded-sm border border-input bg-background px-2 text-sm"
+					:max="pageCount"
+					min="1"
+					type="number"
+					@change="updateQueryParams"
+				/>
+			</label>
+			<label class="flex flex-col gap-1 text-sm font-medium">
+				<span>Page size</span>
+				<input
+					v-model.number="pageSize"
+					class="h-9 w-28 rounded-sm border border-input bg-background px-2 text-sm"
+					min="1"
+					type="number"
+					@change="updateQueryParams"
+				/>
+			</label>
+			<div class="flex items-center gap-2">
+				<button
+					class="h-9 rounded-sm border border-primary px-3 text-sm font-semibold text-primary disabled:border-gray-300 disabled:text-gray-400"
+					:disabled="!canGoToPreviousPage"
+					type="button"
+					@click="goToPreviousPage"
+				>
+					Previous
+				</button>
+				<button
+					class="h-9 rounded-sm border border-primary px-3 text-sm font-semibold text-primary disabled:border-gray-300 disabled:text-gray-400"
+					:disabled="!canGoToNextPage"
+					type="button"
+					@click="goToNextPage"
+				>
+					Next
+				</button>
+			</div>
+			<div class="text-muted-foreground text-sm">
+				<span>Page {{ page }}</span>
+				<span v-if="pageCount"> of {{ pageCount }}</span>
+				<span v-if="totalItems != null">, {{ totalItems }} items</span>
+			</div>
+			<button
+				class="h-9 rounded-sm border border-primary px-3 text-sm font-semibold text-primary"
+				type="button"
+				@click="scrollContainer?.scrollTo({ top: 0, behavior: 'smooth' })"
+			>
+				Scroll to top
+			</button>
 		</div>
 
 		<Centered v-if="isLoading">
