@@ -24,6 +24,47 @@ function fixture(etag?: string): ProjectResponse {
 }
 
 describe("project preparation diagnostics", () => {
+	it("prefers the recording participant age over the corpus-level age", async () => {
+		const result = await prepareProject(
+			{
+				projectConfig: {
+					staticData: {
+						table: [
+							{
+								"@id": "vicav_corpus",
+								teiHeader: {
+									fileDesc: { titleStmt: {}, publicationStmt: { publishers: [] }, sourceDesc: {} },
+									profileDesc: {
+										particDesc: { listPerson: [{ "@id": "speaker", "@age": "70s" }] },
+									},
+								},
+								TEIs: [
+									{
+										"@id": "text",
+										teiHeader: {
+											fileDesc: {
+												titleStmt: { titles: [{ $: "Text" }] },
+												publicationStmt: { publishers: [], idno: { $: "text" } },
+												sourceDesc: {},
+											},
+											profileDesc: {
+												particDesc: {
+													listPerson: [{ "@sameAs": "corpus:speaker", "@age": "40s" }],
+												},
+											},
+										},
+									},
+								],
+							},
+						],
+					},
+				},
+			},
+			"participant-age",
+		);
+		expect(result.simpleItems[0]?.person[0]?.age).toBe("40s");
+	});
+
 	it("initializes empty diagnostics for valid empty static data", async () => {
 		const entry = await prepareProject({ projectConfig: {} }, "empty");
 		expect(entry.response.projectConfig?._validationErrors).toEqual([]);
