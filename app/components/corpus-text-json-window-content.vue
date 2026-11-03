@@ -15,6 +15,7 @@ import type { z } from "zod";
 import type { Div } from "@/lib/api-client";
 import { useTeiHeadersStore } from "@/stores/use-tei-headers-store.ts";
 import type { CorpusTextSchema } from "@/types/global.ts";
+import { getCorpusAudioUrl, rawTeiSourceUrl, resolveCorpusAudio } from "@/utils/corpus-audio.ts";
 import { getCorpusRowText } from "@/utils/corpus-transcription.ts";
 
 const props = defineProps<{
@@ -50,6 +51,7 @@ const {
 } = useCorpusAnnotationAvailability();
 
 const annotationBlocks = ref<Array<Div>>([]);
+const audioUrls = shallowRef(new Map<string, string>());
 const displayAnnotationBlocks = ref<Array<Div>>([]);
 const inlineLinguisticAnnotations = ref<false | true | "indeterminate">(true);
 const inlineTranslations = ref<false | true | "indeterminate">(true);
@@ -135,6 +137,16 @@ const loadNextPage = async function () {
 		});
 		annotationBlocks.value = annotationBlocks.value.concat(newDivs);
 		currentPage.value = currentPage.value + 1;
+		const source = teiHeader?.teiSource_idno && rawTeiSourceUrl(teiHeader.teiSource_idno);
+		if (source && text.data.doc.listPrefixDef) {
+			try {
+				const response = await fetch(source);
+				if (response.ok)
+					audioUrls.value = resolveCorpusAudio(await response.text(), text.data.doc.listPrefixDef);
+			} catch (error) {
+				console.warn("Could not load corpus audio references", error);
+			}
+		}
 	}
 	return text;
 };
@@ -251,7 +263,14 @@ onMounted(async () => {
 						class="corpus-utterance u table-row even:bg-accent"
 					>
 						<td>
-							<!-- audio player goes here -->
+							<!-- eslint-disable-next-line vuejs-accessibility/media-has-caption -->
+							<audio
+								v-if="getCorpusAudioUrl(a['@corresp'], audioUrls)"
+								:aria-label="`Audio for ${a['@id']}`"
+								controls
+								preload="none"
+								:src="getCorpusAudioUrl(a['@corresp'], audioUrls)"
+							></audio>
 						</td>
 						<td class="px-2 align-middle">
 							<TooltipProvider>
