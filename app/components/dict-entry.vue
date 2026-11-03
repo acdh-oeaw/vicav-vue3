@@ -375,11 +375,52 @@ const languageClass = (language: string | undefined) => {
 						</div>
 						<section class="py-0.5">
 							<div class="rounded-sm border border-primary/15 bg-primary/15 px-2 py-1">
-								<div class="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-1">
-									<div v-if="senseGrammarText(sense.grammar)" class="mb-1 font-bold italic">
-										({{ senseGrammarText(sense.grammar) }})
+								<div
+									class="grid items-start gap-2"
+									:class="
+										sense.locations.length
+											? 'grid-cols-[minmax(0,1fr)_minmax(0,min(12rem,40%))]'
+											: 'grid-cols-1'
+									"
+								>
+									<div class="min-w-0 text-base/tight">
+										<div v-if="senseGrammarText(sense.grammar)" class="mb-1 font-bold italic">
+											({{ senseGrammarText(sense.grammar) }})
+										</div>
+										<div
+											v-for="translationGroup in groupedSenseTranslations(sense)"
+											:key="translationGroup.lang ?? 'unknown'"
+											class="flex flex-wrap items-center gap-1.5"
+										>
+											<span
+												class="inline-flex flex-wrap items-center gap-x-1"
+												:class="languageClass(translationGroup.lang)"
+												:title="languageTooltip(translationGroup.lang)"
+											>
+												<template
+													v-for="(translation, translationIndex) in translationGroup.translations"
+													:key="textKey(translation, translationIndex)"
+												>
+													<span>{{ translation.text }}</span>
+													<span v-if="translation.gloss" class="text-gray-700">
+														({{ translation.gloss }})
+													</span>
+													<DictSourceAction
+														v-for="(reference, sourceIndex) in sourceReferences(translation.source)"
+														:key="sourceIndex"
+														:reference="reference"
+													/>
+													<span v-if="translationIndex < translationGroup.translations.length - 1">
+														,
+													</span>
+												</template>
+											</span>
+										</div>
 									</div>
-									<div class="flex max-w-72 flex-wrap justify-end gap-0.5 justify-self-end">
+									<div
+										v-if="sense.locations.length"
+										class="flex flex-wrap items-center justify-end gap-0.5"
+									>
 										<span
 											v-for="location in sense.locations"
 											:key="locationKey(location)"
@@ -387,37 +428,6 @@ const languageClass = (language: string | undefined) => {
 										>
 											<MapPin class="size-4 text-gray-400" />
 											{{ formatLocation(location) }}
-										</span>
-									</div>
-								</div>
-								<div class="text-base/tight">
-									<div
-										v-for="translationGroup in groupedSenseTranslations(sense)"
-										:key="translationGroup.lang ?? 'unknown'"
-										class="flex flex-wrap items-center gap-1.5"
-									>
-										<span
-											class="inline-flex flex-wrap items-center gap-x-1"
-											:class="languageClass(translationGroup.lang)"
-											:title="languageTooltip(translationGroup.lang)"
-										>
-											<template
-												v-for="(translation, translationIndex) in translationGroup.translations"
-												:key="textKey(translation, translationIndex)"
-											>
-												<span>{{ translation.text }}</span>
-												<span v-if="translation.gloss" class="text-gray-700">
-													({{ translation.gloss }})
-												</span>
-												<DictSourceAction
-													v-for="(reference, sourceIndex) in sourceReferences(translation.source)"
-													:key="sourceIndex"
-													:reference="reference"
-												/>
-												<span v-if="translationIndex < translationGroup.translations.length - 1">
-													,
-												</span>
-											</template>
 										</span>
 									</div>
 								</div>
