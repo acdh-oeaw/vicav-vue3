@@ -332,7 +332,20 @@ export const useWindowsStore = defineStore("windows", () => {
 					clearTimeout(highlightTimers.get(id));
 					highlightTimers.delete(id);
 					focusOrder.delete(id);
+					const closing = registry.value.get(id);
 					registry.value.delete(id);
+					//TODO: this is rather dirty, eventually we'll need to set up a generic way to control this
+					if (
+						temporaryDataListLayout &&
+						!restoring &&
+						((closing?.targetType === "DataList" &&
+							![...registry.value.values()].some((window) => window.targetType === "DataList")) ||
+							(closing?.targetType === "WMap" && closing.params.endpoint === "data_markers"))
+					) {
+						temporaryDataListLayout = false;
+						arrangement.value = "smart-tile";
+						arrangeWindows();
+					}
 					return false;
 				},
 				root: rootElement,

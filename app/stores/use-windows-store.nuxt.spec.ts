@@ -211,6 +211,64 @@ describe("window opening and persistence", () => {
 			expect.arrayContaining([...store.registry.values()]),
 		);
 	});
+	it.each(["list", "map"])(
+		"restores smart tiling immediately when the %s closes",
+		async (closing) => {
+			const store = useWindowsStore();
+			disposeStore = () => {
+				store.$dispose();
+			};
+			const list = store.addWindow({
+				targetType: "DataList",
+				title: "List",
+				params: { dataTypes: ["SampleText"] },
+			})!;
+			const map = store.addWindow({
+				targetType: "WMap",
+				title: "Map",
+				params: { endpoint: "data_markers", queryString: "" },
+			})!;
+			store.arrangeDataListsAndMap();
+			await nextTick();
+			vi.mocked(windowArrangement.smartTile).mockClear();
+			store.removeWindow(closing === "list" ? list.id : map.id);
+			expect(store.arrangement).toBe("smart-tile");
+			expect(windowArrangement.smartTile).toHaveBeenCalledWith(expect.anything(), [
+				closing === "list" ? map : list,
+			]);
+		},
+	);
+	it("keeps the temporary layout until the last data list closes", async () => {
+		const store = useWindowsStore();
+		disposeStore = () => {
+			store.$dispose();
+		};
+		const first = store.addWindow({
+			targetType: "DataList",
+			title: "First",
+			params: { dataTypes: ["SampleText"] },
+		})!;
+		const second = store.addWindow({
+			targetType: "DataList",
+			title: "Second",
+			params: { dataTypes: ["Profile"] },
+		})!;
+		store.addWindow({
+			targetType: "WMap",
+			title: "Map",
+			params: { endpoint: "data_markers", queryString: "" },
+		});
+		store.arrangeDataListsAndMap();
+		await nextTick();
+		vi.mocked(windowArrangement.smartTile).mockClear();
+		store.removeWindow(first.id);
+		await nextTick();
+		expect(store.arrangement).toBe("none");
+		expect(windowArrangement.smartTile).not.toHaveBeenCalled();
+		store.removeWindow(second.id);
+		expect(store.arrangement).toBe("smart-tile");
+		expect(windowArrangement.smartTile).toHaveBeenCalled();
+	});
 	it("reuses dictionary identity and fully replaces parameters with defaults", () => {
 		const store = useWindowsStore();
 		disposeStore = () => {
