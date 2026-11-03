@@ -18,6 +18,11 @@ export function useDataListMapWindowSync() {
 		[() => dataListMapStore.layers, mapWindow],
 		([layerRecord, window], [previousLayers]) => {
 			const layers = Object.values(layerRecord);
+			const newlyEnabled =
+				previousLayers &&
+				layers.some(
+					(layer) => layer.enabled !== false && previousLayers[layer.id]?.enabled !== true,
+				);
 			if (window) {
 				const mergedLayers = dataListMapStore.mergeMapLayers(window.params.dataListLayers);
 				if (JSON.stringify(window.params.dataListLayers) !== JSON.stringify(mergedLayers)) {
@@ -26,17 +31,14 @@ export function useDataListMapWindowSync() {
 						dataListLayers: mergedLayers,
 					});
 				}
-			} else if (
-				previousLayers &&
-				layers.some(
-					(layer) => layer.enabled !== false && previousLayers[layer.id]?.enabled !== true,
-				)
-			) {
+				if (newlyEnabled) windowsStore.arrangeDataListsAndMap();
+			} else if (newlyEnabled) {
 				windowsStore.addWindow({
 					targetType: "WMap",
 					title: "Data lists map",
 					params: { endpoint: "data_markers", queryString: "", dataListLayers: layers },
 				});
+				windowsStore.arrangeDataListsAndMap();
 			}
 		},
 		{ immediate: true },

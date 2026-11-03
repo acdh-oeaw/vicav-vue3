@@ -81,6 +81,7 @@ export const useWindowsStore = defineStore("windows", () => {
 	let focusSequence = 0;
 	const geometryRevision = ref(0);
 	let restoring = false;
+	let temporaryDataListLayout = false;
 	let persistenceTimer: ReturnType<typeof setTimeout> | undefined;
 	let navigation = Promise.resolve();
 	let persistenceGeneration = 0;
@@ -281,14 +282,22 @@ export const useWindowsStore = defineStore("windows", () => {
 						.filter((window) => getWindowIdentity(window) === identity)
 						.sort((a, b) => (focusOrder.get(b.id) ?? 0) - (focusOrder.get(a.id) ?? 0))[0]
 				: undefined;
+		const resumeSmartTiling = temporaryDataListLayout && !restoring;
+		if (resumeSmartTiling) {
+			temporaryDataListLayout = false;
+			arrangement.value = "smart-tile";
+		}
 		if (existing) {
 			updateWindow(existing.id, state.params, state.title);
 			existing.winbox.focus();
 			focusOrder.set(existing.id, ++focusSequence);
 			if (highlight) highlightWindow(existing);
+			if (resumeSmartTiling) void nextTick(arrangeWindows);
 			return existing;
 		}
-		return createWindow(state);
+		const created = createWindow(state);
+		if (created && resumeSmartTiling) void nextTick(arrangeWindows);
+		return created;
 	}
 
 	function addWindow(state: WindowState) {
@@ -408,7 +417,27 @@ export const useWindowsStore = defineStore("windows", () => {
 	}
 
 	function setWindowArrangement(id: WindowArrangement) {
+		temporaryDataListLayout = false;
 		arrangement.value = id;
+	}
+
+	function arrangeDataListsAndMap() {
+		const root = document.getElementById(windowRootId);
+		const windows = Array.from(registry.value.values());
+		if (
+			!root ||
+			!windows.some((window) => window.targetType === "DataList") ||
+			!windows.some(
+				(window) => window.targetType === "WMap" && window.params.endpoint === "data_markers",
+			)
+		)
+			return;
+		const viewport = root.getBoundingClientRect();
+		if (viewport.width < narrowScreenBreakpoint) return;
+		temporaryDataListLayout = true;
+		arrangement.value = "none";
+		arrange.none(viewport, windows);
+		arrange.splitDataListsAndMap(viewport, windows);
 	}
 
 	function arrangeWindows() {
@@ -451,7 +480,6 @@ export const useWindowsStore = defineStore("windows", () => {
 				break;
 			}
 		}
-		arrange.splitDataListsAndMap(viewport, windows);
 	}
 
 	function getPersistedWindowParams(windowItem: WindowItem): WindowItem["params"] {
@@ -586,5 +614,6 @@ export const useWindowsStore = defineStore("windows", () => {
 		arrangement,
 		setWindowArrangement,
 		arrangeWindows,
+		arrangeDataListsAndMap,
 	};
 });

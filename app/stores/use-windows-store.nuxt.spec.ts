@@ -155,6 +155,62 @@ describe("window opening and persistence", () => {
 		document.getElementById(windowRootId)?.remove();
 		vi.useRealTimers();
 	});
+	it("uses a temporary map/list split, then smart tiles on a new window", async () => {
+		const store = useWindowsStore();
+		disposeStore = () => {
+			store.$dispose();
+		};
+		vi.mocked(windowArrangement.splitDataListsAndMap).mockClear();
+		store.addWindow({
+			targetType: "DataList",
+			title: "List",
+			params: { dataTypes: ["SampleText"] },
+		});
+		store.addWindow({
+			targetType: "WMap",
+			title: "Map",
+			params: { endpoint: "data_markers", queryString: "" },
+		});
+		store.arrangeDataListsAndMap();
+		await nextTick();
+		expect(store.arrangement).toBe("none");
+		expect(windowArrangement.splitDataListsAndMap).toHaveBeenCalledTimes(1);
+		store.arrangeWindows();
+		expect(windowArrangement.splitDataListsAndMap).toHaveBeenCalledTimes(1);
+		store.addWindow(text());
+		await nextTick();
+		expect(store.arrangement).toBe("smart-tile");
+		expect(windowArrangement.smartTile).toHaveBeenLastCalledWith(
+			expect.anything(),
+			expect.arrayContaining([...store.registry.values()]),
+		);
+	});
+	it("restores smart tiling when an existing window is reopened", async () => {
+		const store = useWindowsStore();
+		disposeStore = () => {
+			store.$dispose();
+		};
+		store.addWindow(text());
+		store.addWindow({
+			targetType: "DataList",
+			title: "List",
+			params: { dataTypes: ["SampleText"] },
+		});
+		store.addWindow({
+			targetType: "WMap",
+			title: "Map",
+			params: { endpoint: "data_markers", queryString: "" },
+		});
+		store.arrangeDataListsAndMap();
+		await nextTick();
+		store.openWindow(text());
+		await nextTick();
+		expect(store.arrangement).toBe("smart-tile");
+		expect(windowArrangement.smartTile).toHaveBeenLastCalledWith(
+			expect.anything(),
+			expect.arrayContaining([...store.registry.values()]),
+		);
+	});
 	it("reuses dictionary identity and fully replaces parameters with defaults", () => {
 		const store = useWindowsStore();
 		disposeStore = () => {

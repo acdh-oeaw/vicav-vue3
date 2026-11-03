@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
 	windows: {
 		registry: new Map() as WindowRegistry,
 		addWindow: vi.fn<(state: WindowState) => void>(),
+		arrangeDataListsAndMap: vi.fn(),
 		updateWindowParams: vi.fn<(id: string, params: WindowItem["params"]) => void>(),
 	},
 }));
@@ -51,6 +52,7 @@ describe("data list map window synchronization", () => {
 		});
 		mocks.windows.registry = reactive(new Map());
 		mocks.windows.addWindow.mockReset();
+		mocks.windows.arrangeDataListsAndMap.mockReset();
 		mocks.windows.updateWindowParams.mockReset();
 		mocks.windows.addWindow.mockImplementation((state) => {
 			const window = { ...mapWindow(), params: state.params } as OpenWindowItem;
@@ -72,6 +74,7 @@ describe("data list map window synchronization", () => {
 		setLayers({ samples: layer() });
 		await nextTick();
 		expect(mocks.windows.addWindow).toHaveBeenCalledTimes(1);
+		expect(mocks.windows.arrangeDataListsAndMap).toHaveBeenCalledTimes(1);
 		expect(mocks.windows.addWindow).toHaveBeenCalledWith({
 			targetType: "WMap",
 			title: "Data lists map",
