@@ -3,7 +3,6 @@ import "v3-infinite-loading/lib/style.css";
 
 import {
 	AlignVerticalSpaceBetween,
-	BookA,
 	ChevronsLeftRightEllipsis,
 	Copy,
 	Languages,
@@ -25,6 +24,13 @@ const props = defineProps<{
 const toastStore = useToastsStore();
 const { simpleItems, persons } = useTeiHeadersStore();
 const teiHeader = simpleItems.find((header) => header.id === props.params.textId);
+const textRevealed = ref(false);
+watch(
+	() => props.params.textId,
+	() => {
+		textRevealed.value = false;
+	},
+);
 const resolvePersonNameById = computed(() => {
 	return function (personId: string | undefined): string | undefined {
 		if (!personId) return undefined;
@@ -40,20 +46,14 @@ const utterancesWrapper = ref<HTMLElement | null>(null);
 const {
 	getUtterances,
 	hasInlineTranslations: blockHasInlineTranslations,
-	hasLemmaAnnotations: blockHasLemmaAnnotations,
 	hasLinguisticAnnotations: blockHasLinguisticAnnotations,
 } = useCorpusAnnotationAvailability();
 
 const annotationBlocks = ref<Array<Div>>([]);
 const displayAnnotationBlocks = ref<Array<Div>>([]);
-const inlineLemmaAnnotations = ref<false | true | "indeterminate">(true);
 const inlineLinguisticAnnotations = ref<false | true | "indeterminate">(true);
 const inlineTranslations = ref<false | true | "indeterminate">(true);
 const denseTeiHeader = ref<false | true | "indeterminate">(true);
-
-const hasLemmaAnnotations = computed(() => {
-	return blockHasLemmaAnnotations(annotationBlocks.value);
-});
 
 const hasLinguisticAnnotations = computed(() => {
 	return blockHasLinguisticAnnotations(annotationBlocks.value);
@@ -61,10 +61,6 @@ const hasLinguisticAnnotations = computed(() => {
 
 const hasInlineTranslations = computed(() => {
 	return blockHasInlineTranslations(annotationBlocks.value);
-});
-
-const showLemmaAnnotations = computed(() => {
-	return hasLemmaAnnotations.value && inlineLemmaAnnotations.value === true;
 });
 
 const showLinguisticAnnotations = computed(() => {
@@ -78,15 +74,12 @@ const showInlineTranslations = computed(() => {
 const enabledOptions = computed<Array<string>>({
 	get() {
 		return [
-			...(showLemmaAnnotations.value ? ["lemma-annotations"] : []),
 			...(showLinguisticAnnotations.value ? ["linguistic-annotations"] : []),
 			...(showInlineTranslations.value ? ["translations"] : []),
 			...(denseTeiHeader.value === true ? ["dense-tei-header"] : []),
 		];
 	},
 	set(values: Array<string>) {
-		inlineLemmaAnnotations.value =
-			hasLemmaAnnotations.value && values.includes("lemma-annotations");
 		inlineLinguisticAnnotations.value =
 			hasLinguisticAnnotations.value && values.includes("linguistic-annotations");
 		inlineTranslations.value = hasInlineTranslations.value && values.includes("translations");
@@ -178,16 +171,6 @@ onMounted(async () => {
 		<div class="sticky top-0 z-10 flex justify-end bg-white p-4">
 			<TooltipProvider>
 				<ToggleGroup v-model="enabledOptions" type="multiple" variant="outline">
-					<Tooltip v-if="hasLemmaAnnotations">
-						<TooltipTrigger as-child>
-							<ToggleGroupItem class="hover:bg-primary" value="lemma-annotations">
-								<BookA class="size-4" />
-							</ToggleGroupItem>
-						</TooltipTrigger>
-						<TooltipContent class="border-black bg-black text-white">
-							Show dictionary links on tokens.
-						</TooltipContent>
-					</Tooltip>
 					<Tooltip v-if="hasLinguisticAnnotations">
 						<TooltipTrigger as-child>
 							<ToggleGroupItem class="hover:bg-primary" value="linguistic-annotations">
@@ -235,9 +218,22 @@ onMounted(async () => {
 				variant="destructive"
 			>
 				<TriangleAlert />
-				<AlertTitle>Content Warning: {{ teiHeader.triggerWarnings.join(", ") }}</AlertTitle>
+				<div class="flex flex-wrap items-center gap-3">
+					<AlertTitle>Content Warning: {{ teiHeader.triggerWarnings.join(", ") }}</AlertTitle>
+					<button
+						v-if="!textRevealed"
+						class="cursor-pointer rounded-sm border border-destructive/50 px-3 py-1 font-semibold text-destructive hover:bg-destructive/10"
+						type="button"
+						@click="textRevealed = true"
+					>
+						Show Text
+					</button>
+				</div>
 			</Alert>
-			<table class="text-sm text-gray-700">
+			<table
+				v-if="!teiHeader?.triggerWarnings?.length || textRevealed"
+				class="text-sm text-gray-700"
+			>
 				<thead class="bg-primary text-xs text-gray-700 uppercase">
 					<tr>
 						<th class="w-[10px] px-6 py-3" scope="col">Audio</th>
@@ -296,7 +292,6 @@ onMounted(async () => {
 										v-for="(uContent, index) in u['$$']"
 										:key="index"
 										:hits="props.params.hits"
-										:inline-lemma-annotation="showLemmaAnnotations"
 										:inline-linguistic-annotation="showLinguisticAnnotations"
 										:utterance="uContent"
 									></CorpusTextJsonUtterance>
@@ -312,7 +307,11 @@ onMounted(async () => {
 					</tr>
 				</tbody>
 			</table>
-			<InfiniteLoading v-if="!scrollComplete" ref="infinite" @infinite="handleInfiniteScroll" />
+			<InfiniteLoading
+				v-if="(!teiHeader?.triggerWarnings?.length || textRevealed) && !scrollComplete"
+				ref="infinite"
+				@infinite="handleInfiniteScroll"
+			/>
 		</div>
 	</div>
 </template>

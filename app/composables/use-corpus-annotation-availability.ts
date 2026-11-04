@@ -68,10 +68,6 @@ export function useCorpusAnnotationAvailability() {
 		return false;
 	}
 
-	function hasLemmaAnnotation(token: CorpusUtteranceToken): boolean {
-		return tokenAndDescendantsHaveAnnotation(token, (annotations) => annotations.lemmaRef != null);
-	}
-
 	function hasLinguisticAnnotation(token: CorpusUtteranceToken): boolean {
 		return tokenAndDescendantsHaveAnnotation(
 			token,
@@ -88,10 +84,6 @@ export function useCorpusAnnotationAvailability() {
 		);
 	}
 
-	function hasLemmaAnnotations(blocks: Array<CorpusAnnotationBlock>): boolean {
-		return blocksHaveAnnotation(blocks, hasLemmaAnnotation);
-	}
-
 	function hasLinguisticAnnotations(blocks: Array<CorpusAnnotationBlock>): boolean {
 		return blocksHaveAnnotation(blocks, hasLinguisticAnnotation);
 	}
@@ -103,8 +95,6 @@ export function useCorpusAnnotationAvailability() {
 	return {
 		getUtterances,
 		hasInlineTranslations,
-		hasLemmaAnnotation,
-		hasLemmaAnnotations,
 		hasLinguisticAnnotation,
 		hasLinguisticAnnotations,
 	};

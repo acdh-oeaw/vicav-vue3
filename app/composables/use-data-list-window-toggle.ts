@@ -43,6 +43,7 @@ export function useDataListWindowToggle() {
 				mapEnabled: record.enabled,
 			},
 		});
+		windowsStore.arrangeDataListsAndMap();
 	}
 
 	return { isListOpen, toggleList };

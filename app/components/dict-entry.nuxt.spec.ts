@@ -19,6 +19,181 @@ afterEach(() => {
 });
 
 describe("dictionary entry corpus search", () => {
+	it("labels the verb form within the grammar brackets", async () => {
+		const entry = {
+			id: "example",
+			lemma: "example",
+			type: "entry",
+			_links: { self: { href: "/example" } },
+			entry: {
+				entry: {
+					inflected_form: {
+						orth: { $: "inflected" },
+						gramGrp: {
+							derivedVerbClass_gram: { $: "II" },
+							number_gram: { $: "singular" },
+							msd_gram: { $: "perfect" },
+						},
+					},
+					gramGrp: {
+						pos_gram: { $: "verb" },
+						derivedVerbClass_gram: { $: "II" },
+						number_gram: { $: "singular" },
+					},
+				},
+			},
+		} as unknown as RestVLEEntry;
+		const wrapper = await mountSuspended(DictEntry, { props: { entry } });
+		expect(wrapper.text()).toContain("verb (Form: II, singular)");
+		expect(wrapper.text()).toContain("inflected (perfect, Form: II, singular)");
+	});
+
+	it("italicizes Arabic Latin lemma forms", async () => {
+		const entry = {
+			id: "example",
+			lemma: "example",
+			type: "entry",
+			_links: { self: { href: "/example" } },
+			entry: {
+				entry: {
+					lemma_form: { orth: { "@lang": "ar-Latn", $: "example" } },
+					lemmaVariant_form: {
+						orth: { "@lang": "ar-Arab", $: "مثال" },
+						variant_form: {
+							orth: { $: "first nested" },
+							variant_form: { orth: { $: "deep nested" } },
+						},
+					},
+					inflected_form: { orth: { $: "inflected" } },
+				},
+			},
+		} as unknown as RestVLEEntry;
+		const wrapper = await mountSuspended(DictEntry, { props: { entry } });
+		const forms = wrapper.findAll("header .text-2xl");
+		expect(forms[0]?.classes()).toContain("italic");
+		expect(forms).toHaveLength(1);
+		expect(wrapper.get("header").text()).not.toContain("مثال");
+		expect(wrapper.text().indexOf("Variant Forms")).toBeLessThan(
+			wrapper.text().indexOf("Infl. Forms"),
+		);
+		expect(wrapper.text()).toContain("مثال");
+		const variantSection = wrapper
+			.findAll("section")
+			.find((section) => section.text().includes("مثال"));
+		expect(variantSection?.text()).toContain("first nested");
+		expect(variantSection?.text()).toContain("deep nested");
+	});
+
+	it("shows noun gender immediately after the word class", async () => {
+		const entry = {
+			id: "example",
+			lemma: "example",
+			type: "entry",
+			_links: { self: { href: "/example" } },
+			entry: {
+				entry: {
+					"@root": "bqr",
+					gramGrp: {
+						pos_gram: { $: "collectiveNoun" },
+						gender_gram: { $: "feminine" },
+						synRoot_gram: { $: "bgr" },
+					},
+				},
+			},
+		} as unknown as RestVLEEntry;
+		const wrapper = await mountSuspended(DictEntry, { props: { entry } });
+		expect(wrapper.text()).toContain("collectiveNoun (feminine), √bgr");
+		expect(wrapper.text()).toContain("√bgr, √bqr");
+	});
+
+	it("renders each bibliography reference in form, translation and example source lists", async () => {
+		const entry = {
+			id: "example",
+			lemma: "example",
+			type: "entry",
+			_links: { self: { href: "/example" } },
+			entry: {
+				entry: {
+					lemma_form: { "@source": " #one   #two #missing ", orth: { $: "example" } },
+					sense: {
+						translationEquivalent_cit: {
+							"@source": "#one #two",
+							form: { orth: { "@lang": "en", $: "meaning" } },
+						},
+						example_cit: { "@source": "#one #two", quote: { $: "example quote" } },
+					},
+					listBibl: [
+						{ "@id": "one", title: { $: "First" } },
+						{ "@id": "two", title: { $: "Second" } },
+					],
+				},
+			},
+		} as unknown as RestVLEEntry;
+		const wrapper = await mountSuspended(DictEntry, { props: { entry } });
+		expect(wrapper.findAll('button[aria-label^="Open bibliography results for"]')).toHaveLength(6);
+		expect(wrapper.find('button[aria-label="Open bibliography results for First"]').exists()).toBe(
+			true,
+		);
+		expect(wrapper.find('button[aria-label="Open bibliography results for Second"]').exists()).toBe(
+			true,
+		);
+	});
+
+	it("shows etymology languages after the senses", async () => {
+		const entry = {
+			id: "example",
+			lemma: "example",
+			type: "entry",
+			_links: { self: { href: "/example" } },
+			entry: {
+				entry: {
+					sense: { translationEquivalent_cit: { form: { orth: { "@lang": "en", $: "meaning" } } } },
+					etym: { etymon_cit: { form: { orth: { "@lang": "tr", $: "badem" } } } },
+				},
+			},
+		} as unknown as RestVLEEntry;
+		const wrapper = await mountSuspended(DictEntry, { props: { entry } });
+		expect(wrapper.text().indexOf("meaning")).toBeLessThan(wrapper.text().indexOf("Etymology"));
+		expect(wrapper.text()).toContain("badem (Turkish)");
+		expect(wrapper.get('[lang="tr"]').text()).toBe("badem");
+	});
+
+	it("renders derivative forms and variants below inflected forms", async () => {
+		const entry = {
+			id: "DShaAr.begar_00000",
+			lemma: "begar",
+			type: "entry",
+			_links: { self: { href: "/restvle/dicts/dc_shawi_eng/entries/DShaAr.begar_00000" } },
+			entry: {
+				entry: {
+					inflected_form: { orth: { $: "begar" } },
+					derivative_form: {
+						orth: { $: "bgara" },
+						gramGrp: { pos_gram: { $: "unitNoun" } },
+						geographic_usg: { place_name: { $: "Harran-Urfa" } },
+						variant_forms: [
+							{
+								orth: { $: "bgaṛa" },
+								geographic_usg: { place_name: { $: "Mayadin" } },
+								variant_form: { orth: { $: "nested" } },
+							},
+						],
+					},
+				},
+			},
+		} as unknown as RestVLEEntry;
+		const wrapper = await mountSuspended(DictEntry, { props: { entry } });
+		const text = wrapper.text();
+		expect(text.indexOf("Infl. Forms")).toBeLessThan(text.indexOf("Derived Forms"));
+		expect(text).toContain("bgara");
+		expect(text).toContain("unitNoun");
+		expect(text).toContain("Harran-Urfa");
+		expect(text).toContain("bgaṛa");
+		expect(text).toContain("Mayadin");
+		expect(text).toContain("nested");
+		expect(text.match(/unitNoun/g)).toHaveLength(3);
+	});
+
 	it("opens a corpus query using the dictionary identifier", async () => {
 		const entry = {
 			id: "DShaAr.wakt_001",

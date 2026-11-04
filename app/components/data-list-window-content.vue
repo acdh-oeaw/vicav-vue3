@@ -25,7 +25,6 @@ const emit = defineEmits<{
 }>();
 
 const dataListMapStore = useDataListMapStore();
-const windowsStore = useWindowsStore();
 const specializedListType = computed(() => {
 	if (props.params.dataTypes.length !== 1) return undefined;
 
@@ -83,7 +82,6 @@ watch(
 	],
 	() => {
 		syncSharedListParams();
-		void nextTick(windowsStore.arrangeWindows);
 	},
 	{ deep: true, immediate: true },
 );

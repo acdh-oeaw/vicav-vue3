@@ -13,6 +13,7 @@ export function renderCorpusTokenText(token: U["$$"][number]): string {
 	}
 
 	if (token.pc) return `${token.pc.$} `;
+	if (token.vocal?.desc.$) return `[${token.vocal.desc.$}] `;
 
 	if (token.gap) {
 		// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition

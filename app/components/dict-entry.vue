@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { BookA, Braces, CircleAlert, Code, MapPin, MessageSquareQuote, Search } from "@lucide/vue";
+import { Braces, CircleAlert, Code, MapPin, Search } from "@lucide/vue";
 
 import type { RestVLEEntry } from "@/lib/api-client";
 import type { WindowItem } from "@/types/global.ts";
@@ -35,7 +35,7 @@ const env = useRuntimeConfig();
 const openOrUpdateWindow = useOpenOrUpdateWindow();
 
 const compactBadgeClass =
-	"inline-flex min-h-6 items-center gap-1 rounded-full border border-gray-300 bg-white/90 px-1.5 text-sm leading-none text-gray-900 shadow-xs";
+	"inline-flex min-h-6 items-center gap-1 rounded-full border border-primary/20 bg-[color-mix(in_srgb,hsl(var(--color-primary))_10%,white)] px-1.5 text-sm leading-none text-gray-900 shadow-xs";
 
 const bibliographyById = computed(() => {
 	return new Map(
@@ -46,31 +46,19 @@ const bibliographyById = computed(() => {
 });
 
 const headerForms = computed(() => {
-	return e.value.lemmaForms.concat(e.value.variantForms);
+	return e.value.lemmaForms;
 });
 
-const compactGrammar = computed(() => {
-	const values = {
-		partOfSpeech: findGrammarValue(e.value.grammar, "Part of speech"),
-		class: findGrammarValue(e.value.grammar, "Class"),
-		synRoot: findGrammarValue(e.value.grammar, "Syn root"),
-		diaRoot: findGrammarValue(e.value.grammar, "Dia root"),
-		root: findGrammarValue(e.value.grammar, "Root"),
-	};
-	const roots = [
-		formatRootGrammar(values.synRoot, "synRoot"),
-		formatRootGrammar(values.diaRoot, "diaRoot"),
-		formatRootGrammar(values.root, "Root"),
-	].filter(Boolean);
-
+const headerGrammar = computed(() => {
 	const patterns = headerForms.value
+		.concat(e.value.variantForms)
 		.flatMap((form) => form.grammar)
-		.filter((item) => item.label === "Pattern" && item.value !== "-")
-		.map((item) => item.value);
-	const uniquePatterns = Array.from(new Set(patterns));
-	return [values.partOfSpeech, values.class, uniquePatterns.join(", "), roots.join(", ")]
-		.filter(Boolean)
-		.join(", ");
+		.filter((item) => item.label === "Pattern" && item.value !== "-");
+	return e.value.grammar.concat(
+		patterns.filter(
+			(item, index) => patterns.findIndex((other) => other.value === item.value) === index,
+		),
+	);
 });
 
 const uniqueEditors = computed(() => {
@@ -85,7 +73,13 @@ const uniqueEditors = computed(() => {
 	return Array.from(names);
 });
 
-const hasInflectedForms = computed(() => e.value.inflectedForms.length > 0);
+const formSections = computed(() =>
+	[
+		{ label: "Variant Forms", forms: e.value.variantForms, separateVariants: false },
+		{ label: "Infl. Forms", forms: e.value.inflectedForms, separateVariants: false },
+		{ label: "Derived Forms", forms: e.value.derivativeForms, separateVariants: true },
+	].filter((section) => section.forms.length > 0),
+);
 const hasEtymology = computed(() => e.value.etymologies.length > 0);
 const hasEditors = computed(() => uniqueEditors.value.length > 0);
 const entryStatus = computed(() => {
@@ -112,16 +106,6 @@ const entryJsonLink = computed(() => getEntryLink(e.value, "json"));
 const corpusDictIDQuery = computed(() => {
 	return `[dict="dict:${escapeCorpusQueryValue(e.value.id)}"] | <seg lemmaRef="dict:${escapeCorpusQueryValue(e.value.id)}"/> containing []`;
 });
-
-const findGrammarValue = (items: Array<RenderedGrammarItem>, label: string) => {
-	const value = items.find((item) => item.label === label)?.value;
-	return value == null || value === "-" ? undefined : value;
-};
-
-const formatRootGrammar = (value: string | undefined, label: string) => {
-	if (value == null) return undefined;
-	return `${value} (${label})`;
-};
 
 const escapeCorpusQueryValue = (value: string) => {
 	return value.replaceAll("\\", "\\\\").replaceAll('"', '\\"');
@@ -155,18 +139,33 @@ const languageTooltip = (language: string | undefined) => {
 	return `Language: ${language}`;
 };
 
-const sourceReference = (source: string | undefined): RenderedBibliographyReference | undefined => {
-	if (source == null) return undefined;
-	return bibliographyById.value.get(source);
+const languageNames = new Intl.DisplayNames(["en"], { type: "language" });
+const languageName = (tag: string) => {
+	const normalized = tag.replace(/^gr(?=-|$)/i, "el");
+	try {
+		return languageNames.of(normalized) ?? tag;
+	} catch {
+		return tag;
+	}
+};
+
+const sourceReferences = (source: string | undefined): Array<RenderedBibliographyReference> => {
+	if (!source?.trim()) return [];
+	return source
+		.trim()
+		.split(/\s+/)
+		.flatMap((id) => {
+			const reference = bibliographyById.value.get(id.replace(/^#/, ""));
+			return reference ? [reference] : [];
+		});
 };
 
 const grammarValues = (items: Array<RenderedGrammarItem>) => {
 	return items.map((item) => item.value).filter((value) => value !== "-");
 };
 
-const formGrammarText = (form: RenderedForm) => {
-	const values = grammarValues(form.grammar);
-	return values.length === 0 ? undefined : values.join(", ");
+const formVariants = (form: RenderedForm): Array<RenderedForm> => {
+	return form.variants.flatMap((variant) => [variant, ...formVariants(variant)]);
 };
 
 const senseGrammarText = (items: Array<RenderedGrammarItem>) => {
@@ -227,27 +226,16 @@ const languageClass = (language: string | undefined) => {
 			v-else
 			class="not-prose overflow-hidden border-2 border-primary bg-white text-gray-950"
 		>
-			<header class="bg-primary px-3 py-2 text-white">
+			<header class="bg-primary/20 px-3 py-2 text-gray-950">
 				<div class="flex flex-wrap items-start justify-between gap-x-2 gap-y-1">
-					<span
-						class="mt-0.5 inline-flex size-7 shrink-0 items-center justify-center rounded-sm border border-white/70 bg-white text-primary"
-					>
-						<BookA v-if="e.type === 'entry'" class="size-4" />
-						<MessageSquareQuote v-else class="size-4" />
-					</span>
 					<div class="min-w-0 flex-1">
-						<div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-lg/tight">
+						<div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-lg">
 							<template v-for="(form, formIndex) in headerForms" :key="`header-${formIndex}`">
-								<span
-									v-if="formIndex > 0"
-									aria-hidden="true"
-									class="hidden text-white/80 sm:inline"
-								>
-									;
-								</span>
+								<span v-if="formIndex > 0" aria-hidden="true" class="hidden sm:inline"> ; </span>
 								<span
 									v-if="formText(form)"
-									class="text-2xl leading-none font-medium wrap-break-word italic underline decoration-white/70 decoration-2 underline-offset-4"
+									class="text-2xl font-bold wrap-break-word"
+									:class="{ italic: /^ar-(latn|ltn)(-|$)/i.test(formLanguage(form) ?? '') }"
 									:title="languageTooltip(formLanguage(form))"
 								>
 									{{ formText(form) }}
@@ -261,13 +249,14 @@ const languageClass = (language: string | undefined) => {
 									{{ formatLocation(location) }}
 								</span>
 								<DictSourceAction
-									v-if="sourceReference(form.source)"
-									:reference="sourceReference(form.source)!"
+									v-for="(reference, sourceIndex) in sourceReferences(form.source)"
+									:key="sourceIndex"
+									:reference="reference"
 								/>
 							</template>
 						</div>
-						<div v-if="compactGrammar" class="pl-10 text-xl/tight">
-							{{ compactGrammar }}
+						<div v-if="headerGrammar.length" class="text-lg">
+							<DictGrammar :items="headerGrammar" />
 						</div>
 					</div>
 					<div class="ml-auto flex flex-col items-end gap-1.5">
@@ -277,7 +266,7 @@ const languageClass = (language: string | undefined) => {
 									<TooltipTrigger as-child>
 										<NuxtLink
 											aria-label="entry as xml"
-											class="flex size-8 items-center justify-center rounded-sm border border-white/50 text-white hover:bg-white hover:text-primary"
+											class="flex size-8 items-center justify-center rounded-sm border border-primary/20 bg-[color-mix(in_srgb,hsl(var(--color-primary))_10%,white)] text-primary hover:bg-primary hover:text-white"
 											external
 											rel="noopener noreferrer"
 											target="_blank"
@@ -296,7 +285,7 @@ const languageClass = (language: string | undefined) => {
 									<TooltipTrigger as-child>
 										<NuxtLink
 											aria-label="entry as JSON"
-											class="flex size-8 items-center justify-center rounded-sm border border-white/50 text-white hover:bg-white hover:text-primary"
+											class="flex size-8 items-center justify-center rounded-sm border border-primary/20 bg-[color-mix(in_srgb,hsl(var(--color-primary))_10%,white)] text-primary hover:bg-primary hover:text-white"
 											external
 											rel="noopener noreferrer"
 											target="_blank"
@@ -315,7 +304,7 @@ const languageClass = (language: string | undefined) => {
 									<TooltipTrigger as-child>
 										<button
 											aria-label="search lemma in corpus"
-											class="flex size-8 items-center justify-center rounded-sm border border-white/50 text-white hover:bg-white hover:text-primary"
+											class="flex size-8 items-center justify-center rounded-sm border border-primary/20 bg-[color-mix(in_srgb,hsl(var(--color-primary))_10%,white)] text-primary hover:bg-primary hover:text-white"
 											type="button"
 											@click="openCorpusSearchWindow"
 										>
@@ -337,92 +326,46 @@ const languageClass = (language: string | undefined) => {
 			</header>
 
 			<div class="px-4 py-3">
-				<div class="grid grid-cols-[8rem_minmax(0,1fr)] gap-x-4">
-					<div
-						v-if="hasEtymology"
-						class="px-4 py-3 text-base leading-none font-semibold text-primary uppercase whitespace-nowrap"
-					>
-						Etymology
-					</div>
-					<section v-if="hasEtymology" class="space-y-1 py-3 text-base/snug">
-						<div v-for="(group, groupIndex) in e.etymologyGroups" :key="`etymology-${groupIndex}`">
-							<template v-for="(level, levelIndex) in group.levels" :key="levelIndex">
-								<span v-if="levelIndex > 0"> &lt; </span>
-								<span
-									v-for="(etymology, etymologyIndex) in level"
-									:key="textKey(etymology, etymologyIndex)"
-								>
-									<span v-if="etymologyIndex > 0">; </span>
-									<span
-										class="italic"
-										:class="languageClass(etymology.lang)"
-										:title="languageTooltip(etymology.lang)"
-									>
-										{{ etymology.text }}
-									</span>
-								</span>
-							</template>
-						</div>
-					</section>
-
-					<div
-						v-if="hasInflectedForms"
-						class="px-4 py-3 text-base leading-none font-semibold text-primary uppercase whitespace-nowrap"
-					>
-						Infl. Forms
-					</div>
-					<section v-if="hasInflectedForms" class="space-y-2 py-3 text-base/snug">
+				<div class="grid grid-cols-[10rem_minmax(0,1fr)] gap-x-4">
+					<template v-for="section in formSections" :key="section.label">
 						<div
-							v-for="(form, formIndex) in e.inflectedForms"
-							:key="`inflected-${formIndex}`"
-							class="flex flex-wrap items-center gap-x-2 gap-y-1"
+							class="px-4 py-3 text-base leading-none font-semibold text-primary uppercase whitespace-nowrap"
 						>
-							<span
-								v-if="formText(form)"
-								class="font-bold italic"
-								:title="languageTooltip(formLanguage(form))"
-							>
-								{{ formText(form) }}
-							</span>
-							<span v-if="formGrammarText(form)">({{ formGrammarText(form) }})</span>
-							<template v-for="location in form.locations" :key="locationKey(location)">
-								<span :class="compactBadgeClass">
-									<MapPin class="size-4 text-gray-400" />
-									{{ formatLocation(location) }}
-								</span>
-							</template>
-							<DictSourceAction
-								v-if="sourceReference(form.source)"
-								:reference="sourceReference(form.source)!"
-							/>
-							<template
-								v-for="(variant, variantIndex) in form.variants"
-								:key="`inflected-${formIndex}-variant-${variantIndex}`"
-							>
-								<span aria-hidden="true">;</span>
-								<span
-									v-if="formText(variant)"
-									class="font-bold italic"
-									:title="languageTooltip(formLanguage(variant))"
-								>
-									{{ formText(variant) }}
-								</span>
-								<span v-if="formGrammarText(variant)">({{ formGrammarText(variant) }})</span>
-								<span
-									v-for="location in variant.locations"
-									:key="locationKey(location)"
-									:class="compactBadgeClass"
-								>
-									<MapPin class="size-4 text-gray-400" />
-									{{ formatLocation(location) }}
-								</span>
-								<DictSourceAction
-									v-if="sourceReference(variant.source)"
-									:reference="sourceReference(variant.source)!"
-								/>
-							</template>
+							{{ section.label }}
 						</div>
-					</section>
+						<section class="space-y-2 py-3 text-base/snug">
+							<div
+								v-for="(form, formIndex) in section.forms"
+								:key="`inflected-${formIndex}`"
+								class="flex flex-wrap items-center gap-x-2 gap-y-1"
+							>
+								<DictFormDisplay
+									:badge-class="compactBadgeClass"
+									:entry-part-of-speech="
+										e.grammar.find((item) => item.label === 'Part of speech')?.value
+									"
+									:form="form"
+									:references="sourceReferences(form.source)"
+								/>
+								<div
+									v-for="(variant, variantIndex) in formVariants(form)"
+									:key="variantIndex"
+									class="flex flex-wrap items-center gap-x-2 gap-y-1"
+									:class="{ 'w-full': section.separateVariants }"
+								>
+									<span v-if="!section.separateVariants" aria-hidden="true">;</span>
+									<DictFormDisplay
+										:badge-class="compactBadgeClass"
+										:entry-part-of-speech="
+											e.grammar.find((item) => item.label === 'Part of speech')?.value
+										"
+										:form="variant"
+										:references="sourceReferences(variant.source)"
+									/>
+								</div>
+							</div>
+						</section>
+					</template>
 
 					<template v-for="(sense, senseIndex) in e.senses" :key="sense.id ?? senseIndex">
 						<div
@@ -432,11 +375,52 @@ const languageClass = (language: string | undefined) => {
 						</div>
 						<section class="py-0.5">
 							<div class="rounded-sm border border-primary/15 bg-primary/15 px-2 py-1">
-								<div class="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-1">
-									<div v-if="senseGrammarText(sense.grammar)" class="mb-1 font-bold italic">
-										({{ senseGrammarText(sense.grammar) }})
+								<div
+									class="grid items-start gap-2"
+									:class="
+										sense.locations.length
+											? 'grid-cols-[minmax(0,1fr)_minmax(0,min(12rem,40%))]'
+											: 'grid-cols-1'
+									"
+								>
+									<div class="min-w-0 text-base/tight">
+										<div v-if="senseGrammarText(sense.grammar)" class="mb-1 font-bold italic">
+											({{ senseGrammarText(sense.grammar) }})
+										</div>
+										<div
+											v-for="translationGroup in groupedSenseTranslations(sense)"
+											:key="translationGroup.lang ?? 'unknown'"
+											class="flex flex-wrap items-center gap-1.5"
+										>
+											<span
+												class="inline-flex flex-wrap items-center gap-x-1"
+												:class="languageClass(translationGroup.lang)"
+												:title="languageTooltip(translationGroup.lang)"
+											>
+												<template
+													v-for="(translation, translationIndex) in translationGroup.translations"
+													:key="textKey(translation, translationIndex)"
+												>
+													<span>{{ translation.text }}</span>
+													<span v-if="translation.gloss" class="text-gray-700">
+														({{ translation.gloss }})
+													</span>
+													<DictSourceAction
+														v-for="(reference, sourceIndex) in sourceReferences(translation.source)"
+														:key="sourceIndex"
+														:reference="reference"
+													/>
+													<span v-if="translationIndex < translationGroup.translations.length - 1">
+														,
+													</span>
+												</template>
+											</span>
+										</div>
 									</div>
-									<div class="flex max-w-72 flex-wrap justify-end gap-0.5 justify-self-end">
+									<div
+										v-if="sense.locations.length"
+										class="flex flex-wrap items-center justify-end gap-0.5"
+									>
 										<span
 											v-for="location in sense.locations"
 											:key="locationKey(location)"
@@ -444,36 +428,6 @@ const languageClass = (language: string | undefined) => {
 										>
 											<MapPin class="size-4 text-gray-400" />
 											{{ formatLocation(location) }}
-										</span>
-									</div>
-								</div>
-								<div class="text-base/tight">
-									<div
-										v-for="translationGroup in groupedSenseTranslations(sense)"
-										:key="translationGroup.lang ?? 'unknown'"
-										class="flex flex-wrap items-center gap-1.5"
-									>
-										<span
-											class="inline-flex flex-wrap items-center gap-x-1"
-											:class="languageClass(translationGroup.lang)"
-											:title="languageTooltip(translationGroup.lang)"
-										>
-											<template
-												v-for="(translation, translationIndex) in translationGroup.translations"
-												:key="textKey(translation, translationIndex)"
-											>
-												<span>{{ translation.text }}</span>
-												<span v-if="translation.gloss" class="text-gray-700">
-													({{ translation.gloss }})
-												</span>
-												<DictSourceAction
-													v-if="sourceReference(translation.source)"
-													:reference="sourceReference(translation.source)!"
-												/>
-												<span v-if="translationIndex < translationGroup.translations.length - 1">
-													,
-												</span>
-											</template>
 										</span>
 									</div>
 								</div>
@@ -508,8 +462,9 @@ const languageClass = (language: string | undefined) => {
 													:reference="item"
 												/>
 												<DictSourceAction
-													v-if="sourceReference(example.source)"
-													:reference="sourceReference(example.source)!"
+													v-for="(reference, sourceIndex) in sourceReferences(example.source)"
+													:key="sourceIndex"
+													:reference="reference"
 												/>
 												<span
 													v-for="location in example.locations"
@@ -536,6 +491,35 @@ const languageClass = (language: string | undefined) => {
 							</div>
 						</section>
 					</template>
+
+					<div
+						v-if="hasEtymology"
+						class="px-4 py-3 text-base leading-none font-semibold text-primary uppercase whitespace-nowrap"
+					>
+						Etymology
+					</div>
+					<section v-if="hasEtymology" class="space-y-1 py-3 text-base/snug">
+						<div v-for="(group, groupIndex) in e.etymologyGroups" :key="`etymology-${groupIndex}`">
+							<template v-for="(level, levelIndex) in group.levels" :key="levelIndex">
+								<span v-if="levelIndex > 0"> &lt; </span>
+								<span
+									v-for="(etymology, etymologyIndex) in level"
+									:key="textKey(etymology, etymologyIndex)"
+								>
+									<span v-if="etymologyIndex > 0">; </span>
+									<span
+										class="italic"
+										:class="languageClass(etymology.lang)"
+										:lang="etymology.lang"
+										:title="languageTooltip(etymology.lang)"
+									>
+										{{ etymology.text }}
+									</span>
+									<span v-if="etymology.lang"> ({{ languageName(etymology.lang) }})</span>
+								</span>
+							</template>
+						</div>
+					</section>
 
 					<div
 						v-if="hasEditors"

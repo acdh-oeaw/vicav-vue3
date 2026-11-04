@@ -35,12 +35,20 @@ const emit = defineEmits<{
 }>();
 const queryString = ref(props.params.queryString);
 const hits = ref<Array<Div & { label?: string; teiSource?: string }>>([]);
+const includeContentWarnings = ref(false);
+const contentWarningsId = useId();
+const visibleHits = computed(() => {
+	if (includeContentWarnings.value) return hits.value;
+	const warnedIds = new Set(
+		simpleItems.filter((header) => header.triggerWarnings?.length).map((header) => header.id),
+	);
+	return hits.value.filter((hit) => !hit["@docRef"] || !warnedIds.has(hit["@docRef"]));
+});
 const scrollCursor = ref({ count: 0, page: 1, pageSize: 30, complete: false });
 const showHelp = ref<boolean>(false);
 const isSearching = ref(false);
 const isLoadingMore = ref(false);
 
-const inlineLemmaAnnotations = ref<false | true | "indeterminate">(true);
 const inlineLinguisticAnnotations = ref<false | true | "indeterminate">(true);
 const inlineTranslations = ref<false | true | "indeterminate">(true);
 const words: Ref<Array<string>> = ref([]);
@@ -48,24 +56,15 @@ const words: Ref<Array<string>> = ref([]);
 const lastRestoredQueryString = ref<string>();
 const {
 	hasInlineTranslations: blockHasInlineTranslations,
-	hasLemmaAnnotations: blockHasLemmaAnnotations,
 	hasLinguisticAnnotations: blockHasLinguisticAnnotations,
 } = useCorpusAnnotationAvailability();
 
-const hasLemmaAnnotations = computed(() => {
-	return blockHasLemmaAnnotations(hits.value);
-});
-
 const hasLinguisticAnnotations = computed(() => {
-	return blockHasLinguisticAnnotations(hits.value);
+	return blockHasLinguisticAnnotations(visibleHits.value);
 });
 
 const hasInlineTranslations = computed(() => {
-	return blockHasInlineTranslations(hits.value);
-});
-
-const showLemmaAnnotations = computed(() => {
-	return hasLemmaAnnotations.value && inlineLemmaAnnotations.value === true;
+	return blockHasInlineTranslations(visibleHits.value);
 });
 
 const showLinguisticAnnotations = computed(() => {
@@ -214,7 +213,7 @@ function getHitKey(hit: Div, index: number) {
 }
 
 const displayHitContexts = computed(() =>
-	hits.value.map((hit) => ({ hit, context: getCorpusHitContext(hit) })),
+	visibleHits.value.map((hit) => ({ hit, context: getCorpusHitContext(hit) })),
 );
 
 const { cqlConfig: attributeConfig } = useCqlAttributes({
@@ -291,20 +290,19 @@ const { cqlTriggers } = useCqlTriggers(cqlConfig);
 				:special-characters="specialCharacters"
 				:triggers="cqlTriggers"
 			/>
-			<br />
+			<div class="mt-3 flex items-center gap-2">
+				<Checkbox
+					:id="contentWarningsId"
+					:checked="includeContentWarnings"
+					@update:checked="includeContentWarnings = $event === true"
+				/>
+				<label :for="contentWarningsId">Include texts with content warnings</label>
+			</div>
 		</form>
 		<div
-			v-if="hasLemmaAnnotations || hasLinguisticAnnotations || hasInlineTranslations"
+			v-if="hasLinguisticAnnotations || hasInlineTranslations"
 			class="flex justify-end gap-3 p-4"
 		>
-			<div v-if="hasLemmaAnnotations">
-				<Checkbox
-					id="switch-lemma-annotations"
-					:checked="inlineLemmaAnnotations === true"
-					@update:checked="inlineLemmaAnnotations = $event"
-				/>
-				<label for="switch-lemma-annotations">&nbsp;Lemma annotations</label>
-			</div>
 			<div v-if="hasLinguisticAnnotations">
 				<Checkbox
 					id="switch-linguistic-annotations"
@@ -333,9 +331,12 @@ const { cqlTriggers } = useCqlTriggers(cqlConfig);
 				<div>•</div>
 				<div>
 					{{ scrollCursor.count }} {{ scrollCursor.count > 1 ? "results" : "result" }} ({{
-						hits.length
+						visibleHits.length
 					}}
-					shown)
+					shown<span v-if="!includeContentWarnings && visibleHits.length < hits.length"
+						>; {{ hits.length - visibleHits.length }} loaded results hidden due to content
+						warnings</span
+					>)
 				</div>
 			</div>
 			<table>
@@ -369,7 +370,6 @@ const { cqlTriggers } = useCqlTriggers(cqlConfig);
 										v-for="(uContent, index) in context.before"
 										:key="`before-${index}`"
 										:hits="hit.hits"
-										:inline-lemma-annotation="showLemmaAnnotations"
 										:inline-linguistic-annotation="showLinguisticAnnotations"
 										:utterance="uContent"
 									></CorpusTextJsonUtterance>
@@ -379,7 +379,6 @@ const { cqlTriggers } = useCqlTriggers(cqlConfig);
 										v-for="(uContent, index) in context.matches"
 										:key="`match-${index}`"
 										:hits="hit.hits"
-										:inline-lemma-annotation="showLemmaAnnotations"
 										:inline-linguistic-annotation="showLinguisticAnnotations"
 										:utterance="uContent"
 									></CorpusTextJsonUtterance>
@@ -389,7 +388,6 @@ const { cqlTriggers } = useCqlTriggers(cqlConfig);
 										v-for="(uContent, index) in context.after"
 										:key="`after-${index}`"
 										:hits="hit.hits"
-										:inline-lemma-annotation="showLemmaAnnotations"
 										:inline-linguistic-annotation="showLinguisticAnnotations"
 										:utterance="uContent"
 									></CorpusTextJsonUtterance>

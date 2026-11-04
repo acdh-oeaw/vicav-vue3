@@ -451,14 +451,20 @@ function extractPersons(
 
 	if (!teiPersons) return [];
 
-	const referencedPersonIds = teiPersons
-		.map((person) => (person["@sameAs"] ?? person.$ ?? "").replace("corpus:", ""))
-		.filter(Boolean);
-
-	return referencedPersonIds.flatMap((personId) => {
+	return teiPersons.flatMap((person) => {
+		const personId = (person["@sameAs"] ?? person.$ ?? "").replace("corpus:", "");
 		const matchingPerson = indexes.personsById.get(personId);
+		const rawAge = person["@age"]?.trim();
+		const participantAge = rawAge === "" ? undefined : rawAge;
 
-		return matchingPerson ? [buildSimplePerson(matchingPerson)] : [];
+		return matchingPerson
+			? [
+					{
+						...buildSimplePerson(matchingPerson),
+						age: participantAge ?? matchingPerson["@age"] ?? "n/a",
+					},
+				]
+			: [];
 	});
 }
 

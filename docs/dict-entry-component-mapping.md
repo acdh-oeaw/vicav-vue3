@@ -35,7 +35,7 @@ or the compact structured entry template.
 | `entry` as HTML string | `html`                          | Rendered directly with `v-html`; compact template is skipped.  |
 | full `RestVLEEntry`    | `raw`                           | Debug-only JSON block when `debug` is true.                    |
 | `id`                   | `id`                            | Used for the corpus search query.                              |
-| `type`                 | `type`                          | Header icon: entry or example.                                 |
+| `type`                 | `type`                          | Normalized; no header icon.                                    |
 | `_links.self.href`     | `selfHref`                      | Header XML link; JSON link is derived by adding `format=json`. |
 | `sid`                  | `sid`                           | View-model-only; no template output.                           |
 | `lemma`                | `lemma`, contributes to `title` | Used only as title fallback after lemma form text.             |
@@ -48,24 +48,24 @@ area from entry `selfHref`; JSON adds `format=json`.
 
 ## Entry Payload
 
-| API field                                                                                                       | Rendered model                                       | Template location                                                                                                                                   |
-| --------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `entry.entry.@id`                                                                                               | `xmlId`                                              | View-model-only; no template output.                                                                                                                |
-| `entry.entry.@lang`                                                                                             | `entryLang`, `metadata[]` item `entry language`      | Normalized but not rendered; individual text nodes expose language as native browser tooltips.                                                      |
-| `lemma_form.orth`, `lemma_form.orths[]`                                                                         | `lemmaForms[].orthographies`, contributes to `title` | Header lemma text; `lang` appears as a tooltip when available.                                                                                      |
-| `lemma_form.@source`                                                                                            | `lemmaForms[].source`                                | Header source bibliography badge when source resolves through entry `listBibl`.                                                                     |
-| `lemma_form.variant_form`, `lemma_form.variant_forms[]`                                                         | `variantForms[]`                                     | Header variant text, locations, and optional bibliography badge.                                                                                    |
-| `lemmaVariant_form`, `lemmaVariant_forms[]`                                                                     | `variantForms[]`                                     | Header variant text, locations, and optional bibliography badge.                                                                                    |
-| `multiWordUnit_form`                                                                                            | `lemmaForms[]`                                       | Header form text if present.                                                                                                                        |
-| `gramGrp` and nested `gramGrp.gramGrp`                                                                          | `grammar[]`                                          | Header grammar summary: part of speech, class, synRoot, diaRoot; placeholder `-` values are hidden.                                                 |
-| `lemma_form.geographic_usg`, `lemma_form.geographic_usgs[]`, payload `geographic_usg`, example `geographic_usg` | `locations[]`                                        | Entry-level locations are normalized; lemma-form locations render in the header.                                                                    |
-| `listBibl[]`                                                                                                    | `bibliography[]`                                     | Used to resolve source ids into compact bibliography badges, e.g. `Younes 2021, p.40`.                                                              |
-| `etym.etymon_cit.form.orth`, `etym.etymon_cit.form.orths[]`, `etym.etymon_cits[]`, nested `etym`                | `etymologies[]`, `etymologyGroups[].levels[]`        | Etymology row; each root group renders on its own line, same-level etymons use `; `, nested levels use `<`, and text uses language colors/tooltips. |
-| payload/top-level example `feature`, `features[]`                                                               | `editors[]`                                          | Editors row as unique comma-separated editor names only.                                                                                            |
-| `translation_cit`, `translation_cits[]` on payload and top-level example                                        | `translations[]`                                     | Normalized but not rendered in compact template.                                                                                                    |
-| top-level example `quote`                                                                                       | `quote`                                              | Normalized and used as title fallback; not rendered as a separate row.                                                                              |
-| `note`, `notes[]`                                                                                               | `notes[]`                                            | Normalized but not rendered in compact template.                                                                                                    |
-| payload `def`, `defs[]`                                                                                         | none                                                 | Not rendered except through debug `raw`.                                                                                                            |
+| API field                                                                                                       | Rendered model                                       | Template location                                                                                                           |
+| --------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `entry.entry.@id`                                                                                               | `xmlId`                                              | View-model-only; no template output.                                                                                        |
+| `entry.entry.@lang`                                                                                             | `entryLang`, `metadata[]` item `entry language`      | Normalized but not rendered; individual text nodes expose language as native browser tooltips.                              |
+| `lemma_form.orth`, `lemma_form.orths[]`                                                                         | `lemmaForms[].orthographies`, contributes to `title` | Header lemma text; `lang` appears as a tooltip when available.                                                              |
+| `lemma_form.@source`                                                                                            | `lemmaForms[].source`                                | Header source bibliography badge when source resolves through entry `listBibl`.                                             |
+| `lemma_form.variant_form`, `lemma_form.variant_forms[]`                                                         | `variantForms[]`                                     | Variant Forms row with text, grammar, locations, and bibliography badges.                                                   |
+| `lemmaVariant_form`, `lemmaVariant_forms[]`                                                                     | `variantForms[]`                                     | Variant Forms row with text, grammar, locations, and bibliography badges.                                                   |
+| `multiWordUnit_form`                                                                                            | `lemmaForms[]`                                       | Header form text if present.                                                                                                |
+| `gramGrp` and nested `gramGrp.gramGrp`                                                                          | `grammar[]`                                          | Header grammar summary includes part of speech, noun gender, class, patterns, and roots; placeholder `-` values are hidden. |
+| `lemma_form.geographic_usg`, `lemma_form.geographic_usgs[]`, payload `geographic_usg`, example `geographic_usg` | `locations[]`                                        | Entry-level locations are normalized; lemma-form locations render in the header.                                            |
+| `listBibl[]`                                                                                                    | `bibliography[]`                                     | Used to resolve source ids into compact bibliography badges, e.g. `Younes 2021, p.40`.                                      |
+| `etym.etymon_cit.form.orth`, `etym.etymon_cit.form.orths[]`, `etym.etymon_cits[]`, nested `etym`                | `etymologies[]`, `etymologyGroups[].levels[]`        | Etymology row below senses; groups render by level and language names follow each etymon.                                   |
+| payload/top-level example `feature`, `features[]`                                                               | `editors[]`                                          | Editors row as unique comma-separated editor names only.                                                                    |
+| `translation_cit`, `translation_cits[]` on payload and top-level example                                        | `translations[]`                                     | Normalized but not rendered in compact template.                                                                            |
+| top-level example `quote`                                                                                       | `quote`                                              | Normalized and used as title fallback; not rendered as a separate row.                                                      |
+| `note`, `notes[]`                                                                                               | `notes[]`                                            | Normalized but not rendered in compact template.                                                                            |
+| payload `def`, `defs[]`                                                                                         | none                                                 | Not rendered except through debug `raw`.                                                                                    |
 
 ## Forms
 
@@ -83,6 +83,16 @@ area from entry `selfHref`; JSON adds `format=json`.
 | form `geographic_usg`, `geographic_usgs[]` | `locations[]`                          | Location badges next to the attached header/inflected/variant form.                 |
 | nested `variant_form`, `variant_forms[]`   | `variants[]`                           | Inline after the parent inflected form; own flection info and badges stay attached. |
 | `inflected_form`, `inflected_forms[]`      | `inflectedForms[]`                     | `INFL. FORMS` row.                                                                  |
+
+## Derived forms and omitted form data
+
+| Field                                                       | Current behavior                                                                     |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `derivative_form`, `derivative_forms[]`                     | Derived Forms row; nested variants inherit the top-level part of speech when absent. |
+| Additional `orths[]`                                        | Normalized; only the first non-missing orthography is displayed.                     |
+| Form subtype, annotation, usage, workflow and form language | Normalized as metadata; not displayed.                                               |
+| Location references and additional tribe names              | Reference identifiers and tribe names beyond the first are not displayed.            |
+| Unresolved source references                                | Skipped when no matching bibliography entry exists.                                  |
 
 ## Locations And Bibliography
 
@@ -151,7 +161,7 @@ area from entry `selfHref`; JSON adds `format=json`.
 | Editors                   | Rendered as unique names only; dates, actions, and statuses are hidden.          |
 | Left-column labels        | Rendered as paired grid cells aligned with each content row.                     |
 | Language badges           | Replaced by native browser `title` tooltips on text items with language data.    |
-| Section card/table layout | Replaced by compact orange header, label column, forms row, sense boxes.         |
+| Section card/table layout | Replaced by primary-derived tinted header, label column, forms row, sense boxes. |
 | Server HTML entries       | Still rendered directly with `v-html`; compact template is skipped.              |
 | Debug output              | Still available and contains all API fields, including hidden normalized data.   |
 

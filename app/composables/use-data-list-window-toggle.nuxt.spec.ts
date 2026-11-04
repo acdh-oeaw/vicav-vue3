@@ -25,6 +25,7 @@ const mocks = vi.hoisted(() => ({
 	windows: {
 		registry: new Map() as WindowRegistry,
 		addWindow: vi.fn<(state: WindowState) => void>(),
+		arrangeDataListsAndMap: vi.fn(),
 		removeWindow: vi.fn<(id: string) => void>(),
 	},
 }));
@@ -41,6 +42,7 @@ beforeEach(() => {
 	mocks.datasets.records.samples.enabled = true;
 	mocks.windows.registry = reactive(new Map());
 	mocks.windows.addWindow.mockReset();
+	mocks.windows.arrangeDataListsAndMap.mockReset();
 	mocks.windows.removeWindow.mockReset();
 	mocks.windows.removeWindow.mockImplementation((id) => {
 		mocks.windows.registry.delete(id);
@@ -54,6 +56,7 @@ describe("dataset list window toggling", () => {
 		const toggle = scope.run(useDataListWindowToggle)!;
 		expect(toggle.isListOpen("samples")).toBe(false);
 		toggle.toggleList("samples");
+		expect(mocks.windows.arrangeDataListsAndMap).toHaveBeenCalledTimes(1);
 		expect(mocks.windows.addWindow).toHaveBeenCalledWith({
 			targetType: "DataList",
 			title: "Sample texts",

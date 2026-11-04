@@ -100,6 +100,7 @@ export interface RenderedDictEntry {
 	editors: Array<RenderedEditor>;
 	grammar: Array<RenderedGrammarItem>;
 	inflectedForms: Array<RenderedForm>;
+	derivativeForms: Array<RenderedForm>;
 	senses: Array<RenderedSense>;
 	notes: Array<string>;
 	metadata: Array<RenderedMetadataItem>;
@@ -251,12 +252,15 @@ interface SenseLike {
 interface EntryPayloadLike {
 	"@id"?: string;
 	"@lang"?: string;
+	"@root"?: string;
 	lemma_form?: EntryFormLike;
 	lemmaVariant_form?: EntryFormLike;
 	lemmaVariant_forms?: Array<EntryFormLike>;
 	multiWordUnit_form?: EntryFormLike;
 	inflected_form?: EntryFormLike;
 	inflected_forms?: Array<EntryFormLike>;
+	derivative_form?: EntryFormLike;
+	derivative_forms?: Array<EntryFormLike>;
 	gramGrp?: GrammarLike | string;
 	sense?: SenseLike;
 	senses?: Array<SenseLike>;
@@ -569,10 +573,19 @@ function collectForm(
 	single: EntryFormLike | undefined,
 	multiple: Array<EntryFormLike> | undefined,
 	fallbackType?: string,
+	inheritedPartOfSpeech?: RenderedGrammarItem,
 ): Array<RenderedForm> {
 	return [...asArray(single), ...asArray(multiple)].flatMap((form) => {
 		const orthographies = collectTextNodes(form.orth, form.orths);
 		const grammar = collectGrammar(form.gramGrp);
+		if (inheritedPartOfSpeech && !grammar.some((item) => item.label === "Part of speech")) {
+			grammar.unshift(inheritedPartOfSpeech);
+		}
+		const descendantPartOfSpeech =
+			inheritedPartOfSpeech ??
+			(fallbackType === "derivative"
+				? grammar.find((item) => item.label === "Part of speech")
+				: undefined);
 		const locations = collectLocations(form.geographic_usg, form.geographic_usgs);
 		const metadata = compactMetadata([
 			["type", form["@type"] ?? fallbackType],
@@ -600,7 +613,12 @@ function collectForm(
 				orthographies,
 				grammar,
 				locations,
-				variants: collectForm(form.variant_form, form.variant_forms, "variant"),
+				variants: collectForm(
+					form.variant_form,
+					form.variant_forms,
+					"variant",
+					descendantPartOfSpeech,
+				),
 				metadata,
 			},
 		];
@@ -702,6 +720,7 @@ export function normalizeEntry(entry: RestVLEEntry): RenderedDictEntry {
 			editors: [],
 			grammar: [],
 			inflectedForms: [],
+			derivativeForms: [],
 			senses: [],
 			notes: [],
 			metadata: compactMetadata([
@@ -758,6 +777,9 @@ export function normalizeEntry(entry: RestVLEEntry): RenderedDictEntry {
 		),
 	);
 	const grammar = collectGrammar(normalizedPayload?.gramGrp);
+	if (normalizedPayload?.["@root"]?.trim()) {
+		grammar.push({ label: "Root", value: normalizedPayload["@root"] });
+	}
 	const etymologies = collectEtymologies(normalizedPayload?.etym);
 	const etymologyGroups = collectEtymologyGroups(normalizedPayload?.etym);
 	const bibliography = collectBibliographyItems(normalizedPayload?.listBibl);
@@ -765,6 +787,11 @@ export function normalizeEntry(entry: RestVLEEntry): RenderedDictEntry {
 		normalizedPayload?.inflected_form,
 		normalizedPayload?.inflected_forms,
 		"inflected",
+	);
+	const derivativeForms = collectForm(
+		normalizedPayload?.derivative_form,
+		normalizedPayload?.derivative_forms,
+		"derivative",
 	);
 	const senses = [...asArray(normalizedPayload?.sense), ...asArray(normalizedPayload?.senses)].map(
 		(sense) => {
@@ -821,6 +848,7 @@ export function normalizeEntry(entry: RestVLEEntry): RenderedDictEntry {
 		editors,
 		grammar,
 		inflectedForms,
+		derivativeForms,
 		senses,
 		notes,
 		metadata: compactMetadata([
