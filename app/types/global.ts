@@ -222,6 +222,7 @@ export const GeoMapSchema = z.object({
 		queryParams: ExploreSamplesQueryDbParams.optional(),
 		scope: z.array(GeoMapScope).optional(),
 		hideDefaultLayers: z.boolean().optional(),
+		enabledDatasets: z.array(z.string()).optional(),
 		dataListLayers: z.array(DataListMapLayerSchema).optional(),
 	}).extend(ShowCitation.partial().shape),
 });

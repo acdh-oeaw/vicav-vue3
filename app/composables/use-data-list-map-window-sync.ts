@@ -13,6 +13,7 @@ export function useDataListMapWindowSync() {
 				window.targetType === "WMap" && window.params.endpoint === "data_markers",
 		),
 	);
+	const initialEnabledApplied = new Set<string>();
 
 	watch(
 		[() => dataListMapStore.layers, mapWindow],
@@ -24,6 +25,14 @@ export function useDataListMapWindowSync() {
 					(layer) => layer.enabled !== false && previousLayers[layer.id]?.enabled !== true,
 				);
 			if (window) {
+				if (
+					layers.length > 0 &&
+					window.params.enabledDatasets &&
+					!initialEnabledApplied.has(window.id)
+				) {
+					initialEnabledApplied.add(window.id);
+					dataListMapStore.applyInitialEnabled(window.params.enabledDatasets);
+				}
 				const mergedLayers = dataListMapStore.mergeMapLayers(window.params.dataListLayers);
 				if (JSON.stringify(window.params.dataListLayers) !== JSON.stringify(mergedLayers)) {
 					windowsStore.updateWindowParams(window.id, {

@@ -358,6 +358,18 @@ describe("configured dataset bootstrap and hydration", () => {
 		expect(first.records).toHaveProperty("configured:samples");
 	});
 
+	it("enables listed datasets initially, ignores unknown ids and never disables", async () => {
+		const store = useDataListMapStore();
+		await store.initialize();
+		store.applyInitialEnabled(["configured:samples", "unknown:id"]);
+		expect(store.records["configured:samples"]?.enabled).toBe(true);
+		expect(store.layers["configured:samples"]?.enabled).toBe(true);
+		store.toggleLayer("configured:samples");
+		expect(store.records["configured:samples"]?.enabled).toBe(false);
+		store.applyInitialEnabled(undefined);
+		expect(store.records["configured:samples"]?.enabled).toBe(false);
+	});
+
 	it("renders and toggles preloaded buttons without serialized map layers or an open list", async () => {
 		const store = useDataListMapStore();
 		await store.initialize();
