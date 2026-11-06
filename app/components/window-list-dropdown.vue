@@ -29,7 +29,7 @@ const { arrangement: currentArrangement, registry } = storeToRefs(windowsStore);
 					<MenubarItem
 						v-for="[id, item] of registry"
 						:key="id"
-						class="justify-between gap-2 items-center"
+						class="items-center justify-between gap-2"
 						@select="
 							() => {
 								if (!item.winbox) {
@@ -50,7 +50,7 @@ const { arrangement: currentArrangement, registry } = storeToRefs(windowsStore);
 						"
 					>
 						{{ item.label }}
-						<Button class="p-1 size-fit" variant="ghost" @click="removeWindow(id)"
+						<Button class="size-fit p-1" variant="ghost" @click="removeWindow(id)"
 							><X class="size-3"></X><span class="sr-only">Close window</span></Button
 						>
 					</MenubarItem>

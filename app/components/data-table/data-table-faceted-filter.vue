@@ -92,7 +92,7 @@ function compareUndefinedValues(a: string, b: string): number {
 	<DropdownMenu>
 		<DropdownMenuTrigger
 			:aria-label="`Filter by ${filterLabel}`"
-			class="group rounded-sm p-1 align-middle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+			class="group rounded-sm p-1 align-middle focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
 			type="button"
 			><Filter
 				class="size-4 group-hover:scale-125"

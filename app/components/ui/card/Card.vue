@@ -18,7 +18,7 @@ const props = withDefaults(defineProps<Props>(), {
 		:as-child="asChild"
 		:class="
 			twMerge(
-				'text-card-foreground rounded-xl border bg-card shadow-sm',
+				'rounded-xl border bg-card text-card-foreground shadow-sm',
 				normalizeClass(props.class),
 			)
 		"

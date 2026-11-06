@@ -89,17 +89,17 @@ function openFeatureValue(location: LocationEntry, feature: ActiveFeature, value
 </script>
 
 <template>
-	<div ref="$el" class="divide-y space-y-2">
+	<div ref="$el" class="space-y-2 divide-y">
 		<div v-for="location in locations" :key="location.marker.id" class="pb-2">
 			<h2 class="text-base font-bold">{{ location.name }}</h2>
-			<p class="text-xs my-1!">
+			<p class="my-1! text-xs">
 				Open
 				<a href="#" @click.prevent.stop="emit('anchor-click', location.marker)"
 					>all details of {{ location.name }}</a
 				>
 				or show one of the active feature values:
 			</p>
-			<ul v-if="location.features.length > 0" class="list-none text-xs ml-4">
+			<ul v-if="location.features.length > 0" class="ml-4 list-none text-xs">
 				<li v-for="feature in location.features" :key="feature.column.id" class="my-1 list-disc">
 					<span class="italic">{{ feature.label }}:</span>
 					<template v-for="(value, idx) in feature.values" :key="value.key">

@@ -87,9 +87,9 @@ watch(
 					filteredFormValues,
 				);
 			}
-		} else if (
-			!(filterSuggestion.value && formValues.items.includes(filterSuggestion.value?.combinedValue))
-		) {
+		} else if (!(
+			filterSuggestion.value && formValues.items.includes(filterSuggestion.value?.combinedValue)
+		)) {
 			filterSuggestion.value = null;
 		}
 		computeMarkerData();
