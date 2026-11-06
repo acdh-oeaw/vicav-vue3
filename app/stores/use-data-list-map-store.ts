@@ -430,6 +430,13 @@ export const useDataListMapStore = defineStore("data-list-map", () => {
 		if (dataset) setEnabled(id, !dataset.enabled.value);
 	}
 
+	function applyInitialEnabled(ids: Array<string> | undefined) {
+		if (!ids) return;
+		for (const id of ids) {
+			if (runtimeDatasets.has(id)) setEnabled(id, true);
+		}
+	}
+
 	function removeDataset(id: string) {
 		runtimeDatasets.get(id)?.dispose();
 		runtimeDatasets.delete(id);
@@ -458,6 +465,7 @@ export const useDataListMapStore = defineStore("data-list-map", () => {
 		ensureDataset,
 		setEnabled,
 		toggleLayer,
+		applyInitialEnabled,
 		removeDataset,
 	};
 });

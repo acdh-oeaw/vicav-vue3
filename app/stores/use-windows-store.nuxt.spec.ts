@@ -408,6 +408,29 @@ describe("window opening and persistence", () => {
 		await persist();
 		expect(mocks.navigate).not.toHaveBeenCalled();
 	});
+	it("persists enabledDatasets while stripping derived map layers", async () => {
+		const store = useWindowsStore();
+		disposeStore = () => {
+			store.$dispose();
+		};
+		const window = store.openWindow({
+			targetType: "WMap",
+			params: {
+				endpoint: "data_markers",
+				queryString: "",
+				enabledDatasets: ["configured:corpus"],
+			},
+			title: "Map",
+		})!;
+		if (window.targetType === "WMap") window.params.dataListLayers = [];
+		await persist();
+		expect(decodeWindowStates(mocks.navigate.mock.calls.at(-1)![0].query.w!)[0]).toMatchObject({
+			params: { enabledDatasets: ["configured:corpus"] },
+		});
+		expect(decodeWindowStates(mocks.navigate.mock.calls.at(-1)![0].query.w!)[0]).not.toHaveProperty(
+			"params.dataListLayers",
+		);
+	});
 	it("recovers after failed navigation", async () => {
 		const log = vi.spyOn(console, "error").mockImplementation(() => undefined);
 		const store = useWindowsStore();

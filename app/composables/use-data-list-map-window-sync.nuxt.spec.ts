@@ -8,7 +8,11 @@ import type { DataListMapLayer, OpenWindowItem, WindowItem } from "@/types/globa
 import { useDataListMapWindowSync } from "./use-data-list-map-window-sync.ts";
 
 const mocks = vi.hoisted(() => ({
-	dataLists: { layers: {}, mergeMapLayers: () => [] as Array<DataListMapLayer> },
+	dataLists: {
+		layers: {},
+		mergeMapLayers: () => [] as Array<DataListMapLayer>,
+		applyInitialEnabled: vi.fn<(ids: Array<string> | undefined) => void>(),
+	},
 	windows: {
 		registry: new Map() as WindowRegistry,
 		addWindow: vi.fn<(state: WindowState) => void>(),
@@ -32,12 +36,12 @@ function setLayers(layers: Record<string, DataListMapLayer>) {
 	mocks.dataLists.layers = layers;
 }
 
-function mapWindow(): OpenWindowItem {
+function mapWindow(extraParams: Record<string, unknown> = {}): OpenWindowItem {
 	return {
 		id: "map",
 		label: "Data lists map",
 		targetType: "WMap",
-		params: { endpoint: "data_markers", queryString: "" },
+		params: { endpoint: "data_markers", queryString: "", ...extraParams },
 		winbox: {},
 	} as OpenWindowItem;
 }
@@ -49,8 +53,10 @@ describe("data list map window synchronization", () => {
 		mocks.dataLists = reactive({
 			layers: {},
 			mergeMapLayers: () => Object.values(mocks.dataLists.layers),
+			applyInitialEnabled: mocks.dataLists.applyInitialEnabled,
 		});
 		mocks.windows.registry = reactive(new Map());
+		mocks.dataLists.applyInitialEnabled.mockReset();
 		mocks.windows.addWindow.mockReset();
 		mocks.windows.arrangeDataListsAndMap.mockReset();
 		mocks.windows.updateWindowParams.mockReset();
@@ -114,6 +120,30 @@ describe("data list map window synchronization", () => {
 		setLayers({ samples: layer() });
 		await nextTick();
 		expect(mocks.windows.addWindow).toHaveBeenCalledTimes(1);
+	});
+
+	it("applies enabledDatasets once per window as an initial default", async () => {
+		scope.run(useDataListMapWindowSync);
+		mocks.windows.registry.set("map", mapWindow({ enabledDatasets: ["samples"] }));
+		await nextTick();
+		expect(mocks.dataLists.applyInitialEnabled).not.toHaveBeenCalled();
+		setLayers({ samples: layer(false) });
+		await nextTick();
+		expect(mocks.dataLists.applyInitialEnabled).toHaveBeenCalledTimes(1);
+		expect(mocks.dataLists.applyInitialEnabled).toHaveBeenCalledWith(["samples"]);
+		setLayers({ samples: layer(true) });
+		await nextTick();
+		setLayers({ samples: layer(false) });
+		await nextTick();
+		expect(mocks.dataLists.applyInitialEnabled).toHaveBeenCalledTimes(1);
+	});
+
+	it("does not touch datasets for maps without an enabledDatasets param", async () => {
+		scope.run(useDataListMapWindowSync);
+		mocks.windows.registry.set("map", mapWindow());
+		setLayers({ samples: layer(false) });
+		await nextTick();
+		expect(mocks.dataLists.applyInitialEnabled).not.toHaveBeenCalled();
 	});
 
 	it("stops synchronization when the window manager scope ends", async () => {

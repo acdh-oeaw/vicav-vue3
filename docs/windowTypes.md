@@ -84,6 +84,7 @@ Rendered as [geo-map-window-content.vue](../app/components/geo-map-window-conten
   };
   scope?: Array<"reg" | "geo" | "diaGroup">;
   hideDefaultLayers?: boolean;
+  enabledDatasets?: string[];
   showCitation?: boolean;
   dataListLayers?: Array<{
     id: string;
@@ -107,6 +108,10 @@ Rendered as [geo-map-window-content.vue](../app/components/geo-map-window-conten
 - For `endpoint: "data_markers"`, `useDataListMapWindowSync`, initialized by the window manager,
   supplies retained layers from the data-list map store. Hidden layers stay in the toolbar and can
   be toggled without an open list. An omitted `enabled` means visible.
+- `enabledDatasets` (dataset IDs, e.g. `"configured:corpus"`) is applied once per map window as an
+  initial default: listed datasets are enabled on the map when the window first sees the store's
+  layers. It never disables datasets, unknown IDs are ignored, and later user toggles are kept. The
+  list is persisted in the URL and is not part of the window identity.
 - `scope` is part of the window identity (windows with the same endpoint, query and scope are reused
   instead of duplicated) and `hideDefaultLayers` is accepted by the schema but currently not read by
   the map component.
