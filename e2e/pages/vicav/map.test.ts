@@ -21,6 +21,6 @@ test.describe("map page", () => {
 		await page.goto("/?w=W10=&a=column-five-flex");
 		await page.getByRole("navigation").getByRole("button", { name: "Bibliographies" }).click();
 		await page.getByLabel("Bibliographies").getByText("All Bibl. Locations on Map").click();
-		await expect(page.locator(".leaflet-marker-icon").first()).toBeVisible({ timeout: 15_000 });
+		await expect(page.locator(".leaflet-marker-icon").first()).toBeVisible({ timeout: 15000 });
 	});
 });
