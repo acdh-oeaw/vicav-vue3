@@ -173,7 +173,7 @@ describe("project preparation diagnostics", () => {
 		const server = new QueryClient();
 		server.setQueryData(["get-project-info"], prepared.response);
 		const browser = new QueryClient();
-		hydrate(browser, JSON.parse(JSON.stringify(dehydrate(server))));
+		hydrate(browser, JSON.parse(JSON.stringify(dehydrate(server))) as ReturnType<typeof dehydrate>);
 		const response = browser.getQueryData<ProjectResponse>(["get-project-info"])!;
 		const add = vi.fn();
 		const remove = vi.fn();

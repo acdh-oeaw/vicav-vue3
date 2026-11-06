@@ -58,13 +58,13 @@ export default defineNuxtPlugin({
 					query.state.dataUpdatedAt = Math.floor(query.state.dataUpdatedAt / THREE_MIN) * THREE_MIN;
 					query.state.errorUpdatedAt =
 						Math.floor(query.state.errorUpdatedAt / THREE_MIN) * THREE_MIN;
-					query.dehydratedAt = Math.floor((query.dehydratedAt ?? 0) / THREE_MIN) * THREE_MIN;
+					query.dehydratedAt = Math.floor(query.dehydratedAt / THREE_MIN) * THREE_MIN;
 				}
 				state.value = dehydrated;
 			});
 		}
 
-		if (import.meta.client) {
+		if (import.meta.client && state.value) {
 			hydrate(queryClient, state.value);
 		}
 	},
