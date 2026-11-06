@@ -261,10 +261,14 @@ describe("window opening and persistence", () => {
 		store.arrangeDataListsAndMap();
 		await nextTick();
 		vi.mocked(windowArrangement.smartTile).mockClear();
+		vi.mocked(windowArrangement.splitDataListsAndMap).mockClear();
 		store.removeWindow(first.id);
 		await nextTick();
 		expect(store.arrangement).toBe("none");
 		expect(windowArrangement.smartTile).not.toHaveBeenCalled();
+		expect(windowArrangement.splitDataListsAndMap).toHaveBeenCalledWith(expect.anything(), [
+			...store.registry.values(),
+		]);
 		store.removeWindow(second.id);
 		expect(store.arrangement).toBe("smart-tile");
 		expect(windowArrangement.smartTile).toHaveBeenCalled();
