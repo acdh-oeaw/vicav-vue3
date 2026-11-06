@@ -18,7 +18,7 @@ const forwardedProps = useForwardProps(delegatedProps);
 	<DialogTitle
 		v-bind="forwardedProps"
 		:class="
-			twMerge('text-lg font-semibold leading-none tracking-tight', normalizeClass(props.class))
+			twMerge('text-lg leading-none font-semibold tracking-tight', normalizeClass(props.class))
 		"
 	>
 		<slot />

@@ -12,7 +12,6 @@ import {
 	VenusAndMars,
 } from "@lucide/vue";
 import type { Column } from "@tanstack/vue-table";
-import type { DefineComponent } from "vue";
 import CrossOutlineIcon from "vue-material-design-icons/CrossOutline.vue";
 import StarCrescentIcon from "vue-material-design-icons/StarCrescent.vue";
 import StarDavidIcon from "vue-material-design-icons/StarDavid.vue";
@@ -32,7 +31,7 @@ const props = defineProps<{
 function getSources(featureValueEntry: unknown) {
 	return (featureValueEntry as Record<string, Record<string, Record<string, string>>>).source;
 }
-const iconMap: Record<string, Record<string, LucideIcon | DefineComponent>> = {
+const iconMap: Record<string, Record<string, LucideIcon | typeof StarDavidIcon>> = {
 	gender: {
 		"#male": Mars,
 		"pgr:male": Mars,

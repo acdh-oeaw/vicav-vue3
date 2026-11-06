@@ -74,13 +74,13 @@ const segmentIsHit = computed(() => {
 			{{ annotation.values.join(", ") }}&nbsp;
 		</div>
 	</div>
-	<div v-if="props.utterance.pc" class="u flex shrink-0 flex-col whitespace-nowrap text-lg">
+	<div v-if="props.utterance.pc" class="u flex shrink-0 flex-col text-lg whitespace-nowrap">
 		<div>{{ props.utterance.pc["$"] }}{{ "&nbsp;" }}</div>
 	</div>
 	<div v-if="props.utterance.vocal?.desc.$" class="u shrink-0 text-lg italic">
 		[{{ props.utterance.vocal.desc.$ }}]&nbsp;
 	</div>
-	<div v-if="props.utterance.gap" class="u flex shrink-0 flex-col whitespace-nowrap py-3 text-lg">
+	<div v-if="props.utterance.gap" class="u flex shrink-0 flex-col py-3 text-lg whitespace-nowrap">
 		<div>
 			{{
 				props.utterance.gap["@rendition"] === "rend:ellipsisInSquareBrackets"
@@ -92,7 +92,7 @@ const segmentIsHit = computed(() => {
 	<div
 		v-if="props.utterance.seg"
 		:id="props.utterance.seg['@id']"
-		class="relative flex shrink-0 flex-col items-center whitespace-nowrap rounded-xs border-b-2 border-dotted border-gray-400 bg-gray-100/60"
+		class="relative flex shrink-0 flex-col items-center rounded-xs border-b-2 border-dotted border-gray-400 bg-gray-100/60 whitespace-nowrap"
 		:class="{ 'border-primary bg-primary/15': segmentIsHit }"
 		:data-compound-id="props.utterance.seg['@id']"
 		:data-highlight-scope="segmentIsHit ? 'segment' : undefined"

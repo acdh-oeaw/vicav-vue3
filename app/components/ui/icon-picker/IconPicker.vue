@@ -147,7 +147,7 @@ function randomizeIcons() {
 			</Button>
 		</PopoverTrigger>
 		<PopoverContent class="max-w-58 bg-white p-2 text-sm" :use-portal="usePopoverPortal">
-			<div :aria-disabled="hidden" :class="hidden ? 'opacity-45 pointer-events-none' : ''">
+			<div :aria-disabled="hidden" :class="hidden ? 'pointer-events-none opacity-45' : ''">
 				<label class="flex grow-0 basis-0 items-center p-0" @click.capture.stop>
 					<span class="mr-2 text-neutral-800">Pick a marker color</span>
 					<div

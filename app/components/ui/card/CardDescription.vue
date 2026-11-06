@@ -16,7 +16,7 @@ const props = withDefaults(defineProps<Props>(), {
 	<Primitive
 		:as="as"
 		:as-child="asChild"
-		:class="twMerge('text-muted-foreground text-sm', normalizeClass(props.class))"
+		:class="twMerge('text-sm text-muted-foreground', normalizeClass(props.class))"
 	>
 		<slot />
 	</Primitive>

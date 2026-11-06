@@ -103,8 +103,7 @@ export function useFeatureTaxonomy() {
 
 	const categories = computed<Record<string, string>>(() => {
 		const categoryArray = projectData.value?.projectConfig?.staticData?.table?.[1] as
-			| Array<Record<string, string>>
-			| undefined;
+			Array<Record<string, string>> | undefined;
 		if (!categoryArray) return {};
 
 		return Object.fromEntries(categoryArray.flatMap((entry) => Object.entries(entry)));

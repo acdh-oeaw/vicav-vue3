@@ -95,7 +95,7 @@ provideCommandContext({
 		v-bind="forwarded"
 		:class="
 			twMerge(
-				'bg-popover text-popover-foreground flex size-full flex-col overflow-hidden rounded-md',
+				'flex size-full flex-col overflow-hidden rounded-md bg-popover text-popover-foreground',
 				normalizeClass(props.class),
 			)
 		"

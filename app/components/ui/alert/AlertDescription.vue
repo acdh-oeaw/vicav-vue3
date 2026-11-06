@@ -18,7 +18,7 @@ const props = withDefaults(defineProps<Props>(), {
 		:as-child="asChild"
 		:class="
 			twMerge(
-				'text-muted-foreground col-start-2 grid justify-items-start gap-1 text-sm [&_p]:leading-relaxed',
+				'col-start-2 grid justify-items-start gap-1 text-sm text-muted-foreground [&_p]:leading-relaxed',
 				normalizeClass(props.class),
 			)
 		"

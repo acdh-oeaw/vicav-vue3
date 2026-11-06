@@ -17,7 +17,7 @@ const forwardedProps = useForwardProps(delegatedProps);
 			v-bind="forwardedProps"
 			:class="
 				twMerge(
-					'origin-top bg-popover text-popover-foreground relative mt-1.5 h-(--reka-navigation-menu-viewport-height) w-full overflow-hidden rounded-md border shadow-sm left-(--reka-navigation-menu-viewport-left) md:w-(--reka-navigation-menu-viewport-width) data-[state=open]:animate-in data-[state=open]:zoom-in-90 data-[state=closed]:animate-out data-[state=closed]:zoom-out-95',
+					'relative left-(--reka-navigation-menu-viewport-left) mt-1.5 h-(--reka-navigation-menu-viewport-height) w-full origin-top overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-sm md:w-(--reka-navigation-menu-viewport-width) data-[state=closed]:animate-out data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:zoom-in-90',
 					normalizeClass(props.class),
 				)
 			"

@@ -181,14 +181,12 @@ function getPetalMarker(feature: GeoJsonFeature<Point, MarkerProperties>, latlng
 				.filter((val) => {
 					return markerSettings.value.showOtherFeatureValues || filterValue.has(val);
 				})
-				.map(
-					(val): PetalEntry => ({
-						id: filterValue.has(val) ? resolveMarkerId(col.id, val) : col.id,
-						// show "empty" petals for feature values that are not in the filter
-						strokeOnly: !filterValue.has(val),
-						type: "featureValue",
-					}),
-				);
+				.map((val): PetalEntry => ({
+					id: filterValue.has(val) ? resolveMarkerId(col.id, val) : col.id,
+					// show "empty" petals for feature values that are not in the filter
+					strokeOnly: !filterValue.has(val),
+					type: "featureValue",
+				}));
 		});
 	const combinedFilters = table
 		?.getVisibleLeafColumns()
@@ -210,12 +208,10 @@ function getPetalMarker(feature: GeoJsonFeature<Point, MarkerProperties>, latlng
 										: ((featureValue as object | undefined) ?? {})),
 							),
 				)
-				.map(
-					(key): PetalEntry => ({
-						id: resolveMarkerId(col.id, key),
-						type: "featureValue",
-					}),
-				);
+				.map((key): PetalEntry => ({
+					id: resolveMarkerId(col.id, key),
+					type: "featureValue",
+				}));
 		});
 
 	const petalEntries: Array<PetalEntry> = [...(featureValues ?? []), ...(combinedFilters ?? [])];
