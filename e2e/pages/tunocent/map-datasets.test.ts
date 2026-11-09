@@ -122,6 +122,39 @@ test("hydrates configured datasets and shares list filters and map toggles", asy
 	await testInfo.attach("shared map datasets", { path: screenshot, contentType: "image/png" });
 });
 
+test("enables only the datasets listed in enabledDatasets on load", async ({ page }) => {
+	const windows = [
+		{
+			targetType: "WMap",
+			title: "Data lists map",
+			params: {
+				endpoint: "data_markers",
+				queryString: "",
+				enabledDatasets: ["configured:corpus"],
+			},
+		},
+	];
+	const query = new URLSearchParams({
+		w: Buffer.from(JSON.stringify(windows)).toString("base64"),
+		a: "column-five-flex",
+	});
+	await page.goto(`/?${query.toString()}`);
+	const corpusToggle = page.getByRole("button", {
+		name: "Toggle Corpus texts map layer",
+		exact: true,
+	});
+	const sampleToggle = page.getByRole("button", {
+		name: "Toggle Sample texts map layer",
+		exact: true,
+	});
+	await expect(corpusToggle).toHaveAttribute("aria-pressed", "true", { timeout: 15000 });
+	await expect(sampleToggle).toHaveAttribute("aria-pressed", "false");
+	await corpusToggle.click();
+	await expect(corpusToggle).toHaveAttribute("aria-pressed", "false");
+	await corpusToggle.click();
+	await expect(corpusToggle).toHaveAttribute("aria-pressed", "true");
+});
+
 test("opens a preloaded dataset list directly from a map with no lists", async ({
 	page,
 }, testInfo) => {
