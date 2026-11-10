@@ -8,6 +8,13 @@
 		"node": "26.x",
 		"pnpm": "11.x"
 	},
+	"devEngines": {
+		"runtime": {
+			"name": "node",
+			"version": "26.x",
+			"onFail": "download"
+		}
+	},
 	"packageManager": "pnpm@11.1.2",
 	"scripts": {
 		"analyze": "nuxt analyze",
