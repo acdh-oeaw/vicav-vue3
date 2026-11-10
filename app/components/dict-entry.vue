@@ -329,7 +329,7 @@ const languageClass = (language: string | undefined) => {
 				<div class="grid grid-cols-[10rem_minmax(0,1fr)] gap-x-4">
 					<template v-for="section in formSections" :key="section.label">
 						<div
-							class="px-4 py-3 text-base leading-none font-semibold text-primary uppercase whitespace-nowrap"
+							class="px-4 py-3 text-base leading-none font-semibold whitespace-nowrap text-primary uppercase"
 						>
 							{{ section.label }}
 						</div>
@@ -369,7 +369,7 @@ const languageClass = (language: string | undefined) => {
 
 					<template v-for="(sense, senseIndex) in e.senses" :key="sense.id ?? senseIndex">
 						<div
-							class="px-4 py-3 text-base leading-none font-semibold text-primary uppercase whitespace-nowrap"
+							class="px-4 py-3 text-base leading-none font-semibold whitespace-nowrap text-primary uppercase"
 						>
 							{{ e.senses.length > 1 ? `Sense ${String(senseIndex + 1)}` : "Sense" }}
 						</div>
@@ -494,7 +494,7 @@ const languageClass = (language: string | undefined) => {
 
 					<div
 						v-if="hasEtymology"
-						class="px-4 py-3 text-base leading-none font-semibold text-primary uppercase whitespace-nowrap"
+						class="px-4 py-3 text-base leading-none font-semibold whitespace-nowrap text-primary uppercase"
 					>
 						Etymology
 					</div>
@@ -523,7 +523,7 @@ const languageClass = (language: string | undefined) => {
 
 					<div
 						v-if="hasEditors"
-						class="px-4 py-3 text-base leading-none font-semibold text-primary uppercase whitespace-nowrap"
+						class="px-4 py-3 text-base leading-none font-semibold whitespace-nowrap text-primary uppercase"
 					>
 						Editors
 					</div>

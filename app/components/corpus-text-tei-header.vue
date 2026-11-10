@@ -91,7 +91,7 @@ function toggleSpeakerCard(index: number) {
 									<CardContent class="flex items-center gap-3 px-3 py-2 whitespace-nowrap">
 										<Contact class="size-4 shrink-0" />
 										<p class="text-sm font-medium">{{ person.name }}</p>
-										<p class="text-muted-foreground text-sm">
+										<p class="text-sm text-muted-foreground">
 											Age: {{ person.age }} | DOB: {{ person.dob }} | Sex: {{ person.sex }}
 										</p>
 									</CardContent>

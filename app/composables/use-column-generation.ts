@@ -107,8 +107,7 @@ function createColumnDefs(
 								cell.column.id === "name"
 									? (
 											cell.row.original.properties.alternateNames as unknown as
-												| Array<Record<string, string>>
-												| undefined
+												Array<Record<string, string>> | undefined
 										)
 											?.map((nameEntry) => nameEntry.name!)
 											.join(" / ")

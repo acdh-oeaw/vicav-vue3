@@ -2,7 +2,7 @@
 
 <template>
 	<th
-		class="text-foreground h-12 px-4 text-left align-middle font-semibold has-[[role=checkbox]]:pr-0"
+		class="h-12 px-4 text-left align-middle font-semibold text-foreground has-[[role=checkbox]]:pr-0"
 		:class="$attrs.class"
 	>
 		<p class="line-clamp-1">

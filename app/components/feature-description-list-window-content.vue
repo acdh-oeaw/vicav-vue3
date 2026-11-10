@@ -142,14 +142,12 @@ function flattenCategories(
 
 		return [
 			row,
-			...category.features.map(
-				(feature): FeatureRow => ({
-					kind: "feature",
-					key: `${category.path}/${feature.id}`,
-					depth: depth + 1,
-					feature,
-				}),
-			),
+			...category.features.map((feature): FeatureRow => ({
+				kind: "feature",
+				key: `${category.path}/${feature.id}`,
+				depth: depth + 1,
+				feature,
+			})),
 			...flattenCategories(category.children, depth + 1),
 		];
 	});

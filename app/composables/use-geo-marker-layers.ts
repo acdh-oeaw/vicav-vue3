@@ -1,7 +1,8 @@
 import { useQueries } from "@tanstack/vue-query";
 import type { Feature, Point } from "geojson";
 
-import type { GeoTargetTypeParameters, MarkerProperties, MarkersType } from "@/lib/api-client";
+import type { GeoTargetTypeParameters, MarkerProperties } from "@/lib/api-client";
+import { markerTypeFromEndpoint } from "@/utils/marker-type.ts";
 
 export function useGeoMarkerLayers(
 	queries: MaybeRef<Array<Required<GeoTargetTypeParameters>>>,
@@ -45,10 +46,9 @@ export function useGeoMarkerLayers(
 							case "profile_markers":
 							case "sample_markers":
 							default:
-								response = await api.vicav.getGeoMarkers(
-									endpoint.slice(0, "_markers".length * -1) as MarkersType,
-									{ headers: { accept: "application/json" } },
-								);
+								response = await api.vicav.getGeoMarkers(markerTypeFromEndpoint(endpoint), {
+									headers: { accept: "application/json" },
+								});
 								break;
 						}
 

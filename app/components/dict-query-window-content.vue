@@ -426,7 +426,7 @@ const api = useApiClient(); */
 					Next
 				</button>
 			</div>
-			<div class="text-muted-foreground text-sm">
+			<div class="text-sm text-muted-foreground">
 				<span>Page {{ page }}</span>
 				<span v-if="pageCount"> of {{ pageCount }}</span>
 				<span v-if="totalItems != null">, {{ totalItems }} items</span>
@@ -495,7 +495,7 @@ const api = useApiClient(); */
 					Next
 				</button>
 			</div>
-			<div class="text-muted-foreground text-sm">
+			<div class="text-sm text-muted-foreground">
 				<span>Page {{ page }}</span>
 				<span v-if="pageCount"> of {{ pageCount }}</span>
 				<span v-if="totalItems != null">, {{ totalItems }} items</span>

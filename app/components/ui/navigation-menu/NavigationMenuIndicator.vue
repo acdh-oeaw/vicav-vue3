@@ -20,7 +20,7 @@ const forwardedProps = useForwardProps(delegatedProps);
 		v-bind="forwardedProps"
 		:class="
 			twMerge(
-				'top-full z-1 flex h-1.5 items-end justify-center overflow-hidden data-[state=visible]:animate-in data-[state=visible]:fade-in data-[state=hidden]:animate-out data-[state=hidden]:fade-out',
+				'top-full z-1 flex h-1.5 items-end justify-center overflow-hidden data-[state=hidden]:animate-out data-[state=hidden]:fade-out data-[state=visible]:animate-in data-[state=visible]:fade-in',
 				normalizeClass(props.class),
 			)
 		"

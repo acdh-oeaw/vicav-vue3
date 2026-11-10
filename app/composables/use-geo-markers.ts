@@ -2,8 +2,9 @@ import { useQuery } from "@tanstack/vue-query";
 import type { Feature, Point } from "geojson";
 import type Zod from "zod";
 
-import type { MarkerProperties, MarkersType } from "@/lib/api-client";
+import type { MarkerProperties } from "@/lib/api-client";
 import type { GeoMapSchema } from "@/types/global.ts";
+import { markerTypeFromEndpoint } from "@/utils/marker-type.ts";
 
 export function useGeoMarkers(
 	params: MaybeRef<Zod.infer<typeof GeoMapSchema>["params"]>,
@@ -38,10 +39,9 @@ export function useGeoMarkers(
 					);
 					break;
 				default:
-					response = await api.vicav.getGeoMarkers(
-						endpoint.slice(0, "_markers".length * -1) as MarkersType,
-						{ headers: { accept: "application/json" } },
-					);
+					response = await api.vicav.getGeoMarkers(markerTypeFromEndpoint(endpoint), {
+						headers: { accept: "application/json" },
+					});
 					break;
 			}
 			return response.data as Array<Feature<Point, MarkerProperties>>;

@@ -17,7 +17,7 @@ const forwarded = useForwardProps(delegatedProps);
 <template>
 	<ListboxContent
 		v-bind="forwarded"
-		:class="twMerge('max-h-[300px] overflow-y-auto overflow-x-hidden', normalizeClass(props.class))"
+		:class="twMerge('max-h-[300px] overflow-x-hidden overflow-y-auto', normalizeClass(props.class))"
 	>
 		<div role="presentation">
 			<slot />
