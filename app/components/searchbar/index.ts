@@ -9,7 +9,7 @@ interface CaretCoordinates {
 interface CaretOptions {
 	debug?: boolean;
 }
-const properties: Array<keyof CSSStyleDeclaration> = [
+const properties = [
 	"direction",
 	"boxSizing",
 	"width",
@@ -40,7 +40,7 @@ const properties: Array<keyof CSSStyleDeclaration> = [
 	"letterSpacing",
 	"wordSpacing",
 	"tabSize",
-];
+] as const;
 
 const isBrowser = typeof window !== "undefined";
 const isFirefox = isBrowser && window.navigator.userAgent.toLowerCase().includes("firefox");
@@ -75,7 +75,6 @@ function getCaretCoordinates(
 		if (isInput && prop === "lineHeight") {
 			handleInputLineHeight(style, computed);
 		} else {
-			// @ts-expect-error - length and parentRule are readonly
 			style[prop] = computed[prop];
 		}
 	});

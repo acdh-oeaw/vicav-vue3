@@ -1,7 +1,6 @@
 <script lang="ts" setup>
-import "@maplibre/maplibre-gl-leaflet";
-
 import { debounce } from "@acdh-oeaw/lib";
+import { maplibreGL } from "@maplibre/maplibre-gl-leaflet";
 import type { Feature, Point } from "geojson";
 import {
 	circleMarker,
@@ -11,7 +10,6 @@ import {
 	type Layer,
 	type Map as LeafletMap,
 	map as createMap,
-	maplibreGL,
 	type Marker as LeafletMarker,
 	marker,
 	type Point as LeafletPoint,

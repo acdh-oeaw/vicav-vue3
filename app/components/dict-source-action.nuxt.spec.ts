@@ -19,7 +19,10 @@ const reference = {
 	queryString: "Lentin 2013",
 };
 
+const wrappers: Array<{ unmount: () => void }> = [];
+
 afterEach(() => {
+	for (const wrapper of wrappers.splice(0)) wrapper.unmount();
 	openOrUpdateWindow.mockReset();
 	document.body.innerHTML = "";
 });
@@ -29,6 +32,7 @@ describe("dictionary source action", () => {
 		const wrapper = await mountSuspended(DictSourceAction, {
 			props: { reference },
 		});
+		wrappers.push(wrapper);
 		const button = wrapper.get("button");
 
 		expect(button.attributes("type")).toBe("button");
@@ -44,6 +48,7 @@ describe("dictionary source action", () => {
 			attachTo: document.body,
 			props: { reference },
 		});
+		wrappers.push(wrapper);
 
 		await wrapper.get("button").trigger("focus");
 		await vi.waitFor(() => {
@@ -56,6 +61,7 @@ describe("dictionary source action", () => {
 			attachTo: document.body,
 			props: { reference },
 		});
+		wrappers.push(wrapper);
 		const button = wrapper.get("button");
 
 		await button.trigger("pointerenter");
@@ -75,6 +81,7 @@ describe("dictionary source action", () => {
 				return { enclosingClick, reference };
 			},
 		});
+		wrappers.push(wrapper);
 
 		await wrapper.get("button").trigger("click");
 

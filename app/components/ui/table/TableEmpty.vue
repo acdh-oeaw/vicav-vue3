@@ -15,7 +15,7 @@ const props = withDefaults(
 <template>
 	<TableRow>
 		<TableCell
-			class="text-foreground p-4 align-middle text-sm whitespace-nowrap"
+			class="p-4 align-middle text-sm whitespace-nowrap text-foreground"
 			:class="$attrs.class"
 			v-bind="props"
 		>

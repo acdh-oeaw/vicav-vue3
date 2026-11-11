@@ -86,18 +86,15 @@ useHead({
 			description: route.meta.description,
 		};
 
-		const scripts = [
-			{ type: "application/ld+json", innerHTML: JSON.stringify(jsonLd, safeJsonLdReplacer) },
+		return [
+			{
+				type: "application/ld+json" as const,
+				innerHTML: JSON.stringify(jsonLd, safeJsonLdReplacer),
+			},
+			...(isNonEmptyString(env.public.matomoBaseUrl) && isNonEmptyString(env.public.matomoId)
+				? [{ innerHTML: createAnalyticsScript(env.public.matomoBaseUrl, env.public.matomoId) }]
+				: []),
 		];
-
-		if (isNonEmptyString(env.public.matomoBaseUrl) && isNonEmptyString(env.public.matomoId)) {
-			scripts.push({
-				type: "",
-				innerHTML: createAnalyticsScript(env.public.matomoBaseUrl, env.public.matomoId),
-			});
-		}
-
-		return scripts;
 	}),
 });
 

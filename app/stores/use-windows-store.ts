@@ -345,6 +345,8 @@ export const useWindowsStore = defineStore("windows", () => {
 						temporaryDataListLayout = false;
 						arrangement.value = "smart-tile";
 						arrangeWindows();
+					} else if (temporaryDataListLayout && !restoring && closing?.targetType === "DataList") {
+						arrangeDataListsAndMap();
 					}
 					return false;
 				},

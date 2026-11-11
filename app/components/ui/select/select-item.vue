@@ -9,7 +9,7 @@ const props = defineProps<SelectItemProps>();
 	<SelectItem
 		v-bind="props"
 		:class="[
-			'relative flex w-full cursor-default items-center rounded-sm px-2 py-1.5 text-sm outline-hidden select-none focus:text-accent-foreground focus:bg-accent data-disabled:pointer-events-none data-disabled:opacity-50',
+			'relative flex w-full cursor-default items-center rounded-sm px-2 py-1.5 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50',
 			$attrs.class,
 		]"
 	>

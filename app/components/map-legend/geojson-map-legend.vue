@@ -326,7 +326,7 @@ function onValueChange(entry: LegendEntry, event: DragChangeEvent<LegendEntry>) 
 							<LegendEntryLabel class="grow" :count="entry.count" :parts="entry.parts" />
 							<DropdownMenu v-if="allGroups.length || allUngrouped.length > 1">
 								<DropdownMenuTrigger
-									class="shrink-0 text-on-muted sr-only hover:text-black"
+									class="sr-only shrink-0 text-on-muted hover:text-black"
 									data-legend-controls
 									draggable="false"
 									:title="`Group ${entry.key} with other values`"

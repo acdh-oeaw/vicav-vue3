@@ -31,7 +31,7 @@ describe("project query refresh", () => {
 		const server = new QueryClient();
 		server.setQueryData(["get-project-info"], response("initial"));
 		const client = new QueryClient({ defaultOptions: { queries: { staleTime, retry: false } } });
-		hydrate(client, JSON.parse(JSON.stringify(dehydrate(server))));
+		hydrate(client, JSON.parse(JSON.stringify(dehydrate(server))) as ReturnType<typeof dehydrate>);
 		getProject.mockReset();
 		getProject.mockResolvedValue({ data: response("first-refresh") });
 		let query!: ReturnType<typeof useProjectInfo>;

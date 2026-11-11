@@ -19,7 +19,7 @@ const forwardedProps = useForwardProps(delegatedProps);
 		v-bind="forwardedProps"
 		:class="
 			twMerge(
-				'relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-hidden transition-colors focus:bg-accent data-disabled:pointer-events-none data-disabled:opacity-50',
+				'relative flex cursor-default items-center rounded-sm px-2 py-1.5 text-sm outline-hidden transition-colors select-none focus:bg-accent data-disabled:pointer-events-none data-disabled:opacity-50',
 				normalizeClass(props.class),
 			)
 		"

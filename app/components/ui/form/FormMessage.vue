@@ -7,5 +7,5 @@ const { name, formMessageId } = useFormField();
 </script>
 
 <template>
-	<p :id="formMessageId" class="text-destructive text-sm font-medium" :name="toValue(name)" />
+	<p :id="formMessageId" class="text-sm font-medium text-destructive" :name="toValue(name)" />
 </template>

@@ -1,10 +1,13 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("map page", () => {
-	test("should have map bar with appropriate selection", async ({ page }) => {
+	test.beforeEach(async ({ page }) => {
 		await page.goto("/?w=W10=&a=column-five-flex");
 		// Wait for hydration (clicking before client-side hydration is a no-op)
 		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
+	});
+
+	test("should have map bar with appropriate selection", async ({ page }) => {
 		await page.getByRole("navigation").getByRole("button", { name: "Bibliographies" }).click();
 		await page
 			.locator("[data-slot=navigation-menu-content]")
@@ -25,14 +28,8 @@ test.describe("map page", () => {
 			browserName === "firefox",
 			"WebGL does not work in headless Firefox, see https://bugzilla.mozilla.org/show_bug.cgi?id=1375585",
 		);
-		await page.goto("/?w=W10=&a=column-five-flex");
-		// Wait for hydration (clicking before client-side hydration is a no-op)
-		await expect(page.locator("#window-root")).toBeInViewport({ timeout: 30000 });
 		await page.getByRole("navigation").getByRole("button", { name: "Bibliographies" }).click();
-		await page
-			.locator("[data-slot=navigation-menu-content]")
-			.getByText("All Bibl. Locations on Map")
-			.click();
-		await expect(page.locator(".leaflet-marker-icon").first()).toBeVisible({ timeout: 15_000 });
+		await page.getByLabel("Bibliographies").getByText("All Bibl. Locations on Map").click();
+		await expect(page.locator(".leaflet-marker-icon").first()).toBeVisible({ timeout: 15000 });
 	});
 });
