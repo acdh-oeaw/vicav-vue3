@@ -131,7 +131,7 @@ watch(params, (newParams) => {
 	updateFilterCriteria();
 	updateQueryParams();
 });
-const { data, isPending, isPlaceholderData } = useDictsEntries({
+const { data, error, isPending, isPlaceholderData } = useDictsEntries({
 	dictId: String(myDict?.id),
 	queryParams: queryParams.value,
 });
@@ -181,6 +181,20 @@ const goToNextPage = () => {
 /* window behaviour */
 const isLoading = computed(() => {
 	return isPending.value || isPlaceholderData.value;
+});
+
+const isEmptySearch = computed(() => {
+	const failure = error.value;
+	if (failure && typeof failure === "object" && "status" in failure && failure.status === 404) {
+		const problem = "error" in failure ? failure.error : undefined;
+		return (
+			problem != null &&
+			typeof problem === "object" &&
+			"detail" in problem &&
+			problem.detail === "Your query did not yield any items."
+		);
+	}
+	return data.value != null && totalItems.value === 0;
 });
 
 const isExtendedFormOpen = ref(false);
@@ -451,6 +465,12 @@ const api = useApiClient(); */
 				/>
 			</div>
 		</div>
+		<p v-if="!isLoading && isEmptySearch" class="mx-8 text-muted-foreground" role="status">
+			No dictionary entries found. Try a different search.
+		</p>
+		<p v-else-if="!isLoading && error" class="mx-8 text-destructive" role="alert">
+			Could not load dictionary entries. Please try again.
+		</p>
 
 		<div
 			v-if="data && showPagination"
