@@ -24,7 +24,7 @@ const queryString: Ref<string> = ref(params.value.queryString);
 const isTextQuery: Ref<boolean> = ref(true);
 const isMapQuery: Ref<boolean> = ref(false);
 
-params.value.isQueryVisible ??= false;
+params.value.isQueryVisible ??= queryString.value === "";
 const isListOpen = ref(queryString.value !== "");
 
 function submitNewQuery(map: boolean): void {
