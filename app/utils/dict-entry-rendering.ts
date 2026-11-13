@@ -1,4 +1,4 @@
-import type { DictChange, DictEntry, DictExample, RestVLEEntry } from "@/lib/api-client";
+import type { DictChange, DictEntry, DictExample, DictKeys, RestVLEEntry } from "@/lib/api-client";
 
 export interface RenderedText {
 	lang?: string;
@@ -125,7 +125,7 @@ interface ExampleLike {
 	"@subtype"?: string;
 	"@vutlsk"?: string;
 	feature?: DictChange;
-	features?: Array<DictChange>;
+	features?: Array<DictChange | DictKeys>;
 	geographic_usg?: EntryLocationLike;
 	quote?: TextNodeLike;
 	translation_cit?: TranslationLike;
@@ -271,7 +271,7 @@ interface EntryPayloadLike {
 	translation_cit?: TranslationLike;
 	translation_cits?: Array<TranslationLike>;
 	feature?: DictChange;
-	features?: Array<DictChange>;
+	features?: Array<DictChange | DictKeys>;
 	etym?: EtymLike;
 	listBibl?: Array<BibliographyLike>;
 	geographic_usg?: EntryLocationLike;
@@ -324,17 +324,17 @@ function normalizeSource(source: string | undefined): string | undefined {
 }
 
 function collectChanges(
-	changes: DictChange | Array<DictChange> | undefined,
+	changes: DictChange | Array<DictChange | DictKeys> | undefined,
 ): Array<RenderedEditor> {
 	const renderedChanges: Array<RenderedEditor> = [];
 
 	for (const item of asArray(changes)) {
-		if (item.change != null) {
+		if ("change" in item && item.change != null) {
 			renderedChanges.push({ action: "change", ...item.change });
 			continue;
 		}
 
-		if (item.create != null) {
+		if ("create" in item && item.create != null) {
 			renderedChanges.push({
 				action: "create",
 				status: item.create.status,

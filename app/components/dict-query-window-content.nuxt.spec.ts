@@ -7,9 +7,11 @@ import type { DictQueryWindowItem } from "@/types/global.ts";
 
 import DictQueryWindowContent from "./dict-query-window-content.vue";
 
-const { useDictsEntriesMock } = vi.hoisted(() => ({
+const { useDictsEntriesMock, getDictByIdMock } = vi.hoisted(() => ({
+	getDictByIdMock: vi.fn(() => Promise.resolve(undefined as unknown)),
 	useDictsEntriesMock: vi.fn((_params: { queryParams: unknown }) => ({
 		data: ref(null),
+		error: ref(null),
 		isPending: ref(false),
 		isPlaceholderData: ref(false),
 	})),
@@ -17,11 +19,39 @@ const { useDictsEntriesMock } = vi.hoisted(() => ({
 
 mockNuxtImport("useDictStore", () => () => ({
 	initialize: () => Promise.resolve(),
-	getDictById: () => Promise.resolve(undefined),
+	getDictById: getDictByIdMock,
 }));
 mockNuxtImport("useDictsEntries", () => useDictsEntriesMock);
 
 describe("dictionary window query replacement", () => {
+	it("shows an empty result message for the API's no-results response", async () => {
+		getDictByIdMock.mockResolvedValueOnce({
+			id: "test-dict",
+			queryTemplates: new Map(),
+			specialCharacters: [],
+		});
+		useDictsEntriesMock.mockReturnValueOnce({
+			data: ref(null),
+			error: ref({ status: 404, error: { detail: "Your query did not yield any items." } }),
+			isPending: ref(false),
+			isPlaceholderData: ref(false),
+		} as unknown as ReturnType<typeof useDictsEntriesMock>);
+		const wrapper = await mountSuspended(DictQueryWindowContent, {
+			props: {
+				params: reactive({
+					textId: "test-dict",
+					queryString: "",
+					isTextInputManual: true,
+					isQueryVisible: false,
+					queryParams: { q: "lemma=missing" },
+				}),
+			},
+		});
+
+		expect(wrapper.text()).toContain("No dictionary entries found.");
+		wrapper.unmount();
+	});
+
 	it("updates the active query without remounting and clears the previous entry and pagination", async () => {
 		const params = reactive<DictQueryWindowItem["params"]>({
 			textId: "test-dict",

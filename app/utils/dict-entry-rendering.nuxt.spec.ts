@@ -123,12 +123,18 @@ describe("dict-entry rendering", () => {
 							biblScope: { "@unit": "page", $: "p.164" },
 						},
 					],
-					features: [{ change: { who: "StephanP", when: "2026-01-30", status: "released" } }],
+					features: [
+						{ keys: "dictionary-key" },
+						{ change: { who: "StephanP", when: "2026-01-30", status: "released" } },
+					],
 				},
 			},
 		};
 
 		const normalized = normalizeEntry(entry as unknown as RestVLEEntry);
+		expect(normalized.editors).toEqual([
+			{ action: "change", who: "StephanP", when: "2026-01-30", status: "released" },
+		]);
 
 		expect(normalized.bibliography).toEqual([
 			{
