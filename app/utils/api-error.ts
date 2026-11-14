@@ -1,10 +1,12 @@
 export class RFC7807ProblemError extends Error {
 	RFC7807Problem: Document;
+	status: number | undefined;
 
-	constructor(RFC7807Problem: Document, message: string | undefined) {
+	constructor(RFC7807Problem: Document, message: string | undefined, status?: number) {
 		super(message);
 		this.name = "RFC7807ProblemError";
 		this.RFC7807Problem = RFC7807Problem;
+		this.status = status;
 	}
 }
 
@@ -19,11 +21,15 @@ export async function withProblemError(promise: Promise<Response>): Promise<Resp
 			const doc = new DOMParser().parseFromString(await error.text(), "application/xml");
 			const title = doc.querySelector("title")?.textContent;
 			if (title) {
-				throw new RFC7807ProblemError(doc, title);
+				throw new RFC7807ProblemError(doc, title, error.status);
 			}
 		}
 		throw error;
 	}
+}
+
+export function isApiNotFound(error: unknown): boolean {
+	return typeof error === "object" && error !== null && "status" in error && error.status === 404;
 }
 
 // Toast description that works for both converted errors and raw Response rejections.

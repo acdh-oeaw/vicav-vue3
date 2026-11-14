@@ -1,7 +1,12 @@
 // @vitest-environment happy-dom
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { describeApiError, RFC7807ProblemError, withProblemError } from "./api-error.ts";
+import {
+	describeApiError,
+	isApiNotFound,
+	RFC7807ProblemError,
+	withProblemError,
+} from "./api-error.ts";
 
 const traceText = `/app/vicav.xqm, 492/29
 - /app/vicav.xqm, 472/38
@@ -74,6 +79,7 @@ describe("withProblemError", () => {
 		const problemError = caught as RFC7807ProblemError;
 		expect(problemError.name).toBe("RFC7807ProblemError");
 		expect(problemError.message).toBe("Text not found");
+		expect(isApiNotFound(problemError)).toBe(true);
 		expect(problemError.RFC7807Problem.querySelector("title")?.textContent).toBe("Text not found");
 		expect(problemError.RFC7807Problem.querySelector("detail")?.textContent).toBe(
 			"Something went wrong",
@@ -98,6 +104,16 @@ describe("withProblemError", () => {
 			headers: { "content-type": "application/xml" },
 		});
 		await expect(withProblemError(Promise.resolve(response))).resolves.toBe(response);
+	});
+});
+
+describe("isApiNotFound", () => {
+	it("recognizes API 404 responses and leaves other errors alone", () => {
+		expect(isApiNotFound(new Response(null, { status: 404 }))).toBe(true);
+		expect(isApiNotFound({ status: 404 })).toBe(true);
+		expect(isApiNotFound(new Response(null, { status: 500 }))).toBe(false);
+		expect(isApiNotFound(new Error("404"))).toBe(false);
+		expect(isApiNotFound(null)).toBe(false);
 	});
 });
 

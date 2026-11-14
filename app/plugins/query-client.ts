@@ -9,7 +9,7 @@ import {
 	type VueQueryPluginOptions,
 } from "@tanstack/vue-query";
 
-import { describeApiError } from "@/utils/api-error.ts";
+import { describeApiError, isApiNotFound } from "@/utils/api-error.ts";
 
 export default defineNuxtPlugin({
 	name: "project-query-client",
@@ -32,6 +32,7 @@ export default defineNuxtPlugin({
 			queryCache: new QueryCache({
 				onError(error) {
 					if (import.meta.client) {
+						if (isApiNotFound(error)) return;
 						addToast({
 							title: "Error",
 							description: describeApiError(error),
