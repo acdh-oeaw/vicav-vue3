@@ -90,7 +90,7 @@ function expandFooter() {
 								<img
 									alt="ACDH Logo"
 									class="h-auto max-w-full"
-									src="https://fundament.acdh.oeaw.ac.at/common-assets/images/acdh_logo.svg"
+									src="/assets/images/logo-acdh-black.svg"
 									title="ACDH Logo"
 								/>
 							</a>
