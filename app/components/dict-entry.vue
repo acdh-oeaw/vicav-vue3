@@ -127,7 +127,8 @@ const openCorpusSearchWindow = () => {
 };
 
 const formText = (form: RenderedForm) => {
-	return form.orthographies.find((orthography) => !orthography.isMissing)?.text;
+	const allOrths = form.orthographies.filter((orthography) => !orthography.isMissing);
+	return allOrths.map((o) => o.text).join(", ");
 };
 
 const formLanguage = (form: RenderedForm) => {
