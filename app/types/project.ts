@@ -10,7 +10,10 @@ export interface ValidationDiagnostic {
 	issues: Array<{ code: string; path: Array<string | number>; message: string }>;
 }
 export interface ProjectResponse extends ProjectConfig {
-	projectConfig?: ProjectConfigType & { _validationErrors?: Array<ValidationDiagnostic> };
+	projectConfig?: ProjectConfigType & {
+		id?: string;
+		_validationErrors?: Array<ValidationDiagnostic>;
+	};
 }
 
 export type ReadonlyProjectResponse = ReadonlyDeep<ProjectResponse>;

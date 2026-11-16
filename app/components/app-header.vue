@@ -166,11 +166,19 @@ function onSelectMenuItem(item: ReadonlyDeep<ItemType>) {
 <template>
 	<header class="border-b border-border bg-header text-on-header">
 		<div class="flex items-center justify-between gap-4 px-8 py-4">
-			<NuxtLink class="flex shrink-0" data-onboarding="app-logo" href="/">
-				<!-- eslint-disable-next-line tailwindcss/no-custom-classname -->
-				<span v-if="titlestring" class="titlestring">{{ titlestring }}</span>
-				<img v-if="logo" alt="" class="h-10" :src="logo" />
-			</NuxtLink>
+			<div class="relative shrink-0">
+				<NuxtLink class="flex" data-onboarding="app-logo" href="/">
+					<!-- eslint-disable-next-line tailwindcss/no-custom-classname -->
+					<span v-if="titlestring" class="titlestring">{{ titlestring }}</span>
+					<img v-if="logo" alt="" class="h-10" :src="logo" />
+				</NuxtLink>
+				<span
+					v-if="data?.projectConfig?.id === 'vicav_config_vicav'"
+					class="pointer-events-none absolute top-0 right-0 translate-x-1/4 rounded-sm border border-current bg-header px-1.5 py-0.5 text-xs font-semibold tracking-wide"
+				>
+					BETA
+				</span>
+			</div>
 
 			<div class="hidden flex-1 lg:flex">
 				<AppNavigationMenu
