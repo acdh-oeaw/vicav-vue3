@@ -107,3 +107,31 @@ Then set `OTEL_EXPORTER_OTLP_ENDPOINT=http://127.0.0.1:4317` in your `.env.local
 ## Maps
 
 The global map config has been moved from env variables to `app/assets/mapStyles.json`
+
+## Instances
+
+The deployment workflow configures the following targets:
+
+| Instance            | Branch    | Target URL                             |
+| ------------------- | --------- | -------------------------------------- |
+| VICAV production    | `main`    | https://vicav.acdh-dev.oeaw.ac.at/     |
+| Shawi production    | `main`    | https://shawi.acdh.oeaw.ac.at          |
+| Tunocent production | `main`    | https://tunocent.acdh.oeaw.ac.at/      |
+| WIBARAB production  | `main`    | https://wibarab.acdh-dev.oeaw.ac.at    |
+| VICAV develop       | `develop` | https://vicav-vue.acdh-dev.oeaw.ac.at/ |
+| Shawi develop       | `develop` | https://shawi.acdh-dev.oeaw.ac.at/     |
+| Tunocent develop    | `develop` | https://tunocent.acdh-dev.oeaw.ac.at   |
+| WIBARAB develop     | `develop` | https://wibarab.acdh-dev.oeaw.ac.at/   |
+
+Other branches use review environments. Unless an environment overrides `PUBLIC_URL`, the workflow
+generates these target URLs using a normalized branch name:
+
+| Instance        | Generated target URL                                      |
+| --------------- | --------------------------------------------------------- |
+| VICAV review    | `https://<branch>.acdh-cluster-2.arz.oeaw.ac.at`          |
+| Shawi review    | `https://shawi-<branch>.acdh-cluster-2.arz.oeaw.ac.at`    |
+| Tunocent review | `https://tunocent-<branch>.acdh-cluster-2.arz.oeaw.ac.at` |
+| WIBARAB review  | `https://wibarab-<branch>.acdh-cluster-2.arz.oeaw.ac.at`  |
+
+Version tags matching `v<number>.<number>.<number>` also use the production environments. These are
+configured targets; a deployment may not have succeeded or be reachable at each URL.
