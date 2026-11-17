@@ -23,7 +23,7 @@ test.describe("Imprint & Footer", () => {
 		await footer.hover();
 
 		const contactLink = page.locator("footer a[href^='mailto:acdh-helpdesk']");
-		await contactLink.hover();
+		await footer.hover();
 		await expect(contactLink).toHaveAttribute("href", /mailto:acdh-helpdesk@oeaw.ac.at/);
 	});
 
@@ -32,7 +32,7 @@ test.describe("Imprint & Footer", () => {
 		await footer.hover();
 
 		const doiLink = page.locator("footer a[href*='doi.org']").first();
-		await doiLink.hover();
+		await footer.hover();
 		await expect(doiLink).toHaveAttribute("href", /https:\/\/doi\.org\/10\.55776\/P31647/);
 	});
 });
