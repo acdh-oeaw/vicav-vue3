@@ -19,7 +19,7 @@ test.describe("Mobile Menu - All Categories Visible", () => {
 			"Profiles",
 			"Feature Lists",
 			"Samples",
-			"Texts",
+			// Removed until there is current data: "Texts",
 			"Dictionaries",
 			"Tools & Technology",
 		];

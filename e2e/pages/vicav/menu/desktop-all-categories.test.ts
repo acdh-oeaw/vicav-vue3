@@ -17,7 +17,7 @@ test.describe("Desktop Menu - All Categories Visible", () => {
 			"Profiles",
 			"Feature Lists",
 			"Samples",
-			"Texts",
+			// Removed until there is current data: "Texts",
 			"Dictionaries",
 			"Tools & Technology",
 		];
@@ -30,6 +30,6 @@ test.describe("Desktop Menu - All Categories Visible", () => {
 		// Count the number of main menu triggers to verify exactly 8
 		// Linter suggested not to use count toBe.
 		const menuItems = triggers.getByRole("button");
-		await expect(menuItems).toHaveCount(8);
+		await expect(menuItems).toHaveCount(7);
 	});
 });

@@ -25,7 +25,7 @@ test.describe("Desktop Menu Rendering", () => {
 			triggers.getByRole("button", { name: "Feature Lists", exact: true }),
 		).toBeVisible();
 		await expect(triggers.getByRole("button", { name: "Samples", exact: true })).toBeVisible();
-		await expect(triggers.getByRole("button", { name: "Texts", exact: true })).toBeVisible();
+		// Removed until there is current data: await expect(triggers.getByRole("button", { name: "Texts", exact: true })).toBeVisible();
 		await expect(triggers.getByRole("button", { name: "Dictionaries", exact: true })).toBeVisible();
 		await expect(
 			triggers.getByRole("button", { name: "Tools & Technology", exact: true }),

@@ -3,8 +3,9 @@ import { expect, test } from "@playwright/test";
 // spec: specs/menu-test-plan.md
 // seed: e2e/seed.spec.ts
 
-test.describe("Desktop Menu - Texts Dropdown", () => {
-	test("should open Texts menu and display the single item", async ({ page }) => {
+test.describe("Desktop Menu - Texts Dropdown - Removed until the current data is ready", () => {
+	// eslint-disable-next-line playwright/no-skipped-test
+	test.skip("should open Texts menu and display the single item", async ({ page }) => {
 		// 1. Click on "Texts" trigger
 		await page.setViewportSize({ width: 1920, height: 1080 });
 		await page.goto("/");

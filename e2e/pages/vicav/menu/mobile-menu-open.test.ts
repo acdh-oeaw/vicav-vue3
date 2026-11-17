@@ -24,7 +24,7 @@ test.describe("Mobile Menu - Open on Toggle Click", () => {
 		await expect(dialog.getByText("Profiles", { exact: true }).first()).toBeVisible();
 		await expect(dialog.getByText("Feature Lists", { exact: true }).first()).toBeVisible();
 		await expect(dialog.getByText("Samples", { exact: true }).first()).toBeVisible();
-		await expect(dialog.getByText("Texts", { exact: true }).first()).toBeVisible();
+		// Removed until there is current data: await expect(dialog.getByText("Texts", { exact: true }).first()).toBeVisible();
 		await expect(dialog.getByText("Dictionaries", { exact: true }).first()).toBeVisible();
 		await expect(dialog.getByText("Tools & Technology", { exact: true }).first()).toBeVisible();
 	});
