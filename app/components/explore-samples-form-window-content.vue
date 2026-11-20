@@ -280,7 +280,7 @@ const openSearchResultsNewWindow = () => openSearchResults(false);
 					:filter-function="(i) => i"
 					:immediate-open="true"
 					:options="sentenceOptions"
-					:placeholder="`Search for features...`"
+					:placeholder="`Search for MSA sentences No....`"
 				/>
 			</div>
 
