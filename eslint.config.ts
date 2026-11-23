@@ -45,6 +45,7 @@ const configs = defineConfig(
 						"^svg-icon$",
 						"^titlestring$",
 						"^u$",
+						"^v-onboarding-[a-z_-]+$",
 						"^vh$",
 					],
 				},
