@@ -112,9 +112,47 @@ function advanceOnClick(target: AttachableElement, index: number) {
 	};
 }
 
+const clickTargets = new Map<number, AttachableElement>();
+
+/**
+ * Reka's dropdown and menubar triggers open on `pointerdown`, not on `click`.
+ */
+function simulateClick(element: HTMLElement) {
+	const { left, top, width, height } = element.getBoundingClientRect();
+	const init = {
+		bubbles: true,
+		cancelable: true,
+		composed: true,
+		view: window,
+		button: 0,
+		clientX: left + width / 2,
+		clientY: top + height / 2,
+	};
+	const pointer = { ...init, pointerId: 1, pointerType: "mouse", isPrimary: true };
+
+	const proceed = element.dispatchEvent(
+		new PointerEvent("pointerdown", { ...pointer, buttons: 1 }),
+	);
+	// as in the browser, a cancelled `pointerdown` suppresses the compatibility mouse events
+	if (proceed) element.dispatchEvent(new MouseEvent("mousedown", { ...init, buttons: 1 }));
+	element.dispatchEvent(new PointerEvent("pointerup", pointer));
+	if (proceed) element.dispatchEvent(new MouseEvent("mouseup", init));
+	element.click();
+}
+
+function interact(index: number, next: () => void) {
+	const target = clickTargets.get(index);
+	const element = target ? resolveElement(target) : null;
+	if (element) simulateClick(element);
+	else next();
+}
+
 function prepareStep(step: TourStep, index: number): StepEntity {
 	const { requireClick, settleDelay, waitTimeout, ...entity } = step;
 	let teardown: (() => void) | null = null;
+	if (requireClick) {
+		clickTargets.set(index, requireClick === true ? entity.attachTo.element : requireClick);
+	}
 
 	return {
 		...entity,
@@ -122,7 +160,6 @@ function prepareStep(step: TourStep, index: number): StepEntity {
 			...entity.options,
 			// keeps the tooltip from flashing at the previous position while `beforeStep` waits
 			hideNextStepDuringHook: true,
-			hideButtons: { ...entity.options?.hideButtons, next: Boolean(requireClick) },
 		},
 		on: {
 			...entity.on,
@@ -132,20 +169,16 @@ function prepareStep(step: TourStep, index: number): StepEntity {
 					waitTimeout ?? DEFAULT_WAIT_TIMEOUT,
 				);
 				if (!element) {
-					// Nothing to point at, and with the "Next" button possibly hidden there would be no
-					// way out of the step either, so move along instead of stranding the user.
+					// Nothing to point at, and nothing to click either if the step waits for a click, so
+					// move along instead of stranding the user.
 					leaveStep(index, options?.direction ?? 1);
 					return;
 				}
 				await entity.on?.beforeStep?.(options);
 				// the click that got us here may still be opening or re-tiling windows around the element
 				await delay(settleDelay ?? DEFAULT_SETTLE_DELAY);
-				if (requireClick) {
-					teardown = advanceOnClick(
-						requireClick === true ? entity.attachTo.element : requireClick,
-						index,
-					);
-				}
+				const target = clickTargets.get(index);
+				if (target) teardown = advanceOnClick(target, index);
 			},
 			afterStep: async (options) => {
 				teardown?.();
@@ -189,7 +222,78 @@ function onExit() {
 			:steps="steps"
 			@exit="onExit"
 			@finish="onFinish"
-	/></Teleport>
+		>
+			<template #default="{ step, next, previous, exit, isFirst, isLast, index }">
+				<VOnboardingStep>
+					<div class="v-onboarding-item">
+						<div class="v-onboarding-item__header">
+							<span v-if="step.content.title" class="v-onboarding-item__header-title">
+								{{ step.content.title }}
+							</span>
+							<button
+								v-if="!step.options?.hideButtons?.exit"
+								aria-label="Close"
+								class="v-onboarding-item__header-close"
+								@click="
+									exit();
+									wrapper?.finish();
+								"
+							>
+								<svg
+									class="size-4"
+									fill="none"
+									stroke="currentColor"
+									viewBox="0 0 24 24"
+									xmlns="http://www.w3.org/2000/svg"
+								>
+									<path
+										d="M6 18L18 6M6 6l12 12"
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+									/>
+								</svg>
+							</button>
+						</div>
+						<!-- eslint-disable vue/no-v-html -- tour content comes from the project config -->
+						<p
+							v-if="step.content.description && step.content.html"
+							class="v-onboarding-item__description"
+							v-html="step.content.description"
+						/>
+						<!-- eslint-enable vue/no-v-html -->
+						<p v-else-if="step.content.description" class="v-onboarding-item__description">
+							{{ step.content.description }}
+						</p>
+						<div class="v-onboarding-item__actions">
+							<button
+								v-if="!isFirst && !step.options?.hideButtons?.previous"
+								class="v-onboarding-btn-secondary"
+								type="button"
+								@click="previous"
+							>
+								Previous
+							</button>
+							<template v-if="!step.options?.hideButtons?.next">
+								<button
+									v-if="clickTargets.has(index)"
+									class="v-onboarding-btn-primary"
+									title="Click the highlighted element, or let this button do it for you"
+									type="button"
+									@click="interact(index, next)"
+								>
+									Interact
+								</button>
+								<button v-else class="v-onboarding-btn-primary" type="button" @click="next">
+									{{ isLast ? "Finish" : "Next" }}
+								</button>
+							</template>
+						</div>
+					</div>
+				</VOnboardingStep>
+			</template>
+		</VOnboardingWrapper></Teleport
+	>
 </template>
 
 <style scoped>
